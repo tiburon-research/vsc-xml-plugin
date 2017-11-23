@@ -1,0 +1,5461 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Tiburon XML script",
+	"firstLineMatch": "(?x)\n# XML declaration\n(?:\n  ^ <\\? xml\n\n  # VersionInfo\n  \\s+ version\n  \\s* = \\s*\n  (['\"])\n    1 \\. [0-9]+\n  \\1\n\n  # EncodingDecl\n  (?:\n    \\s+ encoding\n    \\s* = \\s*\n\n    # EncName\n    (['\"])\n      [A-Za-z]\n      [-A-Za-z0-9._]*\n    \\2\n  )?\n\n  # SDDecl\n  (?:\n    \\s+ standalone\n    \\s* = \\s*\n    (['\"])\n      (?:yes|no)\n    \\3\n  )?\n\n  \\s* \\?>\n)\n|\n# Modeline\n(?i:\n  # Emacs\n  -\\*-(?:\\s*(?=[^:;\\s]+\\s*-\\*-)|(?:.*?[;\\s]|(?<=-\\*-))mode\\s*:\\s*)\n    xml\n  (?=[\\s;]|(?<![-*])-\\*-).*?-\\*-\n  |\n  # Vim\n  (?:(?:\\s|^)vi(?:m[<=>]?\\d+|m)?|\\sex)(?=:(?=\\s*set?\\s[^\\n:]+:)|:(?!\\s*set?\\s))(?:(?:\\s|\\s*:\\s*)\\w*(?:\\s*=(?:[^\\n\\\\\\s]|\\\\.)*)?)*[\\s:](?:filetype|ft|syntax)\\s*=\n    xml\n  (?=\\s|:|$)\n)",
+	"patterns": [
+
+		{  
+			"begin": "(<)(Filter|Redirect|Validate)([^>]*)(>)(\\s*<!\\[CDATA\\[)?[^ \t]",
+			"end": "(\\]\\]>)?(</)(\\w+)(\\s*)(>)",
+			"beginCaptures": {
+				"1":
+				{
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2":
+				{
+					"name": "entity.name.tag.xml"
+				},
+				"3":
+				{
+					"patterns": [
+						{
+							"include": "#tagStuff"
+						}
+					]
+				},
+				"4":
+				{
+					"name": "punctuation.definition.tag.xml"
+				}
+			},
+			"endCaptures": {
+				"2": {
+					"name": "punctuation.definition.tag.xml"
+				},
+				"3": {
+					"name": "entity.name.tag.xml"
+				},
+				"5": {
+					"name": "punctuation.definition.tag.xml"
+				}
+			},
+			"patterns":[
+				{
+					"include": "#statement"
+				}
+			],
+			"name" : "tib.node.allowcode.single"
+		},
+
+		{  
+			"begin": "(<)(Methods)([^>]*)(>)(\\s*<!\\[CDATA\\[)?",
+			"end": "(\\]\\]>)?(</)(\\w+)(\\s*)(>)",
+			"beginCaptures": {
+				"1":
+				{
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2":
+				{
+					"name": "entity.name.tag.xml"
+				},
+				"3":
+				{
+					"patterns": [
+						{
+							"include": "#tagStuff"
+						}
+					]
+				},
+				"4":
+				{
+					"name": "punctuation.definition.tag.xml"
+				}
+			},
+			"endCaptures": {
+				"2": {
+					"name": "punctuation.definition.tag.xml"
+				},
+				"3": {
+					"name": "entity.name.tag.xml"
+				},
+				"5": {
+					"name": "punctuation.definition.tag.xml"
+				}
+			},
+			"patterns":[
+				{
+					"include": "#csharp"
+				}
+			],
+			"name" : "tib.node.allowcode.methods"
+		},
+
+		{  
+			"begin": "(\\[)(c#)([^\\]]*)(\\])",
+			"end": "(\\[)(/c#\\s*)(\\])",
+			"beginCaptures": 
+			{
+				"1":
+				{
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2":
+				{
+					"name": "entity.name.tag.xml"
+				},
+				"3":
+				{
+					"patterns": [
+						{
+							"include": "#tagStuff"
+						}
+					],
+					"name": "tib.inline-code.stuff"
+				},
+				"4":
+				{
+					"name": "punctuation.definition.tag.xml"
+				}
+			},
+			"endCaptures": {
+				"1":
+				{
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2":
+				{
+					"name": "entity.name.tag.xml"
+				},
+				"3":
+				{
+					"name": "punctuation.definition.tag.xml"
+				}
+			},
+			"patterns":[
+				{
+					"include": "#csharp"
+				}
+			],
+			"name": "tib.inline-code"
+		},
+
+
+		{
+			"begin": "(\\$[A_Za-z0-9_]+)(\\([^\\)]*\\))",
+			"end": "^",
+			"beginCaptures":
+			{
+				"1":
+				{
+					"name": "entity.name.function.cs"
+				},
+				"2":
+				{
+					"patterns": [
+						{
+							"include": "#named-argument"
+						},
+						{
+							"include": "#argument"
+						},
+						{
+							"include": "#punctuation-comma"
+						}
+					]
+				}
+			},
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"name": "tib.inline-method"
+		},
+
+
+		{
+			"begin": "(<)((?i:script))\\b",
+			"beginCaptures": {
+				"0": {
+					"name": "meta.tag.metadata.script.html"
+				},
+				"1": {
+					"name": "punctuation.definition.tag.begin.html"
+				},
+				"2": {
+					"name": "entity.name.tag.html"
+				}
+			},
+			"end": "(/>)|(/)((?i:script))(>)",
+			"endCaptures": {
+				"0": {
+					"name": "meta.tag.metadata.script.html"
+				},
+				"1": {
+					"name": "punctuation.definition.tag.end.html"
+				},
+				"2": {
+					"name": "punctuation.definition.tag.begin.html"
+				},
+				"3": {
+					"name": "entity.name.tag.html"
+				},
+				"4": {
+					"name": "punctuation.definition.tag.end.html"
+				}
+			},
+			"name": "meta.embedded.block.html",
+			"patterns": [
+				{
+					"begin": "\\G",
+					"end": "(?=/>|/)",
+					"patterns": [
+						{
+							"begin": "(>)",
+							"beginCaptures": {
+								"0": {
+									"name": "meta.tag.metadata.script.html"
+								},
+								"1": {
+									"name": "punctuation.definition.tag.end.html"
+								}
+							},
+							"end": "((<))(?=/(?i:script))",
+							"endCaptures": {
+								"0": {
+									"name": "meta.tag.metadata.script.html"
+								},
+								"1": {
+									"name": "punctuation.definition.tag.begin.html"
+								},
+								"2": {
+									"name": "source.js"
+								}
+							},
+							"patterns": [
+								{
+									"begin": "\\G",
+									"end": "(?=</(?i:script))",
+									"name": "source.js",
+									"patterns": [
+										{
+											"begin": "(^[ \\t]+)?(?=//)",
+											"beginCaptures": {
+												"1": {
+													"name": "punctuation.whitespace.comment.leading.js"
+												}
+											},
+											"end": "(?!\\G)",
+											"patterns": [
+												{
+													"begin": "//",
+													"beginCaptures": {
+														"0": {
+															"name": "punctuation.definition.comment.js"
+														}
+													},
+													"end": "(?=</script)|\\n",
+													"name": "comment.line.double-slash.js"
+												}
+											]
+										},
+										{
+											"begin": "/\\*",
+											"captures": {
+												"0": {
+													"name": "punctuation.definition.comment.js"
+												}
+											},
+											"end": "\\*/|(?=</script)",
+											"name": "comment.block.js"
+										},
+										{
+											"include": "source.js"
+										}
+									]
+								}
+							]
+						},
+						{
+							"begin": "\\G",
+							"end": "(?i:(?=/?>|type(?=[\\s=])(?!\\s*=\\s*('|\"|)(text/(javascript|ecmascript|babel)|application/((x-)?javascript|ecmascript|babel)|module)[\\s\"'>])))",
+							"name": "meta.tag.metadata.script.html",
+							"patterns": [
+								{
+									"include": "#tag-stuff"
+								}
+							]
+						},
+						{
+							"begin": "(?=(?i:type\\s*=\\s*('|\"|)(text/(x-handlebars|(x-(handlebars-)?|ng-)?template|html)[\\s\"'>])))",
+							"end": "((<))(?=/(?i:script))",
+							"endCaptures": {
+								"0": {
+									"name": "meta.tag.metadata.script.html"
+								},
+								"1": {
+									"name": "punctuation.definition.tag.begin.html"
+								},
+								"2": {
+									"name": "text.html.basic"
+								}
+							},
+							"patterns": [
+								{
+									"begin": "\\G",
+									"end": "(>)|(?=/>)",
+									"endCaptures": {
+										"1": {
+											"name": "punctuation.definition.tag.end.html"
+										}
+									},
+									"name": "meta.tag.metadata.script.html",
+									"patterns": [
+										{
+											"include": "#tag-stuff"
+										}
+									]
+								},
+								{
+									"begin": "(?!\\G)",
+									"end": "(?=</(?i:script))",
+									"name": "text.html.basic",
+									"patterns": [
+										{
+											"include": "text.html.basic"
+										}
+									]
+								}
+							]
+						},
+						{
+							"begin": "(?=(?i:type))",
+							"end": "(<)(?=/(?i:script))",
+							"endCaptures": {
+								"0": {
+									"name": "meta.tag.metadata.script.html"
+								},
+								"1": {
+									"name": "punctuation.definition.tag.begin.html"
+								}
+							},
+							"patterns": [
+								{
+									"begin": "\\G",
+									"end": "(>)|(?=/>)",
+									"endCaptures": {
+										"1": {
+											"name": "punctuation.definition.tag.end.html"
+										}
+									},
+									"name": "meta.tag.metadata.script.html",
+									"patterns": [
+										{
+											"include": "#tag-stuff"
+										}
+									]
+								},
+								{
+									"begin": "(?!\\G)",
+									"end": "(?=</(?i:script))",
+									"name": "source.unknown"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+
+
+
+
+		{
+			"begin": "(<)((?i:style))([^>]*)(>)",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.begin.html"
+				},
+				"2": {
+					"name": "entity.name.tag.html"
+				},
+				"4":
+				{
+					"name": "punctuation.definition.tag.end.html"
+				}
+			},
+			"end": "(/>)|((<)/)((?i:style))(>)",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2": {
+					"name": "punctuation.definition.tag.xml"
+				},
+				"4": {
+					"name": "entity.name.tag.html"
+				},
+				"5": {
+					"name": "punctuation.definition.tag.xml"
+				}
+			},
+			"name": "meta.embedded.block.html",
+			"patterns": [
+				{
+					"begin": "(?!\\G)",
+					"end": "(?=</(?i:style))",
+					"name": "source.css",
+					"patterns": [
+						{
+							"include": "#embedded-code"
+						},
+						{
+							"include": "source.css"
+						}
+					]
+				}
+			]
+		},
+
+		
+		{
+			"begin": " (style=\")([^\"]+)(\")",
+			"end": ".",
+			"beginCaptures": {
+				"2":
+				{
+					"name": "source.inline-css",
+					"patterns": [
+						{
+							"include": "#rule-list-innards"
+						}
+					]
+				}
+			},
+			"patterns": [
+				
+			]
+		},
+
+
+
+
+
+		
+		
+		
+		{
+			
+			"begin": "(<\\?)\\s*([-_a-zA-Z0-9]+)",
+			"captures": {
+				"1": {
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2": {
+					"name": "entity.name.tag.xml"
+				}
+			},
+			"end": "(\\?>)",
+			"name": "meta.tag.preprocessor.xml",
+			"patterns": [
+				{
+					"match": " ([a-zA-Z-]+)",
+					"name": "entity.other.attribute-name.xml"
+				},
+				{
+					"include": "#doublequotedString"
+				},
+				{
+					"include": "#singlequotedString"
+				}
+			]
+		},
+		{
+			"begin": "(<!)(DOCTYPE)\\s+([:a-zA-Z_][:a-zA-Z0-9_.-]*)",
+			"captures": {
+				"1": {
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2": {
+					"name": "keyword.other.doctype.xml"
+				},
+				"3": {
+					"name": "variable.language.documentroot.xml"
+				}
+			},
+			"end": "\\s*(>)",
+			"name": "meta.tag.sgml.doctype.xml",
+			"patterns": [
+				{
+					"include": "#internalSubset"
+				}
+			]
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"begin": "(<)((?:([-_a-zA-Z0-9]+)(:))?([-_a-zA-Z0-9:]+))(?=(\\s[^>]*)?></\\2>)",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2": {
+					"name": "entity.name.tag.xml"
+				},
+				"3": {
+					"name": "entity.name.tag.namespace.xml"
+				},
+				"4": {
+					"name": "punctuation.separator.namespace.xml"
+				},
+				"5": {
+					"name": "entity.name.tag.localname.xml"
+				}
+			},
+			"end": "(>)(</)((?:([-_a-zA-Z0-9]+)(:))?([-_a-zA-Z0-9:]+))(>)",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2": {
+					"name": "punctuation.definition.tag.xml"
+				},
+				"3": {
+					"name": "entity.name.tag.xml"
+				},
+				"4": {
+					"name": "entity.name.tag.namespace.xml"
+				},
+				"5": {
+					"name": "punctuation.separator.namespace.xml"
+				},
+				"6": {
+					"name": "entity.name.tag.localname.xml"
+				},
+				"7": {
+					"name": "punctuation.definition.tag.xml"
+				}
+			},
+			"name": "meta.tag.no-content.xml",
+			"patterns": [
+				{
+					"include": "#tagStuff"
+				}
+			]
+		},
+		{
+			"begin": "(</?)(?:([-\\w\\.]+)((:)))?([-\\w\\.:]+)",
+			"captures": {
+				"1": {
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2": {
+					"name": "entity.name.tag.namespace.xml"
+				},
+				"3": {
+					"name": "entity.name.tag.xml"
+				},
+				"4": {
+					"name": "punctuation.separator.namespace.xml"
+				},
+				"5": {
+					"name": "entity.name.tag.localname.xml"
+				}
+			},
+			"end": "(/?>)",
+			"name": "meta.tag.xml",
+			"patterns": [
+				{
+					"include": "#tagStuff"
+				}
+			]
+		},
+		{
+			"include": "#entity"
+		},
+		{
+			"include": "#bare-ampersand"
+		},
+		{
+			"begin": "<%@",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.section.embedded.begin.xml"
+				}
+			},
+			"end": "%>",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.section.embedded.end.xml"
+				}
+			},
+			"name": "source.java-props.embedded.xml",
+			"patterns": [
+				{
+					"match": "page|include|taglib",
+					"name": "keyword.other.page-props.xml"
+				}
+			]
+		},
+		{
+			"begin": "<%[!=]?(?!--)",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.section.embedded.begin.xml"
+				}
+			},
+			"end": "(?!--)%>",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.section.embedded.end.xml"
+				}
+			},
+			"name": "source.java.embedded.xml",
+			"patterns": [
+				{
+					"include": "source.java"
+				}
+			]
+		}
+	],
+
+
+	"repository": {
+		"embedded-code": {
+			"patterns": [
+				{
+					"include": "#smarty"
+				}
+			]
+		},
+
+		"smarty": {
+			"patterns": [
+				{
+					"begin": "(\\{(literal)\\})",
+					"captures": {
+						"1": {
+							"name": "source.smarty.embedded.html"
+						},
+						"2": {
+							"name": "support.function.built-in.smarty"
+						}
+					},
+					"end": "(\\{/(literal)\\})"
+				},
+				{
+					"begin": "{{|{",
+					"disabled": 1,
+					"end": "}}|}",
+					"name": "source.smarty.embedded.html",
+					"patterns": [
+						{
+							"include": "source.smarty"
+						}
+					]
+				}
+			]
+		},
+
+		"EntityDecl": {
+			"begin": "(<!)(ENTITY)\\s+(%\\s+)?([:a-zA-Z_][:a-zA-Z0-9_.-]*)(\\s+(?:SYSTEM|PUBLIC)\\s+)?",
+			"captures": {
+				"1": {
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2": {
+					"name": "keyword.other.entity.xml"
+				},
+				"3": {
+					"name": "punctuation.definition.entity.xml"
+				},
+				"4": {
+					"name": "variable.language.entity.xml"
+				},
+				"5": {
+					"name": "keyword.other.entitytype.xml"
+				}
+			},
+			"end": "(>)",
+			"patterns": [
+				{
+					"include": "#doublequotedString"
+				},
+				{
+					"include": "#singlequotedString"
+				}
+			]
+		},
+		"bare-ampersand": {
+			"match": "&",
+			"name": "invalid.illegal.bad-ampersand.xml"
+		},
+		"doublequotedString": {
+			"begin": "\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.xml"
+				}
+			},
+			"end": "\"",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.xml"
+				}
+			},
+			"name": "string.quoted.double.xml",
+			"patterns": [
+				{
+					"include": "#entity"
+				},
+				{
+					"include": "#bare-ampersand"
+				},
+				{
+					"include": "#tib-iterator"
+				}
+			]
+		},
+		"entity": {
+			"captures": {
+				"1": {
+					"name": "punctuation.definition.constant.xml"
+				},
+				"3": {
+					"name": "punctuation.definition.constant.xml"
+				}
+			},
+			"match": "(&)([:a-zA-Z_][:a-zA-Z0-9_.-]*|#[0-9]+|#x[0-9a-fA-F]+)(;)",
+			"name": "constant.character.entity.xml"
+		},
+		"internalSubset": {
+			"begin": "(\\[)",
+			"captures": {
+				"1": {
+					"name": "punctuation.definition.constant.xml"
+				}
+			},
+			"end": "(\\])",
+			"name": "meta.internalsubset.xml",
+			"patterns": [
+				{
+					"include": "#EntityDecl"
+				},
+				{
+					"include": "#parameterEntity"
+				},
+				{
+					"include": "#comments"
+				}
+			]
+		},
+		"parameterEntity": {
+			"captures": {
+				"1": {
+					"name": "punctuation.definition.constant.xml"
+				},
+				"3": {
+					"name": "punctuation.definition.constant.xml"
+				}
+			},
+			"match": "(%)([:a-zA-Z_][:a-zA-Z0-9_.-]*)(;)",
+			"name": "constant.character.parameter-entity.xml"
+		},
+		"singlequotedString": {
+			"begin": "'",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.xml"
+				}
+			},
+			"end": "'",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.xml"
+				}
+			},
+			"name": "string.quoted.single.xml",
+			"patterns": [
+				{
+					"include": "#entity"
+				},
+				{
+					"include": "#bare-ampersand"
+				},
+				{
+					"include": "#tib-iterator"
+				}
+			]
+		},
+		"tagStuff": {
+			"patterns": [
+				{
+					"captures": {
+						"1": {
+							"name": "entity.other.attribute-name.namespace.xml"
+						},
+						"2": {
+							"name": "entity.other.attribute-name.xml"
+						},
+						"3": {
+							"name": "punctuation.separator.namespace.xml"
+						},
+						"4": {
+							"name": "entity.other.attribute-name.localname.xml"
+						}
+					},
+					"match": "(?:^|\\s+)(?:([-\\w.]+)((:)))?([-\\w.:]+)\\s*="
+				},
+				{
+					"include": "#doublequotedString"
+				},
+				{
+					"include": "#singlequotedString"
+				}
+			]
+		},
+
+
+		"tag-stuff": {
+			"patterns": [
+				{
+					"include": "#tag-id-attribute"
+				},
+				{
+					"include": "#tag-generic-attribute"
+				},
+				{
+					"include": "#string-double-quoted"
+				},
+				{
+					"include": "#string-single-quoted"
+				},
+				{
+					"include": "#embedded-code"
+				},
+				{
+					"include": "#unquoted-attribute"
+				}
+			]
+		},
+		"string-double-quoted": {
+			"begin": "\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.html"
+				}
+			},
+			"end": "\"",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.html"
+				}
+			},
+			"name": "string.quoted.double.html",
+			"patterns": [
+				{
+					"include": "#embedded-code"
+				},
+				{
+					"include": "#entities"
+				},
+				{
+					"include": "#tib-iterator"
+				}
+			]
+		},
+		"string-single-quoted": {
+			"begin": "'",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.html"
+				}
+			},
+			"end": "'",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.html"
+				}
+			},
+			"name": "string.quoted.single.html",
+			"patterns": [
+				{
+					"include": "#embedded-code"
+				},
+				{
+					"include": "#entities"
+				},
+				{
+					"include": "#tib-iterator"
+				}
+			]
+		},
+		"tag-generic-attribute": {
+			"match": "(?<=[^=])\\b([a-zA-Z0-9:-]+)",
+			"name": "entity.other.attribute-name.html"
+		},
+		"tag-id-attribute": {
+			"begin": "\\b(id)\\b\\s*(=)",
+			"captures": {
+				"1": {
+					"name": "entity.other.attribute-name.id.html"
+				},
+				"2": {
+					"name": "punctuation.separator.key-value.html"
+				}
+			},
+			"end": "(?!\\G)(?<='|\"|[^\\s<>/])",
+			"name": "meta.attribute-with-value.id.html",
+			"patterns": [
+				{
+					"begin": "\"",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.string.begin.html"
+						}
+					},
+					"contentName": "meta.toc-list.id.html",
+					"end": "\"",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.string.end.html"
+						}
+					},
+					"name": "string.quoted.double.html",
+					"patterns": [
+						{
+							"include": "#embedded-code"
+						},
+						{
+							"include": "#entities"
+						}
+					]
+				},
+				{
+					"begin": "'",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.string.begin.html"
+						}
+					},
+					"contentName": "meta.toc-list.id.html",
+					"end": "'",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.string.end.html"
+						}
+					},
+					"name": "string.quoted.single.html",
+					"patterns": [
+						{
+							"include": "#embedded-code"
+						},
+						{
+							"include": "#entities"
+						}
+					]
+				},
+				{
+					"captures": {
+						"0": {
+							"name": "meta.toc-list.id.html"
+						}
+					},
+					"match": "(?<==)(?:[^\\s<>/'\"]|/(?!>))+",
+					"name": "string.unquoted.html"
+				}
+			]
+		},
+		"unquoted-attribute": {
+			"match": "(?<==)(?:[^\\s<>/'\"]|/(?!>))+",
+			"name": "string.unquoted.html"
+		},
+		"entities": {
+			"patterns": [
+				{
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.entity.html"
+						},
+						"3": {
+							"name": "punctuation.definition.entity.html"
+						}
+					},
+					"match": "(&)([a-zA-Z0-9]+|#[0-9]+|#[xX][0-9a-fA-F]+)(;)",
+					"name": "constant.character.entity.html"
+				},
+				{
+					"match": "&",
+					"name": "invalid.illegal.bad-ampersand.html"
+				}
+			]
+		},
+
+
+		"comments": {
+			"begin": "<[!%]--",
+			"captures": {
+				"0": {
+					"name": "punctuation.definition.comment.xml"
+				}
+			},
+			"end": "--%?>",
+			"name": "comment.block.xml"
+		},
+
+
+		"csharp":
+		{
+			"patterns": [
+				{
+					"include": "#cdata"
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#directives"
+				},
+				{
+					"include": "#declarations"
+				},
+				{
+					"include": "#script-top-level"
+				},
+				{
+					"include": "#tib-iterator"
+				}
+			]
+		},
+
+		"directives": {
+			"patterns": [
+				{
+					"include": "#extern-alias-directive"
+				},
+				{
+					"include": "#using-directive"
+				},
+				{
+					"include": "#attribute-section"
+				},
+				{
+					"include": "#punctuation-semicolon"
+				}
+			]
+		},
+		"declarations": {
+			"patterns": [
+				{
+					"include": "#namespace-declaration"
+				},
+				{
+					"include": "#type-declarations"
+				},
+				{
+					"include": "#punctuation-semicolon"
+				}
+			]
+		},
+		"script-top-level": {
+			"patterns": [
+				{
+					"include": "#method-declaration"
+				},
+				{
+					"include": "#statement"
+				},
+				{
+					"include": "#punctuation-semicolon"
+				}
+			]
+		},
+		"type-declarations": {
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#storage-modifier"
+				},
+				{
+					"include": "#class-declaration"
+				},
+				{
+					"include": "#delegate-declaration"
+				},
+				{
+					"include": "#enum-declaration"
+				},
+				{
+					"include": "#interface-declaration"
+				},
+				{
+					"include": "#struct-declaration"
+				},
+				{
+					"include": "#attribute-section"
+				},
+				{
+					"include": "#punctuation-semicolon"
+				}
+			]
+		},
+		"class-or-struct-members": {
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#storage-modifier"
+				},
+				{
+					"include": "#type-declarations"
+				},
+				{
+					"include": "#field-declaration"
+				},
+				{
+					"include": "#event-declaration"
+				},
+				{
+					"include": "#property-declaration"
+				},
+				{
+					"include": "#indexer-declaration"
+				},
+				{
+					"include": "#variable-initializer"
+				},
+				{
+					"include": "#constructor-declaration"
+				},
+				{
+					"include": "#destructor-declaration"
+				},
+				{
+					"include": "#operator-declaration"
+				},
+				{
+					"include": "#conversion-operator-declaration"
+				},
+				{
+					"include": "#method-declaration"
+				},
+				{
+					"include": "#attribute-section"
+				},
+				{
+					"include": "#punctuation-semicolon"
+				}
+			]
+		},
+		"interface-members": {
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#event-declaration"
+				},
+				{
+					"include": "#property-declaration"
+				},
+				{
+					"include": "#indexer-declaration"
+				},
+				{
+					"include": "#method-declaration"
+				},
+				{
+					"include": "#attribute-section"
+				},
+				{
+					"include": "#punctuation-semicolon"
+				}
+			]
+		},
+		"statement": {
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#while-statement"
+				},
+				{
+					"include": "#do-statement"
+				},
+				{
+					"include": "#for-statement"
+				},
+				{
+					"include": "#foreach-statement"
+				},
+				{
+					"include": "#if-statement"
+				},
+				{
+					"include": "#else-part"
+				},
+				{
+					"include": "#switch-statement"
+				},
+				{
+					"include": "#goto-statement"
+				},
+				{
+					"include": "#return-statement"
+				},
+				{
+					"include": "#break-or-continue-statement"
+				},
+				{
+					"include": "#throw-statement"
+				},
+				{
+					"include": "#yield-statement"
+				},
+				{
+					"include": "#await-statement"
+				},
+				{
+					"include": "#try-statement"
+				},
+				{
+					"include": "#checked-unchecked-statement"
+				},
+				{
+					"include": "#lock-statement"
+				},
+				{
+					"include": "#using-statement"
+				},
+				{
+					"include": "#labeled-statement"
+				},
+				{
+					"include": "#local-declaration"
+				},
+				{
+					"include": "#block"
+				},
+				{
+					"include": "#expression"
+				},
+				{
+					"include": "#punctuation-semicolon"
+				},
+				{
+					"include": "#tib-iterator"
+				}
+			]
+		},
+		"expression": {
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#checked-unchecked-expression"
+				},
+				{
+					"include": "#typeof-or-default-expression"
+				},
+				{
+					"include": "#nameof-expression"
+				},
+				{
+					"include": "#throw-expression"
+				},
+				{
+					"include": "#interpolated-string"
+				},
+				{
+					"include": "#verbatim-interpolated-string"
+				},
+				{
+					"include": "#this-or-base-expression"
+				},
+				{
+					"include": "#conditional-operator"
+				},
+				{
+					"include": "#expression-operators"
+				},
+				{
+					"include": "#await-expression"
+				},
+				{
+					"include": "#query-expression"
+				},
+				{
+					"include": "#as-expression"
+				},
+				{
+					"include": "#is-expression"
+				},
+				{
+					"include": "#anonymous-method-expression"
+				},
+				{
+					"include": "#object-creation-expression"
+				},
+				{
+					"include": "#array-creation-expression"
+				},
+				{
+					"include": "#anonymous-object-creation-expression"
+				},
+				{
+					"include": "#invocation-expression"
+				},
+				{
+					"include": "#member-access-expression"
+				},
+				{
+					"include": "#element-access-expression"
+				},
+				{
+					"include": "#cast-expression"
+				},
+				{
+					"include": "#literal"
+				},
+				{
+					"include": "#parenthesized-expression"
+				},
+				{
+					"include": "#tuple-deconstruction-assignment"
+				},
+				{
+					"include": "#initializer-expression"
+				},
+				{
+					"include": "#identifier"
+				}
+			]
+		},
+		"extern-alias-directive": {
+			"begin": "\\s*(extern)\\b\\s*(alias)\\b\\s*([_[:alpha:]][_[:alnum:]]*)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.extern.cs"
+				},
+				"2": {
+					"name": "keyword.other.alias.cs"
+				},
+				"3": {
+					"name": "variable.other.alias.cs"
+				}
+			},
+			"end": "(?=;)"
+		},
+		"using-directive": {
+			"patterns": [
+				{
+					"begin": "\\b(using)\\b\\s+(static)\\s+",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.other.using.cs"
+						},
+						"2": {
+							"name": "keyword.other.static.cs"
+						}
+					},
+					"end": "(?=;)",
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				{
+					"begin": "\\b(using)\\s+(?=([_[:alpha:]][_[:alnum:]]*)\\s*=)",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.other.using.cs"
+						},
+						"2": {
+							"name": "entity.name.type.alias.cs"
+						}
+					},
+					"end": "(?=;)",
+					"patterns": [
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#type"
+						},
+						{
+							"include": "#operator-assignment"
+						}
+					]
+				},
+				{
+					"begin": "\\b(using)\\s*",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.other.using.cs"
+						}
+					},
+					"end": "(?=;)",
+					"patterns": [
+						{
+							"include": "#comment"
+						},
+						{
+							"name": "entity.name.type.namespace.cs",
+							"match": "[_[:alpha:]][_[:alnum:]]*"
+						},
+						{
+							"include": "#operator-assignment"
+						}
+					]
+				}
+			]
+		},
+		"attribute-section": {
+			"begin": "(\\[)(assembly|module|field|event|method|param|property|return|type)?(\\:)?",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.squarebracket.open.cs"
+				},
+				"2": {
+					"name": "keyword.other.attribute-specifier.cs"
+				},
+				"3": {
+					"name": "punctuation.separator.colon.cs"
+				}
+			},
+			"end": "(\\])",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.squarebracket.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#attribute"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"attribute": {
+			"patterns": [
+				{
+					"include": "#type-name"
+				},
+				{
+					"include": "#attribute-arguments"
+				}
+			]
+		},
+		"attribute-arguments": {
+			"begin": "(\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "(\\))",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#attribute-named-argument"
+				},
+				{
+					"include": "#expression"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"attribute-named-argument": {
+			"begin": "([_[:alpha:]][_[:alnum:]]*)\\s*(?==)",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.variable.property.cs"
+				}
+			},
+			"end": "(?=(,|\\)))",
+			"patterns": [
+				{
+					"include": "#operator-assignment"
+				},
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"namespace-declaration": {
+			"begin": "\\b(namespace)\\s+",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.namespace.cs"
+				}
+			},
+			"end": "(?<=\\})",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"name": "entity.name.type.namespace.cs",
+					"match": "[_[:alpha:]][_[:alnum:]]*"
+				},
+				{
+					"include": "#punctuation-accessor"
+				},
+				{
+					"begin": "\\{",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.curlybrace.open.cs"
+						}
+					},
+					"end": "\\}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.curlybrace.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#declarations"
+						},
+						{
+							"include": "#using-directive"
+						},
+						{
+							"include": "#punctuation-semicolon"
+						}
+					]
+				}
+			]
+		},
+		"storage-modifier": {
+			"name": "storage.modifier.cs",
+			"match": "(?<!\\.)\\b(new|public|protected|internal|private|abstract|virtual|override|sealed|static|partial|readonly|volatile|const|extern|async|unsafe)\\b"
+		},
+		"class-declaration": {
+			"begin": "(?=\\bclass\\b)",
+			"end": "(?<=\\})",
+			"patterns": [
+				{
+					"begin": "(?x)\n\\b(class)\\b\\s+\n([_[:alpha:]][_[:alnum:]]*)\\s*",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.other.class.cs"
+						},
+						"2": {
+							"name": "entity.name.type.class.cs"
+						}
+					},
+					"end": "(?=\\{)",
+					"patterns": [
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#type-parameter-list"
+						},
+						{
+							"include": "#base-types"
+						},
+						{
+							"include": "#generic-constraints"
+						}
+					]
+				},
+				{
+					"begin": "\\{",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.curlybrace.open.cs"
+						}
+					},
+					"end": "\\}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.curlybrace.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#class-or-struct-members"
+						}
+					]
+				},
+				{
+					"include": "#comment"
+				}
+			]
+		},
+		"delegate-declaration": {
+			"begin": "(?x)\n(?:\\b(delegate)\\b)\\s+\n(?<type-name>\n  (?:\n    (?:ref\\s+)?   # ref return\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)\\s+\n(\\g<identifier>)\\s*\n(<([^<>]+)>)?\\s*\n(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.delegate.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"7": {
+					"name": "entity.name.type.delegate.cs"
+				},
+				"8": {
+					"patterns": [
+						{
+							"include": "#type-parameter-list"
+						}
+					]
+				}
+			},
+			"end": "(?=;)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#parenthesized-parameter-list"
+				},
+				{
+					"include": "#generic-constraints"
+				}
+			]
+		},
+		"enum-declaration": {
+			"begin": "(?=\\benum\\b)",
+			"end": "(?<=\\})",
+			"patterns": [
+				{
+					"begin": "(?=enum)",
+					"end": "(?=\\{)",
+					"patterns": [
+						{
+							"include": "#comment"
+						},
+						{
+							"match": "(enum)\\s+([_[:alpha:]][_[:alnum:]]*)",
+							"captures": {
+								"1": {
+									"name": "keyword.other.enum.cs"
+								},
+								"2": {
+									"name": "entity.name.type.enum.cs"
+								}
+							}
+						},
+						{
+							"begin": ":",
+							"beginCaptures": {
+								"0": {
+									"name": "punctuation.separator.colon.cs"
+								}
+							},
+							"end": "(?=\\{)",
+							"patterns": [
+								{
+									"include": "#type"
+								}
+							]
+						}
+					]
+				},
+				{
+					"begin": "\\{",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.curlybrace.open.cs"
+						}
+					},
+					"end": "\\}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.curlybrace.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#attribute-section"
+						},
+						{
+							"include": "#punctuation-comma"
+						},
+						{
+							"begin": "[_[:alpha:]][_[:alnum:]]*",
+							"beginCaptures": {
+								"0": {
+									"name": "entity.name.variable.enum-member.cs"
+								}
+							},
+							"end": "(?=(,|\\}))",
+							"patterns": [
+								{
+									"include": "#comment"
+								},
+								{
+									"include": "#variable-initializer"
+								}
+							]
+						}
+					]
+				},
+				{
+					"include": "#comment"
+				}
+			]
+		},
+		"interface-declaration": {
+			"begin": "(?=\\binterface\\b)",
+			"end": "(?<=\\})",
+			"patterns": [
+				{
+					"begin": "(?x)\n(interface)\\b\\s+\n([_[:alpha:]][_[:alnum:]]*)",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.other.interface.cs"
+						},
+						"2": {
+							"name": "entity.name.type.interface.cs"
+						}
+					},
+					"end": "(?=\\{)",
+					"patterns": [
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#type-parameter-list"
+						},
+						{
+							"include": "#base-types"
+						},
+						{
+							"include": "#generic-constraints"
+						}
+					]
+				},
+				{
+					"begin": "\\{",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.curlybrace.open.cs"
+						}
+					},
+					"end": "\\}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.curlybrace.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#interface-members"
+						}
+					]
+				},
+				{
+					"include": "#comment"
+				}
+			]
+		},
+		"struct-declaration": {
+			"begin": "(?=\\bstruct\\b)",
+			"end": "(?<=\\})",
+			"patterns": [
+				{
+					"begin": "(?x)\n(struct)\\b\\s+\n([_[:alpha:]][_[:alnum:]]*)",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.other.struct.cs"
+						},
+						"2": {
+							"name": "entity.name.type.struct.cs"
+						}
+					},
+					"end": "(?=\\{)",
+					"patterns": [
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#type-parameter-list"
+						},
+						{
+							"include": "#base-types"
+						},
+						{
+							"include": "#generic-constraints"
+						}
+					]
+				},
+				{
+					"begin": "\\{",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.curlybrace.open.cs"
+						}
+					},
+					"end": "\\}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.curlybrace.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#class-or-struct-members"
+						}
+					]
+				},
+				{
+					"include": "#comment"
+				}
+			]
+		},
+		"type-parameter-list": {
+			"begin": "\\<",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.typeparameters.begin.cs"
+				}
+			},
+			"end": "\\>",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.typeparameters.end.cs"
+				}
+			},
+			"patterns": [
+				{
+					"match": "\\b(in|out)\\b",
+					"captures": {
+						"1": {
+							"name": "storage.modifier.cs"
+						}
+					}
+				},
+				{
+					"match": "\\b([_[:alpha:]][_[:alnum:]]*)\\b",
+					"captures": {
+						"1": {
+							"name": "entity.name.type.type-parameter.cs"
+						}
+					}
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#punctuation-comma"
+				},
+				{
+					"include": "#attribute-section"
+				}
+			]
+		},
+		"base-types": {
+			"begin": ":",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.separator.colon.cs"
+				}
+			},
+			"end": "(?=\\{|where)",
+			"patterns": [
+				{
+					"include": "#type"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"generic-constraints": {
+			"begin": "(where)\\s+([_[:alpha:]][_[:alnum:]]*)\\s*(:)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.where.cs"
+				},
+				"2": {
+					"name": "storage.type.cs"
+				},
+				"3": {
+					"name": "punctuation.separator.colon.cs"
+				}
+			},
+			"end": "(?=\\{|where|;)",
+			"patterns": [
+				{
+					"name": "keyword.other.class.cs",
+					"match": "\\bclass\\b"
+				},
+				{
+					"name": "keyword.other.struct.cs",
+					"match": "\\bstruct\\b"
+				},
+				{
+					"match": "(new)\\s*(\\()\\s*(\\))",
+					"captures": {
+						"1": {
+							"name": "keyword.other.new.cs"
+						},
+						"2": {
+							"name": "punctuation.parenthesis.open.cs"
+						},
+						"3": {
+							"name": "punctuation.parenthesis.close.cs"
+						}
+					}
+				},
+				{
+					"include": "#type"
+				},
+				{
+					"include": "#punctuation-comma"
+				},
+				{
+					"include": "#generic-constraints"
+				}
+			]
+		},
+		"field-declaration": {
+			"begin": "(?x)\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)\\s+\n(\\g<identifier>)\\s* # first field name\n(?!=>|==)(?=,|;|=|$)",
+			"beginCaptures": {
+				"1": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"6": {
+					"name": "entity.name.variable.field.cs"
+				}
+			},
+			"end": "(?=;)",
+			"patterns": [
+				{
+					"name": "entity.name.variable.field.cs",
+					"match": "[_[:alpha:]][_[:alnum:]]*"
+				},
+				{
+					"include": "#punctuation-comma"
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#variable-initializer"
+				},
+				{
+					"include": "#class-or-struct-members"
+				}
+			]
+		},
+		"property-declaration": {
+			"begin": "(?x)\n(?!.*\\b(?:class|interface|struct|enum|event)\\b)\\s*\n(?<return-type>\n  (?<type-name>\n    (?:\n      (?:ref\\s+)?   # ref return\n      (?:\n        (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n        (?<name-and-type-args> # identifier + type arguments (if any)\n          \\g<identifier>\\s*\n          (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n        )\n        (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n        (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n      )\n      (?:\\s*\\*\\s*)* # pointer suffix?\n      (?:\\s*\\?\\s*)? # nullable suffix?\n      (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n    )\n  )\\s+\n)\n(?<interface-name>\\g<type-name>\\s*\\.\\s*)?\n(?<property-name>\\g<identifier>)\\s*\n(?=\\{|=>|$)",
+			"beginCaptures": {
+				"1": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"7": {
+					"patterns": [
+						{
+							"include": "#type"
+						},
+						{
+							"include": "#punctuation-accessor"
+						}
+					]
+				},
+				"8": {
+					"name": "entity.name.variable.property.cs"
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#property-accessors"
+				},
+				{
+					"include": "#expression-body"
+				},
+				{
+					"include": "#variable-initializer"
+				},
+				{
+					"include": "#class-or-struct-members"
+				}
+			]
+		},
+		"indexer-declaration": {
+			"begin": "(?x)\n(?<return-type>\n  (?<type-name>\n    (?:\n      (?:ref\\s+)?   # ref return\n      (?:\n        (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n        (?<name-and-type-args> # identifier + type arguments (if any)\n          \\g<identifier>\\s*\n          (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n        )\n        (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n        (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n      )\n      (?:\\s*\\*\\s*)* # pointer suffix?\n      (?:\\s*\\?\\s*)? # nullable suffix?\n      (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n    )\n  )\\s+\n)\n(?<interface-name>\\g<type-name>\\s*\\.\\s*)?\n(?<indexer-name>this)\\s*\n(?=\\[)",
+			"beginCaptures": {
+				"1": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"7": {
+					"patterns": [
+						{
+							"include": "#type"
+						},
+						{
+							"include": "#punctuation-accessor"
+						}
+					]
+				},
+				"8": {
+					"name": "keyword.other.this.cs"
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#bracketed-parameter-list"
+				},
+				{
+					"include": "#property-accessors"
+				},
+				{
+					"include": "#expression-body"
+				},
+				{
+					"include": "#variable-initializer"
+				}
+			]
+		},
+		"event-declaration": {
+			"begin": "(?x)\n\\b(event)\\b\\s*\n(?<return-type>\n  (?<type-name>\n    (?:\n      (?:\n        (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n        (?<name-and-type-args> # identifier + type arguments (if any)\n          \\g<identifier>\\s*\n          (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n        )\n        (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n        (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n      )\n      (?:\\s*\\*\\s*)* # pointer suffix?\n      (?:\\s*\\?\\s*)? # nullable suffix?\n      (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n    )\n  )\\s+\n)\n(?<interface-name>\\g<type-name>\\s*\\.\\s*)?\n(?<event-names>\\g<identifier>(?:\\s*,\\s*\\g<identifier>)*)\\s*\n(?=\\{|;|$)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.event.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"8": {
+					"patterns": [
+						{
+							"include": "#type"
+						},
+						{
+							"include": "#punctuation-accessor"
+						}
+					]
+				},
+				"9": {
+					"patterns": [
+						{
+							"name": "entity.name.variable.event.cs",
+							"match": "[_[:alpha:]][_[:alnum:]]*"
+						},
+						{
+							"include": "#punctuation-comma"
+						}
+					]
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#event-accessors"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"property-accessors": {
+			"begin": "\\{",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.curlybrace.open.cs"
+				}
+			},
+			"end": "\\}",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.curlybrace.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"name": "storage.modifier.cs",
+					"match": "\\b(private|protected|internal)\\b"
+				},
+				{
+					"name": "keyword.other.get.cs",
+					"match": "\\b(get)\\b"
+				},
+				{
+					"name": "keyword.other.set.cs",
+					"match": "\\b(set)\\b"
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#attribute-section"
+				},
+				{
+					"include": "#expression-body"
+				},
+				{
+					"include": "#block"
+				},
+				{
+					"include": "#punctuation-semicolon"
+				}
+			]
+		},
+		"event-accessors": {
+			"begin": "\\{",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.curlybrace.open.cs"
+				}
+			},
+			"end": "\\}",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.curlybrace.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"name": "keyword.other.add.cs",
+					"match": "\\b(add)\\b"
+				},
+				{
+					"name": "keyword.other.remove.cs",
+					"match": "\\b(remove)\\b"
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#attribute-section"
+				},
+				{
+					"include": "#expression-body"
+				},
+				{
+					"include": "#block"
+				},
+				{
+					"include": "#punctuation-semicolon"
+				}
+			]
+		},
+		"method-declaration": {
+			"begin": "(?x)\n(?<return-type>\n  (?<type-name>\n    (?:\n      (?:ref\\s+)?   # ref return\n      (?:\n        (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n        (?<name-and-type-args> # identifier + type arguments (if any)\n          \\g<identifier>\\s*\n          (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n        )\n        (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n        (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n      )\n      (?:\\s*\\*\\s*)* # pointer suffix?\n      (?:\\s*\\?\\s*)? # nullable suffix?\n      (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n    )\n  )\\s+\n)\n(?<interface-name>\\g<type-name>\\s*\\.\\s*)?\n(\\g<identifier>)\\s*\n(<([^<>]+)>)?\\s*\n(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"7": {
+					"patterns": [
+						{
+							"include": "#type"
+						},
+						{
+							"include": "#punctuation-accessor"
+						}
+					]
+				},
+				"8": {
+					"name": "entity.name.function.cs"
+				},
+				"9": {
+					"patterns": [
+						{
+							"include": "#type-parameter-list"
+						}
+					]
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#parenthesized-parameter-list"
+				},
+				{
+					"include": "#generic-constraints"
+				},
+				{
+					"include": "#expression-body"
+				},
+				{
+					"include": "#block"
+				}
+			]
+		},
+		"constructor-declaration": {
+			"begin": "(?=[_[:alpha:]][_[:alnum:]]*\\s*\\()",
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"match": "\\b([_[:alpha:]][_[:alnum:]]*)\\b",
+					"captures": {
+						"1": {
+							"name": "entity.name.function.cs"
+						}
+					}
+				},
+				{
+					"begin": "(:)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.separator.colon.cs"
+						}
+					},
+					"end": "(?=\\{|=>)",
+					"patterns": [
+						{
+							"include": "#constructor-initializer"
+						}
+					]
+				},
+				{
+					"include": "#parenthesized-parameter-list"
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#expression-body"
+				},
+				{
+					"include": "#block"
+				}
+			]
+		},
+		"constructor-initializer": {
+			"begin": "\\b(?:(base)|(this))\\b\\s*(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.base.cs"
+				},
+				"2": {
+					"name": "keyword.other.this.cs"
+				}
+			},
+			"end": "(?<=\\))",
+			"patterns": [
+				{
+					"include": "#argument-list"
+				}
+			]
+		},
+		"destructor-declaration": {
+			"begin": "(~)([_[:alpha:]][_[:alnum:]]*)\\s*(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.tilde.cs"
+				},
+				"2": {
+					"name": "entity.name.function.cs"
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#parenthesized-parameter-list"
+				},
+				{
+					"include": "#expression-body"
+				},
+				{
+					"include": "#block"
+				}
+			]
+		},
+		"operator-declaration": {
+			"begin": "(?x)\n(?<type-name>\n  (?:\n    (?:ref\\s+)?   # ref return\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)\\s*\n(?<operator-keyword>(?:\\b(?:operator)))\\s*\n(?<operator>(?:\\+|-|\\*|/|%|&|\\||\\^|\\<\\<|\\>\\>|==|!=|\\>|\\<|\\>=|\\<=|!|~|\\+\\+|--|true|false))\\s*\n(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"6": {
+					"name": "keyword.other.operator-decl.cs"
+				},
+				"7": {
+					"name": "entity.name.function.cs"
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#parenthesized-parameter-list"
+				},
+				{
+					"include": "#expression-body"
+				},
+				{
+					"include": "#block"
+				}
+			]
+		},
+		"conversion-operator-declaration": {
+			"begin": "(?x)\n(?<explicit-or-implicit-keyword>(?:\\b(?:explicit|implicit)))\\s*\n(?<operator-keyword>(?:\\b(?:operator)))\\s*\n(?<type-name>\n  (?:\n    (?:ref\\s+)?   # ref return\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)\\s*\n(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"patterns": [
+						{
+							"match": "\\b(explicit)\\b",
+							"captures": {
+								"1": {
+									"name": "keyword.other.explicit.cs"
+								}
+							}
+						},
+						{
+							"match": "\\b(implicit)\\b",
+							"captures": {
+								"1": {
+									"name": "keyword.other.implicit.cs"
+								}
+							}
+						}
+					]
+				},
+				"2": {
+					"name": "keyword.other.operator-decl.cs"
+				},
+				"3": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#parenthesized-parameter-list"
+				},
+				{
+					"include": "#expression-body"
+				},
+				{
+					"include": "#block"
+				}
+			]
+		},
+		"block": {
+			"begin": "\\{",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.curlybrace.open.cs"
+				}
+			},
+			"end": "\\}",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.curlybrace.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#statement"
+				}
+			]
+		},
+		"variable-initializer": {
+			"begin": "(?<!=|!)(=)(?!=|>)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.operator.assignment.cs"
+				}
+			},
+			"end": "(?=[,\\)\\];}])",
+			"patterns": [
+				{
+					"include": "#ref-modifier"
+				},
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"expression-body": {
+			"begin": "=>",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.operator.arrow.cs"
+				}
+			},
+			"end": "(?=[,\\);}])",
+			"patterns": [
+				{
+					"include": "#ref-modifier"
+				},
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"goto-statement": {
+			"begin": "(?<!\\.)\\b(goto)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.goto.cs"
+				}
+			},
+			"end": "(?=;)",
+			"patterns": [
+				{
+					"begin": "\\b(case)\\b",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.control.case.cs"
+						}
+					},
+					"end": "(?=;)",
+					"patterns": [
+						{
+							"include": "#expression"
+						}
+					]
+				},
+				{
+					"match": "\\b(default)\\b",
+					"captures": {
+						"1": {
+							"name": "keyword.control.default.cs"
+						}
+					}
+				},
+				{
+					"name": "entity.name.label.cs",
+					"match": "[_[:alpha:]][_[:alnum:]]*"
+				}
+			]
+		},
+		"return-statement": {
+			"begin": "(?<!\\.)\\b(return)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.flow.return.cs"
+				}
+			},
+			"end": "(?=;)",
+			"patterns": [
+				{
+					"include": "#ref-modifier"
+				},
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"break-or-continue-statement": {
+			"match": "(?<!\\.)\\b(?:(break)|(continue))\\b",
+			"captures": {
+				"1": {
+					"name": "keyword.control.flow.break.cs"
+				},
+				"2": {
+					"name": "keyword.control.flow.continue.cs"
+				}
+			}
+		},
+		"throw-statement": {
+			"begin": "(?<!\\.)\\b(throw)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.flow.throw.cs"
+				}
+			},
+			"end": "(?=;)",
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"yield-statement": {
+			"patterns": [
+				{
+					"include": "#yield-return-statement"
+				},
+				{
+					"include": "#yield-break-statement"
+				}
+			]
+		},
+		"yield-return-statement": {
+			"begin": "(?<!\\.)\\b(yield)\\b\\s*\\b(return)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.flow.yield.cs"
+				},
+				"2": {
+					"name": "keyword.control.flow.return.cs"
+				}
+			},
+			"end": "(?=;)",
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"yield-break-statement": {
+			"match": "(?<!\\.)\\b(yield)\\b\\s*\\b(break)\\b",
+			"captures": {
+				"1": {
+					"name": "keyword.control.flow.yield.cs"
+				},
+				"2": {
+					"name": "keyword.control.flow.break.cs"
+				}
+			}
+		},
+		"await-statement": {
+			"begin": "(?<!\\.)\\b(await)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.await.cs"
+				}
+			},
+			"end": "(?=;)",
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"if-statement": {
+			"begin": "(?<!\\.)\\b(if)\\b\\s*(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.conditional.if.cs"
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"begin": "\\(",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.open.cs"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expression"
+						}
+					]
+				},
+				{
+					"include": "#statement"
+				}
+			]
+		},
+		"else-part": {
+			"begin": "(?<!\\.)\\b(else)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.conditional.else.cs"
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"include": "#statement"
+				}
+			]
+		},
+		"switch-statement": {
+			"begin": "(?<!\\.)\\b(switch)\\b\\s*(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.switch.cs"
+				}
+			},
+			"end": "(?<=\\})",
+			"patterns": [
+				{
+					"begin": "\\(",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.open.cs"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expression"
+						}
+					]
+				},
+				{
+					"begin": "\\{",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.curlybrace.open.cs"
+						}
+					},
+					"end": "\\}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.curlybrace.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#switch-label"
+						},
+						{
+							"include": "#statement"
+						}
+					]
+				}
+			]
+		},
+		"switch-label": {
+			"patterns": [
+				{
+					"begin": "(?<!\\.)\\b(case)\\b\\s+",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.control.case.cs"
+						}
+					},
+					"end": ":",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.separator.colon.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expression"
+						}
+					]
+				},
+				{
+					"match": "(?<!\\.)\\b(default)\\b\\s*(:)",
+					"captures": {
+						"1": {
+							"name": "keyword.control.default.cs"
+						},
+						"2": {
+							"name": "punctuation.separator.colon.cs"
+						}
+					}
+				}
+			]
+		},
+		"do-statement": {
+			"begin": "(?<!\\.)\\b(do)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.loop.do.cs"
+				}
+			},
+			"end": "(?=;|})",
+			"patterns": [
+				{
+					"include": "#statement"
+				}
+			]
+		},
+		"while-statement": {
+			"begin": "(?<!\\.)\\b(while)\\b\\s*(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.loop.while.cs"
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"begin": "\\(",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.open.cs"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expression"
+						}
+					]
+				},
+				{
+					"include": "#statement"
+				}
+			]
+		},
+		"for-statement": {
+			"begin": "(?<!\\.)\\b(for)\\b\\s*(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.loop.for.cs"
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"begin": "\\(",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.open.cs"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#local-variable-declaration"
+						},
+						{
+							"include": "#expression"
+						},
+						{
+							"include": "#punctuation-comma"
+						},
+						{
+							"include": "#punctuation-semicolon"
+						}
+					]
+				},
+				{
+					"include": "#statement"
+				}
+			]
+		},
+		"foreach-statement": {
+			"begin": "(?<!\\.)\\b(foreach)\\b\\s*(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.loop.foreach.cs"
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"begin": "\\(",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.open.cs"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"match": "(?x)\n(?:\n  (\\bvar\\b)|\n  (?<type-name>\n    (?:\n      (?:\n        (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n        (?<name-and-type-args> # identifier + type arguments (if any)\n          \\g<identifier>\\s*\n          (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n        )\n        (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n        (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n      )\n      (?:\\s*\\*\\s*)* # pointer suffix?\n      (?:\\s*\\?\\s*)? # nullable suffix?\n      (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n    )\n  )\n)\\s+\n(\\g<identifier>)\\s+\n\\b(in)\\b",
+							"captures": {
+								"1": {
+									"name": "keyword.other.var.cs"
+								},
+								"2": {
+									"patterns": [
+										{
+											"include": "#type"
+										}
+									]
+								},
+								"7": {
+									"name": "entity.name.variable.local.cs"
+								},
+								"8": {
+									"name": "keyword.control.loop.in.cs"
+								}
+							}
+						},
+						{
+							"match": "(?x) # match foreach (var (x, y) in ...)\n(?:\\b(var)\\b\\s*)?\n(?<tuple>\\((?:[^\\(\\)]|\\g<tuple>)+\\))\\s+\n\\b(in)\\b",
+							"captures": {
+								"1": {
+									"name": "keyword.other.var.cs"
+								},
+								"2": {
+									"patterns": [
+										{
+											"include": "#tuple-declaration-deconstruction-element-list"
+										}
+									]
+								},
+								"3": {
+									"name": "keyword.control.loop.in.cs"
+								}
+							}
+						},
+						{
+							"include": "#expression"
+						}
+					]
+				},
+				{
+					"include": "#statement"
+				}
+			]
+		},
+		"try-statement": {
+			"patterns": [
+				{
+					"include": "#try-block"
+				},
+				{
+					"include": "#catch-clause"
+				},
+				{
+					"include": "#finally-clause"
+				}
+			]
+		},
+		"try-block": {
+			"begin": "(?<!\\.)\\b(try)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.try.cs"
+				}
+			},
+			"end": "(?<=\\})",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#block"
+				}
+			]
+		},
+		"finally-clause": {
+			"begin": "(?<!\\.)\\b(finally)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.try.finally.cs"
+				}
+			},
+			"end": "(?<=\\})",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#block"
+				}
+			]
+		},
+		"catch-clause": {
+			"begin": "(?<!\\.)\\b(catch)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.try.catch.cs"
+				}
+			},
+			"end": "(?<=\\})",
+			"patterns": [
+				{
+					"begin": "\\(",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.open.cs"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"match": "(?x)\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)\\s*\n(?:\\b(\\g<identifier>)\\b)?",
+							"captures": {
+								"1": {
+									"patterns": [
+										{
+											"include": "#type"
+										}
+									]
+								},
+								"6": {
+									"name": "entity.name.variable.local.cs"
+								}
+							}
+						}
+					]
+				},
+				{
+					"include": "#when-clause"
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#block"
+				}
+			]
+		},
+		"when-clause": {
+			"begin": "(?<!\\.)\\b(when)\\b\\s*(\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.try.when.cs"
+				},
+				"2": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				},
+				{
+					"include": "#comment"
+				}
+			]
+		},
+		"checked-unchecked-statement": {
+			"begin": "(?<!\\.)\\b(?:(checked)|(unchecked))\\b\\s*(?!\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.checked.cs"
+				},
+				"2": {
+					"name": "keyword.other.unchecked.cs"
+				}
+			},
+			"end": "(?<=\\})",
+			"patterns": [
+				{
+					"include": "#block"
+				}
+			]
+		},
+		"lock-statement": {
+			"begin": "(?<!\\.)\\b(lock)\\b\\s*(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.lock.cs"
+				}
+			},
+			"end": "(?<=\\})|(?=;)",
+			"patterns": [
+				{
+					"begin": "\\(",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.open.cs"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#expression"
+						}
+					]
+				},
+				{
+					"include": "#statement"
+				}
+			]
+		},
+		"using-statement": {
+			"begin": "(?<!\\.)\\b(using)\\b\\s*(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.using.cs"
+				}
+			},
+			"end": "(?=\\;|})",
+			"patterns": [
+				{
+					"begin": "\\(",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.open.cs"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.parenthesis.close.cs"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#local-variable-declaration"
+						},
+						{
+							"include": "#expression"
+						}
+					]
+				},
+				{
+					"include": "#statement"
+				}
+			]
+		},
+		"labeled-statement": {
+			"match": "([_[:alpha:]][_[:alnum:]]*)\\s*(:)",
+			"captures": {
+				"1": {
+					"name": "entity.name.label.cs"
+				},
+				"2": {
+					"name": "punctuation.separator.colon.cs"
+				}
+			}
+		},
+		"local-declaration": {
+			"patterns": [
+				{
+					"include": "#local-constant-declaration"
+				},
+				{
+					"include": "#local-variable-declaration"
+				},
+				{
+					"include": "#local-tuple-var-deconstruction"
+				}
+			]
+		},
+		"local-variable-declaration": {
+			"begin": "(?x)\n(?:\n  (?:(\\bref)\\s+)?(\\bvar\\b)| # ref local\n  (?<type-name>\n    (?:\n      (?:ref\\s+)?   # ref local\n      (?:\n        (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n        (?<name-and-type-args> # identifier + type arguments (if any)\n          \\g<identifier>\\s*\n          (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n        )\n        (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n        (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n      )\n      (?:\\s*\\*\\s*)* # pointer suffix?\n      (?:\\s*\\?\\s*)? # nullable suffix?\n      (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n    )\n  )\n)\\s+\n(\\g<identifier>)\\s*\n(?=,|;|=|\\))",
+			"beginCaptures": {
+				"1": {
+					"name": "storage.modifier.cs"
+				},
+				"2": {
+					"name": "keyword.other.var.cs"
+				},
+				"3": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"8": {
+					"name": "entity.name.variable.local.cs"
+				}
+			},
+			"end": "(?=;|\\))",
+			"patterns": [
+				{
+					"name": "entity.name.variable.local.cs",
+					"match": "[_[:alpha:]][_[:alnum:]]*"
+				},
+				{
+					"include": "#punctuation-comma"
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#variable-initializer"
+				}
+			]
+		},
+		"local-constant-declaration": {
+			"begin": "(?x)\n(?<const-keyword>\\b(?:const)\\b)\\s*\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)\\s+\n(\\g<identifier>)\\s*\n(?=,|;|=)",
+			"beginCaptures": {
+				"1": {
+					"name": "storage.modifier.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"7": {
+					"name": "entity.name.variable.local.cs"
+				}
+			},
+			"end": "(?=;)",
+			"patterns": [
+				{
+					"name": "entity.name.variable.local.cs",
+					"match": "[_[:alpha:]][_[:alnum:]]*"
+				},
+				{
+					"include": "#punctuation-comma"
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#variable-initializer"
+				}
+			]
+		},
+		"local-tuple-var-deconstruction": {
+			"begin": "(?x) # e.g. var (x, y) = GetPoint();\n(?:\\b(var)\\b\\s*)\n(?<tuple>\\((?:[^\\(\\)]|\\g<tuple>)+\\))\\s*\n(?=;|=|\\))",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.var.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#tuple-declaration-deconstruction-element-list"
+						}
+					]
+				}
+			},
+			"end": "(?=;|\\))",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#variable-initializer"
+				}
+			]
+		},
+		"tuple-deconstruction-assignment": {
+			"match": "(?x)\n(?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\\s*\n(?!=>|==)(?==)",
+			"captures": {
+				"1": {
+					"patterns": [
+						{
+							"include": "#tuple-deconstruction-element-list"
+						}
+					]
+				}
+			}
+		},
+		"tuple-declaration-deconstruction-element-list": {
+			"begin": "\\(",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#tuple-declaration-deconstruction-element-list"
+				},
+				{
+					"include": "#declaration-expression-tuple"
+				},
+				{
+					"include": "#punctuation-comma"
+				},
+				{
+					"match": "(?x) # e.g. x\n\\b([_[:alpha:]][_[:alnum:]]*)\\b\\s*\n(?=[,)])",
+					"captures": {
+						"1": {
+							"name": "entity.name.variable.tuple-element.cs"
+						}
+					}
+				}
+			]
+		},
+		"tuple-deconstruction-element-list": {
+			"begin": "\\(",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#tuple-deconstruction-element-list"
+				},
+				{
+					"include": "#declaration-expression-tuple"
+				},
+				{
+					"include": "#punctuation-comma"
+				},
+				{
+					"match": "(?x) # e.g. x\n\\b([_[:alpha:]][_[:alnum:]]*)\\b\\s*\n(?=[,)])",
+					"captures": {
+						"1": {
+							"name": "variable.other.readwrite.cs"
+						}
+					}
+				}
+			]
+		},
+		"declaration-expression-local": {
+			"match": "(?x) # e.g. int x OR var x\n(?:\n  \\b(var)\\b|\n  (?<type-name>\n    (?:\n      (?:\n        (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n        (?<name-and-type-args> # identifier + type arguments (if any)\n          \\g<identifier>\\s*\n          (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n        )\n        (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n        (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n      )\n      (?:\\s*\\*\\s*)* # pointer suffix?\n      (?:\\s*\\?\\s*)? # nullable suffix?\n      (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n    )\n  )\n)\\s+\n\\b(\\g<identifier>)\\b\\s*\n(?=[,)\\]])",
+			"captures": {
+				"1": {
+					"name": "keyword.other.var.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"7": {
+					"name": "entity.name.variable.local.cs"
+				}
+			}
+		},
+		"declaration-expression-tuple": {
+			"match": "(?x) # e.g. int x OR var x\n(?:\n  \\b(var)\\b|\n  (?<type-name>\n    (?:\n      (?:\n        (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n        (?<name-and-type-args> # identifier + type arguments (if any)\n          \\g<identifier>\\s*\n          (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n        )\n        (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n        (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n      )\n      (?:\\s*\\*\\s*)* # pointer suffix?\n      (?:\\s*\\?\\s*)? # nullable suffix?\n      (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n    )\n  )\n)\\s+\n\\b(\\g<identifier>)\\b\\s*\n(?=[,)])",
+			"captures": {
+				"1": {
+					"name": "keyword.other.var.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"7": {
+					"name": "entity.name.variable.tuple-element.cs"
+				}
+			}
+		},
+		"checked-unchecked-expression": {
+			"begin": "(?<!\\.)\\b(?:(checked)|(unchecked))\\b\\s*(\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.checked.cs"
+				},
+				"2": {
+					"name": "keyword.other.unchecked.cs"
+				},
+				"3": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"typeof-or-default-expression": {
+			"begin": "(?<!\\.)\\b(?:(typeof)|(default))\\b\\s*(\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.typeof.cs"
+				},
+				"2": {
+					"name": "keyword.other.default.cs"
+				},
+				"3": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#type"
+				}
+			]
+		},
+		"nameof-expression": {
+			"begin": "(?<!\\.)\\b(nameof)\\b\\s*(\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.nameof.cs"
+				},
+				"2": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"throw-expression": {
+			"begin": "(?<!\\.)\\b(throw)\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.flow.throw.cs"
+				}
+			},
+			"end": "(?=;)",
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"interpolated-string": {
+			"name": "string.quoted.double.cs",
+			"begin": "\\$\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.cs"
+				}
+			},
+			"end": "(\")|((?:[^\\\\\\n])$)",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.string.end.cs"
+				},
+				"2": {
+					"name": "invalid.illegal.newline.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#string-character-escape"
+				},
+				{
+					"include": "#interpolation"
+				}
+			]
+		},
+		"verbatim-interpolated-string": {
+			"name": "string.quoted.double.cs",
+			"begin": "\\$@\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.cs"
+				}
+			},
+			"end": "\"(?=[^\"])",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#verbatim-string-character-escape"
+				},
+				{
+					"include": "#interpolation"
+				}
+			]
+		},
+		"interpolation": {
+			"name": "meta.interpolation.cs",
+			"begin": "(?<=[^\\{])((?:\\{\\{)*)(\\{)(?=[^\\{])",
+			"beginCaptures": {
+				"1": {
+					"name": "string.quoted.double.cs"
+				},
+				"2": {
+					"name": "punctuation.definition.interpolation.begin.cs"
+				}
+			},
+			"end": "\\}",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.interpolation.end.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"literal": {
+			"patterns": [
+				{
+					"include": "#boolean-literal"
+				},
+				{
+					"include": "#null-literal"
+				},
+				{
+					"include": "#numeric-literal"
+				},
+				{
+					"include": "#char-literal"
+				},
+				{
+					"include": "#string-literal"
+				},
+				{
+					"include": "#verbatim-string-literal"
+				},
+				{
+					"include": "#tuple-literal"
+				}
+			]
+		},
+		"boolean-literal": {
+			"patterns": [
+				{
+					"name": "constant.language.boolean.true.cs",
+					"match": "(?<!\\.)\\btrue\\b"
+				},
+				{
+					"name": "constant.language.boolean.false.cs",
+					"match": "(?<!\\.)\\bfalse\\b"
+				}
+			]
+		},
+		"null-literal": {
+			"name": "constant.language.null.cs",
+			"match": "(?<!\\.)\\bnull\\b"
+		},
+		"numeric-literal": {
+			"patterns": [
+				{
+					"name": "constant.numeric.hex.cs",
+					"match": "\\b0(x|X)[0-9a-fA-F_]+(U|u|L|l|UL|Ul|uL|ul|LU|Lu|lU|lu)?\\b"
+				},
+				{
+					"name": "constant.numeric.binary.cs",
+					"match": "\\b0(b|B)[01_]+(U|u|L|l|UL|Ul|uL|ul|LU|Lu|lU|lu)?\\b"
+				},
+				{
+					"name": "constant.numeric.decimal.cs",
+					"match": "\\b([0-9_]+)?\\.[0-9_]+((e|E)[0-9]+)?(F|f|D|d|M|m)?\\b"
+				},
+				{
+					"name": "constant.numeric.decimal.cs",
+					"match": "\\b[0-9_]+(e|E)[0-9_]+(F|f|D|d|M|m)?\\b"
+				},
+				{
+					"name": "constant.numeric.decimal.cs",
+					"match": "\\b[0-9_]+(F|f|D|d|M|m)\\b"
+				},
+				{
+					"name": "constant.numeric.decimal.cs",
+					"match": "\\b[0-9_]+(U|u|L|l|UL|Ul|uL|ul|LU|Lu|lU|lu)?\\b"
+				}
+			]
+		},
+		"char-literal": {
+			"name": "string.quoted.single.cs",
+			"begin": "'",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.char.begin.cs"
+				}
+			},
+			"end": "(\\')|((?:[^\\\\\\n])$)",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.char.end.cs"
+				},
+				"2": {
+					"name": "invalid.illegal.newline.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#string-character-escape"
+				}
+			]
+		},
+		"string-literal": {
+			"name": "string.quoted.double.cs",
+			"begin": "(?<!@)\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.cs"
+				}
+			},
+			"end": "(\")|((?:[^\\\\\\n])$)",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.string.end.cs"
+				},
+				"2": {
+					"name": "invalid.illegal.newline.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#string-character-escape"
+				}
+			]
+		},
+		"string-character-escape": {
+			"name": "constant.character.escape.cs",
+			"match": "\\\\."
+		},
+		"verbatim-string-literal": {
+			"name": "string.quoted.double.cs",
+			"begin": "@\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.cs"
+				}
+			},
+			"end": "\"(?=[^\"])",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#verbatim-string-character-escape"
+				}
+			]
+		},
+		"verbatim-string-character-escape": {
+			"name": "constant.character.escape.cs",
+			"match": "\"\""
+		},
+		"tuple-literal": {
+			"begin": "(\\()(?=.*[:,])",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#tuple-literal-element"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"tuple-literal-element": {
+			"begin": "(?x)\n(?:([_[:alpha:]][_[:alnum:]]*)\\s*(:)\\s*)?\n(?![,)])",
+			"beginCaptures": {
+				"0": {
+					"name": "entity.name.variable.tuple-element.cs"
+				},
+				"1": {
+					"name": "punctuation.separator.colon.cs"
+				}
+			},
+			"end": "(?=[,)])",
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"expression-operators": {
+			"patterns": [
+				{
+					"name": "keyword.operator.assignment.compound.cs",
+					"match": "\\*=|/=|%=|\\+=|-="
+				},
+				{
+					"name": "keyword.operator.assignment.compound.bitwise.cs",
+					"match": "\\&=|\\^=|<<=|>>=|\\|="
+				},
+				{
+					"name": "keyword.operator.bitwise.shift.cs",
+					"match": "<<|>>"
+				},
+				{
+					"name": "keyword.operator.comparison.cs",
+					"match": "==|!="
+				},
+				{
+					"name": "keyword.operator.relational.cs",
+					"match": "<=|>=|<|>"
+				},
+				{
+					"name": "keyword.operator.logical.cs",
+					"match": "\\!|&&|\\|\\|"
+				},
+				{
+					"name": "keyword.operator.bitwise.cs",
+					"match": "\\&|~|\\^|\\|"
+				},
+				{
+					"name": "keyword.operator.assignment.cs",
+					"match": "\\="
+				},
+				{
+					"name": "keyword.operator.decrement.cs",
+					"match": "--"
+				},
+				{
+					"name": "keyword.operator.increment.cs",
+					"match": "\\+\\+"
+				},
+				{
+					"name": "keyword.operator.arithmetic.cs",
+					"match": "%|\\*|/|-|\\+"
+				},
+				{
+					"name": "keyword.operator.null-coalescing.cs",
+					"match": "\\?\\?"
+				}
+			]
+		},
+		"conditional-operator": {
+			"begin": "(?<!\\?)\\?(?!\\?|\\.|\\[)",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.operator.conditional.question-mark.cs"
+				}
+			},
+			"end": ":",
+			"endCaptures": {
+				"0": {
+					"name": "keyword.operator.conditional.colon.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"await-expression": {
+			"name": "keyword.other.await.cs",
+			"match": "(?!\\.)\\b(await)\\b"
+		},
+		"parenthesized-expression": {
+			"begin": "\\(",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"initializer-expression": {
+			"begin": "\\{",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.curlybrace.open.cs"
+				}
+			},
+			"end": "\\}",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.curlybrace.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"identifier": {
+			"name": "variable.other.readwrite.cs",
+			"match": "[_[:alpha:]][_[:alnum:]]*"
+		},
+		"cast-expression": {
+			"match": "(?x)\n(\\()\\s*\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)\\s*\n(\\))(?=\\s*[_[:alnum:]\\(])",
+			"captures": {
+				"1": {
+					"name": "punctuation.parenthesis.open.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"7": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			}
+		},
+		"as-expression": {
+			"match": "(?x)\n(?<!\\.)\\b(as)\\b\\s*\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)?",
+			"captures": {
+				"1": {
+					"name": "keyword.other.as.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				}
+			}
+		},
+		"is-expression": {
+			"match": "(?x)\n(?<!\\.)\\b(is)\\b\\s*\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)?",
+			"captures": {
+				"1": {
+					"name": "keyword.other.is.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				}
+			}
+		},
+		"this-or-base-expression": {
+			"match": "\\b(?:(base)|(this))\\b",
+			"captures": {
+				"1": {
+					"name": "keyword.other.base.cs"
+				},
+				"2": {
+					"name": "keyword.other.this.cs"
+				}
+			}
+		},
+		"invocation-expression": {
+			"begin": "(?x)\n(?:(\\?)\\s*)?                                     # preceding null-conditional operator?\n(?:(\\.)\\s*)?                                     # preceding dot?\n([_[:alpha:]][_[:alnum:]]*)\\s*                   # method name\n(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s* # type arguments\n(?=\\()                                           # open paren of argument list",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.operator.null-conditional.cs"
+				},
+				"2": {
+					"name": "punctuation.accessor.cs"
+				},
+				"3": {
+					"name": "entity.name.function.cs"
+				},
+				"4": {
+					"patterns": [
+						{
+							"include": "#type-arguments"
+						}
+					]
+				}
+			},
+			"end": "(?<=\\))",
+			"patterns": [
+				{
+					"include": "#argument-list"
+				}
+			]
+		},
+		"element-access-expression": {
+			"begin": "(?x)\n(?:(\\?)\\s*)?                        # preceding null-conditional operator?\n(?:(\\.)\\s*)?                        # preceding dot?\n(?:([_[:alpha:]][_[:alnum:]]*)\\s*)? # property name\n(?:(\\?)\\s*)?                        # null-conditional operator?\n(?=\\[)                              # open bracket of argument list",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.operator.null-conditional.cs"
+				},
+				"2": {
+					"name": "punctuation.accessor.cs"
+				},
+				"3": {
+					"name": "variable.other.object.property.cs"
+				},
+				"4": {
+					"name": "keyword.operator.null-conditional.cs"
+				}
+			},
+			"end": "(?<=\\])(?!\\s*\\[)",
+			"patterns": [
+				{
+					"include": "#bracketed-argument-list"
+				}
+			]
+		},
+		"member-access-expression": {
+			"patterns": [
+				{
+					"match": "(?x)\n(?:(\\?)\\s*)?                   # preceding null-conditional operator?\n(\\.)\\s*                        # preceding dot\n([_[:alpha:]][_[:alnum:]]*)\\s* # property name\n(?![_[:alnum:]]|\\(|(\\?)?\\[|<)  # next character is not alpha-numeric, nor a (, [, or <. Also, test for ?[",
+					"captures": {
+						"1": {
+							"name": "keyword.operator.null-conditional.cs"
+						},
+						"2": {
+							"name": "punctuation.accessor.cs"
+						},
+						"3": {
+							"name": "variable.other.object.property.cs"
+						}
+					}
+				},
+				{
+					"match": "(?x)\n(\\.)?\\s*\n([_[:alpha:]][_[:alnum:]]*)\n(?<type-params>\\s*<([^<>]|\\g<type-params>)+>\\s*)\n(?=\n  (\\s*\\?)?\n  \\s*\\.\\s*[_[:alpha:]][_[:alnum:]]*\n)",
+					"captures": {
+						"1": {
+							"name": "punctuation.accessor.cs"
+						},
+						"2": {
+							"name": "variable.other.object.cs"
+						},
+						"3": {
+							"patterns": [
+								{
+									"include": "#type-arguments"
+								}
+							]
+						}
+					}
+				},
+				{
+					"match": "(?x)\n([_[:alpha:]][_[:alnum:]]*)\n(?=\n  (\\s*\\?)?\n  \\s*\\.\\s*[_[:alpha:]][_[:alnum:]]*\n)",
+					"captures": {
+						"1": {
+							"name": "variable.other.object.cs"
+						}
+					}
+				}
+			]
+		},
+		"object-creation-expression": {
+			"patterns": [
+				{
+					"include": "#object-creation-expression-with-parameters"
+				},
+				{
+					"include": "#object-creation-expression-with-no-parameters"
+				}
+			]
+		},
+		"object-creation-expression-with-parameters": {
+			"begin": "(?x)\n(new)\\s+\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)\\s*\n(?=\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.new.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				}
+			},
+			"end": "(?<=\\))",
+			"patterns": [
+				{
+					"include": "#argument-list"
+				}
+			]
+		},
+		"object-creation-expression-with-no-parameters": {
+			"match": "(?x)\n(new)\\s+\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)\\s*\n(?=\\{|$)",
+			"captures": {
+				"1": {
+					"name": "keyword.other.new.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				}
+			}
+		},
+		"array-creation-expression": {
+			"begin": "(?x)\n\\b(new)\\b\\s*\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)?\\s*\n(?=\\[)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.new.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				}
+			},
+			"end": "(?<=\\])",
+			"patterns": [
+				{
+					"include": "#bracketed-argument-list"
+				}
+			]
+		},
+		"anonymous-object-creation-expression": {
+			"begin": "\\b(new)\\b\\s*(?=\\{|$)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.new.cs"
+				}
+			},
+			"end": "(?=\\)|;|})",
+			"patterns": [
+				{
+					"include": "#initializer-expression"
+				}
+			]
+		},
+		"bracketed-parameter-list": {
+			"begin": "(?=(\\[))",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.squarebracket.open.cs"
+				}
+			},
+			"end": "(?=(\\]))",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.squarebracket.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"begin": "(?<=\\[)",
+					"end": "(?=\\])",
+					"patterns": [
+						{
+							"include": "#comment"
+						},
+						{
+							"include": "#attribute-section"
+						},
+						{
+							"name": "storage.modifier.cs",
+							"match": "\\b(ref|params|out)\\b"
+						},
+						{
+							"match": "\\s+([_[:alpha:]][_[:alnum:]]*)\\s*(?=[=,\\]])",
+							"captures": {
+								"1": {
+									"name": "entity.name.variable.parameter.cs"
+								}
+							}
+						},
+						{
+							"include": "#variable-initializer"
+						},
+						{
+							"include": "#type"
+						},
+						{
+							"include": "#punctuation-comma"
+						}
+					]
+				}
+			]
+		},
+		"parenthesized-parameter-list": {
+			"begin": "(\\()",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "(\\))",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#attribute-section"
+				},
+				{
+					"name": "storage.modifier.cs",
+					"match": "\\b(ref|params|out|this)\\b"
+				},
+				{
+					"match": "\\b([_[:alpha:]][_[:alnum:]]*)\\s*(?=[=,)])",
+					"captures": {
+						"1": {
+							"name": "entity.name.variable.parameter.cs"
+						}
+					}
+				},
+				{
+					"include": "#variable-initializer"
+				},
+				{
+					"include": "#type"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"argument-list": {
+			"begin": "\\(",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#named-argument"
+				},
+				{
+					"include": "#argument"
+				},
+				{
+					"include": "#punctuation-comma"
+				},
+				{
+					"include": "#tib-iterator"
+				}
+			]
+		},
+		"bracketed-argument-list": {
+			"begin": "\\[",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.squarebracket.open.cs"
+				}
+			},
+			"end": "\\]",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.squarebracket.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#named-argument"
+				},
+				{
+					"include": "#argument"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"named-argument": {
+			"begin": "([_[:alpha:]][_[:alnum:]]*)\\s*(:)",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.variable.parameter.cs"
+				},
+				"2": {
+					"name": "punctuation.separator.colon.cs"
+				}
+			},
+			"end": "(?=(,|\\)|\\]))",
+			"patterns": [
+				{
+					"include": "#argument"
+				},
+				{
+					"include": "#tib-iterator"
+				}
+			]
+		},
+		"argument": {
+			"patterns": [
+				{
+					"name": "storage.modifier.cs",
+					"match": "\\b(ref|out)\\b"
+				},
+				{
+					"include": "#declaration-expression-local"
+				},
+				{
+					"include": "#expression"
+				},
+				{
+					"include": "#tib-iterator"
+				}
+			]
+		},
+		"query-expression": {
+			"begin": "(?x)\n\\b(from)\\b\\s*\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)?\n\\b(\\g<identifier>)\\b\\s*\n\\b(in)\\b\\s*",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.query.from.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"7": {
+					"name": "entity.name.variable.range-variable.cs"
+				},
+				"8": {
+					"name": "keyword.query.in.cs"
+				}
+			},
+			"end": "(?=;|\\))",
+			"patterns": [
+				{
+					"include": "#query-body"
+				},
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"query-body": {
+			"patterns": [
+				{
+					"include": "#let-clause"
+				},
+				{
+					"include": "#where-clause"
+				},
+				{
+					"include": "#join-clause"
+				},
+				{
+					"include": "#orderby-clause"
+				},
+				{
+					"include": "#select-clause"
+				},
+				{
+					"include": "#group-clause"
+				}
+			]
+		},
+		"let-clause": {
+			"begin": "(?x)\n\\b(let)\\b\\s*\n\\b([_[:alpha:]][_[:alnum:]]*)\\b\\s*\n(=)\\s*",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.query.let.cs"
+				},
+				"2": {
+					"name": "entity.name.variable.range-variable.cs"
+				},
+				"3": {
+					"name": "keyword.operator.assignment.cs"
+				}
+			},
+			"end": "(?=;|\\))",
+			"patterns": [
+				{
+					"include": "#query-body"
+				},
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"where-clause": {
+			"begin": "(?x)\n\\b(where)\\b\\s*",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.query.where.cs"
+				}
+			},
+			"end": "(?=;|\\))",
+			"patterns": [
+				{
+					"include": "#query-body"
+				},
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"join-clause": {
+			"begin": "(?x)\n\\b(join)\\b\\s*\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)?\n\\b(\\g<identifier>)\\b\\s*\n\\b(in)\\b\\s*",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.query.join.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"7": {
+					"name": "entity.name.variable.range-variable.cs"
+				},
+				"8": {
+					"name": "keyword.query.in.cs"
+				}
+			},
+			"end": "(?=;|\\))",
+			"patterns": [
+				{
+					"include": "#join-on"
+				},
+				{
+					"include": "#join-equals"
+				},
+				{
+					"include": "#join-into"
+				},
+				{
+					"include": "#query-body"
+				},
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"join-on": {
+			"match": "\\b(on)\\b\\s*",
+			"captures": {
+				"1": {
+					"name": "keyword.query.on.cs"
+				}
+			}
+		},
+		"join-equals": {
+			"match": "\\b(equals)\\b\\s*",
+			"captures": {
+				"1": {
+					"name": "keyword.query.equals.cs"
+				}
+			}
+		},
+		"join-into": {
+			"match": "(?x)\n\\b(into)\\b\\s*\n\\b([_[:alpha:]][_[:alnum:]]*)\\b\\s*",
+			"captures": {
+				"1": {
+					"name": "keyword.query.into.cs"
+				},
+				"2": {
+					"name": "entity.name.variable.range-variable.cs"
+				}
+			}
+		},
+		"orderby-clause": {
+			"begin": "\\b(orderby)\\b\\s*",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.query.orderby.cs"
+				}
+			},
+			"end": "(?=;|\\))",
+			"patterns": [
+				{
+					"include": "#ordering-direction"
+				},
+				{
+					"include": "#query-body"
+				},
+				{
+					"include": "#expression"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"ordering-direction": {
+			"match": "\\b(?:(ascending)|(descending))\\b",
+			"captures": {
+				"1": {
+					"name": "keyword.query.ascending.cs"
+				},
+				"2": {
+					"name": "keyword.query.descending.cs"
+				}
+			}
+		},
+		"select-clause": {
+			"begin": "\\b(select)\\b\\s*",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.query.select.cs"
+				}
+			},
+			"end": "(?=;|\\))",
+			"patterns": [
+				{
+					"include": "#query-body"
+				},
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"group-clause": {
+			"begin": "\\b(group)\\b\\s*",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.query.group.cs"
+				}
+			},
+			"end": "(?=;|\\))",
+			"patterns": [
+				{
+					"include": "#group-by"
+				},
+				{
+					"include": "#group-into"
+				},
+				{
+					"include": "#query-body"
+				},
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"group-by": {
+			"match": "\\b(by)\\b\\s*",
+			"captures": {
+				"1": {
+					"name": "keyword.query.by.cs"
+				}
+			}
+		},
+		"group-into": {
+			"match": "(?x)\n\\b(into)\\b\\s*\n\\b([_[:alpha:]][_[:alnum:]]*)\\b\\s*",
+			"captures": {
+				"1": {
+					"name": "keyword.query.into.cs"
+				},
+				"2": {
+					"name": "entity.name.variable.range-variable.cs"
+				}
+			}
+		},
+		"anonymous-method-expression": {
+			"patterns": [
+				{
+					"begin": "(?x)\n(?:\\b(async)\\b\\s*)?\n\\b([_[:alpha:]][_[:alnum:]]*)\\b\\s*\n(=>)",
+					"beginCaptures": {
+						"1": {
+							"name": "storage.modifier.cs"
+						},
+						"2": {
+							"name": "entity.name.variable.parameter.cs"
+						},
+						"3": {
+							"name": "keyword.operator.arrow.cs"
+						}
+					},
+					"end": "(?=\\)|;|}|,)",
+					"patterns": [
+						{
+							"include": "#block"
+						},
+						{
+							"include": "#ref-modifier"
+						},
+						{
+							"include": "#expression"
+						}
+					]
+				},
+				{
+					"begin": "(?x)\n(?:\\b(async)\\b\\s*)?\n(\\(.*?\\))\\s*\n(=>)",
+					"beginCaptures": {
+						"1": {
+							"name": "storage.modifier.cs"
+						},
+						"2": {
+							"patterns": [
+								{
+									"include": "#lambda-parameter-list"
+								}
+							]
+						},
+						"3": {
+							"name": "keyword.operator.arrow.cs"
+						}
+					},
+					"end": "(?=\\)|;|}|,)",
+					"patterns": [
+						{
+							"include": "#block"
+						},
+						{
+							"include": "#ref-modifier"
+						},
+						{
+							"include": "#expression"
+						}
+					]
+				},
+				{
+					"begin": "(?x)\n(?:\\b(async)\\b\\s*)?\n(?:\\b(delegate)\\b\\s*)",
+					"beginCaptures": {
+						"1": {
+							"name": "storage.modifier.cs"
+						},
+						"2": {
+							"name": "keyword.other.delegate.cs"
+						}
+					},
+					"end": "(?=\\)|;|}|,)",
+					"patterns": [
+						{
+							"include": "#parenthesized-parameter-list"
+						},
+						{
+							"include": "#block"
+						},
+						{
+							"include": "#expression"
+						}
+					]
+				}
+			]
+		},
+		"lambda-parameter-list": {
+			"begin": "\\(",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#attribute-section"
+				},
+				{
+					"include": "#lambda-parameter"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"lambda-parameter": {
+			"match": "(?x)\n(ref|out)?\\s*\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)?\n\\b(\\g<identifier>)\\b\\s*\n(?=[,)])",
+			"captures": {
+				"1": {
+					"name": "storage.modifier.cs"
+				},
+				"2": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"7": {
+					"name": "entity.name.variable.parameter.cs"
+				}
+			}
+		},
+		"type": {
+			"name": "meta.type.cs",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#ref-modifier"
+				},
+				{
+					"include": "#tuple-type"
+				},
+				{
+					"include": "#type-builtin"
+				},
+				{
+					"include": "#type-name"
+				},
+				{
+					"include": "#type-arguments"
+				},
+				{
+					"include": "#type-array-suffix"
+				},
+				{
+					"include": "#type-nullable-suffix"
+				}
+			]
+		},
+		"ref-modifier": {
+			"name": "storage.modifier.cs",
+			"match": "ref"
+		},
+		"tuple-type": {
+			"begin": "\\(",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.open.cs"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.parenthesis.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#tuple-element"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"tuple-element": {
+			"match": "(?x)\n(?<type-name>\n  (?:\n    (?:\n      (?:(?<identifier>[_[:alpha:]][_[:alnum:]]*)\\s*\\:\\:\\s*)? # alias-qualification\n      (?<name-and-type-args> # identifier + type arguments (if any)\n        \\g<identifier>\\s*\n        (?<type-args>\\s*<(?:[^<>]|\\g<type-args>)+>\\s*)?\n      )\n      (?:\\s*\\.\\s*\\g<name-and-type-args>)* | # Are there any more names being dotted into?\n      (?<tuple>\\s*\\((?:[^\\(\\)]|\\g<tuple>)+\\))\n    )\n    (?:\\s*\\*\\s*)* # pointer suffix?\n    (?:\\s*\\?\\s*)? # nullable suffix?\n    (?:\\s*\\[(?:\\s*,\\s*)*\\]\\s*)* # array suffix?\n  )\n)\n(?:\\b(?<tuple-name>\\g<identifier>)\\b)?",
+			"captures": {
+				"1": {
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				"6": {
+					"name": "entity.name.variable.tuple-element.cs"
+				}
+			}
+		},
+		"type-builtin": {
+			"match": "\\b(bool|byte|char|decimal|double|float|int|long|object|sbyte|short|string|uint|ulong|ushort|void)\\b",
+			"captures": {
+				"1": {
+					"name": "keyword.type.cs"
+				}
+			}
+		},
+		"type-name": {
+			"patterns": [
+				{
+					"match": "([_[:alpha:]][_[:alnum:]]*)\\s*(\\:\\:)",
+					"captures": {
+						"1": {
+							"name": "entity.name.type.alias.cs"
+						},
+						"2": {
+							"name": "punctuation.separator.coloncolon.cs"
+						}
+					}
+				},
+				{
+					"match": "([_[:alpha:]][_[:alnum:]]*)\\s*(\\.)",
+					"captures": {
+						"1": {
+							"name": "storage.type.cs"
+						},
+						"2": {
+							"name": "punctuation.accessor.cs"
+						}
+					}
+				},
+				{
+					"match": "(\\.)\\s*([_[:alpha:]][_[:alnum:]]*)",
+					"captures": {
+						"1": {
+							"name": "punctuation.accessor.cs"
+						},
+						"2": {
+							"name": "storage.type.cs"
+						}
+					}
+				},
+				{
+					"name": "storage.type.cs",
+					"match": "[_[:alpha:]][_[:alnum:]]*"
+				}
+			]
+		},
+		"type-arguments": {
+			"begin": "<",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.typeparameters.begin.cs"
+				}
+			},
+			"end": ">",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.typeparameters.end.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#type"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"type-array-suffix": {
+			"begin": "\\[",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.squarebracket.open.cs"
+				}
+			},
+			"end": "\\]",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.squarebracket.close.cs"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"type-nullable-suffix": {
+			"match": "\\?",
+			"captures": {
+				"0": {
+					"name": "punctuation.separator.question-mark.cs"
+				}
+			}
+		},
+		"operator-assignment": {
+			"name": "keyword.operator.assignment.cs",
+			"match": "(?<!=|!)(=)(?!=)"
+		},
+		"punctuation-comma": {
+			"name": "punctuation.separator.comma.cs",
+			"match": ","
+		},
+		"punctuation-semicolon": {
+			"name": "punctuation.terminator.statement.cs",
+			"match": ";"
+		},
+		"punctuation-accessor": {
+			"name": "punctuation.accessor.cs",
+			"match": "\\."
+		},
+		"comment": {
+			"patterns": [
+				{
+					"name": "comment.block.cs",
+					"begin": "/\\*",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.cs"
+						}
+					},
+					"end": "\\*/",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.cs"
+						}
+					}
+				},
+				{
+					"begin": "(^\\s+)?(?=//)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.whitespace.comment.leading.cs"
+						}
+					},
+					"end": "(?=$)",
+					"patterns": [
+						{
+							"name": "comment.block.documentation.cs",
+							"begin": "(?<!/)///(?!/)",
+							"beginCaptures": {
+								"0": {
+									"name": "punctuation.definition.comment.cs"
+								}
+							},
+							"end": "(?=$)",
+							"patterns": [
+								{
+									"include": "#xml-doc-comment"
+								}
+							]
+						},
+						{
+							"name": "comment.line.double-slash.cs",
+							"begin": "(?<!/)//(?!/)",
+							"beginCaptures": {
+								"0": {
+									"name": "punctuation.definition.comment.cs"
+								}
+							},
+							"end": "(?=$)"
+						}
+					]
+				}
+			]
+		},
+
+		"tib-iterator":
+		{
+			"begin": "(@)(Var|ID|Itera|Text|Pure)",
+			"end": "",
+			"beginCaptures": {
+				"1":
+				{
+					"name": "tib.iterator.prefix"
+				},
+				"2":
+				{
+					"name": "tib.iterator.prefix"
+				}
+			}
+		},
+
+		"cdata":
+		{
+			"begin": "(<!\\[CDATA\\[)|(\\]\\]>)",
+			"end": ".",
+			"beginCaptures":
+			{
+				"name": "tib.cdata"
+			},
+			"patterns": [
+				{
+					"name": "tib.cdata"
+				}
+			]
+		},
+
+
+
+
+		"color-keywords": {
+			"patterns": [
+				{
+					"match": "(?i)(?<![\\w-])(aqua|black|blue|fuchsia|gray|green|lime|maroon|navy|olive|orange|purple|red|silver|teal|white|yellow)(?![\\w-])",
+					"name": "support.constant.color.w3c-standard-color-name.css"
+				},
+				{
+					"match": "(?xi) (?<![\\w-])\n(aliceblue|antiquewhite|aquamarine|azure|beige|bisque|blanchedalmond|blueviolet|brown|burlywood\n|cadetblue|chartreuse|chocolate|coral|cornflowerblue|cornsilk|crimson|cyan|darkblue|darkcyan\n|darkgoldenrod|darkgray|darkgreen|darkgrey|darkkhaki|darkmagenta|darkolivegreen|darkorange\n|darkorchid|darkred|darksalmon|darkseagreen|darkslateblue|darkslategray|darkslategrey|darkturquoise\n|darkviolet|deeppink|deepskyblue|dimgray|dimgrey|dodgerblue|firebrick|floralwhite|forestgreen\n|gainsboro|ghostwhite|gold|goldenrod|greenyellow|grey|honeydew|hotpink|indianred|indigo|ivory|khaki\n|lavender|lavenderblush|lawngreen|lemonchiffon|lightblue|lightcoral|lightcyan|lightgoldenrodyellow\n|lightgray|lightgreen|lightgrey|lightpink|lightsalmon|lightseagreen|lightskyblue|lightslategray\n|lightslategrey|lightsteelblue|lightyellow|limegreen|linen|magenta|mediumaquamarine|mediumblue\n|mediumorchid|mediumpurple|mediumseagreen|mediumslateblue|mediumspringgreen|mediumturquoise\n|mediumvioletred|midnightblue|mintcream|mistyrose|moccasin|navajowhite|oldlace|olivedrab|orangered\n|orchid|palegoldenrod|palegreen|paleturquoise|palevioletred|papayawhip|peachpuff|peru|pink|plum\n|powderblue|rebeccapurple|rosybrown|royalblue|saddlebrown|salmon|sandybrown|seagreen|seashell\n|sienna|skyblue|slateblue|slategray|slategrey|snow|springgreen|steelblue|tan|thistle|tomato\n|transparent|turquoise|violet|wheat|whitesmoke|yellowgreen)\n(?![\\w-])",
+					"name": "support.constant.color.w3c-extended-color-name.css"
+				},
+				{
+					"match": "(?i)(?<![\\w-])currentColor(?![\\w-])",
+					"name": "support.constant.color.current.css"
+				},
+				{
+					"match": "(?xi) (?<![\\w-])\n(ActiveBorder|ActiveCaption|AppWorkspace|Background|ButtonFace|ButtonHighlight|ButtonShadow\n|ButtonText|CaptionText|GrayText|Highlight|HighlightText|InactiveBorder|InactiveCaption\n|InactiveCaptionText|InfoBackground|InfoText|Menu|MenuText|Scrollbar|ThreeDDarkShadow\n|ThreeDFace|ThreeDHighlight|ThreeDLightShadow|ThreeDShadow|Window|WindowFrame|WindowText)\n(?![\\w-])",
+					"name": "invalid.deprecated.color.system.css"
+				}
+			]
+		},
+		"combinators": {
+			"patterns": [
+				{
+					"match": "/deep/|>>>",
+					"name": "invalid.deprecated.combinator.css"
+				},
+				{
+					"match": ">>|>|\\+|~",
+					"name": "keyword.operator.combinator.css"
+				}
+			]
+		},
+		"commas": {
+			"match": ",",
+			"name": "punctuation.separator.list.comma.css"
+		},
+		"comment-block": {
+			"begin": "/\\*",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.comment.begin.css"
+				}
+			},
+			"end": "\\*/",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.comment.end.css"
+				}
+			},
+			"name": "comment.block.css"
+		},
+		"escapes": {
+			"patterns": [
+				{
+					"match": "\\\\[0-9a-fA-F]{1,6}",
+					"name": "constant.character.escape.codepoint.css"
+				},
+				{
+					"begin": "\\\\$\\s*",
+					"end": "^(?<!\\G)",
+					"name": "constant.character.escape.newline.css"
+				},
+				{
+					"match": "\\\\.",
+					"name": "constant.character.escape.css"
+				}
+			]
+		},
+		"functions": {
+			"patterns": [
+				{
+					"begin": "(?i)(?<![\\w-])(calc)(\\()",
+					"beginCaptures": {
+						"1": {
+							"name": "support.function.calc.css"
+						},
+						"2": {
+							"name": "punctuation.section.function.begin.bracket.round.css"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.section.function.end.bracket.round.css"
+						}
+					},
+					"name": "meta.function.calc.css",
+					"patterns": [
+						{
+							"match": "[*/]|(?<=\\s|^)[-+](?=\\s|$)",
+							"name": "keyword.operator.arithmetic.css"
+						},
+						{
+							"include": "#property-values"
+						}
+					]
+				},
+				{
+					"begin": "(?i)(?<![\\w-])(rgba?|hsla?)(\\()",
+					"beginCaptures": {
+						"1": {
+							"name": "support.function.misc.css"
+						},
+						"2": {
+							"name": "punctuation.section.function.begin.bracket.round.css"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.section.function.end.bracket.round.css"
+						}
+					},
+					"name": "meta.function.color.css",
+					"patterns": [
+						{
+							"include": "#property-values"
+						}
+					]
+				},
+				{
+					"begin": "(?xi) (?<![\\w-])\n(\n  (?:-webkit-|-moz-|-o-)?    # Accept prefixed/historical variants\n  (?:repeating-)?            # \"Repeating\"-type gradient\n  (?:linear|radial|conic)    # Shape\n  -gradient\n)\n(\\()",
+					"beginCaptures": {
+						"1": {
+							"name": "support.function.gradient.css"
+						},
+						"2": {
+							"name": "punctuation.section.function.begin.bracket.round.css"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.section.function.end.bracket.round.css"
+						}
+					},
+					"name": "meta.function.gradient.css",
+					"patterns": [
+						{
+							"match": "(?i)(?<![\\w-])(from|to|at)(?![\\w-])",
+							"name": "keyword.operator.gradient.css"
+						},
+						{
+							"include": "#property-values"
+						}
+					]
+				},
+				{
+					"begin": "(?i)(?<![\\w-])(-webkit-gradient)(\\()",
+					"beginCaptures": {
+						"1": {
+							"name": "invalid.deprecated.gradient.function.css"
+						},
+						"2": {
+							"name": "punctuation.section.function.begin.bracket.round.css"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.section.function.end.bracket.round.css"
+						}
+					},
+					"name": "meta.function.gradient.invalid.deprecated.gradient.css",
+					"patterns": [
+						{
+							"begin": "(?i)(?<![\\w-])(from|to|color-stop)(\\()",
+							"beginCaptures": {
+								"1": {
+									"name": "invalid.deprecated.function.css"
+								},
+								"2": {
+									"name": "punctuation.section.function.begin.bracket.round.css"
+								}
+							},
+							"end": "\\)",
+							"endCaptures": {
+								"0": {
+									"name": "punctuation.section.function.end.bracket.round.css"
+								}
+							},
+							"patterns": [
+								{
+									"include": "#property-values"
+								}
+							]
+						},
+						{
+							"include": "#property-values"
+						}
+					]
+				},
+				{
+					"begin": "(?xi) (?<![\\w-])\n(annotation|attr|blur|brightness|character-variant|contrast|counters?\n|cross-fade|drop-shadow|element|fit-content|format|grayscale|hue-rotate\n|image-set|invert|local|minmax|opacity|ornaments|repeat|saturate|sepia\n|styleset|stylistic|swash|symbols)\n(\\()",
+					"beginCaptures": {
+						"1": {
+							"name": "support.function.misc.css"
+						},
+						"2": {
+							"name": "punctuation.section.function.begin.bracket.round.css"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.section.function.end.bracket.round.css"
+						}
+					},
+					"name": "meta.function.misc.css",
+					"patterns": [
+						{
+							"match": "(?i)(?<=[,\\s\"]|\\*/|^)\\d+x(?=[\\s,\"')]|/\\*|$)",
+							"name": "constant.numeric.other.density.css"
+						},
+						{
+							"include": "#property-values"
+						},
+						{
+							"match": "[^'\"),\\s]+",
+							"name": "variable.parameter.misc.css"
+						}
+					]
+				},
+				{
+					"begin": "(?i)(?<![\\w-])(circle|ellipse|inset|polygon|rect)(\\()",
+					"beginCaptures": {
+						"1": {
+							"name": "support.function.shape.css"
+						},
+						"2": {
+							"name": "punctuation.section.function.begin.bracket.round.css"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.section.function.end.bracket.round.css"
+						}
+					},
+					"name": "meta.function.shape.css",
+					"patterns": [
+						{
+							"match": "(?i)(?<=\\s|^|\\*/)(at|round)(?=\\s|/\\*|$)",
+							"name": "keyword.operator.shape.css"
+						},
+						{
+							"include": "#property-values"
+						}
+					]
+				},
+				{
+					"begin": "(?i)(?<![\\w-])(cubic-bezier|steps)(\\()",
+					"beginCaptures": {
+						"1": {
+							"name": "support.function.timing-function.css"
+						},
+						"2": {
+							"name": "punctuation.section.function.begin.bracket.round.css"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.section.function.end.bracket.round.css"
+						}
+					},
+					"name": "meta.function.timing-function.css",
+					"patterns": [
+						{
+							"match": "(?i)(?<![\\w-])(start|end)(?=\\s*\\)|$)",
+							"name": "support.constant.step-direction.css"
+						},
+						{
+							"include": "#property-values"
+						}
+					]
+				},
+				{
+					"begin": "(?xi) (?<![\\w-])\n( (?:translate|scale|rotate)(?:[XYZ]|3D)?\n| matrix(?:3D)?\n| skew[XY]?\n| perspective\n)\n(\\()",
+					"beginCaptures": {
+						"1": {
+							"name": "support.function.transform.css"
+						},
+						"2": {
+							"name": "punctuation.section.function.begin.bracket.round.css"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.section.function.end.bracket.round.css"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#property-values"
+						}
+					]
+				},
+				{
+					"include": "#url"
+				},
+				{
+					"begin": "(?i)(?<![\\w-])(var)(\\()",
+					"beginCaptures": {
+						"1": {
+							"name": "support.function.misc.css"
+						},
+						"2": {
+							"name": "punctuation.section.function.begin.bracket.round.css"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.section.function.end.bracket.round.css"
+						}
+					},
+					"name": "meta.function.variable.css",
+					"patterns": [
+						{
+							"name": "variable.argument.css",
+							"match": "(?x)\n--\n(?:[-a-zA-Z_]    | [^\\x00-\\x7F])     # First letter\n(?:[-a-zA-Z0-9_] | [^\\x00-\\x7F]      # Remainder of identifier\n  |\\\\(?:[0-9a-fA-F]{1,6}|.)\n)*"
+						},
+						{
+							"include": "#property-values"
+						}
+					]
+				}
+			]
+		},
+		"numeric-values": {
+			"patterns": [
+				{
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.constant.css"
+						}
+					},
+					"match": "(#)(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b",
+					"name": "constant.other.color.rgb-value.hex.css"
+				},
+				{
+					"captures": {
+						"1": {
+							"name": "keyword.other.unit.percentage.css"
+						},
+						"2": {
+							"name": "keyword.other.unit.${2:/downcase}.css"
+						}
+					},
+					"match": "(?xi) (?<![\\w-])\n[-+]?                               # Sign indicator\n\n(?:                                 # Numerals\n    [0-9]+ (?:\\.[0-9]+)?           # Integer/float with leading digits\n  | \\.[0-9]+                       # Float without leading digits\n)\n\n(?:                                 # Scientific notation\n  (?<=[0-9])                        # Exponent must follow a digit\n  E                                 # Exponent indicator\n  [-+]?                             # Possible sign indicator\n  [0-9]+                            # Exponent value\n)?\n\n(?:                                 # Possible unit for data-type:\n  (%)                               # - Percentage\n  | ( deg|grad|rad|turn             # - Angle\n    | Hz|kHz                        # - Frequency\n    | ch|cm|em|ex|fr|in|mm|mozmm|   # - Length\n      pc|pt|px|q|rem|vh|vmax|vmin|\n      vw\n    | dpi|dpcm|dppx                 # - Resolution\n    | s|ms                          # - Time\n    )\n  \\b                               # Boundary checking intentionally lax to\n)?                                  # facilitate embedding in CSS-like grammars",
+					"name": "constant.numeric.css"
+				}
+			]
+		},
+		"property-keywords": {
+			"patterns": [
+				{
+					"match": "(?xi) (?<![\\w-])\n(above|absolute|active|add|additive|after-edge|alias|all|all-petite-caps|all-scroll|all-small-caps|alpha|alphabetic|alternate|alternate-reverse\n|always|antialiased|auto|auto-pos|available|avoid|avoid-column|avoid-page|avoid-region|backwards|balance|baseline|before-edge|below|bevel\n|bidi-override|blink|block|block-axis|block-start|block-end|bold|bolder|border|border-box|both|bottom|bottom-outside|break-all|break-word|bullets\n|butt|capitalize|caption|cell|center|central|char|circle|clip|clone|close-quote|closest-corner|closest-side|col-resize|collapse|color|color-burn\n|color-dodge|column|column-reverse|common-ligatures|compact|condensed|contain|content|content-box|contents|context-menu|contextual|copy|cover\n|crisp-edges|crispEdges|crosshair|cyclic|darken|dashed|decimal|default|dense|diagonal-fractions|difference|digits|disabled|disc|discretionary-ligatures\n|distribute|distribute-all-lines|distribute-letter|distribute-space|dot|dotted|double|double-circle|downleft|downright|e-resize|each-line|ease|ease-in\n|ease-in-out|ease-out|economy|ellipse|ellipsis|embed|end|evenodd|ew-resize|exact|exclude|exclusion|expanded|extends|extra-condensed|extra-expanded\n|fallback|farthest-corner|farthest-side|fill|fill-available|fill-box|filled|fit-content|fixed|flat|flex|flex-end|flex-start|flip|forwards|freeze\n|from-image|full-width|geometricPrecision|georgian|grab|grabbing|grayscale|grid|groove|hand|hanging|hard-light|help|hidden|hide\n|historical-forms|historical-ligatures|horizontal|horizontal-tb|hue|icon|ideograph-alpha|ideograph-numeric|ideograph-parenthesis|ideograph-space\n|ideographic|inactive|infinite|inherit|initial|inline|inline-axis|inline-block|inline-end|inline-flex|inline-grid|inline-list-item|inline-start\n|inline-table|inset|inside|inter-character|inter-ideograph|inter-word|intersect|invert|isolate|isolate-override|italic|jis04|jis78|jis83\n|jis90|justify|justify-all|kannada|keep-all|landscape|large|larger|left|lighten|lighter|line|line-edge|line-through|linear|linearRGB\n|lining-nums|list-item|local|loose|lowercase|lr|lr-tb|ltr|luminance|luminosity|main-size|mandatory|manipulation|manual|margin-box|match-parent\n|match-source|mathematical|max-content|medium|menu|message-box|middle|min-content|miter|mixed|move|multiply|n-resize|narrower|ne-resize\n|nearest-neighbor|nesw-resize|newspaper|no-change|no-clip|no-close-quote|no-common-ligatures|no-contextual|no-discretionary-ligatures\n|no-drop|no-historical-ligatures|no-open-quote|no-repeat|none|nonzero|normal|not-allowed|nowrap|ns-resize|numbers|numeric|nw-resize|nwse-resize\n|oblique|oldstyle-nums|open|open-quote|optimizeLegibility|optimizeQuality|optimizeSpeed|optional|ordinal|outset|outside|over|overlay|overline|padding\n|padding-box|page|painted|pan-down|pan-left|pan-right|pan-up|pan-x|pan-y|paused|petite-caps|pixelated|plaintext|pointer|portrait|pre|pre-line\n|pre-wrap|preserve-3d|progress|progressive|proportional-nums|proportional-width|proximity|radial|recto|region|relative|remove|repeat|repeat-[xy]\n|reset-size|reverse|revert|ridge|right|rl|rl-tb|round|row|row-resize|row-reverse|row-severse|rtl|ruby|ruby-base|ruby-base-container|ruby-text\n|ruby-text-container|run-in|running|s-resize|saturation|scale-down|screen|scroll|scroll-position|se-resize|semi-condensed|semi-expanded|separate\n|sesame|show|sideways|sideways-left|sideways-lr|sideways-right|sideways-rl|simplified|slashed-zero|slice|small|small-caps|small-caption|smaller\n|smooth|soft-light|solid|space|space-around|space-between|spell-out|square|sRGB|stacked-fractions|start|static|status-bar|swap|step-end|step-start\n|sticky|stretch|strict|stroke|stroke-box|style|sub|subgrid|subpixel-antialiased|subtract|super|sw-resize|symbolic|table|table-caption|table-cell\n|table-column|table-column-group|table-footer-group|table-header-group|table-row|table-row-group|tabular-nums|tb|tb-rl|text|text-after-edge\n|text-before-edge|text-bottom|text-top|thick|thin|titling-caps|top|top-outside|touch|traditional|transparent|triangle|ultra-condensed|ultra-expanded\n|under|underline|unicase|unset|upleft|uppercase|upright|use-glyph-orientation|use-script|verso|vertical|vertical-ideographic|vertical-lr|vertical-rl\n|vertical-text|view-box|visible|visibleFill|visiblePainted|visibleStroke|w-resize|wait|wavy|weight|whitespace|wider|words|wrap|wrap-reverse\n|x-large|x-small|xx-large|xx-small|zero|zoom-in|zoom-out)\n(?![\\w-])",
+					"name": "support.constant.property-value.css"
+				},
+				{
+					"match": "(?xi) (?<![\\w-])\n(arabic-indic|armenian|bengali|cambodian|circle|cjk-decimal|cjk-earthly-branch|cjk-heavenly-stem|cjk-ideographic\n|decimal|decimal-leading-zero|devanagari|disc|disclosure-closed|disclosure-open|ethiopic-halehame-am\n|ethiopic-halehame-ti-e[rt]|ethiopic-numeric|georgian|gujarati|gurmukhi|hangul|hangul-consonant|hebrew\n|hiragana|hiragana-iroha|japanese-formal|japanese-informal|kannada|katakana|katakana-iroha|khmer\n|korean-hangul-formal|korean-hanja-formal|korean-hanja-informal|lao|lower-alpha|lower-armenian|lower-greek\n|lower-latin|lower-roman|malayalam|mongolian|myanmar|oriya|persian|simp-chinese-formal|simp-chinese-informal\n|square|tamil|telugu|thai|tibetan|trad-chinese-formal|trad-chinese-informal|upper-alpha|upper-armenian\n|upper-latin|upper-roman|urdu)\n(?![\\w-])",
+					"name": "support.constant.property-value.list-style-type.css"
+				},
+				{
+					"match": "(?<![\\w-])(?i:-(?:ah|apple|atsc|epub|hp|khtml|moz|ms|o|rim|ro|tc|wap|webkit|xv)|(?:mso|prince))-[a-zA-Z-]+",
+					"name": "support.constant.vendored.property-value.css"
+				},
+				{
+					"match": "(?<![\\w-])(?i:arial|century|comic|courier|garamond|georgia|helvetica|impact|lucida|symbol|system|tahoma|times|trebuchet|utopia|verdana|webdings|sans-serif|serif|monospace)(?![\\w-])",
+					"name": "support.constant.font-name.css"
+				}
+			]
+		},
+		"property-names": {
+			"patterns": [
+				{
+					"match": "(?xi) (?<![\\w-])\n(?:\n    # Standard CSS\n    additive-symbols|align-content|align-items|align-self|all|animation|animation-delay|animation-direction\n  | animation-duration|animation-fill-mode|animation-iteration-count|animation-name|animation-play-state\n  | animation-timing-function|backface-visibility|background|background-attachment|background-blend-mode\n  | background-clip|background-color|background-image|background-origin|background-position|background-position-[xy]\n  | background-repeat|background-size|block-size|border|border-block-end|border-block-end-color|border-block-end-style\n  | border-block-end-width|border-block-start|border-block-start-color|border-block-start-style\n  | border-block-start-width|border-bottom|border-bottom-color|border-bottom-left-radius|border-bottom-right-radius\n  | border-bottom-style|border-bottom-width|border-collapse|border-color|border-image|border-image-outset\n  | border-image-repeat|border-image-slice|border-image-source|border-image-width|border-inline-end\n  | border-inline-end-color|border-inline-end-style|border-inline-end-width|border-inline-start\n  | border-inline-start-color|border-inline-start-style|border-inline-start-width|border-left|border-left-color\n  | border-left-style|border-left-width|border-radius|border-right|border-right-color|border-right-style\n  | border-right-width|border-spacing|border-style|border-top|border-top-color|border-top-left-radius\n  | border-top-right-radius|border-top-style|border-top-width|border-width|bottom|box-decoration-break\n  | box-shadow|box-sizing|break-after|break-before|break-inside|caption-side|clear|clip|clip-path|color\n  | column-count|column-fill|column-gap|column-rule|column-rule-color|column-rule-style|column-rule-width\n  | column-span|column-width|columns|content|counter-increment|counter-reset|cursor|direction|display\n  | empty-cells|filter|flex|flex-basis|flex-direction|flex-flow|flex-grow|flex-shrink|flex-wrap|float\n  | font|font-display|font-family|font-feature-settings|font-kerning|font-language-override|font-size|font-size-adjust\n  | font-stretch|font-style|font-synthesis|font-variant|font-variant-alternates|font-variant-caps\n  | font-variant-east-asian|font-variant-ligatures|font-variant-numeric|font-variant-position|font-weight\n  | grid|grid-area|grid-auto-columns|grid-auto-flow|grid-auto-rows|grid-column|grid-column-end|grid-column-gap\n  | grid-column-start|grid-gap|grid-row|grid-row-end|grid-row-gap|grid-row-start|grid-template|grid-template-areas\n  | grid-template-columns|grid-template-rows|height|hyphens|image-orientation|image-rendering|image-resolution\n  | ime-mode|inline-size|isolation|justify-content|left|letter-spacing|line-break|line-height|list-style\n  | list-style-image|list-style-position|list-style-type|margin|margin-block-end|margin-block-start|margin-bottom\n  | margin-inline-end|margin-inline-start|margin-left|margin-right|margin-top|mask|mask-clip|mask-composite\n  | mask-image|mask-mode|mask-origin|mask-position|mask-repeat|mask-size|mask-type|max-block-size|max-height\n  | max-inline-size|max-width|max-zoom|min-block-size|min-height|min-inline-size|min-width|min-zoom|mix-blend-mode\n  | negative|object-fit|object-position|offset-block-end|offset-block-start|offset-inline-end|offset-inline-start\n  | opacity|order|orientation|orphans|outline|outline-color|outline-offset|outline-style|outline-width|overflow\n  | overflow-wrap|overflow-[xy]|pad|padding|padding-block-end|padding-block-start|padding-bottom|padding-inline-end\n  | padding-inline-start|padding-left|padding-right|padding-top|page-break-after|page-break-before|page-break-inside\n  | perspective|perspective-origin|pointer-events|position|prefix|quotes|range|resize|right|ruby-align|ruby-merge\n  | ruby-position|scroll-behavior|scroll-snap-coordinate|scroll-snap-destination|scroll-snap-type|shape-image-threshold\n  | shape-margin|shape-outside|speak-as|src|suffix|symbols|system|tab-size|table-layout|text-align|text-align-last\n  | text-combine-upright|text-decoration|text-decoration-color|text-decoration-line|text-decoration-style|text-emphasis\n  | text-emphasis-color|text-emphasis-position|text-emphasis-style|text-indent|text-orientation|text-overflow\n  | text-rendering|text-shadow|text-transform|text-underline-position|top|touch-action|transform|transform-box\n  | transform-origin|transform-style|transition|transition-delay|transition-duration|transition-property\n  | transition-timing-function|unicode-bidi|unicode-range|user-zoom|vertical-align|visibility|white-space|widows\n  | width|will-change|word-break|word-spacing|word-wrap|writing-mode|z-index|zoom\n\n  # SVG attributes\n  | alignment-baseline|baseline-shift|clip-rule|color-interpolation|color-interpolation-filters|color-profile\n  | color-rendering|dominant-baseline|enable-background|fill|fill-opacity|fill-rule|flood-color|flood-opacity\n  | glyph-orientation-horizontal|glyph-orientation-vertical|kerning|lighting-color|marker-end|marker-mid\n  | marker-start|shape-rendering|stop-color|stop-opacity|stroke|stroke-dasharray|stroke-dashoffset|stroke-linecap\n  | stroke-linejoin|stroke-miterlimit|stroke-opacity|stroke-width|text-anchor|x|y\n\n  # Not listed on MDN; presumably deprecated\n  | adjust|after|align|align-last|alignment|alignment-adjust|appearance|attachment|azimuth|background-break\n  | balance|baseline|before|bidi|binding|bookmark|bookmark-label|bookmark-level|bookmark-target|border-length\n  | bottom-color|bottom-left-radius|bottom-right-radius|bottom-style|bottom-width|box|box-align|box-direction\n  | box-flex|box-flex-group|box-lines|box-ordinal-group|box-orient|box-pack|break|character|collapse|column\n  | column-break-after|column-break-before|count|counter|crop|cue|cue-after|cue-before|decoration|decoration-break\n  | delay|display-model|display-role|down|drop|drop-initial-after-adjust|drop-initial-after-align|drop-initial-before-adjust\n  | drop-initial-before-align|drop-initial-size|drop-initial-value|duration|elevation|emphasis|family|fit|fit-position\n  | flex-group|float-offset|gap|grid-columns|grid-rows|hanging-punctuation|header|hyphenate|hyphenate-after|hyphenate-before\n  | hyphenate-character|hyphenate-lines|hyphenate-resource|icon|image|increment|indent|index|initial-after-adjust\n  | initial-after-align|initial-before-adjust|initial-before-align|initial-size|initial-value|inline-box-align|iteration-count\n  | justify|label|left-color|left-style|left-width|length|level|line|line-stacking|line-stacking-ruby|line-stacking-shift\n  | line-stacking-strategy|lines|list|mark|mark-after|mark-before|marks|marquee|marquee-direction|marquee-play-count|marquee-speed\n  | marquee-style|max|min|model|move-to|name|nav|nav-down|nav-index|nav-left|nav-right|nav-up|new|numeral|offset|ordinal-group\n  | orient|origin|overflow-style|overhang|pack|page|page-policy|pause|pause-after|pause-before|phonemes|pitch|pitch-range\n  | play-count|play-during|play-state|point|presentation|presentation-level|profile|property|punctuation|punctuation-trim\n  | radius|rate|rendering-intent|repeat|replace|reset|resolution|resource|respond-to|rest|rest-after|rest-before|richness\n  | right-color|right-style|right-width|role|rotation|rotation-point|rows|ruby|ruby-overhang|ruby-span|rule|rule-color\n  | rule-style|rule-width|shadow|size|size-adjust|sizing|space|space-collapse|spacing|span|speak|speak-header|speak-numeral\n  | speak-punctuation|speech|speech-rate|speed|stacking|stacking-ruby|stacking-shift|stacking-strategy|stress|stretch\n  | string-set|style|style-image|style-position|style-type|target|target-name|target-new|target-position|text|text-height\n  | text-justify|text-outline|text-replace|text-wrap|timing-function|top-color|top-left-radius|top-right-radius|top-style\n  | top-width|trim|unicode|up|user-select|variant|voice|voice-balance|voice-duration|voice-family|voice-pitch|voice-pitch-range\n  | voice-rate|voice-stress|voice-volume|volume|weight|white|white-space-collapse|word|wrap\n)\n(?![\\w-])",
+					"name": "support.type.property-name.css"
+				},
+				{
+					"match": "(?<![\\w-])(?i:-(?:ah|apple|atsc|epub|hp|khtml|moz|ms|o|rim|ro|tc|wap|webkit|xv)|(?:mso|prince))-[a-zA-Z-]+",
+					"name": "support.type.vendored.property-name.css"
+				}
+			]
+		},
+		"property-values": {
+			"patterns": [
+				{
+					"include": "#commas"
+				},
+				{
+					"include": "#comment-block"
+				},
+				{
+					"include": "#escapes"
+				},
+				{
+					"include": "#functions"
+				},
+				{
+					"include": "#property-keywords"
+				},
+				{
+					"include": "#unicode-range"
+				},
+				{
+					"include": "#numeric-values"
+				},
+				{
+					"include": "#color-keywords"
+				},
+				{
+					"include": "#string"
+				},
+				{
+					"match": "!\\s*important(?![\\w-])",
+					"name": "keyword.other.important.css"
+				}
+			]
+		},
+		"rule-list-innards": {
+			"patterns": [
+				{
+					"include": "#comment-block"
+				},
+				{
+					"include": "#escapes"
+				},
+				{
+					"include": "#font-features"
+				},
+				{
+					"match": "(?x) (?<![\\w-])\n--\n(?:[-a-zA-Z_]    | [^\\x00-\\x7F])     # First letter\n(?:[-a-zA-Z0-9_] | [^\\x00-\\x7F]      # Remainder of identifier\n  |\\\\(?:[0-9a-fA-F]{1,6}|.)\n)*",
+					"name": "variable.css"
+				},
+				{
+					"begin": "(?<![-a-zA-Z])(?=[-a-zA-Z])",
+					"end": "$|(?![-a-zA-Z])",
+					"name": "meta.property-name.css",
+					"patterns": [
+						{
+							"include": "#property-names"
+						}
+					]
+				},
+				{
+					"begin": "(:)\\s*",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.separator.key-value.css"
+						}
+					},
+					"end": "\\s*(;)|\\s*(?=}|\\))",
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.terminator.rule.css"
+						}
+					},
+					"contentName": "meta.property-value.css",
+					"patterns": [
+						{
+							"include": "#comment-block"
+						},
+						{
+							"include": "#property-values"
+						}
+					]
+				},
+				{
+					"match": ";",
+					"name": "punctuation.terminator.rule.css"
+				}
+			]
+		},
+		"string": {
+			"patterns": [
+				{
+					"begin": "\"",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.string.begin.css"
+						}
+					},
+					"end": "\"|(?<!\\\\)(?=$|\\n)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.string.end.css"
+						}
+					},
+					"name": "string.quoted.double.css",
+					"patterns": [
+						{
+							"begin": "(?:\\G|^)(?=(?:[^\\\\\"]|\\\\.)+$)",
+							"end": "$",
+							"name": "invalid.illegal.unclosed.string.css",
+							"patterns": [
+								{
+									"include": "#escapes"
+								}
+							]
+						},
+						{
+							"include": "#escapes"
+						}
+					]
+				},
+				{
+					"begin": "'",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.string.begin.css"
+						}
+					},
+					"end": "'|(?<!\\\\)(?=$|\\n)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.string.end.css"
+						}
+					},
+					"name": "string.quoted.single.css",
+					"patterns": [
+						{
+							"begin": "(?:\\G|^)(?=(?:[^\\\\']|\\\\.)+$)",
+							"end": "$",
+							"name": "invalid.illegal.unclosed.string.css",
+							"patterns": [
+								{
+									"include": "#escapes"
+								}
+							]
+						},
+						{
+							"include": "#escapes"
+						}
+					]
+				}
+			]
+		},
+		"unicode-range": {
+			"captures": {
+				"0": {
+					"name": "constant.other.unicode-range.css"
+				},
+				"1": {
+					"name": "punctuation.separator.dash.unicode-range.css"
+				}
+			},
+			"match": "(?<![\\w-])[Uu]\\+[0-9A-Fa-f?]{1,6}(?:(-)[0-9A-Fa-f]{1,6})?(?![\\w-])"
+		},
+		"url": {
+			"begin": "(?i)(?<![\\w@-])(url)(\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "support.function.url.css"
+				},
+				"2": {
+					"name": "punctuation.section.function.begin.bracket.round.css"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.section.function.end.bracket.round.css"
+				}
+			},
+			"name": "meta.function.url.css",
+			"patterns": [
+				{
+					"match": "[^'\")\\s]+",
+					"name": "variable.parameter.url.css"
+				},
+				{
+					"include": "#string"
+				},
+				{
+					"include": "#comment-block"
+				},
+				{
+					"include": "#escapes"
+				}
+			]
+		}
+
+	},
+	"scopeName": "source.tib"
+}

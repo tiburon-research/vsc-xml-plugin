@@ -1,0 +1,62 @@
+{
+    "name": "tiburonscripter",
+    "displayName": "Tiburon XML Helper",
+    "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
+    "version": "0.0.0",
+    "publisher": "Tiburon",
+    "author": {
+        "name": "GuRu",
+        "email": "gulyaev@tiburon-research.ru"
+    },
+    "bugs": {
+        "url": "https://github.com/tiburon-research/vsc-xml-plugin/issues"
+    },
+    "repository": {
+		"type": "git",
+        "url": "https://github.com/tiburon-research/vsc-xml-plugin"
+	},
+    "icon": "stuff/icon.png",
+    "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/README.md",
+    "engines": {
+        "vscode": "^1.17.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onLanguage:tib"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "languages": [{
+            "id": "tib",
+            "aliases": ["Tiburon XML script", "tib"],
+            "extensions": ["xml"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "tib",
+            "scopeName": "source.tib",
+            "path": "./syntaxes/tib.tmLanguage.json"
+        }],
+        "snippets": [
+            {
+                "language": "tib",
+                "path": "./snippets/nodes.json"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "typescript": "^2.5.3",
+        "vscode": "^1.1.5",
+        "@types/node": "^7.0.43",
+        "@types/mocha": "^2.2.42"
+    }
+}

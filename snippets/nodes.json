@@ -1,0 +1,147 @@
+{
+	"PageFull": {
+		"prefix": "<Page",
+		"body": [
+            "<Page Id=\"${1:Id}\">",
+                "\t<Question Id=\"${1:Id}\" Type=\"${2|RadioButton,CheckBox,Text,Memo,Integer,Number,File,Date|}\">",
+                    "\t\t<Header></Header>",
+                    "\t\t$3",
+                "\t</Question>",
+            "</Page>\n"
+		],
+		"description": "Полная структура Page"
+    },
+    "PageShort": {
+		"prefix": "<Page",
+		"body": [
+            "<Page Id=\"${1:Id}\">",
+                "\t<Header>$2</Header>",
+            "</Page>\n"
+		],
+		"description": "Краткая структура Page"
+    },
+    "Question":{
+        "prefix": "<Question",
+		"body": [
+            "<Question Id=\"${1:Id}\" Type=\"${2|RadioButton,CheckBox,Text,Memo,Integer,Number,File,Date|}\">",
+                "\t<Header></Header>",
+                "\t$3",
+            "</Question>"
+		],
+		"description": "Структура Question"
+    },
+    "Answer":{
+        "prefix": "<Answer",
+        "body": [
+            "<Answer Id=\"${1:Id}\"><Text>$2</Text></Answer>"
+        ],
+        "description": "Структура Answer"
+    },
+    "Block":{
+        "prefix": "<Block",
+        "body":[
+            "<Block Items=\"$1\"/>"
+        ],
+        "description": "Структура Block"
+    },
+    "List":{
+        "prefix": "<List",
+        "body": [
+            "<List Id=\"${1:Id}\">",
+            "\t<Item Id=\"${2:Id}\"><Text>$3</Text></Item>",
+            "</List>"
+        ],
+        "description": "Структура List"
+    },
+    "Redirect":{
+        "prefix": "<Redirect",
+        "body": [
+            "<Redirect Status=\"${1:19}\">return $2</Redirect>"
+        ],
+        "description": "Структура Redirect"
+    },
+    "Validate":{
+        "prefix": "<Validate",
+        "body": [
+            "<Validate Message=\"Проверьте правильность введённых данных\" PinAnswer=\"\" PinQuestion=\"\">",
+            "\treturn $1;",
+            "</Validate>"
+        ],
+        "description": "Структура Validate"
+    },
+    "blockFolding":{
+        "prefix": "<!--block",
+        "body": [
+            "<!--#block ${1:Name}-->\n",
+            "\t$2",
+            "\n<!--#endblock-->"
+        ],
+        "description": "Сворачиваемый блок"
+    },
+    "CDATA":{
+        "prefix": "<![CDATA[",
+        "body": [
+            "<![CDATA[",
+            "\t$1",
+            "]]>"
+        ],
+        "description": "CDATA"
+    },
+    "CustomText1":{
+        "prefix": "<CustomText1",
+        "body": [
+            "<CustomText1>",
+            "\t<![CDATA[",
+            "\t\t$1",
+            "\t]]>",
+            "</CustomText1>"
+        ],
+        "description": "CustomText1"
+    },
+    "CustomText2":{
+        "prefix": "<CustomText2",
+        "body": [
+            "<CustomText2>",
+            "\t<![CDATA[",
+            "\t\t$1",
+            "\t]]>",
+            "</CustomText2>"
+        ],
+        "description": "CustomText2"
+    },
+    "Repeat":{
+        "prefix": "<Repeat",
+        "body": [
+            "<Repeat ${1|List,Length,Range|}=\"$2\">",
+            "\t$3",
+            "</Repeat>"
+        ],
+        "description": "Структура Repeat"
+    },
+    "Quota":{
+        "prefix": "<Quota",
+        "body":[
+            "<Quota Id=\"$1\" Apply=\"$2\" Limit=\"$3\">",
+            "\t$4",
+            "</Quota>"
+        ]
+    },
+    "RepeatInline":{
+        "prefix": "$repeat",
+        "body":[
+            "\\$repeat(${1:source}){$2[,]}"
+        ]
+    },
+    "src":{
+        "prefix": "src=\"",
+        "body": [
+            "src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\""
+        ]
+    },
+    "inlineCsharp":{
+        "prefix": "[c#",
+            "body":[
+                "[c#]$1[/c#]"
+            ]
+    }
+}
