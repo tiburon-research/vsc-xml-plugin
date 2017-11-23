@@ -425,12 +425,6 @@ var KnownCode = [
         "Documentation": "bool ExtInterviewAnswerExistsAll(int externalInterview, string questionId, string srcRange)"
     },
     {
-        "Name": "CheckRotation",
-        "Detail": "void",
-        "Kind": "Function",
-        "Documentation": "void CheckRotation(string pageId, string questionId, string answerId, string val)"
-    },
-    {
         "Name": "AnswerValue",
         "Detail": "string",
         "Kind": "Function",
@@ -441,30 +435,6 @@ var KnownCode = [
         "Detail": "string",
         "Kind": "Function",
         "Documentation": "string AnswerValue(string questionId, string answerId)"
-    },
-    {
-        "Name": "ExtAnswerID",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string ExtAnswerID(int surveyId, string pageId, string questionId)"
-    },
-    {
-        "Name": "ExtAnswerID",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string ExtAnswerID(int surveyId, string questionId)"
-    },
-    {
-        "Name": "ExtAnswerValue",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string ExtAnswerValue(int surveyId, string pageId, string questionId, string answerId)"
-    },
-    {
-        "Name": "ExtAnswerValue",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string ExtAnswerValue(int surveyId, string questionId, string answerId)"
     },
     {
         "Name": "ExtInterviewAnswerValue",
@@ -509,46 +479,10 @@ var KnownCode = [
         "Documentation": "int AnswerCountRange(string questionId, string srcRange)"
     },
     {
-        "Name": "InsertResult",
-        "Detail": "void",
-        "Kind": "Function",
-        "Documentation": "void InsertResult(string pageId, string questionId, string answerId, string val)"
-    },
-    {
-        "Name": "InsertResult",
-        "Detail": "void",
-        "Kind": "Function",
-        "Documentation": "void InsertResult(string pageId, string questionId, string answerId)"
-    },
-    {
-        "Name": "AnswerMarked",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string AnswerMarked(string pageId, string questionId)"
-    },
-    {
-        "Name": "AnswerMarked",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string AnswerMarked(string questionId)"
-    },
-    {
         "Name": "DataExists",
         "Detail": "bool",
         "Kind": "Function",
         "Documentation": "bool DataExists(int index, string val)"
-    },
-    {
-        "Name": "ClearResults",
-        "Detail": "void",
-        "Kind": "Function",
-        "Documentation": "void ClearResults(string pageId)"
-    },
-    {
-        "Name": "ClearResults",
-        "Detail": "void",
-        "Kind": "Function",
-        "Documentation": "void ClearResults(string pageId, string questionId)"
     },
     {
         "Name": "QuotaCount",
@@ -617,30 +551,6 @@ var KnownCode = [
         "Documentation": "void AnswerDelete(string questionId, string answerId)"
     },
     {
-        "Name": "WriteFlash",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string WriteFlash(string id, int width, int height, string filePath, string flashVars)"
-    },
-    {
-        "Name": "WriteFlash",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string WriteFlash(int width, int height, string filePath, string flashVars)"
-    },
-    {
-        "Name": "AnswersSelect",
-        "Detail": "DataView",
-        "Kind": "Function",
-        "Documentation": "DataView AnswersSelect(string pageId)"
-    },
-    {
-        "Name": "AnswersSelect",
-        "Detail": "DataView",
-        "Kind": "Function",
-        "Documentation": "DataView AnswersSelect(string pageId, string questionId)"
-    },
-    {
         "Name": "AnswerText",
         "Detail": "string",
         "Kind": "Function",
@@ -681,36 +591,6 @@ var KnownCode = [
         "Detail": "string",
         "Kind": "Function",
         "Documentation": "string MixItera(int defaultItera)"
-    },
-    {
-        "Name": "BlockItera",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string BlockItera(int defaultItera)"
-    },
-    {
-        "Name": "PlayAudio",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string PlayAudio(string audioPath, bool autoPlay)"
-    },
-    {
-        "Name": "PlayAudio",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string PlayAudio(string audioPath)"
-    },
-    {
-        "Name": "PlayVideo",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string PlayVideo(string videoPath, string splashPath)"
-    },
-    {
-        "Name": "PlayVideo",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string PlayVideo(string videPath)"
     },
     {
         "Name": "GetDateDiff",
@@ -761,12 +641,6 @@ var KnownCode = [
         "Documentation": "DateTime InterviewStartDate()"
     },
     {
-        "Name": "ListText",
-        "Detail": "string",
-        "Kind": "Function",
-        "Documentation": "string ListText(string listId, string itemId)"
-    },
-    {
         "Name": "MailSend",
         "Detail": "void",
         "Kind": "Function",
@@ -809,12 +683,6 @@ var KnownCode = [
         "Documentation": "string GetListItemText(string listId, int itemIndex)"
     },
     {
-        "Name": "AuthCookieReset",
-        "Detail": "void",
-        "Kind": "Function",
-        "Documentation": "void AuthCookieReset()"
-    },
-    {
         "Name": "getRedirectUrl",
         "Detail": "string",
         "Kind": "Function",
@@ -844,11 +712,6 @@ export const Attributes = {
     "Settings": [
         {
             "Name": "LogoText",
-            "Type": "String"
-        },
-        {
-            "Name": "StartPage",
-            "Default": "pre_data",
             "Type": "String"
         },
         {
@@ -915,10 +778,6 @@ export const Attributes = {
             "Type": "String"
         },
         {
-            "Name": "DbDataConnection",
-            "Type": "String"
-        },
-        {
             "Name": "UrlAgreement",
             "Default": "https://survey.survstat.ru/agreement",
             "Type": "String"
@@ -926,16 +785,6 @@ export const Attributes = {
         {
             "Name": "UrlPrivacy",
             "Default": "https://docs.survstat.ru/privacy",
-            "Type": "String"
-        },
-        {
-            "Name": "SupportServiceUrl",
-            "Default": "https://support-api.survstat.ru/",
-            "Type": "String"
-        },
-        {
-            "Name": "SupportServicePassword",
-            "Default": "KbzQ3vyeAq",
             "Type": "String"
         },
         {
@@ -949,11 +798,7 @@ export const Attributes = {
         },
         {
             "Name": "Utf8",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "AutoMonadic",
-            "Default": "true",
+            "Default": "false",
             "Type": "Boolean"
         },
         {
@@ -961,49 +806,16 @@ export const Attributes = {
             "Default": "false",
             "DbValue": "true",
             "Type": "Boolean"
-        },
-        {
-            "Name": "UseNewMix",
-            "Default": "true",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "UseJSManager",
-            "Default": "false",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "UseNewQuotas",
-            "Default": "false",
-            "Type": "Boolean"
         }
     ],
     "CustomText": [
         {
-            "Name": "Index",
-            "Default": "2",
-            "Type": "Integer"
-        },
-        {
             "Name": "Action",
             "Default": "Replace",
-            "Type": "String"
-        },
-        {
-            "Name": "Value",
-            "AllowCode": "true",
             "Type": "String"
         }
     ],
     "Defaults": [
-        {
-            "Name": "RedirectUrl",
-            "Type": "String"
-        },
-        {
-            "Name": "RedirectParamsList",
-            "Type": "String"
-        },
         {
             "Name": "LogoText",
             "Type": "String"
@@ -1267,61 +1079,6 @@ export const Attributes = {
             "Type": "String"
         },
         {
-            "Name": "VideoCaptureStartText",
-            "Default": "Начать запись",
-            "Type": "String"
-        },
-        {
-            "Name": "VideoCaptureCancelText",
-            "Default": "Отмена",
-            "Type": "String"
-        },
-        {
-            "Name": "VideoCaptureEndText",
-            "Default": "Завершить запись",
-            "Type": "String"
-        },
-        {
-            "Name": "VideoCaptureRemoveText",
-            "Default": "Удалить видеоответ",
-            "Type": "String"
-        },
-        {
-            "Name": "VideoCaptureAsyncLoadText",
-            "Default": "Видеоответ загружается на сервер...",
-            "Type": "String"
-        },
-        {
-            "Name": "VideoCapturePlayerWidth",
-            "Default": "640",
-            "Type": "String"
-        },
-        {
-            "Name": "VideoCapturePlayerHeight",
-            "Default": "480",
-            "Type": "String"
-        },
-        {
-            "Name": "VideoCaptureImgUrl",
-            "Default": "/Content/images/camera.png",
-            "Type": "String"
-        },
-        {
-            "Name": "VideoCaptureMinLengthText",
-            "Default": "Минимальная длина видео",
-            "Type": "String"
-        },
-        {
-            "Name": "VideoCaptureLengthMeasureText",
-            "Default": "сек",
-            "Type": "String"
-        },
-        {
-            "Name": "VideoCaptureTimerText",
-            "Default": "Текущая длина видео",
-            "Type": "String"
-        },
-        {
             "Name": "HintMinAnswers",
             "Default": "Не менее @count ответов",
             "Type": "String"
@@ -1369,21 +1126,8 @@ export const Attributes = {
             "Type": "Boolean"
         },
         {
-            "Name": "ProhibitPrintscreen",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "Caching",
-            "Default": "false",
-            "Type": "Boolean"
-        },
-        {
             "Name": "CountPageTime",
             "Default": "true",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "HideSurveyHeader",
             "Type": "Boolean"
         },
         {
@@ -1420,11 +1164,6 @@ export const Attributes = {
             "Type": "Boolean"
         },
         {
-            "Name": "LoadAsync",
-            "Default": "false",
-            "Type": "Boolean"
-        },
-        {
             "Name": "WarnClosing",
             "Type": "Boolean"
         },
@@ -1432,16 +1171,6 @@ export const Attributes = {
             "Name": "ShowQuestionIds",
             "Default": "false",
             "DbValue": "true",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "ShowInterruptButton",
-            "Default": "false",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "MaxAnswersDisable",
-            "Default": "false",
             "Type": "Boolean"
         },
         {
@@ -1454,11 +1183,6 @@ export const Attributes = {
             "Default": "3000",
             "Type": "Integer"
         },
-        {
-            "Name": "LoadAsyncTimeout",
-            "Default": "0",
-            "Type": "Integer"
-        }
     ],
     "Page": [
         {
@@ -1477,49 +1201,7 @@ export const Attributes = {
             "Type": "String"
         },
         {
-            "Name": "OptionalHeader",
-            "AllowCode": "true",
-            "Type": "String"
-        },
-        {
             "Name": "Footer",
-            "Type": "String"
-        },
-        {
-            "Name": "Template",
-            "AllowCode": "true",
-            "Type": "String"
-        },
-        {
-            "Name": "Itera",
-            "Type": "String"
-        },
-        {
-            "Name": "IteraID",
-            "Type": "String"
-        },
-        {
-            "Name": "DefaultControl",
-            "Type": "String"
-        },
-        {
-            "Name": "GenerablePar",
-            "Type": "String"
-        },
-        {
-            "Name": "Quota",
-            "Type": "String"
-        },
-        {
-            "Name": "SaveMixOrder",
-            "Type": "String"
-        },
-        {
-            "Name": "RestoreMixOrder",
-            "Type": "String"
-        },
-        {
-            "Name": "DefaultsId",
             "Type": "String"
         },
         {
@@ -1545,19 +1227,9 @@ export const Attributes = {
             "Type": "Integer"
         },
         {
-            "Name": "DefaultCode",
-            "Default": "13",
-            "Type": "Integer"
-        },
-        {
             "Name": "CustomProgress",
             "AllowCode": "true",
             "Type": "Integer"
-        },
-        {
-            "Name": "Reverse",
-            "AllowCode": "true",
-            "Type": "Boolean"
         },
         {
             "Name": "CountProgress",
@@ -1581,22 +1253,9 @@ export const Attributes = {
             "Type": "Boolean"
         },
         {
-            "Name": "FastLoad",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "ShowModalError",
-            "Default": "true",
-            "Type": "Boolean"
-        },
-        {
             "Name": "StructIgnore",
             "Type": "Boolean"
         },
-        {
-            "Name": "OnloadFilter",
-            "Type": "FilteredObject"
-        }
     ],
     "ListItem": [
         {
@@ -1604,20 +1263,8 @@ export const Attributes = {
             "AllowCode": "true",
             "Type": "String"
         },
-        {
-            "Name": "ChildList",
-            "Type": "String"
-        },
-        {
-            "Name": "Fix",
-            "Type": "Boolean"
-        }
     ],
     "List": [
-        {
-            "Name": "Mix",
-            "Type": "Boolean"
-        },
         {
             "Name": "SaveToDb",
             "Type": "Boolean"
@@ -1636,10 +1283,6 @@ export const Attributes = {
             "Type": "String"
         },
         {
-            "Name": "Multiply",
-            "Type": "String"
-        },
-        {
             "Name": "Text",
             "AllowCode": "true",
             "Type": "String"
@@ -1651,11 +1294,6 @@ export const Attributes = {
         },
         {
             "Name": "Header",
-            "AllowCode": "true",
-            "Type": "String"
-        },
-        {
-            "Name": "OptionalHeader",
             "AllowCode": "true",
             "Type": "String"
         },
@@ -1675,44 +1313,6 @@ export const Attributes = {
             "Type": "String"
         },
         {
-            "Name": "SelectionBackColor",
-            "Default": "#FFFF00",
-            "Type": "String"
-        },
-        {
-            "Name": "SelectionColor",
-            "Default": "#000000",
-            "Type": "String"
-        },
-        {
-            "Name": "SelectedBackColor",
-            "Default": "#000000",
-            "Type": "String"
-        },
-        {
-            "Name": "SelectedColor",
-            "Default": "#FFFFFF",
-            "Type": "String"
-        },
-        {
-            "Name": "OverColor",
-            "Type": "String"
-        },
-        {
-            "Name": "GenerablePar",
-            "Type": "String"
-        },
-        {
-            "Name": "SplitOpen",
-            "Default": "{",
-            "Type": "String"
-        },
-        {
-            "Name": "SplitClose",
-            "Default": "}",
-            "Type": "String"
-        },
-        {
             "Name": "Store",
             "Type": "String"
         },
@@ -1722,39 +1322,7 @@ export const Attributes = {
             "Type": "String"
         },
         {
-            "Name": "Template",
-            "Type": "String"
-        },
-        {
-            "Name": "SubstPage",
-            "AllowCode": "true",
-            "Type": "String"
-        },
-        {
-            "Name": "SubstQuestion",
-            "AllowCode": "true",
-            "Type": "String"
-        },
-        {
-            "Name": "Image",
-            "AllowCode": "true",
-            "Type": "String"
-        },
-        {
             "Name": "Union",
-            "Type": "String"
-        },
-        {
-            "Name": "Tag",
-            "Default": "z",
-            "Type": "String"
-        },
-        {
-            "Name": "RestoreMixOrder",
-            "Type": "String"
-        },
-        {
-            "Name": "RestoreUnionMixOrder",
             "Type": "String"
         },
         {
@@ -1785,29 +1353,11 @@ export const Attributes = {
             "Type": "Boolean"
         },
         {
-            "Name": "Reverse",
-            "AllowCode": "true",
-            "Type": "Boolean"
-        },
-        {
             "Name": "Mix",
             "Type": "Boolean"
         },
         {
             "Name": "Inv",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "SaveMixOrder",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "SaveUnionMixOrder",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "Visible",
-            "Default": "true",
             "Type": "Boolean"
         },
         {
@@ -1825,14 +1375,6 @@ export const Attributes = {
         },
         {
             "Name": "Fix",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "HideOnFilter",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "Separate",
             "Type": "Boolean"
         },
         {
@@ -1865,121 +1407,8 @@ export const Attributes = {
             "Type": "Integer"
         },
         {
-            "Name": "ColsPerRow",
-            "Type": "Integer"
-        },
-        {
-            "Name": "Cols",
-            "Type": "Integer"
-        },
-        {
             "Name": "Length",
             "Type": "Integer"
-        }
-    ],
-    "QuestionStyle": [
-        {
-            "Name": "EvenClass",
-            "Default": "SEEvenRow",
-            "Type": "String"
-        },
-        {
-            "Name": "OddClass",
-            "Default": "SEOddRow",
-            "Type": "String"
-        },
-        {
-            "Name": "TitleClass",
-            "Default": "SETitle",
-            "Type": "String"
-        },
-        {
-            "Name": "ErrorCellClass",
-            "Default": "SEErrorCell",
-            "Type": "String"
-        },
-        {
-            "Name": "ComboBoxClass",
-            "Default": "SEComboBox",
-            "Type": "String"
-        },
-        {
-            "Name": "SingleClass",
-            "Default": "SESingle",
-            "Type": "String"
-        },
-        {
-            "Name": "MemoClass",
-            "Default": "SEMemo",
-            "Type": "String"
-        },
-        {
-            "Name": "ContainerClass",
-            "Default": "SEQuestionContainer",
-            "Type": "String"
-        },
-        {
-            "Name": "SelTextContainerClass",
-            "Default": "SESelTextQuestionContainer",
-            "Type": "String"
-        },
-        {
-            "Name": "HoverClass",
-            "Default": "SEHover",
-            "Type": "String"
-        },
-        {
-            "Name": "SelectedClass",
-            "Default": "SESelected",
-            "Type": "String"
-        },
-        {
-            "Name": "AnswersClass",
-            "Default": "SEAnswers",
-            "Type": "String"
-        },
-        {
-            "Name": "HeaderClass",
-            "Default": "SEHeader",
-            "Type": "String"
-        },
-        {
-            "Name": "SelectionClass",
-            "Default": "SESelection",
-            "Type": "String"
-        },
-        {
-            "Name": "SeparatorClass",
-            "Default": "SESeparator",
-            "Type": "String"
-        },
-        {
-            "Name": "Width",
-            "Type": "String"
-        },
-        {
-            "Name": "ShelfCellClass",
-            "Default": "SEShelfCell",
-            "Type": "String"
-        },
-        {
-            "Name": "ShelfSelDivClass",
-            "Default": "SEShelfSelDiv",
-            "Type": "String"
-        },
-        {
-            "Name": "AnswersVisible",
-            "Default": "true",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "DetailsVisible",
-            "Default": "true",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "IgnoreStyle",
-            "Type": "Boolean"
         }
     ],
     "Answer": [
@@ -1999,11 +1428,6 @@ export const Attributes = {
             "Type": "String"
         },
         {
-            "Name": "Label",
-            "AllowCode": "true",
-            "Type": "String"
-        },
-        {
             "Name": "Title",
             "AllowCode": "true",
             "Type": "String"
@@ -2019,38 +1443,12 @@ export const Attributes = {
             "Type": "String"
         },
         {
-            "Name": "GenerablePar",
-            "Type": "String"
-        },
-        {
-            "Name": "ResetGroups",
-            "Type": "String"
-        },
-        {
-            "Name": "Resets",
-            "Type": "String"
-        },
-        {
             "Name": "Range",
             "AllowCode": "true",
             "Type": "String"
         },
         {
-            "Name": "RangeSpread",
-            "Type": "String"
-        },
-        {
-            "Name": "Image",
-            "AllowCode": "true",
-            "Type": "String"
-        },
-        {
             "Name": "ExportLabel",
-            "Type": "String"
-        },
-        {
-            "Name": "Partial",
-            "AllowCode": "true",
             "Type": "String"
         },
         {
@@ -2060,11 +1458,6 @@ export const Attributes = {
         {
             "Name": "NoUseInQstFilter",
             "Default": "false",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "Visible",
-            "Default": "true",
             "Type": "Boolean"
         },
         {
@@ -2092,15 +1485,7 @@ export const Attributes = {
             "Type": "Boolean"
         },
         {
-            "Name": "HideOnFilter",
-            "Type": "Boolean"
-        },
-        {
             "Name": "Reset",
-            "Type": "Boolean"
-        },
-        {
-            "Name": "Separate",
             "Type": "Boolean"
         },
         {
@@ -2118,10 +1503,6 @@ export const Attributes = {
     ],
     "Filter": [
         {
-            "Name": "Generable",
-            "Type": "Boolean"
-        },
-        {
             "Name": "Spread",
             "Type": "String"
         },
@@ -2135,11 +1516,6 @@ export const Attributes = {
             "Default": "Server",
             "Type": "ProcessSide"
         },
-        {
-            "Name": "Runtime",
-            "Default": "Declaring",
-            "Type": "RuntimeType"
-        }
     ],
     "Condition": [
         {
@@ -2253,34 +1629,6 @@ export const Attributes = {
             "Default": "And",
             "Type": "LogicalOperator"
         },
-        {
-            "Name": "Side",
-            "Default": "Server",
-            "Type": "ProcessSide"
-        },
-        {
-            "Name": "Runtime",
-            "Default": "Declaring",
-            "Type": "RuntimeType"
-        }
-    ],
-    "QuotaGrid": [
-        {
-            "Name": "Text",
-            "Type": "String"
-        }
-    ],
-    "QuotaGridRow": [
-        {
-            "Name": "Items",
-            "Type": "String"
-        }
-    ],
-    "QuotaGridCol": [
-        {
-            "Name": "Items",
-            "Type": "String"
-        }
     ],
     "Block": [
         {
@@ -2316,10 +1664,6 @@ export const Attributes = {
             "Type": "Boolean"
         },
         {
-            "Name": "InnerMix",
-            "Type": "Boolean"
-        },
-        {
             "Name": "Mix",
             "Type": "Boolean"
         },
@@ -2340,44 +1684,7 @@ export const Attributes = {
             "Type": "Integer"
         }
     ],
-    "Mix": [
-        {
-            "Name": "Items",
-            "Type": "String"
-        },
-        {
-            "Name": "SaveMixOrder",
-            "Type": "String"
-        },
-        {
-            "Name": "RestoreMixOrder",
-            "Type": "String"
-        },
-        {
-            "Name": "Reverse",
-            "AllowCode": "true",
-            "Type": "Boolean"
-        }
-    ],
-    "FlashVar": [
-        {
-            "Name": "Text",
-            "AllowCode": "true",
-            "Type": "String"
-        }
-    ],
-    "PreloadImage": [
-        {
-            "Name": "Src",
-            "AllowCode": "true",
-            "Type": "String"
-        }
-    ],
     "Repeat": [
-        {
-            "Name": "Block",
-            "Type": "Boolean"
-        },
         {
             "Name": "Mix",
             "Type": "Boolean"
@@ -2392,7 +1699,6 @@ export const Attributes = {
         },
         {
             "Name": "Range",
-            "AllowCode": "true",
             "Type": "String"
         },
         {
@@ -2418,16 +1724,6 @@ export const Attributes = {
             "Default": "And",
             "Type": "LogicalOperator"
         },
-        {
-            "Name": "Side",
-            "Default": "Server",
-            "Type": "ProcessSide"
-        },
-        {
-            "Name": "Runtime",
-            "Default": "Code",
-            "Type": "RuntimeType"
-        }
     ],
     "Split": [
         {
