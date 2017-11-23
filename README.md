@@ -55,7 +55,7 @@
 
 При вводе расширение предлагает имеющиеся шаблоны (например, Page, Question и т.д.), которые принимаются нажатием клавиши `Tab`. Каждое следующее нажатие `Tab` перемещает курсор к следующей позиции, где предполагается ввод.
 
-![Image](https://github.com/tiburon-research/vsc-xml-plugin/stuff/PageSnippet.gif)
+![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/PageSnippet.gif)
 
 ### Кроме структуры XML предусмотрены следующие шаблоны:
 * Сворачивающийся блок
