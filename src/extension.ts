@@ -9,7 +9,9 @@ var TibAutoCompleteList = {
     Functions: [],
     Methods: [],
     Variables: [],
-    Properties: []
+    Properties: [],
+    Enums: [],
+    EnumMembers: []
 };
 
 var codeAutoCompleteArray = [];
@@ -18,7 +20,9 @@ var link = {
     Function: "Functions",
     Method: "Methods",
     Variable: "Variables",
-    Property: "Properties"
+    Property: "Properties",
+    Enum: "Enums",
+    EnumMember: "EnumMembers"
 };
 
 var ItemSnippets = {
@@ -63,7 +67,9 @@ function getData()
         Functions: [],
         Methods: [],
         Variables: [],
-        Properties: []
+        Properties: [],
+        Enums: [],
+        EnumMembers: []
     };
     AutoCompleteArray.Code.forEach(element =>
     {
