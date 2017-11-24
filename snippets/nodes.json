@@ -53,12 +53,22 @@
         ],
         "description": "Структура List"
     },
-    "Redirect":{
+    "RedirectCode":{
+        "prefix": "<Redirect",
+        "body": [
+            "<Redirect>",
+            "\t$2",
+            "\treturn false;",
+            "</Redirect>"
+        ],
+        "description": "Структура Redirect"
+    },
+    "RedirectStatus":{
         "prefix": "<Redirect",
         "body": [
             "<Redirect Status=\"${1:19}\">return $2</Redirect>"
         ],
-        "description": "Структура Redirect"
+        "description": "Структура Redirect со статусом"
     },
     "Validate":{
         "prefix": "<Validate",
