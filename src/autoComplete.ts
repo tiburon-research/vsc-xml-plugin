@@ -137,6 +137,34 @@ var ManualCode = [
         Name: "Header",
         Kind: "Property",
         Parent: "CurrentSurvey\\.Pages\\[.*\\]\\.Questions\\[.*\\]\\.Answers\\[.*\\]"
+    },
+    {
+        Name: "Common",
+        Kind: "Variable"
+    },
+    {
+        Name: "MixArray",
+        Kind: "Method",
+        Parent: "Common"
+    },
+    {
+        Name: "LogicalOperator",
+        Kind: "Enum"
+    },
+    {
+        Name: "Or",
+        Kind: "EnumMember",
+        Parent: "LogicalOperator"
+    },
+    {
+        Name: "Xor",
+        Kind: "EnumMember",
+        Parent: "LogicalOperator"
+    },
+    {
+        Name: "And",
+        Kind: "EnumMember",
+        Parent: "LogicalOperator"
     }
 ];
 
@@ -808,7 +836,14 @@ export const Attributes = {
             "Type": "Boolean"
         }
     ],
-    "CustomText": [
+    "CustomText1": [
+        {
+            "Name": "Action",
+            "Default": "Replace",
+            "Type": "String"
+        }
+    ],
+    "CustomText2": [
         {
             "Name": "Action",
             "Default": "Replace",
@@ -1515,7 +1550,7 @@ export const Attributes = {
             "Name": "Side",
             "Default": "Server",
             "Type": "ProcessSide"
-        },
+        }
     ],
     "Condition": [
         {
@@ -1628,7 +1663,7 @@ export const Attributes = {
             "Name": "Operator",
             "Default": "And",
             "Type": "LogicalOperator"
-        },
+        }
     ],
     "Block": [
         {
@@ -1723,7 +1758,7 @@ export const Attributes = {
             "Name": "Operator",
             "Default": "And",
             "Type": "LogicalOperator"
-        },
+        }
     ],
     "Split": [
         {
