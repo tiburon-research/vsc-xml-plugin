@@ -5,7 +5,7 @@
 	"patterns": [
 
 		{  
-			"begin": "(<)(Filter|Redirect|Validate)([^>]*)(>)(\\s*<!\\[CDATA\\[)?[^ \t]",
+			"begin": "(<)(Filter|Redirect|Validate)([^>]*)(>)(\\s*<!\\[CDATA\\[)?((?:[^ \t]))?$",
 			"end": "(\\]\\]>)?(</)(\\w+)(\\s*)(>)",
 			"beginCaptures": {
 				"1":
@@ -46,6 +46,96 @@
 				}
 			],
 			"name" : "tib.node.allowcode.single"
+		},{  
+			"begin": "(<)(Filter|Redirect|Validate)([^>]*)(>)(\\s*<!\\[CDATA\\[)?((?:[^ \t]))?$",
+			"end": "(\\]\\]>)?(</)(\\w+)(\\s*)(>)",
+			"beginCaptures": {
+				"1":
+				{
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2":
+				{
+					"name": "entity.name.tag.xml"
+				},
+				"3":
+				{
+					"patterns": [
+						{
+							"include": "#tagStuff"
+						}
+					]
+				},
+				"4":
+				{
+					"name": "punctuation.definition.tag.xml"
+				}
+			},
+			"endCaptures": {
+				"2": {
+					"name": "punctuation.definition.tag.xml"
+				},
+				"3": {
+					"name": "entity.name.tag.xml"
+				},
+				"5": {
+					"name": "punctuation.definition.tag.xml"
+				}
+			},
+			"patterns":[
+				{
+					"include": "#statement"
+				}
+			],
+			"name" : "tib.node.allowcode.single.multiline"
+		},
+
+		{  
+			"begin": "(<)(Filter|Redirect|Validate)([^>]*)(>)(\\s*<!\\[CDATA\\[)?(.*)(</)(\\2)([^>]*)(>)",
+			"end": ".",
+			"beginCaptures": {
+				"1":
+				{
+					"name": "punctuation.definition.tag.xml"
+				},
+				"2":
+				{
+					"name": "entity.name.tag.xml"
+				},
+				"3":
+				{
+					"patterns": [
+						{
+							"include": "#tagStuff"
+						}
+					]
+				},
+				"4":
+				{
+					"name": "punctuation.definition.tag.xml"
+				},
+				"6":
+				{
+					"patterns":[
+						{
+							"include": "#statement"
+						}
+					],
+					"name" : "tib.node.allowcode.single.singleline"
+				},
+				"7":
+				{
+					"name": "punctuation.definition.tag.xml"
+				},
+				"8":
+				{
+					"name": "entity.name.tag.xml"
+				},
+				"10":
+				{
+					"name": "punctuation.definition.tag.xml"
+				}
+			}
 		},
 
 		{  
