@@ -478,7 +478,10 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         var lastc = str.lastIndexOf("[c#");
         var lastcEnd = str.lastIndexOf("]");
 
-        tag.CSMode = !!mt[1].match(/(Filter)|(Redirect)|(Validate)|(Methods)/) || (lastc > str.lastIndexOf("[/c#") && lastc < lastcEnd && lastcEnd >= 0);
+        tag.CSMode =
+            !!mt[1].match(/(Filter)|(Redirect)|(Validate)|(Methods)/) ||
+            (lastc > str.lastIndexOf("[/c#") && lastc < lastcEnd && lastcEnd >= 0) ||
+            !!text.match(/\$[^\s]+$/);
         tag.Parents = nn;
         tag.Position = vscode.window.activeTextEditor.document.positionAt(originalText.lastIndexOf("<" + mt[1]));
         if (mt[2]) tag.setAttributes(mt[2]);
