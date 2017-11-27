@@ -2,7 +2,7 @@
     "name": "tiburonscripter",
     "displayName": "Tiburon XML Helper",
     "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "publisher": "TiburonResearch",
     "author": {
         "name": "GuRu",
@@ -12,9 +12,9 @@
         "url": "https://github.com/tiburon-research/vsc-xml-plugin/issues"
     },
     "repository": {
-		"type": "git",
+        "type": "git",
         "url": "https://github.com/tiburon-research/vsc-xml-plugin"
-	},
+    },
     "icon": "stuff/icon.png",
     "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/README.md",
     "engines": {
@@ -28,17 +28,26 @@
     ],
     "main": "./out/extension",
     "contributes": {
-        "languages": [{
-            "id": "tib",
-            "aliases": ["Tiburon XML script", "tib"],
-            "extensions": ["xml"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "tib",
-            "scopeName": "source.tib",
-            "path": "./syntaxes/tib.tmLanguage.json"
-        }],
+        "languages": [
+            {
+                "id": "tib",
+                "aliases": [
+                    "Tiburon XML script",
+                    "tib"
+                ],
+                "extensions": [
+                    "xml"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "tib",
+                "scopeName": "source.tib",
+                "path": "./syntaxes/tib.tmLanguage.json"
+            }
+        ],
         "snippets": [
             {
                 "language": "tib",
