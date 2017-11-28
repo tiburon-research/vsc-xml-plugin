@@ -177,7 +177,7 @@ function autoComplete()
         }
     }, " ");
 
-    //Functions & Variables
+    //Functions, Variables, Enums
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
@@ -185,7 +185,7 @@ function autoComplete()
             var tag = getCurrentTag(getPreviousText(document, position));
             if (tag.CSMode)
             {
-                var ar = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables);
+                var ar = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums);
                 ar.forEach(element =>
                 {
                     completionItems.push(element.ToCompletionItem());
@@ -199,7 +199,7 @@ function autoComplete()
         }
     });
 
-    //Properties & Methods
+    //Properties, Methods, EnumMembers
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
@@ -207,7 +207,7 @@ function autoComplete()
             var tag = getCurrentTag(getPreviousText(document, position));
             if (tag.CSMode)
             {
-                var ar = TibAutoCompleteList.Properties.concat(TibAutoCompleteList.Methods);
+                var ar = TibAutoCompleteList.Properties.concat(TibAutoCompleteList.Methods, TibAutoCompleteList.EnumMembers);
                 var lastLine = getCurrentLineText(document, position);
                 ar.forEach(element =>
                 {
