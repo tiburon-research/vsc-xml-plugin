@@ -1902,5 +1902,26 @@ export const Attributes = {
             "AllowCode": "true",
             "Type": "String"
         }
+    ],
+    "QuotaItem": [
+        {
+            "Name": "Operator",
+            "Default": "And",
+            "Type": "LogicalOperator"
+        }
+    ],
+    "RedirectItem": [
+        {
+            "Name": "Operator",
+            "Default": "And",
+            "Type": "LogicalOperator"
+        }
+    ],
+    "ValidateItem": [
+        {
+            "Name": "Operator",
+            "Default": "And",
+            "Type": "LogicalOperator"
+        }
     ]
 };
