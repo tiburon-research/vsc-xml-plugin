@@ -44,12 +44,11 @@
 				{
 					"include": "#statement"
 				}
-			],
-			"name" : "tib.node.allowcode.single.multiline"
+			]
 		},
 
 		{  
-			"begin": "(<)(Filter|Redirect|Validate)([^>]*)(>)(\\s*<!\\[CDATA\\[)?(.*)(</)(\\2)([^>]*)(>)",
+			"begin": "(<)(Filter|Redirect|Validate)([^/>]*)(>)(\\s*<!\\[CDATA\\[)?(.*)(</)(\\2)([^>]*)(>)",
 			"end": ".",
 			"beginCaptures": {
 				"1":
@@ -78,8 +77,7 @@
 						{
 							"include": "#statement"
 						}
-					],
-					"name" : "tib.node.allowcode.single.singleline"
+					]
 				},
 				"7":
 				{
@@ -136,8 +134,7 @@
 				{
 					"include": "#csharp"
 				}
-			],
-			"name" : "tib.node.allowcode.methods"
+			]
 		},
 
 		{  
@@ -151,7 +148,7 @@
 				},
 				"2":
 				{
-					"name": "entity.name.tag.xml"
+					
 				},
 				"3":
 				{
@@ -159,8 +156,7 @@
 						{
 							"include": "#tagStuff"
 						}
-					],
-					"name": "tib.inline-code.stuff"
+					]
 				},
 				"4":
 				{
@@ -174,7 +170,7 @@
 				},
 				"2":
 				{
-					"name": "entity.name.tag.xml"
+					
 				},
 				"3":
 				{
@@ -185,8 +181,7 @@
 				{
 					"include": "#csharp"
 				}
-			],
-			"name": "tib.inline-code"
+			]
 		},
 
 
@@ -218,8 +213,7 @@
 				"0": {
 					"name": "punctuation.parenthesis.close.cs"
 				}
-			},
-			"name": "tib.inline-method"
+			}
 		},
 
 
@@ -4891,11 +4885,11 @@
 			"beginCaptures": {
 				"1":
 				{
-					"name": "tib.iterator.prefix"
+					
 				},
 				"2":
 				{
-					"name": "tib.iterator.prefix"
+					
 				}
 			}
 		},
@@ -4906,11 +4900,11 @@
 			"end": ".",
 			"beginCaptures":
 			{
-				"name": "tib.cdata"
+				
 			},
 			"patterns": [
 				{
-					"name": "tib.cdata"
+					
 				}
 			]
 		},

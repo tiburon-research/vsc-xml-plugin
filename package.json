@@ -41,6 +41,13 @@
                 "configuration": "./language-configuration.json"
             }
         ],
+        "themes": [
+            {
+                "label": "Tiburon Dark",
+                "path": "./themes/tib-dark.json",
+                "uiTheme": "vs-dark"
+            }
+        ],
         "grammars": [
             {
                 "language": "tib",
