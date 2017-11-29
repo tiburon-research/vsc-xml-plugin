@@ -442,19 +442,24 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 {
     if (inProcess || !editor || !event || !event.contentChanges[0]) return;
 
+    var change = event.contentChanges[0].text;
     var originalPosition = editor.selection.start.translate(0, 1);
+    
     // закрывание [тегов]
-    var tagT = text.match(/\[([\w\d#]+)[^\]]*\]$/);
-    if (tagT && tagT.length > 1)
+    var tagT = text.match(/\[([\w\d#]+)([^\]]*)?(\/)?\]$/);
+    if (
+        change[change.length - 1] == "]" &&
+        !tag.CSMode &&
+        !!tagT &&
+        !!tagT[1] &&
+        !tagT[3] && 
+        !tagT[1].match(/^((area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr))$/))
     {
-        if (!tag.CSMode)
+        inProcess = true;
+        editor.insertSnippet(new vscode.SnippetString("$1[/" + tagT[1] + "]"), originalPosition).then(() =>
         {
-            inProcess = true;
-            editor.insertSnippet(new vscode.SnippetString("$1[/" + tagT[1] + "]"), originalPosition.translate(0, 1)).then(() =>
-            {
-                inProcess = false;
-            });
-        }
+            inProcess = false;
+        });
     }
 
 }
