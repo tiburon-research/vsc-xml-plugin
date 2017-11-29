@@ -126,8 +126,14 @@ function autoComplete()
             {
                 if ("Item".indexOf(tag.Name) > -1)
                 {
-                    var parent = tag.LastParent;
-                    if (!ItemSnippets[parent]) parent = "List";
+                    var parent;
+                    for (let key in ItemSnippets)
+                        if (tag.Parents.indexOf(key) > -1)
+                        {
+                            parent = key;
+                            break;
+                        }    
+                    if (!parent || !ItemSnippets[parent]) parent = "List";
                     var res = new vscode.SnippetString(ItemSnippets[parent]);
                     if (res)
                     {
@@ -504,8 +510,8 @@ function getCurrentTag(text: string): CurrentTag
     pure = pure.replace(/(?:<!\[CDATA\[)([\s\S]*?)(\]\]>)/, "");
     var code = "(Filter)|(Redirect)|(Validate)|(Methods)"; // элементы, которые могут содержать <нетеги>
     // удаление закрытых (Filter)|(Redirect)|(Validate) из остатка кода
-    var reg = new RegExp("(?:<(" + code + ")[^>]*>)(?![\\s]*<[^!])[\\s\\S]*(?:<\\/\\1\\s*>)", "g");
-    var regEnd = new RegExp("(<(" + code + ")([^>]*>)?)[\\s\\S]*$", "g");
+    var reg = new RegExp("(?:<(" + code + ")[^>]*>)((?![\\t ]+\\s*\n)[\\s\\S]*?)(?:<\\/\\1\\s*>)", "g");
+    var regEnd = new RegExp("(<(" + code + ")([^>]*>)?)((?![\\t ]+\\s*\n)[\\s\\S]?)*$", "g");
     pure = pure.replace(reg, "");
     pure = pure.replace(regEnd, "$1");
     return parseTags(pure, text);
@@ -530,9 +536,9 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         var str = mt[0];
         var lastc = str.lastIndexOf("[c#");
         var lastcEnd = str.lastIndexOf("]");
-
+        var isSpaced = !!mt[3] && !!mt[3].substr(0, mt[3].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+
         tag.CSMode =
-            !!mt[1].match(/(Filter)|(Redirect)|(Validate)|(Methods)/) ||
+            mt[1] && !!mt[1].match(/(Filter)|(Redirect)|(Validate)|(Methods)/) && !isSpaced ||
             (lastc > str.lastIndexOf("[/c#") && lastc < lastcEnd && lastcEnd >= 0) ||
             !!text.match(/\$[^\s]+$/);
         tag.Parents = nn;
