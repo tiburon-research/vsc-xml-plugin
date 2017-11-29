@@ -54,11 +54,16 @@ export function activate(context: vscode.ExtensionContext)
     vscode.workspace.onDidChangeTextDocument(event =>
     {
         var originalPosition = editor.selection.start.translate(0, 1);
-        var text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));//+ event.contentChanges[0].text;
+        var text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
         var tag = getCurrentTag(text);
         insertAutoCloseTag(event, editor, tag, text);
         insertSpecialSnippets(event, editor, text, tag);
         saveMethods(editor, tag);
+    });
+
+    vscode.commands.registerCommand('tib.debug', () => 
+    {
+        execute("http://debug.survstat.ru/Survey/Adaptive/?fileName=" + editor.document.fileName);
     });
 }
 
@@ -132,7 +137,7 @@ function autoComplete()
                         {
                             parent = key;
                             break;
-                        }    
+                        }
                     if (!parent || !ItemSnippets[parent]) parent = "List";
                     var res = new vscode.SnippetString(ItemSnippets[parent]);
                     if (res)
@@ -484,6 +489,12 @@ function saveMethods(editor: vscode.TextEditor, tag: CurrentTag): void
     var res = text.match(/((<(?:(Filter)|(Methods)|(Redirect)|(Validate))([^>]*>)((?!([\s\n]*<))[\s\S])+)|((?:\[c#)((?!\[\/c#)[\s\S])+))$/);
     return !!res && res.length > 0;
 }*/
+
+
+function execute(link: string)
+{
+    vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
+}
 
 function parseMethods(editor: vscode.TextEditor): void
 {
