@@ -60,6 +60,12 @@
                 "language": "tib",
                 "path": "./snippets/nodes.json"
             }
+        ],
+        "commands":[
+            {
+                "command": "tib.debug",
+                "title": "Отладка скрипта на сервере"
+            }
         ]
     },
     "scripts": {
