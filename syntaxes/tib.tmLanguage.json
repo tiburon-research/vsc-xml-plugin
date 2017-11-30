@@ -137,84 +137,10 @@
 			]
 		},
 
-		{  
-			"begin": "(\\[)(c#)([^\\]]*)(\\])",
-			"end": "(\\[)(/c#\\s*)(\\])",
-			"beginCaptures": 
-			{
-				"1":
-				{
-					"name": "punctuation.definition.tag.xml"
-				},
-				"2":
-				{
-					
-				},
-				"3":
-				{
-					"patterns": [
-						{
-							"include": "#tagStuff"
-						}
-					]
-				},
-				"4":
-				{
-					"name": "punctuation.definition.tag.xml"
-				}
-			},
-			"endCaptures": {
-				"1":
-				{
-					"name": "punctuation.definition.tag.xml"
-				},
-				"2":
-				{
-					
-				},
-				"3":
-				{
-					"name": "punctuation.definition.tag.xml"
-				}
-			},
-			"patterns":[
-				{
-					"include": "#csharp"
-				}
-			]
-		},
-
-
 		{
-			"begin": "(\\$[A_Za-z0-9_]+)(\\([^\\)]*\\))",
-			"end": "^",
-			"beginCaptures":
-			{
-				"1":
-				{
-					"name": "entity.name.function.cs"
-				},
-				"2":
-				{
-					"patterns": [
-						{
-							"include": "#named-argument"
-						},
-						{
-							"include": "#argument"
-						},
-						{
-							"include": "#punctuation-comma"
-						}
-					]
-				}
-			},
-			"endCaptures": {
-				"0": {
-					"name": "punctuation.parenthesis.close.cs"
-				}
-			}
+			"include": "#cs-inline"
 		},
+
 
 
 		{
@@ -300,6 +226,10 @@
 													},
 													"end": "(?=</script)|\\n",
 													"name": "comment.line.double-slash.js"
+												},
+
+												{
+													"include": "#cs-inline"
 												}
 											]
 										},
@@ -315,6 +245,9 @@
 										},
 										{
 											"include": "source.js"
+										},
+										{
+											"include": "#cs-inline"
 										}
 									]
 								}
@@ -407,6 +340,9 @@
 							]
 						}
 					]
+				},
+				{
+					"include": "#cs-inline"
 				}
 			]
 		},
@@ -455,15 +391,21 @@
 						},
 						{
 							"include": "source.css"
+						},
+						{
+							"include": "#cs-inline"
 						}
 					]
+				},
+				{
+					"include": "#cs-inline"
 				}
 			]
 		},
 
 		
 		{
-			"begin": " (style=\")([^\"]+)(\")",
+			"begin": " (style=\")([^\"]+)\"",
 			"end": ".",
 			"beginCaptures": {
 				"2":
@@ -472,6 +414,31 @@
 					"patterns": [
 						{
 							"include": "#rule-list-innards"
+						},
+						{
+							"include": "#cs-inline"
+						}
+					]
+				}
+			},
+			"patterns": [
+				
+			]
+		},
+
+		{
+			"begin": " (style=')([^']+)'",
+			"end": ".",
+			"beginCaptures": {
+				"2":
+				{
+					"name": "source.inline-css",
+					"patterns": [
+						{
+							"include": "#rule-list-innards"
+						},
+						{
+							"include": "#cs-inline"
 						}
 					]
 				}
@@ -670,9 +637,98 @@
 			"patterns": [
 				{
 					"include": "#smarty"
+				},
+				{
+					"include": "#cs-inline"
 				}
 			]
 		},
+
+
+
+
+		"cs-inline":
+		{
+			"patterns": [
+				{  
+					"begin": "(\\[)(c#)([^\\]]*)(\\])",
+					"end": "(\\[)(/c#\\s*)(\\])",
+					"beginCaptures": 
+					{
+						"1":
+						{
+							"name": "punctuation.definition.tag.xml"
+						},
+						"2":
+						{
+							
+						},
+						"3":
+						{
+							"patterns": [
+								{
+									"include": "#tagStuff"
+								}
+							]
+						},
+						"4":
+						{
+							"name": "punctuation.definition.tag.xml"
+						}
+					},
+					"endCaptures": {
+						"1":
+						{
+							"name": "punctuation.definition.tag.xml"
+						},
+						"2":
+						{
+							
+						},
+						"3":
+						{
+							"name": "punctuation.definition.tag.xml"
+						}
+					},
+					"patterns":[
+						{
+							"include": "#csharp"
+						}
+					]
+				},
+				{
+					"begin": "\\$([A-Za-z0-9_]+)\\(((([^\\(\\)]+)|([^\\(\\)]*@\\w+(\\([^\\(\\)]*(([^\\(\\)]+)|([^\\(\\)]*@\\w+\\([^\\(\\)]+\\)[^\\(\\)]*))\\))*[^\\(\\)]*)),?)*\\)",
+					"end": ".",
+					"beginCaptures":
+					{
+						"1":
+						{
+							"name": "entity.name.function.cs"
+						},
+						"2":
+						{
+							"patterns": [
+								{
+									"include": "#named-argument"
+								},
+								{
+									"include": "#argument"
+								},
+								{
+									"include": "#punctuation-comma"
+								},
+								{
+									"include": "#tib-iterator"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+
+
+
 
 		"smarty": {
 			"patterns": [
@@ -698,6 +754,9 @@
 							"include": "source.smarty"
 						}
 					]
+				},
+				{
+					"include": "#cs-inline"
 				}
 			]
 		},
@@ -758,6 +817,9 @@
 				},
 				{
 					"include": "#tib-iterator"
+				},
+				{
+					"include": "#cs-inline"
 				}
 			]
 		},
@@ -829,6 +891,9 @@
 				},
 				{
 					"include": "#tib-iterator"
+				},
+				{
+					"include": "#cs-inline"
 				}
 			]
 		},
@@ -856,6 +921,9 @@
 				},
 				{
 					"include": "#singlequotedString"
+				},
+				{
+					"include": "#cs-inline"
 				}
 			]
 		},
@@ -880,6 +948,9 @@
 				},
 				{
 					"include": "#unquoted-attribute"
+				},
+				{
+					"include": "#cs-inline"
 				}
 			]
 		},
@@ -5380,12 +5451,18 @@
 						},
 						{
 							"include": "#property-values"
+						},
+						{
+							"include": "#cs-inline"
 						}
 					]
 				},
 				{
 					"match": ";",
 					"name": "punctuation.terminator.rule.css"
+				},
+				{
+					"include": "#cs-inline"
 				}
 			]
 		},
