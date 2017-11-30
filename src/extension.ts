@@ -2,6 +2,14 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes} from "./classes";
+
+// константы
+
+const _NodeStoreNames = "";
+
+
+// глобальные переменные
 
 var inProcess = false; // во избежание рекурсий
 var methodsChanged = false; // для отслеживания изменения <Methods>
@@ -37,6 +45,7 @@ var ItemSnippets = {
 
 var Methods = {};
 
+var CurrentNodes:SurveyNodes = new SurveyNodes();
 
 
 export function activate(context: vscode.ExtensionContext)
@@ -51,11 +60,14 @@ export function activate(context: vscode.ExtensionContext)
     parseMethods(editor);
     definitions();
 
+    updateNodesIds(editor);
+
     vscode.workspace.onDidChangeTextDocument(event =>
     {
         var originalPosition = editor.selection.start.translate(0, 1);
         var text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
         var tag = getCurrentTag(text);
+        if (tag && tag.Name.match(new RegExp("^(" + _NodeStoreNames + ")$"))) updateNodesIds(editor, tag.Name);
         insertAutoCloseTag(event, editor, tag, text);
         insertSpecialSnippets(event, editor, text, tag);
         saveMethods(editor, tag);
@@ -480,6 +492,26 @@ function saveMethods(editor: vscode.TextEditor, tag: CurrentTag): void
     }
 }
 
+// сохранение Id
+function updateNodesIds(editor: vscode.TextEditor, name?: string)
+{
+    //console.log(name);
+    var nNames = name;
+    if (!nNames) nNames = _NodeStoreNames;
+    var txt = editor.document.getText();
+    var reg = new RegExp("<(" + nNames + ")[^>]+Id=(\"|')([^\"'])+(\"|')", "g");
+    var res;
+    var idIndex = (nNames.match(/\(/g) || []).length + 3;
+    while (res = reg.exec(txt))
+    {
+        var pos = editor.document.positionAt(txt.indexOf(res[0]));
+        var item = new SurveyNode(res[1], res[idIndex], pos);
+        CurrentNodes.Add(item);
+    }
+}
+
+
+
 
 
 // -------------------- доп функции
@@ -650,164 +682,4 @@ function moveSelectionRight(selection: vscode.Selection, shift: number): vscode.
 function occurrenceCount(source: string, find: string): number
 {
     return source.split(find).length - 1;
-}
-
-
-
-// -------------------- классы
-
-
-/*
-    для классов TibAutoCompleteItem и TibAttribute:
-    Detail - краткое описание (появляется в редакторе в той же строчке)
-    Description - подробное описание (появляется при клике на i (зависит от настроек))
-    Documentation - кусок кода, сигнатура (показывается при наведении)
-*/
-
-class TibAutoCompleteItem 
-{
-    Name: string;
-    Kind;
-    Detail: string = "";
-    Description: string = "";
-    Documentation: string = "";
-    Parent: string = "";
-    Overloads = [];
-    PrentTag: string = "";
-
-    constructor(obj: Object)
-    {
-        for (let key in obj)
-            this[key] = obj[key];
-    }
-
-    ToCompletionItem()
-    {
-        var kind: keyof typeof vscode.CompletionItemKind = this.Kind;
-        var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind[kind]);
-        var mds = new vscode.MarkdownString();
-        if (this.Description) mds.value = this.Description;
-        else mds.value = this.Documentation;
-        item.documentation = mds;
-        item.detail = this.Detail;
-        return item;
-    }
-
-    ToSignatureInformation()
-    {
-        return new vscode.SignatureInformation(this.Documentation, new vscode.MarkdownString(this.Description));
-    }
-}
-
-
-class TibAttribute
-{
-    Name: string = "";
-    Type: string = "";
-    Default = null;
-    AllowCode: boolean = false;
-    Detail: string = "";
-    Description: string = "";
-    Documentation: string = "";
-    Values: Array<string> = [];
-
-    constructor(obj: Object)
-    {
-        for (let key in obj)
-            this[key] = obj[key];
-    }
-
-    ToCompletionItem()
-    {
-        var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Property);
-        var snip = this.Name + "=\"$";
-        if (this.Values.length) snip += "{1|" + this.Values.join(",") + "|}"; else snip += "1";
-        snip += "\"";
-        var res = new vscode.SnippetString(snip);
-
-        item.detail = (this.Detail ? this.Detail : this.Name) + (this.Type ? (" (" + this.Type + ")") : "");
-        var doc = "";
-        if (this.Default) doc += "Значение по умолчанию: `" + this.Default + "`";
-        doc += "\nПоддержка кадовых вставок: `" + (this.AllowCode ? "да" : "нет") + "`";
-        item.documentation = new vscode.MarkdownString(doc);
-        item.insertText = res;
-
-        return item;
-    }
-}
-
-
-class TibMethod
-{
-    Name: string = "";
-    Signature: string = "";
-    Location: vscode.Range;
-    Uri: vscode.Uri;
-
-    constructor(name: string, sign: string, location: vscode.Range, uri: vscode.Uri)
-    {
-        this.Name = name;
-        this.Signature = sign;
-        this.Location = location;
-        this.Uri = uri;
-    }
-}
-
-
-class InlineAttribute
-{
-    Name: string = "";
-    Value: string = "";
-    Text: string = "";
-
-    constructor(name: string, value)
-    {
-        this.Name = name;
-        this.Value = value as string;
-        this.Text = name + "=\"" + value + "\"";
-    }
-}
-
-
-class CurrentTag
-{
-    Name: string = "";
-    Id: string = ""; // отличается ПОКА только для Item - в зависимости от родителя
-    Attributes: Array<InlineAttribute> = [];
-    Body: string = "";
-    Closed: boolean = false; // закрыт не тег, просто есть вторая скобка <Page...>
-    Parents: Array<string> = [];
-    LastParent: string = "";
-    CSMode: boolean = false;
-    Position: vscode.Position;
-
-    constructor(name: string)
-    {
-        this.Name = name;
-        this.Id = name;
-    }
-
-    attributeNames()
-    {
-        return this.Attributes.map(function (e)
-        {
-            return e.Name;
-        });
-    }
-
-    setAttributes(str: string)
-    {
-        var res = str.match(/\s*([\w\d]+)=(("([^"]+)?")|(('([^']+)?')))\s*/g);
-        if (res)
-        {
-            res.forEach(element =>
-            {
-                var parse = element.match(/\s*([\w\d]+)=(("([^"]+)?")|(('([^']+)?')))\s*/);
-                if (parse)
-                {
-                    this.Attributes.push(new InlineAttribute(parse[1], parse[2]));
-                }
-            });
-        }
-    }
 }
