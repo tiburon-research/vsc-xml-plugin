@@ -349,7 +349,7 @@ function makeIndent(): void
 
 function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag, text: string): void
 {
-    if (inProcess || !editor || !event || !event.contentChanges[0]) return;
+    if (inProcess || !editor || !event || !event.contentChanges[0] || tag.CSMode) return;
 
     var isRightAngleBracket = checkLastSymbol(event.contentChanges[0], ">");
     var isSelfClosed = checkLastSymbol(event.contentChanges[0], "/");
