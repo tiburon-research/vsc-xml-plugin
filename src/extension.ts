@@ -526,8 +526,8 @@ function getCurrentTag(text: string): CurrentTag
     pure = pure.replace(/(?:<!\[CDATA\[)([\s\S]*?)(\]\]>)/, "");
     var code = "(Filter)|(Redirect)|(Validate)|(Methods)"; // элементы, которые могут содержать <нетеги>
     // удаление закрытых (Filter)|(Redirect)|(Validate) из остатка кода
-    var reg = new RegExp("(?:<(" + code + ")[^>]*>)((?![\\t ]+\\s*\n)[\\s\\S]*?)(?:<\\/\\1\\s*>)", "g");
-    var regEnd = new RegExp("(<(" + code + ")([^>]*>)?)((?![\\t ]+\\s*\n)[\\s\\S]?)*$", "g");
+    var reg = new RegExp("<(" + code + ")[^/>]*((/>)|(>((?![\\t ]+\\s*\n)[\\s\\S]*?)(<\\/\\1\\s*>)))", "g");
+    var regEnd = new RegExp("(<(" + code + ")([^/>]*>)?)((?![\\t ]+\\s*\n)[\\s\\S]?)*$", "g");
     pure = pure.replace(reg, "");
     pure = pure.replace(regEnd, "$1");
     return parseTags(pure, text);
