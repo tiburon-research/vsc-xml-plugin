@@ -6,7 +6,8 @@ import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentT
 
 // константы
 
-const _NodeStoreNames = "(Page)|(Question)|(Quota)|(List)";
+const _NodeStoreNames = "(Page)|(Question)|(Quota)|(List)"; // XML теги, которые сохраняются в CurrentNodes
+const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)"; // XML теги, которые могут содержать c#
 
 
 // глобальные переменные
@@ -397,62 +398,8 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
     if (inProcess || !editor || !event || !event.contentChanges[0] || tag.CSMode) return;
 
     var isRightAngleBracket = checkLastSymbol(event.contentChanges[0], ">");
-    var isSelfClosed = checkLastSymbol(event.contentChanges[0], "/");
-    if (!isRightAngleBracket && !isSelfClosed) return;
-
-    //var config = vscode.workspace.getConfiguration('tiburon-scripter');
-
-    var selection = editor.selection;
-    var originalPosition = selection.start.translate(0, 1);
-
-    if (isSelfClosed) 
-    {
-        var nextChar = getNextChars(editor, originalPosition, 1);
-
-        if (text.match(/<\w+\/$/) && nextChar !== ">")
-        {
-            inProcess = true;
-            editor.edit((editBuilder) => 
-            {
-                editBuilder.insert(originalPosition, ">");
-            }).then(() =>
-            {
-                editor.selection = moveSelectionRight(editor.selection, 1);
-                inProcess = false;
-            });
-        }
-        else
-        {
-            var last2chars = "";
-            if (text.length > 2)
-            {
-                last2chars = text.substr(text.length - 2);
-            }
-            if (last2chars === "</") 
-            {
-                var closeTag = getCloseTag(text);
-                if (closeTag) 
-                {
-                    if (nextChar === ">") 
-                    {
-                        closeTag = closeTag.substr(0, closeTag.length - 1);
-                    }
-                    inProcess = true;
-                    editor.edit((editBuilder) => 
-                    {
-                        editBuilder.insert(originalPosition, closeTag);
-                    }).then(() =>
-                    {
-                        if (nextChar === ">") 
-                        {
-                            editor.selection = moveSelectionRight(editor.selection, 1);
-                        }
-                        inProcess = false;
-                    });
-                }
-            }
-        }
-    }
+    if (!isRightAngleBracket) return;
+    var originalPosition = editor.selection.start.translate(0, 1);
 
     if (isRightAngleBracket)
     {
@@ -562,12 +509,6 @@ function updateNodesIds(editor: vscode.TextEditor, name?: string)
 
 // -------------------- доп функции
 
-/*function csharpNode(text: string): boolean
-{
-    var res = text.match(/((<(?:(Filter)|(Methods)|(Redirect)|(Validate))([^>]*>)((?!([\s\n]*<))[\s\S])+)|((?:\[c#)((?!\[\/c#)[\s\S])+))$/);
-    return !!res && res.length > 0;
-}*/
-
 
 function execute(link: string)
 {
@@ -579,10 +520,9 @@ function getCurrentTag(text: string): CurrentTag
 {
     var pure = text.replace(/(?:<!--)([\s\S]*?)(-->)/, "");
     pure = pure.replace(/(?:<!\[CDATA\[)([\s\S]*?)(\]\]>)/, "");
-    var code = "(Filter)|(Redirect)|(Validate)|(Methods)"; // элементы, которые могут содержать <нетеги>
-    // удаление закрытых (Filter)|(Redirect)|(Validate) из остатка кода
-    var reg = new RegExp("<(" + code + ")[^/>]*((/>)|(>((?![\\t ]+\\s*\n)[\\s\\S]*?)(<\\/\\1\\s*>)))", "g");
-    var regEnd = new RegExp("(<(" + code + ")([^/>]*>)?)((?![\\t ]+\\s*\n)[\\s\\S]?)*$", "g");
+    // удаление закрытых _AllowCodeTag из остатка кода
+    var reg = new RegExp("<(" + _AllowCodeTags + ")[^/>]*((/>)|(>((?![\\t ]+\\s*\n)[\\s\\S]*?)(<\\/\\1\\s*>)))", "g");
+    var regEnd = new RegExp("(<(" + _AllowCodeTags + ")([^/>]*>)?)((?![\\t ]+\\s*\n)[\\s\\S]?)*$", "g");
     pure = pure.replace(reg, "");
     pure = pure.replace(regEnd, "$1");
     return parseTags(pure, text);
@@ -609,7 +549,7 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         var lastcEnd = str.lastIndexOf("]");
         var isSpaced = !!mt[3] && !!mt[3].substr(0, mt[3].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+
         tag.CSMode =
-            mt[1] && !!mt[1].match(/(Filter)|(Redirect)|(Validate)|(Methods)/) && !isSpaced ||
+            mt[1] && !!mt[1].match(new RegExp(_AllowCodeTags)) && !isSpaced ||
             (lastc > str.lastIndexOf("[/c#") && lastc < lastcEnd && lastcEnd >= 0) ||
             !!text.match(/\$[^\s]+$/);
         tag.Parents = nn;
@@ -661,7 +601,8 @@ function getCloseTag(text: string): string
     var stack = [];
 
     // не берём те теги, которые не теги (например <int> из Generic)
-    var pure_text = text.replace(/<((Filter)|(Methods)|(Redirect)|(Validate))((?!<\/\1)[\s\S])+/g, "");
+    var reg = new RegExp("<(" + _AllowCodeTags + ")((?!<\\/\\1)[\\s\\S])+", "g");
+    var pure_text = text.replace(reg, "");
     while ((result = regex.exec(pure_text)) !== null)
     {
         var isStartTag = result[1].substr(0, 1) !== "/";
