@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods } from "./classes";
 
 // константы
 
@@ -12,7 +12,6 @@ const _NodeStoreNames = "(Page)|(Question)|(Quota)|(List)";
 // глобальные переменные
 
 var inProcess = false; // во избежание рекурсий
-var methodsChanged = false; // для отслеживания изменения <Methods>
 
 var TibAutoCompleteList = {
     Functions: [],
@@ -43,9 +42,9 @@ var ItemSnippets = {
     Constants: "<Item Id=\"$1\"><Value>$2</Value></Item>"
 }
 
-var Methods = {};
+var Methods = new TibMethods();
 
-var CurrentNodes:SurveyNodes = new SurveyNodes();
+var CurrentNodes: SurveyNodes = new SurveyNodes();
 
 
 export function activate(context: vscode.ExtensionContext)
@@ -57,7 +56,7 @@ export function activate(context: vscode.ExtensionContext)
     autoComplete();
     hoverDocs();
     helper();
-    parseMethods(editor);
+    saveMethods(editor);
     definitions();
 
     updateNodesIds(editor);
@@ -70,7 +69,7 @@ export function activate(context: vscode.ExtensionContext)
         if (tag && tag.Name.match(new RegExp("^(" + _NodeStoreNames + ")$"))) updateNodesIds(editor, tag.Name);
         insertAutoCloseTag(event, editor, tag, text);
         insertSpecialSnippets(event, editor, text, tag);
-        saveMethods(editor, tag);
+        saveMethods(editor);
     });
 
     vscode.commands.registerCommand('tib.debug', () => 
@@ -276,7 +275,6 @@ function autoComplete()
                     ci.insertText = element;
                     completionItems.push(ci);
                 });
-                console.log(completionItems);
             }
             return completionItems;
         },
@@ -367,7 +365,7 @@ function definitions()
             var tag = getCurrentTag(getPreviousText(document, position));
             if (!tag.CSMode) return;
             var word = document.getText(document.getWordRangeAtPosition(position));
-            if (Methods[word]) return new vscode.Location(Methods[word].Uri, Methods[word].Location);
+            if (Methods.Contains(word)) return Methods.Item(word).GetLocation();
         }
     });
 }
@@ -504,7 +502,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
         !tag.CSMode &&
         !!tagT &&
         !!tagT[1] &&
-        !tagT[3] && 
+        !tagT[3] &&
         !tagT[1].match(/^((area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr))$/))
     {
         inProcess = true;
@@ -517,20 +515,33 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 }
 
 
-function saveMethods(editor: vscode.TextEditor, tag: CurrentTag): void
+function saveMethods(editor: vscode.TextEditor): void
 {
-    if (tag.Name == "Methods") methodsChanged = true;
-    else if (methodsChanged)
+    var text = editor.document.getText();
+    var mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
+    if (!mtd || !mtd[3]) return;
+    var reg = new RegExp(/((public)|(private)|(protected))\s*([\w\d_<>\[\],\s]+)\s+(([\w\d_]+)\s*(\([^)]*\))?)/, "g");
+    var str = mtd[3];
+    var m;
+    Methods.Clear();
+    while (m = reg.exec(str))
     {
-        methodsChanged = false;
-        parseMethods(editor);
+        if (m && m[7])
+        {
+            var start = text.indexOf(m[0]);
+            var end = text.indexOf(m[8] ? ")" : ";", start) + 1;
+            var positionFrom = editor.document.positionAt(start);
+            var positionTo = editor.document.positionAt(end);
+            var rng = new vscode.Range(positionFrom, positionTo);
+            var ur = vscode.Uri.file(editor.document.fileName);
+            Methods.Add(new TibMethod(m[7], m[6].trim(), rng, ur));
+        }
     }
 }
 
 // сохранение Id
 function updateNodesIds(editor: vscode.TextEditor, name?: string)
 {
-    //console.log(name);
     var nNames = name;
     if (!nNames) nNames = _NodeStoreNames;
     var txt = editor.document.getText();
@@ -563,29 +574,6 @@ function execute(link: string)
     vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
 }
 
-function parseMethods(editor: vscode.TextEditor): void
-{
-    var text = editor.document.getText();
-    var mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
-    if (!mtd || !mtd[3]) return;
-    var reg = new RegExp(/((public)|(private)|(protected))\s*([\w\d_<>\[\],\s]+)\s+(([\w\d_]+)\s*(\([^)]*\))?)/, "g");
-    var str = mtd[3];
-    var m;
-    Methods = {};
-    while (m = reg.exec(str))
-    {
-        if (m && m[7])
-        {
-            var start = text.indexOf(m[0]);
-            var end = text.indexOf(m[8] ? ")" : ";", start) + 1;
-            var positionFrom = editor.document.positionAt(start);
-            var positionTo = editor.document.positionAt(end);
-            var rng = new vscode.Range(positionFrom, positionTo);
-            var ur = vscode.Uri.file(editor.document.fileName);
-            Methods[m[7]] = (new TibMethod(m[7], m[6].trim(), rng, ur));
-        }
-    }
-}
 
 function getCurrentTag(text: string): CurrentTag
 {

@@ -3,6 +3,85 @@ import * as vscode from 'vscode';
 // -------------------- классы
 
 
+export class KeyedCollection<T>
+{
+    private items: { [index: string]: T } = {};
+    private count: number = 0;
+
+    constructor()
+    {
+        
+    }
+
+    public Contains(key: string): boolean
+    {
+        return this.items.hasOwnProperty(key);
+    }
+
+    public Count(): number
+    {
+        return this.count;
+    }
+
+    protected AddPair(key: string, value: T)
+    {
+        if (!this.items.hasOwnProperty(key))
+            this.count++;
+
+        this.items[key] = value;
+    }
+
+    public Remove(key: string): T
+    {
+        var val = this.items[key];
+        delete this.items[key];
+        this.count--;
+        return val;
+    }
+
+    public Item(key: string): T
+    {
+        return this.items[key];
+    }
+
+    public Keys(): string[]
+    {
+        var keySet: string[] = [];
+
+        for (var prop in this.items)
+        {
+            if (this.items.hasOwnProperty(prop))
+            {
+                keySet.push(prop);
+            }
+        }
+
+        return keySet;
+    }
+
+    public Values(): T[]
+    {
+        var values: T[] = [];
+
+        for (var prop in this.items)
+        {
+            if (this.items.hasOwnProperty(prop))
+            {
+                values.push(this.items[prop]);
+            }
+        }
+
+        return values;
+    }
+
+    public Clear(): void
+    {
+        this.items = {};
+        this.count = 0;
+    }
+}
+
+
 /*
     для классов TibAutoCompleteItem и TibAttribute:
     Detail - краткое описание (появляется в редакторе в той же строчке)
@@ -97,7 +176,26 @@ export class TibMethod
         this.Location = location;
         this.Uri = uri;
     }
+
+    public GetLocation(): vscode.Location
+    {
+        return new vscode.Location(this.Uri, this.Location)
+    }
 }
+
+
+export class TibMethods extends KeyedCollection<TibMethod>
+{
+    constructor()
+    {
+        super();
+    }
+
+    public Add(item: TibMethod)
+    {
+        if (!this.Contains(item.Name)) this.AddPair(item.Name, item);
+    }
+}    
 
 
 export class InlineAttribute
@@ -171,80 +269,6 @@ export class SurveyNode
     Id: string = "";
     Type: string = "";
     Position: vscode.Position;
-}
-
-
-
-export class KeyedCollection<T>
-{
-    private items: { [index: string]: T } = {};
-    private count: number = 0;
-
-    constructor()
-    {
-        
-    }
-
-    public Contains(key: string): boolean
-    {
-        return this.items.hasOwnProperty(key);
-    }
-
-    public Count(): number
-    {
-        return this.count;
-    }
-
-    protected AddPair(key: string, value: T)
-    {
-        if (!this.items.hasOwnProperty(key))
-            this.count++;
-
-        this.items[key] = value;
-    }
-
-    public Remove(key: string): T
-    {
-        var val = this.items[key];
-        delete this.items[key];
-        this.count--;
-        return val;
-    }
-
-    public Item(key: string): T
-    {
-        return this.items[key];
-    }
-
-    public Keys(): string[]
-    {
-        var keySet: string[] = [];
-
-        for (var prop in this.items)
-        {
-            if (this.items.hasOwnProperty(prop))
-            {
-                keySet.push(prop);
-            }
-        }
-
-        return keySet;
-    }
-
-    public Values(): T[]
-    {
-        var values: T[] = [];
-
-        for (var prop in this.items)
-        {
-            if (this.items.hasOwnProperty(prop))
-            {
-                values.push(this.items[prop]);
-            }
-        }
-
-        return values;
-    }
 }
 
 
