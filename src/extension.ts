@@ -510,6 +510,12 @@ function updateNodesIds(editor: vscode.TextEditor, name?: string)
 // -------------------- доп функции
 
 
+function inString(text: string): boolean
+{
+    return !((occurrenceCount(text, "'") % 2 === 0) && (occurrenceCount(text, "\"") % 2 === 0) && (occurrenceCount(text, "`") % 2 === 0));
+}
+
+
 function execute(link: string)
 {
     vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
