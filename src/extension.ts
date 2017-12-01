@@ -77,6 +77,13 @@ export function activate(context: vscode.ExtensionContext)
     {
         execute("http://debug.survstat.ru/Survey/Adaptive/?fileName=" + editor.document.fileName);
     });
+
+    vscode.commands.registerCommand('tib.insertTag', () => 
+    {
+        var str = editor.document.getText(editor.selection);
+        editor.insertSnippet(new vscode.SnippetString("[${1:u}]" + str + "[/${1:u}]"));
+    });
+
 }
 
 export function deactivate()
