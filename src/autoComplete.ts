@@ -81,6 +81,11 @@ var ManualCode = [
         Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
     },
     {
+        Name: "ItemsIdArray",
+        Kind: "Property",
+        Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
+    },
+    {
         Name: "Text",
         Kind: "Property",
         Detail: "string",
@@ -1307,6 +1312,11 @@ export const Attributes = {
     ],
     "Question": [
         {
+            Name: "Orientation",
+            Default: "Vertical",
+            Values: ["Horizontal", "Vertical"]
+        },
+        {
             "Name": "Type",
             "Default": "RadioButton",
             "Type": "QuestionType",
@@ -1908,6 +1918,14 @@ export const Attributes = {
             "Name": "Operator",
             "Default": "And",
             "Type": "LogicalOperator"
+        },
+        {
+            Name: "Value"
+        },
+        {
+            Name: "Generable",
+            Type: "Boolean",
+            Default: "false"
         }
     ],
     "RedirectItem": [
@@ -1915,6 +1933,9 @@ export const Attributes = {
             "Name": "Operator",
             "Default": "And",
             "Type": "LogicalOperator"
+        },
+        {
+            Name: "Value"
         }
     ],
     "ValidateItem": [
@@ -1922,6 +1943,9 @@ export const Attributes = {
             "Name": "Operator",
             "Default": "And",
             "Type": "LogicalOperator"
+        },
+        {
+            Name: "Value"
         }
     ]
 };
