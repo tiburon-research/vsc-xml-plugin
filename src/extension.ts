@@ -496,7 +496,7 @@ function updateNodesIds(editor: vscode.TextEditor, name?: string)
     var nNames = name;
     if (!nNames) nNames = _NodeStoreNames;
     var txt = editor.document.getText();
-    var reg = new RegExp("<(" + nNames + ")[^>]+Id=(\"|')([^\"'])+(\"|')", "g");
+    var reg = new RegExp("<(" + nNames + ")[^>]+Id=(\"|')([^\"']+)(\"|')", "g");
     var res;
     var idIndex = (nNames.match(/\(/g) || []).length + 3;
     while (res = reg.exec(txt))
