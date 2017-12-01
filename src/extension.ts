@@ -445,16 +445,19 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 
     var change = event.contentChanges[0].text;
     var originalPosition = editor.selection.start.translate(0, 1);
-    
+    var curLine = getPreviousText(editor.document, editor.selection.start, true)
+
     // закрывание [тегов]
-    var tagT = text.match(/\[([\w\d#]+)([^\]]*)?(\/)?\]$/);
-    if (
+    var tagT = text.match(/\[([\w\d#]+)([^\]\[]*)?(\/)?\]$/);
+    if
+    (
         change[change.length - 1] == "]" &&
-        !tag.CSMode &&
+        (!tag.CSMode || inString(curLine)) &&
         !!tagT &&
         !!tagT[1] &&
         !tagT[3] &&
-        !tagT[1].match(/^((area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr))$/))
+        !tagT[1].match(/^((area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr))$/)
+    )
     {
         inProcess = true;
         editor.insertSnippet(new vscode.SnippetString("$1[/" + tagT[1] + "]"), originalPosition).then(() =>
