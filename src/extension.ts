@@ -179,7 +179,8 @@ function autoComplete()
         {
             var completionItems = [];
             var parent = getCurrentTag(getPreviousText(document, position));
-            if (parent && !parent.Closed && AutoCompleteArray.Attributes[parent.Id])
+            var curLine = getPreviousText(document, position, true);
+            if (parent && !parent.Closed && AutoCompleteArray.Attributes[parent.Id] && !inString(curLine))
             {
                 var existAttrs = parent.attributeNames();
                 AutoCompleteArray.Attributes[parent.Id].forEach(element =>
@@ -206,7 +207,8 @@ function autoComplete()
         {
             var completionItems = [];
             var tag = getCurrentTag(getPreviousText(document, position));
-            if (tag.CSMode)
+            var curLine = getPreviousText(document, position, true);
+            if (tag.CSMode && !inString(curLine))
             {
                 var ar = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums);
                 ar.forEach(element =>
@@ -228,7 +230,8 @@ function autoComplete()
         {
             var completionItems = [];
             var tag = getCurrentTag(getPreviousText(document, position));
-            if (tag.CSMode)
+            var curLine = getPreviousText(document, position, true);
+            if (tag.CSMode && !inString(curLine))
             {
                 var ar = TibAutoCompleteList.Properties.concat(TibAutoCompleteList.Methods, TibAutoCompleteList.EnumMembers);
                 var lastLine = getCurrentLineText(document, position);
@@ -251,7 +254,7 @@ function autoComplete()
         }
     }, '.');
 
-    // Node Ids
+    //Node Ids
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
@@ -395,7 +398,7 @@ function makeIndent(): void
 
 function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag, text: string): void
 {
-    if (inProcess || !editor || !event || !event.contentChanges[0] || tag.CSMode) return;
+    if (inProcess || !editor || !event || !event.contentChanges[0]) return;
 
     var isRightAngleBracket = checkLastSymbol(event.contentChanges[0], ">");
     if (!isRightAngleBracket) return;
@@ -405,8 +408,8 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
     {
         var curLine = getPreviousText(editor.document, originalPosition, true);
         var result = /<([a-zA-Z][a-zA-Z0-9:\-_.]*)(?:\s+[^<>]*?[^\s/<>=]+?)*?\s?(\/|>)$/.exec(curLine);
-        if (result !== null && ((occurrenceCount(result[0], "'") % 2 === 0)
-            && (occurrenceCount(result[0], "\"") % 2 === 0) && (occurrenceCount(result[0], "`") % 2 === 0)))
+        if (tag.CSMode && !result[1].match(new RegExp("^(" + _AllowCodeTags + ")$"))) return;
+        if (result !== null && !inString(result[0]))
         {
             if (result[2] === ">")
             {
