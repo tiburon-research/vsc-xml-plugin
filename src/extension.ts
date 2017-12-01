@@ -260,18 +260,18 @@ function autoComplete()
         {
             var completionItems = [];
             var tag = getCurrentTag(getPreviousText(document, position));
-            var text = getPreviousText(document, position);
+            if (!tag) return;
+            var text = getPreviousText(document, position, true);
+
+            // Id листов
             var curAttr = text.match(/(\w+)=(["'])(\w*)$/);
-            if (
-                !!tag &&
-                !tag.Closed &&
-                curAttr && tag.Name == "Repeat" && curAttr[1].toLowerCase() == "list"
+            if
+            (
+                !tag.Closed && curAttr && tag.Name == "Repeat" && curAttr[1].toLowerCase() == "list" ||
+                tag.CSMode && text.match(/CurrentSurvey\.Lists\["\w*$/)
             )
             {
-                var from_pos = document.positionAt(text.lastIndexOf(curAttr[2]) + 1);
-                var range = new vscode.Range(from_pos, position);
                 var lists = CurrentNodes.GetIds("List");
-
                 lists.forEach(element =>
                 {
                     var ci = new vscode.CompletionItem(element, vscode.CompletionItemKind.Reference);
@@ -280,6 +280,7 @@ function autoComplete()
                     completionItems.push(ci);
                 });
             }
+
             return completionItems;
         },
         resolveCompletionItem(item, token)
