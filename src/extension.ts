@@ -2,11 +2,11 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes} from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes } from "./classes";
 
 // константы
 
-const _NodeStoreNames = "";
+const _NodeStoreNames = "(Page)|(Question)|(Quota)|(List)";
 
 
 // глобальные переменные
@@ -250,6 +250,41 @@ function autoComplete()
             return item;
         }
     }, '.');
+
+    // Node Ids
+    vscode.languages.registerCompletionItemProvider('tib', {
+        provideCompletionItems(document, position, token, context)
+        {
+            var completionItems = [];
+            var tag = getCurrentTag(getPreviousText(document, position));
+            var text = getPreviousText(document, position);
+            var curAttr = text.match(/(\w+)=(["'])(\w*)$/);
+            if (
+                !!tag &&
+                !tag.Closed &&
+                curAttr && tag.Name == "Repeat" && curAttr[1].toLowerCase() == "list"
+            )
+            {
+                var from_pos = document.positionAt(text.lastIndexOf(curAttr[2]) + 1);
+                var range = new vscode.Range(from_pos, position);
+                var lists = CurrentNodes.GetIds("List");
+
+                lists.forEach(element =>
+                {
+                    var ci = new vscode.CompletionItem(element, vscode.CompletionItemKind.Reference);
+                    ci.detail = "Id листа";
+                    ci.insertText = element;
+                    completionItems.push(ci);
+                });
+                console.log(completionItems);
+            }
+            return completionItems;
+        },
+        resolveCompletionItem(item, token)
+        {
+            return item;
+        }
+    });
 }
 
 
@@ -542,7 +577,7 @@ function parseMethods(editor: vscode.TextEditor): void
         if (m && m[7])
         {
             var start = text.indexOf(m[0]);
-            var end = text.indexOf( m[8] ? ")" : ";", start) + 1;
+            var end = text.indexOf(m[8] ? ")" : ";", start) + 1;
             var positionFrom = editor.document.positionAt(start);
             var positionTo = editor.document.positionAt(end);
             var rng = new vscode.Range(positionFrom, positionTo);
