@@ -58,7 +58,7 @@ export function activate(context: vscode.ExtensionContext)
     hoverDocs();
     helper();
     saveMethods(editor);
-    definitions();
+    definitions(editor);
 
     updateNodesIds(editor);
 
@@ -369,15 +369,35 @@ function hoverDocs()
 
 
 //definitions
-function definitions()
+function definitions(editor: vscode.TextEditor)
 {
     vscode.languages.registerDefinitionProvider('tib', {
         provideDefinition(document, position, token)
         {
             var tag = getCurrentTag(getPreviousText(document, position));
-            if (!tag.CSMode) return;
-            var word = document.getText(document.getWordRangeAtPosition(position));
-            if (Methods.Contains(word)) return Methods.Item(word).GetLocation();
+            var word;
+            var res: vscode.Location;
+            if (tag.CSMode)
+            {
+                word = document.getText(document.getWordRangeAtPosition(position));
+                if (Methods.Contains(word)) res = Methods.Item(word).GetLocation();
+                console.log('c#');
+            }
+            else
+            {
+                word = document.getText(document.getWordRangeAtPosition(position, /[^'"]+/));
+                var enabledNodes = ["Page", "List"];
+                var ur = vscode.Uri.file(editor.document.fileName);
+                enabledNodes.forEach(element => {
+                    var item = CurrentNodes.GetItem(word, element);
+                    if (item)
+                    {
+                        res = item.GetLocation(ur);
+                        return res;
+                    }    
+                });
+            }
+            return res;
         }
     });
 }
@@ -572,10 +592,11 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
             mt[1] && !!mt[1].match(new RegExp(_AllowCodeTags)) && !isSpaced ||
             (lastc > str.lastIndexOf("[/c#") && lastc < lastcEnd && lastcEnd >= 0) ||
             !!text.match(/\$[^\s]+$/);
+        if (mt[4]) tag.Closed = true;
+        tag.CSMode = tag.CSMode && tag.Closed;
         tag.Parents = nn;
         tag.Position = vscode.window.activeTextEditor.document.positionAt(originalText.lastIndexOf("<" + mt[1]));
         if (mt[2]) tag.setAttributes(mt[2]);
-        if (mt[4]) tag.Closed = true;
         if (mt[5]) tag.Body = mt[5];
         tag.LastParent = nn[nn.length - 1];
         if (mt[1] == "Item") tag.Id = tag.LastParent + "Item";

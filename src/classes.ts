@@ -10,7 +10,7 @@ export class KeyedCollection<T>
 
     constructor()
     {
-        
+
     }
 
     public Contains(key: string): boolean
@@ -195,7 +195,7 @@ export class TibMethods extends KeyedCollection<TibMethod>
     {
         if (!this.Contains(item.Name)) this.AddPair(item.Name, item);
     }
-}    
+}
 
 
 export class InlineAttribute
@@ -265,10 +265,15 @@ export class SurveyNode
         this.Type = type;
         this.Position = pos;
     }
-    
+
     Id: string = "";
     Type: string = "";
     Position: vscode.Position;
+
+    GetLocation(uri: vscode.Uri): vscode.Location
+    {
+        return new vscode.Location(uri, this.Position);
+    }
 }
 
 
@@ -292,5 +297,20 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
         {
             return e.Id;
         });
+    }
+
+    GetItem(id: string, type?: string): SurveyNode
+    {
+        var nodes = this.Item(type);
+        var res: SurveyNode;
+        for (let i = 0; i < nodes.length; i++)
+        {
+            if (nodes[i].Id == id)
+            {
+                res = nodes[i];
+                break;
+            }    
+        };
+        return res;
     }
 }
