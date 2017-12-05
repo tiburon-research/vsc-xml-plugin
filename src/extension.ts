@@ -6,7 +6,7 @@ import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentT
 
 // константы
 
-const _NodeStoreNames = "(Page)|(Question)|(Quota)|(List)"; // XML теги, которые сохраняются в CurrentNodes
+const _NodeStoreNames = ["Page", "Question", "Quota", "List"]; // XML теги, которые сохраняются в CurrentNodes
 const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)"; // XML теги, которые могут содержать c#
 
 
@@ -67,7 +67,7 @@ export function activate(context: vscode.ExtensionContext)
         var originalPosition = editor.selection.start.translate(0, 1);
         var text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
         var tag = getCurrentTag(text);
-        if (tag && tag.Name.match(new RegExp("^(" + _NodeStoreNames + ")$"))) updateNodesIds(editor, tag.Name);
+        if (tag && _NodeStoreNames.indexOf(tag.Name) > -1) updateNodesIds(editor, [tag.Name]);
         insertAutoCloseTag(event, editor, tag, text);
         insertSpecialSnippets(event, editor, text, tag);
         saveMethods(editor);
@@ -294,7 +294,7 @@ function autoComplete()
         {
             return item;
         }
-    });
+    }, "\"", "'");
 }
 
 
@@ -521,14 +521,15 @@ function saveMethods(editor: vscode.TextEditor): void
 }
 
 // сохранение Id
-function updateNodesIds(editor: vscode.TextEditor, name?: string)
+function updateNodesIds(editor: vscode.TextEditor, name?: string[])
 {
     var nNames = name;
     if (!nNames) nNames = _NodeStoreNames;
     var txt = editor.document.getText();
-    var reg = new RegExp("<(" + nNames + ")[^>]+Id=(\"|')([^\"']+)(\"|')", "g");
+    var reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]+Id=(\"|')([^\"']+)(\"|')", "g");
     var res;
-    var idIndex = (nNames.match(/\(/g) || []).length + 3;
+    var idIndex = nNames.length + 3;
+    CurrentNodes.Clear(nNames);
     while (res = reg.exec(txt))
     {
         var pos = editor.document.positionAt(txt.indexOf(res[0]));

@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 
 export class KeyedCollection<T>
 {
-    private items: { [index: string]: T } = {};
+    protected items: { [index: string]: T } = {};
     private count: number = 0;
 
     constructor()
@@ -313,4 +313,14 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
         };
         return res;
     }
+
+    Clear(names?: string[])
+    {
+        if (!names) super.Clear();
+        else 
+        names.forEach(element => {
+            this.items[element] = [];
+        });    
+    }
+    
 }
