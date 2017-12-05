@@ -375,18 +375,16 @@ function definitions(editor: vscode.TextEditor)
         provideDefinition(document, position, token)
         {
             var tag = getCurrentTag(getPreviousText(document, position));
-            var word;
             var res: vscode.Location;
-            if (tag.CSMode)
+            if (tag.CSMode && !inString(getPreviousText(document, position, true)))
             {
                 word = document.getText(document.getWordRangeAtPosition(position));
                 if (Methods.Contains(word)) res = Methods.Item(word).GetLocation();
-                console.log('c#');
             }
             else
             {
-                word = document.getText(document.getWordRangeAtPosition(position, /[^'"]+/));
-                var enabledNodes = ["Page", "List"];
+                var word = document.getText(document.getWordRangeAtPosition(position, /[^'"\s]+/));;
+                var enabledNodes = ["Page", "List", "Quota"];
                 var ur = vscode.Uri.file(editor.document.fileName);
                 enabledNodes.forEach(element => {
                     var item = CurrentNodes.GetItem(word, element);
