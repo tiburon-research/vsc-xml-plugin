@@ -241,13 +241,13 @@ function autoComplete()
             if (tag.CSMode && !inString(curLine))
             {
                 var ar = TibAutoCompleteList.Properties.concat(TibAutoCompleteList.Methods, TibAutoCompleteList.EnumMembers);
-                var lastLine = getCurrentLineText(document, position);
+                var lastLine = getPreviousText(document, position, true);
                 ar.forEach(element =>
                 {
                     var m = false;
                     if (element.Parent)
                     {
-                        var reg = new RegExp(element.Parent + "\\.\s*$");
+                        var reg = new RegExp(element.Parent + "\\.$");
                         m = !!lastLine.match(reg);
                     }
                     if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem());
