@@ -378,7 +378,7 @@ function definitions(editor: vscode.TextEditor)
             var res: vscode.Location;
             if (tag.CSMode && !inString(getPreviousText(document, position, true)))
             {
-                word = document.getText(document.getWordRangeAtPosition(position));
+                var word = document.getText(document.getWordRangeAtPosition(position));
                 if (Methods.Contains(word)) res = Methods.Item(word).GetLocation();
             }
             else
@@ -386,13 +386,14 @@ function definitions(editor: vscode.TextEditor)
                 var word = document.getText(document.getWordRangeAtPosition(position, /[^'"\s]+/));;
                 var enabledNodes = ["Page", "List", "Quota"];
                 var ur = vscode.Uri.file(editor.document.fileName);
-                enabledNodes.forEach(element => {
+                enabledNodes.forEach(element =>
+                {
                     var item = CurrentNodes.GetItem(word, element);
                     if (item)
                     {
                         res = item.GetLocation(ur);
                         return res;
-                    }    
+                    }
                 });
             }
             return res;
@@ -429,36 +430,25 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
     var isRightAngleBracket = checkLastSymbol(event.contentChanges[0], ">");
     if (!isRightAngleBracket) return;
     var originalPosition = editor.selection.start.translate(0, 1);
-
     if (isRightAngleBracket)
     {
-        var curLine = getPreviousText(editor.document, originalPosition, true);
-        var result = /<([a-zA-Z][a-zA-Z0-9:\-_.]*)(?:\s+[^<>]*?[^\s/<>=]+?)*?\s?(\/|>)$/.exec(curLine);
-        if (tag.CSMode && !result[1].match(new RegExp("^(" + _AllowCodeTags + ")$"))) return;
-        if (result !== null && !inString(result[0]))
+        var curLine = getCurrentLineText(editor.document, originalPosition);
+        var prev = curLine.substr(0, editor.selection.start.character + 1);
+        var after = curLine.substr(editor.selection.start.character + 1);
+        var result = prev.match(/<([\w\d_]+)[^>]*>?$/);
+        if (!result || tag.CSMode && !result[1].match(new RegExp("^(" + _AllowCodeTags + ")$"))) return;
+        var closed = after.match(new RegExp("^[^<]*(<\\/)?" + result[1]));
+        if (!inString(prev) && !closed)
         {
-            if (result[2] === ">")
+            inProcess = true;
+            editor.edit((editBuilder) =>
             {
-                inProcess = true;
-                editor.edit((editBuilder) =>
-                {
-                    editBuilder.insert(originalPosition, "</" + result[1] + ">");
-                }).then(() =>
-                {
-                    editor.selection = new vscode.Selection(originalPosition, originalPosition);
-                    inProcess = false;
-                });
-            } else
+                editBuilder.insert(originalPosition, "</" + result[1] + ">");
+            }).then(() =>
             {
-                inProcess = true;
-                editor.edit((editBuilder) =>
-                {
-                    editBuilder.insert(originalPosition, ">");
-                }).then(() =>
-                {
-                    inProcess = false;
-                });
-            }
+                editor.selection = new vscode.Selection(originalPosition, originalPosition);
+                inProcess = false;
+            });
         }
     }
 }
