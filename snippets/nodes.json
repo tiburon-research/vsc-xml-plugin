@@ -83,7 +83,7 @@
         "prefix": "<!--block",
         "body": [
             "<!--#block ${1:Name}-->\n",
-            "\t$2",
+            "$2",
             "\n<!--#endblock-->"
         ],
         "description": "Сворачиваемый блок"
@@ -142,11 +142,19 @@
             "\\$repeat(${1:source}){$2[,]}"
         ]
     },
+    "ftpPath":{
+        "prefix": "@StoreUrl",
+        "body":[
+            "@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2"
+        ],
+        "description": "Стандартный путь к материалам проета"
+    },
     "src":{
-        "prefix": "src=\"",
+        "prefix": "img src=\"",
         "body": [
-            "src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\""
-        ]
+            "img src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\""
+        ],
+        "description": "Стандартный путь к материалам проета"
     },
     "inlineCsharp":{
         "prefix": "[c#",

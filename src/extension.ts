@@ -100,8 +100,7 @@ export function activate(context: vscode.ExtensionContext)
 
     vscode.commands.registerCommand('tib.insertTag', () => 
     {
-        var str = editor.document.getText(editor.selection);
-        editor.insertSnippet(new vscode.SnippetString("[${1:u}]" + str + "[/${1:u}]"));
+        editor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[${1:u}]"));
     });
 
 }
@@ -456,7 +455,7 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
         var curLine = getCurrentLineText(editor.document, originalPosition);
         var prev = curLine.substr(0, editor.selection.start.character + 1);
         var after = curLine.substr(editor.selection.start.character + 1);
-        var result = prev.match(/<([\w\d_]+)[^>]*>?$/);
+        var result = prev.match(/<([\w\d_]+)[^>\/]*>?$/);
         if (!result || tag.CSMode && !result[1].match(new RegExp("^(" + _AllowCodeTags + ")$"))) return;
         var closed = after.match(new RegExp("^[^<]*(<\\/)?" + result[1]));
         if (!inString(prev) && !closed)
@@ -601,7 +600,7 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         tag.CSMode =
             mt[1] && !!mt[1].match(new RegExp(_AllowCodeTags)) && !isSpaced ||
             (lastc > str.lastIndexOf("[/c#") && lastc < lastcEnd && lastcEnd >= 0) ||
-            !!text.match(/\$[^\s]+$/);
+            !!text.match(/\$[\w\d_]+$/);
         if (mt[4]) tag.Closed = true;
         tag.CSMode = tag.CSMode && tag.Closed;
         tag.Parents = nn;
