@@ -229,7 +229,7 @@ function autoComplete()
         }
     }, " ");
 
-    //Functions, Variables, Enums, Classes
+    //Functions, Variables, Enums, Classes, Custom Methods
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
@@ -238,11 +238,13 @@ function autoComplete()
             var curLine = getPreviousText(document, position, true);
             if (tag.CSMode && !inString(curLine))
             {
-                var ar = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums, TibAutoCompleteList.Classes);
+                var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums, TibAutoCompleteList.Classes);
                 ar.forEach(element =>
                 {
                     completionItems.push(element.ToCompletionItem());
                 });
+                var customMethods = Methods.CompletionArray();
+                if (customMethods) completionItems = completionItems.concat(customMethods);
             }
             return completionItems;
         },
@@ -261,7 +263,7 @@ function autoComplete()
             var curLine = getPreviousText(document, position, true);
             if (tag.CSMode && !inString(curLine))
             {
-                var ar = TibAutoCompleteList.Properties.concat(TibAutoCompleteList.Methods, TibAutoCompleteList.EnumMembers);
+                var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Properties.concat(TibAutoCompleteList.Methods, TibAutoCompleteList.EnumMembers);
                 var lastLine = getPreviousText(document, position, true);
                 ar.forEach(element =>
                 {
@@ -382,6 +384,8 @@ function hoverDocs()
                     break;
                 }
             }
+            var customMethods = Methods.HoverArray(text);
+            if (customMethods) res = res.concat(customMethods);
             if (res.length == 0) return;
             return new vscode.Hover(res, range);
         }
@@ -519,12 +523,13 @@ function saveMethods(editor: vscode.TextEditor): void
         if (m && m[7])
         {
             var start = text.indexOf(m[0]);
-            var end = text.indexOf(m[8] ? ")" : ";", start) + 1;
+            var isFunc = !!m[8];
+            var end = text.indexOf(isFunc ? ")" : ";", start) + 1;
             var positionFrom = editor.document.positionAt(start);
             var positionTo = editor.document.positionAt(end);
             var rng = new vscode.Range(positionFrom, positionTo);
             var ur = vscode.Uri.file(editor.document.fileName);
-            Methods.Add(new TibMethod(m[7], m[6].trim(), rng, ur));
+            Methods.Add(new TibMethod(m[7], m[5] + " " + m[6].trim(), rng, ur, isFunc));
         }
     }
 }

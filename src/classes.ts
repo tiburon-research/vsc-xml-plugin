@@ -79,6 +79,12 @@ export class KeyedCollection<T>
         this.items = {};
         this.count = 0;
     }
+
+    public forEach(callback)
+    {
+        for (var key in this.items)
+            callback(key, this.Item(key));
+    }
 }
 
 
@@ -98,7 +104,7 @@ export class TibAutoCompleteItem
     Documentation: string = "";
     Parent: string = "";
     Overloads = [];
-    PrentTag: string = "";
+    ParentTag: string = "";
 
     constructor(obj: Object)
     {
@@ -110,6 +116,7 @@ export class TibAutoCompleteItem
     {
         var kind: keyof typeof vscode.CompletionItemKind = this.Kind;
         var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind[kind]);
+        if (this.Kind == "Function" || this.Kind == "Method") item.insertText = new vscode.SnippetString(this.Name + "($1)");
         var mds = new vscode.MarkdownString();
         if (this.Description) mds.value = this.Description;
         else mds.value = this.Documentation;
@@ -168,18 +175,35 @@ export class TibMethod
     Signature: string = "";
     Location: vscode.Range;
     Uri: vscode.Uri;
+    IsFunction: boolean;
 
-    constructor(name: string, sign: string, location: vscode.Range, uri: vscode.Uri)
+    constructor(name: string, sign: string, location: vscode.Range, uri: vscode.Uri, isFunction: boolean = false, fullString: string = "")
     {
         this.Name = name;
         this.Signature = sign;
         this.Location = location;
         this.Uri = uri;
+        this.IsFunction = isFunction;
     }
 
     public GetLocation(): vscode.Location
     {
         return new vscode.Location(this.Uri, this.Location)
+    }
+
+    ToCompletionItem()
+    {
+        var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Function);
+        if (this.IsFunction) item.insertText = new vscode.SnippetString(this.Name + "($1)");
+        var mds = new vscode.MarkdownString();
+        mds.value = this.Signature;
+        item.documentation = mds;
+        return item;
+    }
+
+    ToHoverItem()
+    {
+        return { language: "csharp", value: this.Signature };
     }
 }
 
@@ -194,6 +218,22 @@ export class TibMethods extends KeyedCollection<TibMethod>
     public Add(item: TibMethod)
     {
         if (!this.Contains(item.Name)) this.AddPair(item.Name, item);
+    }
+
+    CompletionArray(): vscode.CompletionItem[]
+    {
+        return this.Values().map(function(e)
+        {
+            return e.ToCompletionItem();
+        });
+    }
+
+    HoverArray(word: string): any[]
+    {
+        return this.Values().map(function(e)
+        {
+            if (e.Name == word) return e.ToHoverItem();
+        });
     }
 }
 
