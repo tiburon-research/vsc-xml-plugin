@@ -101,7 +101,7 @@ export function activate(context: vscode.ExtensionContext)
 
     vscode.commands.registerCommand('tib.insertTag', () => 
     {
-        editor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[${1:u}]"));
+        editor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]"));
     });
 
 }
