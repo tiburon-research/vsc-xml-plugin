@@ -119,7 +119,8 @@ function getData()
         Variables: [],
         Properties: [],
         Enums: [],
-        EnumMembers: []
+        EnumMembers: [],
+        Classes: []
     };
     AutoCompleteArray.Code.forEach(element =>
     {
@@ -228,7 +229,7 @@ function autoComplete()
         }
     }, " ");
 
-    //Functions, Variables, Enums
+    //Functions, Variables, Enums, Classes
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
@@ -237,7 +238,7 @@ function autoComplete()
             var curLine = getPreviousText(document, position, true);
             if (tag.CSMode && !inString(curLine))
             {
-                var ar = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums);
+                var ar = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums, TibAutoCompleteList.Classes);
                 ar.forEach(element =>
                 {
                     completionItems.push(element.ToCompletionItem());

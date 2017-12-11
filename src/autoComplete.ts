@@ -5,6 +5,11 @@ var ManualCode = [
         Detail: "Object"
     },
     {
+        Name: "SurveyListItem",
+        Kind: "Class",
+        Detail: "Class"
+    },
+    {
         Name: "ToString()",
         Kind: "Method",
         Parent: "[\\w\\d]+"
@@ -78,6 +83,12 @@ var ManualCode = [
     {
         Name: "Contains",
         Kind: "Method",
+        Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
+    },
+    {
+        Name: "Count",
+        Kind: "Method",
+        Detail: "Integer",
         Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
     },
     {
@@ -170,6 +181,12 @@ var ManualCode = [
         Name: "And",
         Kind: "EnumMember",
         Parent: "LogicalOperator"
+    },
+    {
+        Name: "AnswerIDs",
+        Kind: "Function",
+        Detail: "string[]",
+        Documentation: "string[] AnswerIDs(string pageId, string questionId)"
     }
 ];
 
