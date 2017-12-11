@@ -509,9 +509,9 @@ function saveMethods(editor: vscode.TextEditor): void
 }
 
 // сохранение Id
-function updateNodesIds(editor: vscode.TextEditor, name?: string[])
+function updateNodesIds(editor: vscode.TextEditor, names?: string[])
 {
-    var nNames = name;
+    var nNames = names;
     if (!nNames) nNames = _NodeStoreNames;
     var txt = editor.document.getText();
     var reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]+Id=(\"|')([^\"']+)(\"|')", "g");
