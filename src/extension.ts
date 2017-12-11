@@ -69,7 +69,7 @@ export function activate(context: vscode.ExtensionContext)
     helper();
 
     // для каждого дукумента свои
-    reload();    
+    reload();
 
     vscode.workspace.onDidOpenTextDocument(event =>
     {
@@ -90,7 +90,7 @@ export function activate(context: vscode.ExtensionContext)
         var tag = getCurrentTag(text);
         updateNodesIds(editor);
         insertAutoCloseTag(event, editor, tag, text);
-        insertSpecialSnippets(event, editor, text, tag);       
+        insertSpecialSnippets(event, editor, text, tag);
         saveMethods(editor);
     });
 
@@ -235,16 +235,19 @@ function autoComplete()
         {
             var completionItems = [];
             var tag = getCurrentTag(getPreviousText(document, position));
-            var curLine = getPreviousText(document, position, true);
-            if (tag.CSMode && !inString(curLine))
+            if (tag.CSMode)
             {
-                var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums, TibAutoCompleteList.Classes);
-                ar.forEach(element =>
-                {
-                    completionItems.push(element.ToCompletionItem());
-                });
+                var curLine = getPreviousText(document, position, true);
                 var customMethods = Methods.CompletionArray();
                 if (customMethods) completionItems = completionItems.concat(customMethods);
+                if (!tag.CSInline && !inString(curLine))
+                {
+                    var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums, TibAutoCompleteList.Classes);
+                    ar.forEach(element =>
+                    {
+                        completionItems.push(element.ToCompletionItem());
+                    });
+                }
             }
             return completionItems;
         },
