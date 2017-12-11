@@ -82,14 +82,15 @@ export function activate(context: vscode.ExtensionContext)
         reload();
     });
 
+
     vscode.workspace.onDidChangeTextDocument(event =>
     {
         var originalPosition = editor.selection.start.translate(0, 1);
         var text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
         var tag = getCurrentTag(text);
-        if (tag && _NodeStoreNames.indexOf(tag.Name) > -1) updateNodesIds(editor, [tag.Name]);
+        updateNodesIds(editor);
         insertAutoCloseTag(event, editor, tag, text);
-        insertSpecialSnippets(event, editor, text, tag);
+        insertSpecialSnippets(event, editor, text, tag);       
         saveMethods(editor);
     });
 
