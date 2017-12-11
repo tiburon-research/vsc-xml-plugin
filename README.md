@@ -133,4 +133,5 @@
   - [проблемы](https://github.com/tiburon-research/vsc-xml-plugin/issues),
   - [список пожеланий](https://github.com/tiburon-research/vsc-xml-plugin/issues/1).
 
-* Можно писать [напрямую в Telegram](https://t.me/Gulyaev_Ruslan)
+* можно писать [напрямую в Telegram](https://t.me/Gulyaev_Ruslan)
+* или в [беседу Telegram](https://t.me/joinchat/B-Eb_kGQNrjF6IPE2Zqfbw)
