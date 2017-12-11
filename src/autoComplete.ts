@@ -25,6 +25,11 @@ var ManualCode = [
         Detail: "Object"
     },
     {
+        Name: "RespID",
+        Kind: "Property",
+        Detail: "string"
+    },
+    {
         Name: "GetInstance()",
         Kind: "Method",
         Parent: "InterviewPars"
@@ -187,6 +192,12 @@ var ManualCode = [
         Kind: "Function",
         Detail: "string[]",
         Documentation: "string[] AnswerIDs(string pageId, string questionId)"
+    },
+    {
+        Name: "DataGetCustoms",
+        Kind: "Function",
+        Detail: "string[][]",
+        Documentation: "string[][] DataGetCustoms(int csvId, string key)"
     }
 ];
 

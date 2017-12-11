@@ -64,11 +64,13 @@
         "commands":[
             {
                 "command": "tib.debug",
-                "title": "Отладка скрипта на сервере"
+                "title": "Отладка скрипта на сервере",
+                "category": "tib"
             },
             {
                 "command": "tib.insertTag",
-                "title": "Обернуть текст в тег"
+                "title": "Обернуть текст в тег",
+                "category": "tib"
             }
         ],
         "keybindings":[
