@@ -20,7 +20,8 @@ var TibAutoCompleteList = {
     Variables: [],
     Properties: [],
     Enums: [],
-    EnumMembers: []
+    EnumMembers: [],
+    Classes: []
 };
 
 var codeAutoCompleteArray = [];
@@ -31,7 +32,8 @@ var link = {
     Variable: "Variables",
     Property: "Properties",
     Enum: "Enums",
-    EnumMember: "EnumMembers"
+    EnumMember: "EnumMembers",
+    Class: "Classes"
 };
 
 var ItemSnippets = {
@@ -52,15 +54,33 @@ export function activate(context: vscode.ExtensionContext)
 {
     var editor = vscode.window.activeTextEditor;
 
+    function reload()
+    {
+        saveMethods(editor);
+        definitions(editor);
+        updateNodesIds(editor);
+    }
+
+    // общие дествия при старте расширения
     getData();
     makeIndent();
     autoComplete();
     hoverDocs();
     helper();
-    saveMethods(editor);
-    definitions(editor);
 
-    updateNodesIds(editor);
+    // для каждого дукумента свои
+    reload();    
+
+    vscode.workspace.onDidOpenTextDocument(event =>
+    {
+        reload();
+    });
+
+    vscode.window.onDidChangeActiveTextEditor(neweditor =>
+    {
+        editor = neweditor;
+        reload();
+    });
 
     vscode.workspace.onDidChangeTextDocument(event =>
     {
