@@ -401,7 +401,7 @@ function definitions(editor: vscode.TextEditor)
         {
             var tag = getCurrentTag(getPreviousText(document, position));
             var res: vscode.Location;
-            if (tag.CSMode && !inString(getPreviousText(document, position, true)))
+            if (tag.CSMode && (!inString(getPreviousText(document, position, true))) || tag.CSInline)
             {
                 var word = document.getText(document.getWordRangeAtPosition(position));
                 if (Methods.Contains(word)) res = Methods.Item(word).GetLocation();
