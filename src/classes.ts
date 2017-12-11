@@ -263,6 +263,7 @@ export class CurrentTag
     Parents: Array<string> = [];
     LastParent: string = "";
     CSMode: boolean = false;
+    CSInline: boolean = false;
     Position: vscode.Position;
 
     constructor(name: string)

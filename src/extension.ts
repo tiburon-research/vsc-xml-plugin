@@ -603,10 +603,11 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         var lastc = str.lastIndexOf("[c#");
         var lastcEnd = str.lastIndexOf("]");
         var isSpaced = !!mt[3] && !!mt[3].substr(0, mt[3].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+
+        tag.CSInline = !!text.match(/\$[\w\d_]+$/);
         tag.CSMode =
             mt[1] && !!mt[1].match(new RegExp(_AllowCodeTags)) && !isSpaced ||
             (lastc > str.lastIndexOf("[/c#") && lastc < lastcEnd && lastcEnd >= 0) ||
-            !!text.match(/\$[\w\d_]+$/);
+            tag.CSInline;
         if (mt[4]) tag.Closed = true;
         tag.CSMode = tag.CSMode && tag.Closed;
         tag.Parents = nn;
