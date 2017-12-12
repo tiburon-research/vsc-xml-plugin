@@ -14,7 +14,7 @@
 				},
 				"2":
 				{
-					"name": "entity.name.tag.xml"
+					"name": "entity.name.tag.allowcode.tib"
 				},
 				"3":
 				{
@@ -34,7 +34,7 @@
 					"name": "punctuation.definition.tag.xml"
 				},
 				"3": {
-					"name": "entity.name.tag.xml"
+					"name": "entity.name.tag.allowcode.tib"
 				},
 				"5": {
 					"name": "punctuation.definition.tag.xml"
@@ -57,7 +57,7 @@
 				},
 				"2":
 				{
-					"name": "entity.name.tag.xml"
+					"name": "entity.name.tag.allowcode.tib"
 				},
 				"3":
 				{
@@ -85,7 +85,7 @@
 				},
 				"8":
 				{
-					"name": "entity.name.tag.xml"
+					"name": "entity.name.tag.allowcode.tib"
 				}
 			},
 			"endCaptures": {
@@ -106,7 +106,7 @@
 				},
 				"2":
 				{
-					"name": "entity.name.tag.xml"
+					"name": "entity.name.tag.allowcode.tib"
 				},
 				"3":
 				{
@@ -126,7 +126,7 @@
 					"name": "punctuation.definition.tag.xml"
 				},
 				"3": {
-					"name": "entity.name.tag.xml"
+					"name": "entity.name.tag.allowcode.tib"
 				},
 				"5": {
 					"name": "punctuation.definition.tag.xml"
@@ -663,7 +663,7 @@
 						},
 						"2":
 						{
-							
+							"name": "entity.name.tag.allowcode.tib"
 						},
 						"3":
 						{
@@ -685,7 +685,7 @@
 						},
 						"2":
 						{
-							
+							"name": "entity.name.tag.allowcode.tib"
 						},
 						"3":
 						{
