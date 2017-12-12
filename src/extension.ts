@@ -455,9 +455,10 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
 {
     if (inProcess || !editor || !event || !event.contentChanges[0]) return;
 
-    var isRightAngleBracket = checkLastSymbol(event.contentChanges[0], ">");
+    var isRightAngleBracket = event.contentChanges[0].text == ">";
     if (!isRightAngleBracket) return;
     var originalPosition = editor.selection.start.translate(0, 1);
+    
     if (isRightAngleBracket)
     {
         var curLine = getCurrentLineText(editor.document, originalPosition);
@@ -638,13 +639,6 @@ function getPreviousText(document: vscode.TextDocument, position: vscode.Positio
         start = lineOnly ? new vscode.Position(position.line, 0) : new vscode.Position(0, 0),
         end = new vscode.Position(position.line, position.character);
     return document.getText(new vscode.Range(start, end));
-}
-
-function checkLastSymbol(contentChange: vscode.TextDocumentContentChangeEvent, symbol: string)
-{
-    return contentChange.text === symbol || contentChange.text.endsWith(symbol) && contentChange.range.start.character === 0
-        && contentChange.range.start.line === contentChange.range.end.line
-        && !contentChange.range.end.isEqual(new vscode.Position(0, 0));
 }
 
 function getNextChars(editor: vscode.TextEditor, position: vscode.Position, count: number): string
