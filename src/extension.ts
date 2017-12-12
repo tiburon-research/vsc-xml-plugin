@@ -57,7 +57,6 @@ export function activate(context: vscode.ExtensionContext)
     function reload()
     {
         saveMethods(editor);
-        definitions(editor);
         updateNodesIds(editor);
     }
 
@@ -67,6 +66,7 @@ export function activate(context: vscode.ExtensionContext)
     autoComplete();
     hoverDocs();
     helper();
+    definitions(editor);
 
     // для каждого дукумента свои
     reload();
@@ -515,13 +515,13 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 
 function saveMethods(editor: vscode.TextEditor): void
 {
+    Methods.Clear();
     var text = editor.document.getText();
     var mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
     if (!mtd || !mtd[3]) return;
     var reg = new RegExp(/((public)|(private)|(protected))\s*([\w\d_<>\[\],\s]+)\s+(([\w\d_]+)\s*(\([^)]*\))?)/, "g");
     var str = mtd[3];
     var m;
-    Methods.Clear();
     while (m = reg.exec(str))
     {
         if (m && m[7])
