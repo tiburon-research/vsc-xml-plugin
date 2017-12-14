@@ -112,11 +112,12 @@ export class TibAutoCompleteItem
             this[key] = obj[key];
     }
 
-    ToCompletionItem()
+    ToCompletionItem(addBracket: boolean = false)
     {
         var kind: keyof typeof vscode.CompletionItemKind = this.Kind;
         var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind[kind]);
-        if (this.Kind == "Function" || this.Kind == "Method") item.insertText = new vscode.SnippetString(this.Name + "($1)");
+        if (addBracket && (this.Kind == "Function" || this.Kind == "Method")) item.insertText = new vscode.SnippetString(this.Name + "($1)");
+        if (this.Name == "GetInstance") console.log(item.insertText);
         var mds = new vscode.MarkdownString();
         if (this.Description) mds.value = this.Description;
         else mds.value = this.Documentation;

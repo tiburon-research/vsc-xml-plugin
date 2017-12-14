@@ -240,12 +240,13 @@ function autoComplete()
                 var curLine = getPreviousText(document, position, true);
                 var customMethods = Methods.CompletionArray();
                 if (customMethods) completionItems = completionItems.concat(customMethods);
+                var str = getCurrentLineText(document, position).substr(position.character);
                 if (!tag.CSSingle && !tag.InCSString)
                 {
                     var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums, TibAutoCompleteList.Classes);
                     ar.forEach(element =>
                     {
-                        completionItems.push(element.ToCompletionItem());
+                        completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
                     });
                 }
             }
@@ -263,11 +264,11 @@ function autoComplete()
         {
             var completionItems = [];
             var tag = getCurrentTag(getPreviousText(document, position));
-            var curLine = getPreviousText(document, position, true);
             if (tag.CSMode && !tag.InCSString && !tag.CSSingle)
             {
                 var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Properties.concat(TibAutoCompleteList.Methods, TibAutoCompleteList.EnumMembers);
                 var lastLine = getPreviousText(document, position, true);
+                var str = getCurrentLineText(document, position).substr(position.character);
                 ar.forEach(element =>
                 {
                     var m = false;
@@ -276,7 +277,7 @@ function autoComplete()
                         var reg = new RegExp(element.Parent + "\\.$");
                         m = !!lastLine.match(reg);
                     }
-                    if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem());
+                    if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
                 });
             }
             return completionItems;
