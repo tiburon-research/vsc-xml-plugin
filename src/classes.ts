@@ -263,8 +263,11 @@ export class CurrentTag
     Parents: Array<string> = [];
     LastParent: string = "";
     CSMode: boolean = false;
-    CSInline: boolean = false;
+    CSSingle: boolean = false; //$Method()
+    CSInline: boolean = false; //[c#]Method();[/c#]
     Position: vscode.Position;
+    InString: boolean = false; // "body$
+    InCSString: boolean = false; // "body1 [c#]Method("str$
 
     constructor(name: string)
     {

@@ -208,7 +208,7 @@ function autoComplete()
             var completionItems = [];
             var parent = getCurrentTag(getPreviousText(document, position));
             var curLine = getPreviousText(document, position, true);
-            if (parent && !parent.Closed && AutoCompleteArray.Attributes[parent.Id] && !inString(curLine))
+            if (parent && !parent.Closed && AutoCompleteArray.Attributes[parent.Id] && !parent.InString)
             {
                 var existAttrs = parent.attributeNames();
                 AutoCompleteArray.Attributes[parent.Id].forEach(element =>
@@ -240,7 +240,7 @@ function autoComplete()
                 var curLine = getPreviousText(document, position, true);
                 var customMethods = Methods.CompletionArray();
                 if (customMethods) completionItems = completionItems.concat(customMethods);
-                if (!tag.CSInline && !inString(curLine))
+                if (!tag.CSSingle && !tag.InCSString)
                 {
                     var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums, TibAutoCompleteList.Classes);
                     ar.forEach(element =>
@@ -264,7 +264,7 @@ function autoComplete()
             var completionItems = [];
             var tag = getCurrentTag(getPreviousText(document, position));
             var curLine = getPreviousText(document, position, true);
-            if (tag.CSMode && !inString(curLine))
+            if (tag.CSMode && !tag.InCSString && !tag.CSSingle)
             {
                 var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Properties.concat(TibAutoCompleteList.Methods, TibAutoCompleteList.EnumMembers);
                 var lastLine = getPreviousText(document, position, true);
@@ -404,7 +404,7 @@ function definitions()
         {
             var tag = getCurrentTag(getPreviousText(document, position));
             var res: vscode.Location;
-            if (tag.CSMode && (!inString(getPreviousText(document, position, true))) || tag.CSInline)
+            if (tag.CSMode && !tag.InCSString)
             {
                 var word = document.getText(document.getWordRangeAtPosition(position));
                 if (Methods.Contains(word)) res = Methods.Item(word).GetLocation();
@@ -453,7 +453,7 @@ function makeIndent(): void
 
 function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag, text: string): void
 {
-    if (inProcess || !editor || !event || !event.contentChanges[0]) return;
+    if (inProcess || !editor || !event || !event.contentChanges[0] || tag.CSMode) return;
 
     var isRightAngleBracket = event.contentChanges[0].text == ">";
     if (!isRightAngleBracket) return;
@@ -465,9 +465,9 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
         var prev = curLine.substr(0, editor.selection.start.character + 1);
         var after = curLine.substr(editor.selection.start.character + 1);
         var result = prev.match(/<([\w\d_]+)[^>\/]*>?$/);
-        if (!result || tag.CSMode && !result[1].match(new RegExp("^(" + _AllowCodeTags + ")$"))) return;
+        if (!result) return;
         var closed = after.match(new RegExp("^[^<]*(<\\/)?" + result[1]));
-        if (!inString(prev) && !closed)
+        if (!closed)
         {
             inProcess = true;
             editor.edit((editBuilder) =>
@@ -496,7 +496,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
     if
     (
         change[change.length - 1] == "]" &&
-        (!tag.CSMode || inString(curLine)) &&
+        (!tag.CSMode || tag.InCSString) &&
         tag.Parents.indexOf("CustomText1") + tag.Parents.indexOf("CustomText2") == -2 &&
         tag.Name != "CustomText1" && tag.Name != "CustomText2" &&
         !!tagT &&
@@ -567,7 +567,40 @@ function updateNodesIds(editor: vscode.TextEditor, names?: string[])
 
 function inString(text: string): boolean
 {
-    return !((occurrenceCount(text, "'") % 2 === 0) && (occurrenceCount(text, "\"") % 2 === 0) && (occurrenceCount(text, "`") % 2 === 0));
+    // не учитывает кавычки в кавычках
+    //return !((occurrenceCount(text, "'") % 2 === 0) && (occurrenceCount(text, "\"") % 2 === 0) && (occurrenceCount(text, "`") % 2 === 0));
+    
+    /*
+    // выполняется очень долго
+    var regStr = /^((([^'"]*)(("[^"]*")|('[^']*'))*)*)$/;
+    return !text.match(regStr);*/
+
+    var rest = text;
+    var i = posiveMin(rest.indexOf("'"), rest.indexOf("\""));
+    while (rest.length > 0 && i !== null)
+    {
+        if (i !== null)
+        {
+            var ch = rest[i];
+            rest = rest.substr(i + 1);
+            var next = rest.indexOf(ch);
+            if (next < 0) return true;
+            rest = rest.substr(next + 1);
+            i = posiveMin(rest.indexOf("'"), rest.indexOf("\""));
+        }
+    }
+    return false;
+}
+
+
+function posiveMin(a, b)
+{
+    if (a < 0)
+        if (b < 0) return null;
+        else return b;
+    else
+        if (b < 0) return a;
+        else return Math.min(a, b);
 }
 
 
@@ -586,7 +619,28 @@ function getCurrentTag(text: string): CurrentTag
     var regEnd = new RegExp("(<(" + _AllowCodeTags + ")([^/>]*>)?)((?![\\t ]+\\s*\n)[\\s\\S]?)*$", "g");
     pure = pure.replace(reg, "");
     pure = pure.replace(regEnd, "$1");
-    return parseTags(pure, text);
+    var tag = parseTags(pure, text);
+    if (tag.Closed)
+    {
+        tag.Body = text.substr(text.indexOf(">", text.lastIndexOf("<" + tag.Name)) + 1);
+        tag.InString = tag && tag.Body && inString(tag.Body);
+        if (tag.CSMode)
+        {
+            if (tag.CSSingle)
+            {
+                var rest = text.substr(text.lastIndexOf("$"));
+                tag.InCSString = inString(rest);
+            }
+            else if (tag.CSInline)
+            {
+                var rest = text.substr(text.lastIndexOf("[c#"));
+                rest = rest.substr(rest.indexOf("]") + 1);
+                tag.InCSString = inString(rest);
+            }
+            else tag.InCSString = tag.InString;
+        }    
+    }
+    return tag;
 }
 
 // рекурсивный поиск незакрытых тегов
@@ -609,11 +663,12 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         var lastc = str.lastIndexOf("[c#");
         var lastcEnd = str.lastIndexOf("]");
         var isSpaced = !!mt[3] && !!mt[3].substr(0, mt[3].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+
-        tag.CSInline = !!text.match(/\$[\w\d_]+$/);
+        tag.CSSingle = !!text.match(/\$[\w\d_]+$/);
+        tag.CSInline = (lastc > str.lastIndexOf("[/c#") && lastc < lastcEnd && lastcEnd >= 0);
         tag.CSMode =
-            mt[1] && !!mt[1].match(new RegExp(_AllowCodeTags)) && !isSpaced ||
-            (lastc > str.lastIndexOf("[/c#") && lastc < lastcEnd && lastcEnd >= 0) ||
-            tag.CSInline;
+            tag.CSInline ||
+            tag.CSSingle ||
+            mt[1] && !!mt[1].match(new RegExp(_AllowCodeTags)) && !isSpaced;
         if (mt[4]) tag.Closed = true;
         tag.CSMode = tag.CSMode && tag.Closed;
         tag.Parents = nn;
@@ -622,7 +677,6 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         if (mt[5]) tag.Body = mt[5];
         tag.LastParent = nn[nn.length - 1];
         if (mt[1] == "Item") tag.Id = tag.LastParent + "Item";
-
         return tag;
     }
 }
