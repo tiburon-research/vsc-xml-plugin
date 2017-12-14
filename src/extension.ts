@@ -492,7 +492,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
     var curLine = getPreviousText(editor.document, editor.selection.start, true)
 
     // закрывание [тегов]
-    var tagT = text.match(/\[([\w\d#]+)([^\]\[]*)?(\/)?\]$/);
+    var tagT = text.match(/\[([a-zA-Z][\w\d]*)([^\]\[]*)?(\/)?\]$/);
     if
     (
         change[change.length - 1] == "]" &&
