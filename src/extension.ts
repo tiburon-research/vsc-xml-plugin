@@ -296,6 +296,7 @@ function autoComplete()
             var tag = getCurrentTag(getPreviousText(document, position));
             if (!tag) return;
             var text = getPreviousText(document, position, true);
+            var needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
 
             // Id листов
             var curAttr = text.match(/(\w+)=(["'])(\w*)$/);
@@ -311,9 +312,26 @@ function autoComplete()
                     var ci = new vscode.CompletionItem(element, vscode.CompletionItemKind.Reference);
                     ci.detail = "Id листа";
                     ci.insertText = element;
+                    if (needClose) ci.insertText = element + curAttr[2];
                     completionItems.push(ci);
                 });
             }
+
+            //Id страниц
+            var opened = text.match(/Page\s*=\s*(['"])\w*$/);
+            if (opened)
+            {
+                var pages = CurrentNodes.GetIds("Page");
+                pages.forEach(element =>
+                {
+                    var ci = new vscode.CompletionItem(element, vscode.CompletionItemKind.Reference);
+                    ci.detail = "Id страницы";
+                    ci.insertText = element;
+                    if (needClose) ci.insertText = element + opened[1];
+                    completionItems.push(ci);
+                });
+            }    
+
 
             return completionItems;
         },
