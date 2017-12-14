@@ -229,7 +229,7 @@ function autoComplete()
         }
     }, " ");
 
-    //Functions, Variables, Enums, Classes, Custom Methods
+    //Functions, Variables, Enums, Classes, Custom Methods, Snippets
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
@@ -247,6 +247,11 @@ function autoComplete()
                     ar.forEach(element =>
                     {
                         completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
+                    });
+                    AutoCompleteArray.CSSnippets.forEach(element => {
+                        var ci = new vscode.CompletionItem(element.prefix, vscode.CompletionItemKind.Snippet);
+                        ci.insertText = new vscode.SnippetString(element.body);
+                        completionItems.push(ci);
                     });
                 }
             }
