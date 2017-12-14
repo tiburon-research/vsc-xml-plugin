@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext)
     autoComplete();
     hoverDocs();
     helper();
-    definitions(editor);
+    definitions();
 
     // для каждого дукумента свои
     reload();
@@ -397,7 +397,7 @@ function hoverDocs()
 
 
 //definitions
-function definitions(editor: vscode.TextEditor)
+function definitions()
 {
     vscode.languages.registerDefinitionProvider('tib', {
         provideDefinition(document, position, token)
@@ -413,7 +413,7 @@ function definitions(editor: vscode.TextEditor)
             {
                 var word = document.getText(document.getWordRangeAtPosition(position, /[^'"\s]+/));;
                 var enabledNodes = ["Page", "List", "Quota"];
-                var ur = vscode.Uri.file(editor.document.fileName);
+                var ur = vscode.Uri.file(vscode.window.activeTextEditor.document.fileName);
                 enabledNodes.forEach(element =>
                 {
                     var item = CurrentNodes.GetItem(word, element);
