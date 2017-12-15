@@ -27,9 +27,25 @@
 				"4":
 				{
 					"name": "punctuation.definition.tag.xml"
+				},
+				"5":
+				{
+					"patterns": [
+						{
+							"include": "#cdata"
+						}
+					]
 				}
 			},
 			"endCaptures": {
+				"1":
+				{
+					"patterns": [
+						{
+							"include": "#cdata"
+						}
+					]
+				},
 				"2": {
 					"name": "punctuation.definition.tag.xml"
 				},
@@ -43,12 +59,15 @@
 			"patterns":[
 				{
 					"include": "#statement"
+				},
+				{
+					"include": "#cdata"
 				}
 			]
 		},
 
 		{  
-			"begin": "(<)(Filter|Redirect|Validate)([^/>]*)(>)(\\s*<!\\[CDATA\\[)?(.*)(</)(\\2)([^>]*)",
+			"begin": "(<)(Filter|Redirect|Validate)([^/>]*)(>)(\\s*<!\\[CDATA\\[)?(.*?)(\\]\\]>)?(</)(\\2)([^>]*)",
 			"end": "(>)",
 			"beginCaptures": {
 				"1":
@@ -71,6 +90,14 @@
 				{
 					"name": "punctuation.definition.tag.xml"
 				},
+				"5":
+				{
+					"patterns": [
+						{
+							"include": "#cdata"
+						}
+					]
+				},
 				"6":
 				{
 					"patterns":[
@@ -81,9 +108,17 @@
 				},
 				"7":
 				{
-					"name": "punctuation.definition.tag.xml"
+					"patterns": [
+						{
+							"include": "#cdata"
+						}
+					]
 				},
 				"8":
+				{
+					"name": "punctuation.definition.tag.xml"
+				},
+				"9":
 				{
 					"name": "entity.name.tag.allowcode.tib"
 				}
@@ -119,9 +154,25 @@
 				"4":
 				{
 					"name": "punctuation.definition.tag.xml"
+				},
+				"5":
+				{
+					"patterns": [
+						{
+							"include": "#cdata"
+						}
+					]
 				}
 			},
 			"endCaptures": {
+				"1":
+				{
+					"patterns": [
+						{
+							"include": "#cdata"
+						}
+					]
+				},
 				"2": {
 					"name": "punctuation.definition.tag.xml"
 				},
@@ -135,6 +186,9 @@
 			"patterns":[
 				{
 					"include": "#csharp"
+				},
+				{
+					"include": "#cdata"
 				}
 			]
 		},
@@ -451,7 +505,12 @@
 		},
 
 
-
+		{
+			"include": "#cdata"
+		},
+		{
+			"include": "#tib-iterator"
+		},
 
 
 		
@@ -472,14 +531,7 @@
 			"name": "meta.tag.preprocessor.xml",
 			"patterns": [
 				{
-					"match": " ([a-zA-Z-]+)",
-					"name": "entity.other.attribute-name.xml"
-				},
-				{
-					"include": "#doublequotedString"
-				},
-				{
-					"include": "#singlequotedString"
+					"include": "#tagStuff"
 				}
 			]
 		},
@@ -634,19 +686,47 @@
 	],
 
 
+
+
+
+
+
+
+
 	"repository": {
-		"embedded-code": {
+
+		"node-id":
+		{
 			"patterns": [
 				{
-					"include": "#smarty"
-				},
-				{
-					"include": "#cs-inline"
+					"match": "((I|i)(D|d))=((\"([^\"]+)\")|('([^']+)'))",
+					"captures": {
+						"1": 
+						{
+							"name": "entity.other.attribute-name.localname.xml"
+						},
+						"6":
+						{
+							"name": "string.value.id",
+							"patterns": [
+								{
+									"include": "#tib-iterator"
+								}
+							]
+						},
+						"8":
+						{
+							"name": "string.value.id",
+							"patterns": [
+								{
+									"include": "#tib-iterator"
+								}
+							]
+						}
+					}
 				}
 			]
 		},
-
-
 
 
 		"cs-inline":
@@ -699,15 +779,19 @@
 					]
 				},
 				{
-					"begin": "\\$([A-Za-z0-9_]+)\\(((([^\\(\\)]+)|([^\\(\\)]*@\\w+(\\([^\\(\\)]*(([^\\(\\)]+)|([^\\(\\)]*@\\w+\\([^\\(\\)]+\\)[^\\(\\)]*))\\))*[^\\(\\)]*)),?)*",
+					"begin": "(\\$)([A-Za-z0-9_]+)\\(((([^\\(\\)]+)|([^\\(\\)]*@\\w+(\\([^\\(\\)]*(([^\\(\\)]+)|([^\\(\\)]*@\\w+\\([^\\(\\)]+\\)[^\\(\\)]*))\\))*[^\\(\\)]*)),?)*",
 					"end": "\\)",
 					"beginCaptures":
 					{
 						"1":
 						{
-							"name": "entity.name.function.cs"
+							"name": "entity.name.inline-prefix"
 						},
 						"2":
+						{
+							"name": "entity.name.function.cs"
+						},
+						"3":
 						{
 							"patterns": [
 								{
@@ -729,8 +813,200 @@
 			]
 		},
 
+		"tib-iterator":
+		{
+			"patterns": [
+				{
+					"include": "#tib-iterator-single"
+				},
+				{
+					"include": "#tib-iterator-var"
+				}
+			]
+		},
+
+		"tib-iterator-single":
+		{
+			"patterns": [
+				{
+					"begin": "(@)((ID)|(Text)|(Pure)|(Itera))((\\()(-\\d+)(\\)))?",
+					"end": "",
+					"beginCaptures": {
+						"1":
+						{
+							"name": "tib.iterator.prefix"
+						},
+						"2":
+						{
+							"name": "tib.iterator.name"
+						},
+						"8":
+						{
+							"name": "tib.iterator.bracket"
+						},
+						"9":
+						{
+							"name": "tib.iterator.depth"
+						},
+						"10":
+						{
+							"name": "tib.iterator.bracket"
+						}
+					}
+				}	
+			]
+		},
+
+		"tib-iterator-var":
+		{
+			"patterns": [
+				{
+					"begin": "(@)(Var)((\\()(-\\d+)(\\)))?((\\()(([@0-9a-zA-Z]+(\\(-\\d+\\))?)|((@)(Var)((\\()(-\\d+)(\\)))?(\\()([@0-9a-zA-Z]+(\\(-\\d+\\))?)(\\))))(\\)))",
+					"end": "",
+					"beginCaptures": {
+						"1":
+						{
+							"name": "tib.iterator.prefix"
+						},
+						"2":
+						{
+							"name": "tib.iterator.name"
+						},
+						"4":
+						{
+							"name": "tib.iterator.bracket"
+						},
+						"5":
+						{
+							"name": "tib.iterator.depth"
+						},
+						"6":
+						{
+							"name": "tib.iterator.bracket"
+						},
+						"8":
+						{
+							"name": "tib.iterator.bracket"
+						},
+						"10":
+						{
+							"patterns": [
+								{
+									"include": "#tib-iterator-single"
+								}
+							],
+							"name": "tib.iterator.varindex"
+						},
+						"13":
+						{
+							"name": "tib.iterator.prefix"
+						},
+						"14":
+						{
+							"name": "tib.iterator.name"
+						},
+						"16":
+						{
+							"name": "tib.iterator.bracket"
+						},
+						"17":
+						{
+							"name": "tib.iterator.depth"
+						},
+						"18":
+						{
+							"name": "tib.iterator.bracket"
+						},
+						"19":
+						{
+							"name": "tib.iterator.bracket"
+						},
+						"20":
+						{
+							"patterns": [
+								{
+									"include": "#tib-iterator-single"
+								}
+							],
+							"name": "tib.iterator.varindex"
+						},
+						"22":
+						{
+							"name": "tib.iterator.bracket"
+						},
+						"23":
+						{
+							"name": "tib.iterator.bracket"
+						}
+					}
+				}	
+			]
+		},
+
+		"cdata":
+		{
+			"patterns": [
+				{
+					"begin": "(<)(!)(\\[)(CDATA)",
+					"end": "\\[",
+					"beginCaptures":
+					{
+						"1":{
+							"name" : "punctuation.definition.tag.xml"
+						},
+						"2":{
+							"name" : "punctuation.definition.cdata.prefix.tib"
+						},
+						"3":{
+							"name" : "punctuation.definition.cdata.bracket.tib"
+						},
+						"4":
+						{
+							"name": "entity.name.tag.cdata.tib"
+						}
+					},
+					"endCaptures": {
+						"0":
+						{
+							"name" : "punctuation.definition.cdata.bracket.tib"
+						}
+					},
+					"name": "tib.cdata"
+				},
+				{
+					"begin": "(]])(>)",
+					"end": "",
+					"beginCaptures":
+					{
+						"1":
+						{
+							"name": "punctuation.definition.cdata.bracket.tib"
+						},
+						"2":{
+							"name" : "punctuation.definition.tag.xml"
+						}
+					}
+				}
+			],
+			"name": "tib.cdata"
+		},
 
 
+
+
+		"embedded-code": {
+			"patterns": [
+				{
+					"include": "#smarty"
+				},
+				{
+					"include": "#cs-inline"
+				},
+				{
+					"include": "#tib-iterator"
+				}
+			]
+		},
 
 		"smarty": {
 			"patterns": [
@@ -759,6 +1035,9 @@
 				},
 				{
 					"include": "#cs-inline"
+				},
+				{
+					"include": "#tib-iterator"
 				}
 			]
 		},
@@ -789,6 +1068,9 @@
 				},
 				{
 					"include": "#singlequotedString"
+				},
+				{
+					"include": "#cdata"
 				}
 			]
 		},
@@ -899,6 +1181,8 @@
 				}
 			]
 		},
+
+
 		"tagStuff": {
 			"patterns": [
 				{
@@ -913,19 +1197,27 @@
 							"name": "punctuation.separator.namespace.xml"
 						},
 						"4": {
-							"name": "entity.other.attribute-name.localname.xml"
+							"name": "entity.other.attribute-name.localname.xml",
+							"patterns": [
+								{
+									"include": "#node-id"
+								},
+								{
+									"include": "#doublequotedString"
+								},
+								{
+									"include": "#singlequotedString"
+								},
+								{
+									"include": "#cs-inline"
+								},
+								{
+									"include": "#tib-iterator"
+								}
+							]
 						}
 					},
-					"match": "(?:^|\\s+)(?:([-\\w.]+)((:)))?([-\\w.:]+)\\s*="
-				},
-				{
-					"include": "#doublequotedString"
-				},
-				{
-					"include": "#singlequotedString"
-				},
-				{
-					"include": "#cs-inline"
+					"match": "(?:^|\\s+)(?:([-\\w.]+)((:)))?(([-\\w.:]+)\\s*=((\"[^\"]+\")|('[^']+')))"
 				}
 			]
 		},
@@ -953,6 +1245,9 @@
 				},
 				{
 					"include": "#cs-inline"
+				},
+				{
+					"include": "#tib-iterator"
 				}
 			]
 		},
@@ -3558,6 +3853,9 @@
 				},
 				{
 					"include": "#interpolation"
+				},
+				{
+					"include": "#tib-iterator"
 				}
 			]
 		},
@@ -3581,6 +3879,9 @@
 				},
 				{
 					"include": "#interpolation"
+				},
+				{
+					"include": "#tib-iterator"
 				}
 			]
 		},
@@ -3629,6 +3930,9 @@
 				},
 				{
 					"include": "#tuple-literal"
+				},
+				{
+					"include": "#tib-iterator"
 				}
 			]
 		},
@@ -3719,6 +4023,9 @@
 			"patterns": [
 				{
 					"include": "#string-character-escape"
+				},
+				{
+					"include": "#tib-iterator"
 				}
 			]
 		},
@@ -3743,6 +4050,9 @@
 			"patterns": [
 				{
 					"include": "#verbatim-string-character-escape"
+				},
+				{
+					"include": "#tib-iterator"
 				}
 			]
 		},
@@ -4951,37 +5261,6 @@
 			]
 		},
 
-		"tib-iterator":
-		{
-			"begin": "(@)(Var|ID|Itera|Text|Pure)",
-			"end": "",
-			"beginCaptures": {
-				"1":
-				{
-					
-				},
-				"2":
-				{
-					
-				}
-			}
-		},
-
-		"cdata":
-		{
-			"begin": "(<!\\[CDATA\\[)|(\\]\\]>)",
-			"end": ".",
-			"beginCaptures":
-			{
-				
-			},
-			"patterns": [
-				{
-					
-				}
-			]
-		},
-
 
 
 
@@ -5492,11 +5771,17 @@
 							"patterns": [
 								{
 									"include": "#escapes"
-								}
+								},
+								{
+									"incule": "#tib-iterator"
+								}								
 							]
 						},
 						{
 							"include": "#escapes"
+						},
+						{
+							"incule": "#tib-iterator"
 						}
 					]
 				},
@@ -5527,8 +5812,14 @@
 						},
 						{
 							"include": "#escapes"
+						},
+						{
+							"incule": "#tib-iterator"
 						}
 					]
+				},
+				{
+					"incule": "#tib-iterator"
 				}
 			]
 		},
