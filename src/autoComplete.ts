@@ -10,9 +10,9 @@ var ManualCode = [
         Detail: "Class"
     },
     {
-        Name: "ToString()",
+        Name: "ToString",
         Kind: "Method",
-        Parent: "[\\w\\d]+"
+        Parent: "[\\w\\d\\(\\)\\[\\]]+"
     },
     {
         Name: "CurrentInterview",
@@ -27,10 +27,11 @@ var ManualCode = [
     {
         Name: "RespID",
         Kind: "Property",
-        Detail: "string"
+        Detail: "string",
+        Parent: "InterviewPars"
     },
     {
-        Name: "GetInstance()",
+        Name: "GetInstance",
         Kind: "Method",
         Parent: "InterviewPars"
     },
@@ -92,7 +93,7 @@ var ManualCode = [
     },
     {
         Name: "Count",
-        Kind: "Method",
+        Kind: "Property",
         Detail: "Integer",
         Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
     },
@@ -1977,3 +1978,172 @@ export const Attributes = {
         }
     ]
 };
+
+
+export const CSSnippets = [
+    {
+		"prefix": "class",
+		"body": [
+			"public class ${1:MyClass}",
+			"{",
+			"\t$0",
+			"}"
+			],
+		"description": "Объявление класса"
+    },
+    {
+		"prefix": "const",
+		"body": [
+			"${1:public} const ${2:string} ${3:CONSTANT_NAME} = \"${4:value}\";",
+			"$0"
+			],
+		"description": "Объявление константы"
+    },
+    {
+		"prefix": "do",
+		"body": [
+			"do",
+			"{",
+			"\t$0",
+			"} while (${1:true});"
+			],
+		"description": "Блок do-while"
+    },
+    {
+		"prefix": "else",
+		"body": [
+			"else",
+			"{",
+			"\t$0",
+			"}"
+			],
+		"description": "Блок else"
+    },
+    {
+		"prefix": "enum",
+		"body": [
+			"public enum ${1:MyEnum}Type()",
+			"{",
+			"\t$0",
+			"}"
+			],
+		"description": "Объявление перечисления"
+    },
+    {
+		"prefix": "for",
+		"body": [
+			"for (${1:int} ${2:i} = 0; $2 < ${3:length}; $2++)",
+			"{",
+			"\t$0",
+			"}"
+			],
+		"description": "Блок for"
+    },
+    {
+		"prefix": "foreach",
+		"body": [
+			"foreach (${1:SurveyListItem} ${2:item} in ${3:CurrentSurvey.Lists[\"$4\"].Items})",
+			"{",
+			"\t$0",
+			"}"
+			],
+		"description": "Блок foreach"
+    },
+    {
+		"prefix": "if",
+		"body": [
+			"if (${1:true})",
+			"{",
+			"\t$0",
+			"}"
+			],
+		"description": "Блок if"
+    },
+    {
+		"prefix": "ifelse",
+		"body": [
+			"if (${1:true})",
+			"{",
+			"\t$2",
+            "}",
+            "else",
+            "{",
+			"\t$0",
+            "}"
+			],
+		"description": "Блок if-else"
+    },
+    {
+        prefix: "public",
+        body: [
+            "public ${1:string} ${2:method}($3)",
+            "{",
+            "\t$0",
+            "}"
+        ],
+        description: "Метод public"
+    },
+    {
+		"prefix": "struct",
+		"body": [
+			"public struct ${1:MyStruct}",
+			"{",
+			"\t$0",
+			"}"
+			],
+		"description": "Объявление структуры"
+    },
+    {
+		"prefix": "switch",
+		"body": [
+			"switch (${1:switch_on})",
+			"{",
+			"\t$0",
+			"\tdefault:",
+			"\t\tbreak;",
+			"}"
+			],
+		"description": "Блок switch"
+    },    
+	{
+		"prefix": "try",
+		"body": [
+			"try",
+			"{",
+			"\t$0",
+			"}",
+			"catch (${1:}Exception ${2:ex})",
+			"{\r\n",
+			"\tthrow;",
+			"}"
+			],
+		"description": "Блок try-catch"
+	},
+	{
+		"prefix": "tryf",
+		"body": [
+			"try",
+			"{",
+			"\t$0",
+			"}",
+			"catch (${1:}Exception ${2:ex})",
+			"{\r\n",
+			"\tthrow;",
+			"}",
+			"finally",
+			"{\r\n",
+			"}"
+			],
+		"description": "Блок try-finally"
+    },
+    {
+		"prefix": "while",
+		"body": [
+			"while (${1:true})",
+			"{",
+			"\t$0",
+			"}"
+			],
+		"description": "Блок while"
+	},
+];

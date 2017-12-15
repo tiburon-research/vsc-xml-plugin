@@ -250,7 +250,8 @@ function autoComplete()
                     });
                     AutoCompleteArray.CSSnippets.forEach(element => {
                         var ci = new vscode.CompletionItem(element.prefix, vscode.CompletionItemKind.Snippet);
-                        ci.insertText = new vscode.SnippetString(element.body);
+                        ci.detail = element.description;
+                        ci.insertText = new vscode.SnippetString(element.body.join("\n"));
                         completionItems.push(ci);
                     });
                 }
