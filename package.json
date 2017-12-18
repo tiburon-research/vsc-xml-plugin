@@ -68,6 +68,16 @@
                 "category": "tib"
             },
             {
+                "command": "tib.transform.AnswersToItems",
+                "title": "Answers -> Items",
+                "category": "tib"
+            },
+            {
+                "command": "tib.transform.ItemsToAnswers",
+                "title": "Items -> Answers",
+                "category": "tib"
+            },
+            {
                 "command": "tib.insertTag",
                 "title": "Обернуть текст в тег",
                 "category": "tib"

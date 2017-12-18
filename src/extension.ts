@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform } from "./classes";
 
 // константы
 
@@ -67,6 +67,7 @@ export function activate(context: vscode.ExtensionContext)
     hoverDocs();
     helper();
     definitions();
+    registerCommands(editor);
 
     // для каждого дукумента свои
     reload();
@@ -93,7 +94,15 @@ export function activate(context: vscode.ExtensionContext)
         insertSpecialSnippets(event, editor, text, tag);
         saveMethods(editor);
     });
+}
 
+export function deactivate()
+{ }
+
+
+
+function registerCommands(editor: vscode.TextEditor)
+{
     vscode.commands.registerCommand('tib.debug', () => 
     {
         execute("http://debug.survstat.ru/Survey/Adaptive/?fileName=" + editor.document.fileName);
@@ -104,11 +113,32 @@ export function activate(context: vscode.ExtensionContext)
         editor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]"));
     });
 
+    vscode.commands.registerCommand('tib.transform.AnswersToItems', () => 
+    {
+        inProcess = true;
+        editor.edit((editBuilder) =>
+        {
+            var text = editor.document.getText(editor.selection);
+            editBuilder.replace(editor.selection, TibTransform.AnswersToItems(text));
+        }).then(() =>
+        {
+            inProcess = false;
+        });
+    });
+
+    vscode.commands.registerCommand('tib.transform.ItemsToAnswers', () => 
+    {
+        inProcess = true;
+        editor.edit((editBuilder) =>
+        {
+            var text = editor.document.getText(editor.selection);
+            editBuilder.replace(editor.selection, TibTransform.ItemsToAnswers(text));
+        }).then(() =>
+        {
+            inProcess = false;
+        });
+    });
 }
-
-export function deactivate()
-{ }
-
 
 
 function getData()

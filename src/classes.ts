@@ -369,3 +369,51 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
     }
     
 }
+
+
+
+export namespace TibTransform
+{
+
+    export function AnswersToItems(text: string): string
+    {
+        return TransformElement(text, "Answer", "Item");
+    }
+
+    export function ItemsToAnswers(text: string): string
+    {
+        return TransformElement(text, "Item", "Answer");
+    }
+
+    function TransformElement(text: string, from: string, to: string): string
+    {
+        var ar = text.split("\n");
+        var res = "";
+        ar.forEach(element => 
+        {
+            var mt = element.match(new RegExp("(\\s*)<" + from + "\\s*([^\\/>]+)((\\/>)|(>([\\s\\S]+?)<\\/" + from + ".*>))"));
+            if (!mt) res += element + "\n";
+            else
+            {
+                if (mt[1]) res += mt[1];
+                res += "<" + to;
+                if (mt[2])
+                {
+                    var id = mt[2].match(/Id=["'][^"']+["']/);
+                    if (id) res += " " + id[0];
+                    var txt = mt[2].match(/Text=["'][^"']*["']/);
+                    if (txt) res += " " + txt[0];
+                }
+                res += ">";
+                if (mt[6])
+                {
+                    var txt = mt[6].match(/<Text[^>]*>.*<\/Text\s*>/);
+                    if (txt) res += txt[0];
+                }
+                res += "</" + to + ">\n"
+            }    
+        });
+        return res.substr(0, res.length-1);
+    }
+
+}
