@@ -53,6 +53,16 @@
         ],
         "description": "Структура List"
     },
+    "SexList":{
+        "prefix": "_sexList",
+        "body": [
+            "<List Id=\"sexList\">",
+            "\t<Item Id=\"1\" Var=\"Мужчины\"><Text>Man</Text></Item>",
+            "\t<Item Id=\"2\" Var=\"Женщины\"><Text>Woman</Text></Item>",
+            "</List>"
+        ],
+        "description": "Структура List"
+    },
     "RedirectCode":{
         "prefix": "<Redirect",
         "body": [
