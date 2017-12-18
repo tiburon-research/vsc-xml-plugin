@@ -241,7 +241,7 @@ function autoComplete()
                 var customMethods = Methods.CompletionArray();
                 if (customMethods) completionItems = completionItems.concat(customMethods);
                 var str = getCurrentLineText(document, position).substr(position.character);
-                if (!tag.CSSingle && !tag.InCSString)
+                if (!tag.CSSingle && !tag.InCSString && !curLine.match(/\w+\.\w*$/))
                 {
                     var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums, TibAutoCompleteList.Classes);
                     ar.forEach(element =>
@@ -280,7 +280,7 @@ function autoComplete()
                     var m = false;
                     if (element.Parent)
                     {
-                        var reg = new RegExp(element.Parent + "\\.$");
+                        var reg = new RegExp(element.Parent + "\\.\\w*$");
                         m = !!lastLine.match(reg);
                     }
                     if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
