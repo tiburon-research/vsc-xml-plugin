@@ -18,18 +18,11 @@
 				"tib.iterator.prefix",
 				"tib.iterator.name",
 				"tib.iterator.depth",
-				"tib.iterator.varindex"
-			],
-			"settings": {
-				"foreground": "#417e7e"
-			}
-		},
-		{
-			"scope":[
+				"tib.iterator.varindex",
 				"tib.iterator.bracket"
 			],
 			"settings": {
-				"foreground": "#ff0000"	
+				"foreground": "#417e7e"
 			}
 		},
 		{
@@ -43,8 +36,15 @@
 		},
 		{
 			"scope":[
-				"entity.name.tag.allowcode",
 				"entity.name.inline-prefix"
+			],
+			"settings": {
+				"foreground": "#DCDCAA"
+			}
+		},
+		{
+			"scope":[
+				"entity.name.tag.allowcode"
 			],
 			"settings": {
 				"foreground": "#0077f7"
