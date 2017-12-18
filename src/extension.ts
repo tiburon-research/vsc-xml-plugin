@@ -557,7 +557,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
         !!tagT &&
         !!tagT[1] &&
         !tagT[3] &&
-        !tagT[1].match(/^((area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr))$/)
+        !isSelfClosedTag(tagT[1])
     )
     {
         inProcess = true;
@@ -620,11 +620,16 @@ function updateNodesIds(editor: vscode.TextEditor, names?: string[])
 // -------------------- доп функции
 
 
+function isSelfClosedTag(tag: string): boolean
+{
+    return !!tag.match(/^((area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr))$/);
+}
+
 function inString(text: string): boolean
 {
     // не учитывает кавычки в кавычках
     //return !((occurrenceCount(text, "'") % 2 === 0) && (occurrenceCount(text, "\"") % 2 === 0) && (occurrenceCount(text, "`") % 2 === 0));
-    
+
     /*
     // выполняется очень долго
     var regStr = /^((([^'"]*)(("[^"]*")|('[^']*'))*)*)$/;
