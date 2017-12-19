@@ -681,6 +681,7 @@ function getCurrentTag(text: string): CurrentTag
     var regEnd = new RegExp("(<(" + _AllowCodeTags + ")([^/>]*>)?)((?![\\t ]+\\s*\n)[\\s\\S]?)*$", "g");
     pure = pure.replace(reg, "");
     pure = pure.replace(regEnd, "$1");
+    if (pure.match(/<\s*$/)) pure = pure.substr(0, pure.lastIndexOf("<")); // иначе regExp в parseTags работает неправильно
     var tag = parseTags(pure, text);
     if (tag.Closed)
     {
@@ -700,7 +701,7 @@ function getCurrentTag(text: string): CurrentTag
                 tag.InCSString = inString(rest);
             }
             else tag.InCSString = tag.InString;
-        }    
+        }
     }
     return tag;
 }
@@ -710,15 +711,14 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
 {
     var res = text.match(/<([\w\d]+)([^/>]*)((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
     var nn = nodes;
-    if (res) nn.push(res[1]);
-    if (res && res[5])
+    if (res && res[1]) nn.push(res[1]);
+    if (res && res[1] && res[3] && res[5])
     {
         var rem = res[3];
         return parseTags(rem, originalText, nn, res);
     }
     else
     {
-        nn.pop();
         var mt = res ? res : prevMatch;
         var tag = new CurrentTag(mt[1]);
         var str = mt[0];
