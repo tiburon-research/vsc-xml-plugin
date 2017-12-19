@@ -280,7 +280,8 @@ function autoComplete()
                     {
                         completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
                     });
-                    AutoCompleteArray.CSSnippets.forEach(element => {
+                    AutoCompleteArray.CSSnippets.forEach(element =>
+                    {
                         var ci = new vscode.CompletionItem(element.prefix, vscode.CompletionItemKind.Snippet);
                         ci.detail = element.description;
                         ci.insertText = new vscode.SnippetString(element.body.join("\n"));
@@ -368,7 +369,7 @@ function autoComplete()
                     if (needClose) ci.insertText = element + opened[1];
                     completionItems.push(ci);
                 });
-            }    
+            }
 
 
             return completionItems;
@@ -510,13 +511,13 @@ function makeIndent(): void
 
 function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag, text: string): void
 {
-    if (inProcess || !editor || !event || !event.contentChanges[0] || tag.CSMode) return;
+    if (inProcess || !editor || !event || !event.contentChanges[0]) return;
 
     var isRightAngleBracket = event.contentChanges[0].text == ">";
     if (!isRightAngleBracket) return;
     var originalPosition = editor.selection.start.translate(0, 1);
-    
-    if (isRightAngleBracket)
+
+    if (isRightAngleBracket && (!tag.CSMode || tag.Body == ""))
     {
         var curLine = getCurrentLineText(editor.document, originalPosition);
         var prev = curLine.substr(0, editor.selection.start.character + 1);
