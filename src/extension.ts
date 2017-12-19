@@ -56,6 +56,7 @@ export function activate(context: vscode.ExtensionContext)
 
     function reload()
     {
+        if (!editor || editor.document.languageId != "tib") return;
         saveMethods(editor);
         updateNodesIds(editor);
     }
@@ -86,6 +87,7 @@ export function activate(context: vscode.ExtensionContext)
 
     vscode.workspace.onDidChangeTextDocument(event =>
     {
+        if (!editor || editor.document.languageId != "tib") return;
         var originalPosition = editor.selection.start.translate(0, 1);
         var text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
         var tag = getCurrentTag(text);
