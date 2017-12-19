@@ -767,49 +767,6 @@ function getNextChars(editor: vscode.TextEditor, position: vscode.Position, coun
     return text.substr(0, count);
 }
 
-function getCloseTag(text: string): string
-{
-    var regex = /<(\/?[a-zA-Z][a-zA-Z0-9:\-_.]*)(?:\s+[^<>]*?[^\s/<>=]+?)*?\s?>/g;
-    var result = null;
-    var stack = [];
-
-    // не берём те теги, которые не теги (например <int> из Generic)
-    var reg = new RegExp("<(" + _AllowCodeTags + ")((?!<\\/\\1)[\\s\\S])+", "g");
-    var pure_text = text.replace(reg, "");
-    while ((result = regex.exec(pure_text)) !== null)
-    {
-        var isStartTag = result[1].substr(0, 1) !== "/";
-        var tag = isStartTag ? result[1] : result[1].substr(1);
-        if (isStartTag)
-        {
-            stack.push(tag);
-        } else if (stack.length > 0)
-        {
-            var lastTag = stack[stack.length - 1];
-            if (lastTag === tag)
-            {
-                stack.pop()
-            }
-        }
-    }
-    if (stack.length > 0)
-    {
-        var closeTag = stack[stack.length - 1];
-        if (text.substr(text.length - 2) === "</")
-        {
-            return closeTag + ">";
-        }
-        if (text.substr(text.length - 1) === "<")
-        {
-            return "/" + closeTag + ">";
-        }
-        return "</" + closeTag + ">";
-    } else
-    {
-        return null;
-    }
-}
-
 function moveSelectionRight(selection: vscode.Selection, shift: number): vscode.Selection
 {
     var newPosition = selection.active.translate(0, shift);
