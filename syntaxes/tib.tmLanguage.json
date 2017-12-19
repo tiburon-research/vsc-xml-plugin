@@ -452,31 +452,29 @@
 			]
 		},
 
-		
-		{
-			"begin": " (style=\")",
-			"end": "\"",
-			"patterns": [
-				{
-					"include": "#rule-list-innards"
-				},
-				{
-					"include": "#cs-inline"
-				}
-			]
-		},
 
 		{
-			"begin": " (style=')",
-			"end": "'",
-			"patterns": [
-				{
-					"include": "#rule-list-innards"
+			"begin":"(?i)((\\[\\/?)(a|abbr|acronym|address|applet|area|article|aside|audio|b|base|basefont|bdi|bdo|bgsound|big|blink|blockquote|body|br|button|canvas|caption|center|cite|code|col|colgroup|command|content|data|datalist|dd|del|details|dfn|dialog|dir|div|dl|dt|element|em|embed|fieldset|figcaption|figure|font|footer|form|frame|frameset|h[1-6]|head|header|hgroup|hr|html|i|iframe|image|img|input|ins|isindex|kbd|keygen|label|legend|li|link|listing|main|map|mark|marquee|math|menu|menuitem|meta|meter|multicol|nav|nextid|nobr|noembed|noframes|noscript|object|ol|optgroup|option|output|p|param|picture|plaintext|pre|progress|q|rb|rp|rt|rtc|ruby|s|samp|script|section|select|shadow|slot|small|source|spacer|span|strike|strong|style|sub|summary|sup|table|tbody|td|template|textarea|tfoot|th|thead|time|title|tr|track|tt|u|ul|var|video|wbr|xmp#SVG|altGlyph|altGlyphDef|altGlyphItem|animate|animateColor|animateMotion|animateTransform|circle|clipPath|color-profile|cursor|defs|desc|discard|ellipse|feBlend|feColorMatrix|feComponentTransfer|feComposite|feConvolveMatrix|feDiffuseLighting|feDisplacementMap|feDistantLight|feDropShadow|feFlood|feFuncA|feFuncB|feFuncG|feFuncR|feGaussianBlur|feImage|feMerge|feMergeNode|feMorphology|feOffset|fePointLight|feSpecularLighting|feSpotLight|feTile|feTurbulence|filter|font-face|font-face-format|font-face-name|font-face-src|font-face-uri|foreignObject|g|glyph|glyphRef|hatch|hatchpath|hkern|line|linearGradient|marker|mask|mesh|meshgradient|meshpatch|meshrow|metadata|missing-glyph|mpath|path|pattern|polygon|polyline|radialGradient|rect|set|solidcolor|stop|svg|switch|symbol|text|textPath|tref|tspan|use|view|vkern#MathML|annotation|annotation-xml|maction|maligngroup|malignmark|math|menclose|merror|mfenced|mfrac|mglyph|mi|mlabeledtr|mlongdiv|mmultiscripts|mn|mo|mover|mpadded|mphantom|mroot|mrow|ms|mscarries|mscarry|msgroup|msline|mspace|msqrt|msrow|mstack|mstyle|msub|msubsup|msup|mtable|mtd|mtext|mtr|munder|munderover|semantics))(\\s[^\\]]*)?(\\])",
+			"end":"",
+			"beginCaptures": {
+				"2": {
+					"name": "punctuation.definition.tag.html"
 				},
-				{
-					"include": "#cs-inline"
+				"3": {
+					"name": "entity.name.tag.html.tib"
+				},
+				"4":{
+					"patterns": [
+						{
+							"include": "#tagStuff"
+						}
+					],
+					"name": "entity.stuff.tag.html.tib"
+				},
+				"5": {
+					"name": "punctuation.definition.tag.html"
 				}
-			]
+			}
 		},
 
 
@@ -485,6 +483,9 @@
 		},
 		{
 			"include": "#tib-iterator"
+		},
+		{
+			"include": "#inline-css"
 		},
 
 
@@ -966,6 +967,46 @@
 			"name": "tib.cdata"
 		},
 
+		"inline-css":
+		{
+			"patterns": [
+				{
+					"include": "#inline-css-double"
+				},
+				{
+					"include": "#inline-css-single"
+				}
+			]
+		},
+
+		"inline-css-double":
+		{
+			"begin": "\\s?(style=\")",
+			"end": "\"",
+			"patterns": [
+				{
+					"include": "#rule-list-innards"
+				},
+				{
+					"include": "#cs-inline"
+				}
+			]
+		},
+
+		"inline-css-single":
+		{
+			"begin": "\\s?(style=')",
+			"end": "'",
+			"patterns": [
+				{
+					"include": "#rule-list-innards"
+				},
+				{
+					"include": "#cs-inline"
+				}
+			]
+		},
+
 
 
 
@@ -1178,6 +1219,9 @@
 									"include": "#node-id"
 								},
 								{
+									"include": "#inline-css"
+								},
+								{
 									"include": "#doublequotedString"
 								},
 								{
@@ -1193,6 +1237,9 @@
 						}
 					},
 					"match": "(?:^|\\s+)(?:([-\\w.]+)((:)))?(([-\\w.:]+)\\s*=((\"[^\"]+\")|('[^']+')))"
+				},
+				{
+					"include": "#inline-css"
 				}
 			]
 		},

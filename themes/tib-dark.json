@@ -51,7 +51,10 @@
 			}
 		},
 		{
-			"scope": "entity.other.attribute-name",
+			"scope": [
+				"entity.other.attribute-name",
+				"entity.stuff.tag.html.tib entity.other.attribute-name.localname.xml"
+			],
 			"settings": {
 				"foreground": "#bdbdbd"
 			}
@@ -59,18 +62,30 @@
 		{
 			"scope":[
 				"string.quoted.double.xml",
-				"string.quoted.single.xml"
+				"string.quoted.single.xml",
+				"entity.stuff.tag.html.tib string.value.id"
 			],
 			"settings": {
 				"foreground": "#928f8e"
 			}
 		},
 		{
-			"scope": "string.value.id",
+			"scope": [
+				"string.value.id",
+				"entity.other.attribute-name.localname.xml tib.iterator.name"
+			],
 			"settings": {
 				"foreground": "#d3d46b"
 			}
 		},
+		{
+			"scope": "entity.name.tag.html.tib",
+			"settings": {
+				"foreground": "#677458"
+			}
+		},
+
+
 
 
 		{
