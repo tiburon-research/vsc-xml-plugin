@@ -63,11 +63,6 @@
         ],
         "commands":[
             {
-                "command": "tib.debug",
-                "title": "Отладка скрипта на сервере",
-                "category": "tib"
-            },
-            {
                 "command": "tib.transform.AnswersToItems",
                 "title": "Answers -> Items",
                 "category": "tib"

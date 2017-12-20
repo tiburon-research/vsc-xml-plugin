@@ -106,10 +106,10 @@ export function deactivate()
 
 function registerCommands(editor: vscode.TextEditor)
 {
-    vscode.commands.registerCommand('tib.debug', () => 
+    /*vscode.commands.registerCommand('tib.debug', () => 
     {
         execute("http://debug.survstat.ru/Survey/Adaptive/?fileName=" + editor.document.fileName);
-    });
+    });*/
 
     vscode.commands.registerCommand('tib.insertTag', () => 
     {
