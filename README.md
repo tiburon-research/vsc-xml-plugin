@@ -12,7 +12,7 @@
     ```JSON
     "files.associations": {"*.xml": "tib"}
     ```
-    Язык для любого файла можно поменять в нижнем правом углу, но это одноразовое изменение - в следующий раз файл откроется в соответствии с настройками. Этим удобно пользоваться в случае, если, например, вы попали в ситуацию, когда расширение `tiburonscripter` сломалось и не даёт нормально дописать скрипт. В этом случае нужно (сразу [написать о проблеме](https://t.me/Gulyaev_Ruslan) и) переключить язык с `tib` на `xml`.
+    Язык для любого файла можно поменять в нижнем правом углу, но это одноразовое изменение - в следующий раз файл откроется в соответствии с настройками. Этим удобно пользоваться в случае, если, например, вы попали в ситуацию, когда расширение `tiburonscripter` сломалось и не даёт нормально дописать скрипт. В этом случае нужно (сразу [написать о проблеме](https://t.me/Gulyaev_Ruslan) и) переключить язык с `tib (Tiburon XML script)` на `xml`.
     
 * **Автозавершение**
 
@@ -35,7 +35,7 @@
    Чтобы VSC пытался сам определить кодировку файла нужно включить
    ```JSON
    "files.autoGuessEncoding": true
-   ```   
+   ```
 
 ### Разное полезное
 
@@ -91,6 +91,7 @@
 ![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/PageSnippet.gif?raw=true)
 
 ### Кроме структуры XML предусмотрены следующие шаблоны:
+
 * Сворачивающийся блок
 ```xml
   <!--#block Тестирование упаковок -->
@@ -104,23 +105,62 @@
 
 * Путь для материалов: после ввода `src="` расширение предлагает подставить путь `src="@StoreUrl/t/tib_####"/` с номером проекта из имени файла.
 
+* Вставка `sexList`: при вводе `_sexList` появляется предложение об автозавершении.
+
+![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/sexList.gif?raw=true)
+
 ### Переход к определению
 
 Из кодовых вставок в скрипте можно переходить к определению функций/переменных, описанных в Methods. Это делается с помощью соответствующих пунктов контекстного меню (`Перейти к определению (F12)` или `Показать определени (Alt+F12)`).
 
 ![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/definitions.gif?raw=true)
 
-### подсказки при наведении
+### Подсказки при наведении
 
 При наведении курсора на C# функцию, метод, глобальную переменную и т.д. во всплывающем окне появляется соответствующее определение или список возможных перегрузок.
 
 ![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/hovers.gif?raw=true)
 
-### оборачивание в тег
+### команды
+
+Для всех команд может быть назначено сочетание клавиш в настройках.
+Для вызова команды без сочетания клавиш нужно вызвать командную строку (`ctrl`+`shift`+`P`) и ввести название нужной команды.
+Все команды расширения можно найти по префиксу `tib.`.
+
+* Оборачивание в тег
 
 Выделенный текст можно обернуть в тег с помощью сочетаний клавиш `ctrl`+`Alt`+`T` (команда `tib.insertTag`). После нажатия `tab` курсор переходит в позицию атрибутов для тега. По следующему нажатию - в положение после закрывающегося тега.
 
 ![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/tag.gif?raw=true)
+
+* Преобразования `Answer` <-> `Item`
+
+Преобразование выделенных элементов с учётом только `Id` и `Text`;
+
+### Тема
+
+Для выбора темы нужно перейти: `Файл -> Параметры -> Цветовая тема`. На данный момент доступна пока только тёмная (`Tiburon Dark`).
+
+![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/theme.jpg?raw=true)
+
+О том, как точнее настроить тему под себя можно [почитать тут](https://code.visualstudio.com/docs/getstarted/themes#_customize-a-color-theme).
+
+Список сущностей:
+
+- `"tib.iterator.prefix"`,
+- `"tib.iterator.name"`,
+- `"tib.iterator.depth"`,
+- `"tib.iterator.varindex"`,
+- `"tib.iterator.bracket`",
+- `"entity.name.tag.cdata.tib"`,
+- `"punctuation.definition.cdata.prefix.tib"`,
+- `"punctuation.definition.cdata.bracket.tib"`,
+- `"tib.cdata"` (целиком `<![CDATA[`),
+- `"entity.name.inline-prefix"` (`$` в строчных методах),
+- `"entity.name.tag.allowcode"`,
+- `"entity.name.tag.html.tib"`,
+- `"entity.stuff.tag.html.tib"` (атрибуты html-тегов),
+- `"string.value.id"` (значение XML атрибута `Id`).
 
 
 # Особенности
