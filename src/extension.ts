@@ -68,7 +68,7 @@ export function activate(context: vscode.ExtensionContext)
     hoverDocs();
     helper();
     definitions();
-    registerCommands(editor);
+    registerCommands();
     higlight();
 
     // для каждого дукумента свои
@@ -104,7 +104,7 @@ export function deactivate()
 
 
 
-function registerCommands(editor: vscode.TextEditor)
+function registerCommands()
 {
     /*vscode.commands.registerCommand('tib.debug', () => 
     {
@@ -113,12 +113,13 @@ function registerCommands(editor: vscode.TextEditor)
 
     vscode.commands.registerCommand('tib.insertTag', () => 
     {
-        editor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]"));
+        vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]"));
     });
 
     vscode.commands.registerCommand('tib.transform.AnswersToItems', () => 
     {
         inProcess = true;
+        var editor = vscode.window.activeTextEditor;
         editor.edit((editBuilder) =>
         {
             var text = editor.document.getText(editor.selection);
@@ -132,6 +133,7 @@ function registerCommands(editor: vscode.TextEditor)
     vscode.commands.registerCommand('tib.transform.ItemsToAnswers', () => 
     {
         inProcess = true;
+        var editor = vscode.window.activeTextEditor;
         editor.edit((editBuilder) =>
         {
             var text = editor.document.getText(editor.selection);
