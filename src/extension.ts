@@ -69,6 +69,7 @@ export function activate(context: vscode.ExtensionContext)
     helper();
     definitions();
     registerCommands(editor);
+    higlight();
 
     // для каждого дукумента свои
     reload();
@@ -186,6 +187,85 @@ function getData()
             codeAutoCompleteArray.push(element);
         });
     }
+}
+
+
+// tag match higlight
+function higlight()
+{
+    vscode.languages.registerDocumentHighlightProvider('tib', {
+        provideDocumentHighlights(document, position)
+        {
+            var text = getPreviousText(document, position);
+            var tag = getCurrentTag(text);
+            var curRange = document.getWordRangeAtPosition(position);
+            var word = document.getText(curRange);
+
+            if (tag.CSMode) return;
+            var res = [];
+            var fullText = document.getText();
+            var after = getCurrentLineText(document, position).substr(position.character);
+            var mt = text.match(/(((\[)|(<))\/?)((?!CDATA)\w*)$/);
+
+            if (!mt) return;
+            var ind = -1;
+            var range: vscode.Range;
+
+            switch (mt[1])
+            {
+                case "<":
+                    // открывающийся
+                    var endpos = document.positionAt(fullText.indexOf(">", text.length) + 1);
+                    curRange = new vscode.Range(curRange.start.translate(0, -1), endpos);
+                    res.push(new vscode.DocumentHighlight(curRange));
+
+                    // закрывающийся
+                    if (!after.match(/^[^>]*\/>/) && !isSelfClosedTag(word))
+                    {
+                        range = findCloseTag("<", word, ">", document, position);
+                        if (range) res.push(new vscode.DocumentHighlight(range));
+                    }
+                    break;
+
+                case "[":
+                    // открывающийся
+                    var endpos = document.positionAt(fullText.indexOf("]", text.length) + 1);
+                    curRange = new vscode.Range(curRange.start.translate(0, -1), endpos);
+                    res.push(new vscode.DocumentHighlight(curRange));
+
+                    // закрывающийся
+                    if (!after.match(/^[^\]]*\/\]/) && !isSelfClosedTag(word))
+                    {
+                        range = findCloseTag("[", word, "]", document, position);
+                        if (range) res.push(new vscode.DocumentHighlight(range));
+                    }
+                    break;
+
+                case "</":
+                    // закрывающийся
+                    var endpos = document.positionAt(fullText.indexOf(">", text.length) + 1);
+                    curRange = new vscode.Range(curRange.start.translate(0, -2), endpos);
+                    res.push(new vscode.DocumentHighlight(curRange));
+
+                    // открывающийся
+                    range = findOpenTag("<", word, ">", document, position);
+                    if (range) res.push(new vscode.DocumentHighlight(range));
+                    break;
+
+                case "[/":
+                    // закрывающийся
+                    var endpos = document.positionAt(fullText.indexOf("]", text.length) + 1);
+                    curRange = new vscode.Range(curRange.start.translate(0, -2), endpos);
+                    res.push(new vscode.DocumentHighlight(curRange));
+
+                    // открывающийся
+                    range = findOpenTag("[", word, "]", document, position);
+                    if (range) res.push(new vscode.DocumentHighlight(range));
+                    break;
+            }
+            return res;
+        }
+    })
 }
 
 
@@ -622,6 +702,85 @@ function updateNodesIds(editor: vscode.TextEditor, names?: string[])
 
 // -------------------- доп функции
 
+function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range
+{
+    var fullText = document.getText();
+    var prevText = getPreviousText(document, position);
+    var textAfter = fullText.substr(prevText.length);
+    var curIndex = prevText.length + textAfter.indexOf(clBracket);
+    
+    var rest = textAfter;
+    var op = rest.indexOf(opBracket + tagName);
+    var cl = rest.indexOf(opBracket + "/" + tagName);
+    if (cl < 0) return null;
+    
+    var cO = 0;
+    var cC = 0;
+    while (cl > -1 && ((op > -1) || (cC != cO)))
+    {
+        if (op < cl && op > -1)
+        {
+            rest = rest.substr(op + 1);
+            cO++;
+        }
+        else if (cO != cC)
+        {
+            rest = rest.substr(cl + 1);
+            cC++;
+        }
+
+        op = rest.indexOf(opBracket + tagName);
+        cl = rest.indexOf(opBracket + "/" + tagName);
+        if (cO == cC) break;
+    }
+
+    rest = rest.substr(cl);
+    var clLast = rest.indexOf(clBracket);
+
+    if (cl < 0 || clLast < 0) return null;
+    var startPos = document.positionAt(fullText.length - rest.length);
+    var endPos = document.positionAt(fullText.length - rest.length + clLast + 1);
+    return new vscode.Range(startPos, endPos);
+}
+
+
+function findOpenTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range
+{
+    var prevText = getPreviousText(document, position);
+    var curIndex = prevText.lastIndexOf(opBracket);
+    
+    var rest = prevText.substr(0, curIndex);
+    var op = rest.lastIndexOf(opBracket + tagName);
+    var cl = rest.lastIndexOf(opBracket + "/" + tagName);
+    if (op < 0) return null;
+    
+    var cO = 0;
+    var cC = 0;
+    while (op > -1 && ((cl > -1) || op != cl))
+    {
+        if (cl > op && cl > -1)
+        {
+            rest = rest.substr(0, cl);
+            cC++;
+        }
+        else if (cO != cC)
+        {
+            rest = rest.substr(0, op);
+            cO++;
+        }
+        op = rest.lastIndexOf(opBracket + tagName);
+        cl = rest.lastIndexOf(opBracket + "/" + tagName);
+        if (cO == cC) break;
+    }
+    
+    rest = rest.substr(0, rest.indexOf(clBracket, op) + 1);
+    var clLast = rest.lastIndexOf(clBracket) + 1;
+
+    if (op < 0 || clLast < 0) return null;
+    var startPos = document.positionAt(op);
+    var endPos = document.positionAt(clLast);
+    return new vscode.Range(startPos, endPos);
+}
 
 function isSelfClosedTag(tag: string): boolean
 {
