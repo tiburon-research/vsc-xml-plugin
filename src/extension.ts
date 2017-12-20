@@ -843,6 +843,7 @@ function getCurrentTag(text: string): CurrentTag
     pure = pure.replace(regEnd, "$1");
     if (pure.match(/<\s*$/)) pure = pure.substr(0, pure.lastIndexOf("<")); // иначе regExp в parseTags работает неправильно
     var tag = parseTags(pure, text);
+    if (!tag) return new CurrentTag("xml");
     if (tag.Closed)
     {
         tag.Body = text.substr(text.indexOf(">", text.lastIndexOf("<" + tag.Name)) + 1);
@@ -893,6 +894,7 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
     else
     {
         var mt = res ? res : prevMatch;
+        if (!mt || !mt[1]) return null;
         var tag = new CurrentTag(mt[1]);
         var str = mt[0];
         var lastc = str.lastIndexOf("[c#");
