@@ -80,10 +80,6 @@
         ],
         "keybindings":[
             {
-                "key": "F5",
-                "command": "tib.debug"
-            },
-            {
                 "key": "ctrl+alt+t",
                 "command": "tib.insertTag"
             }
