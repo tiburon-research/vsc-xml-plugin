@@ -847,6 +847,19 @@ function getCurrentTag(text: string): CurrentTag
     {
         tag.Body = text.substr(text.indexOf(">", text.lastIndexOf("<" + tag.Name)) + 1);
         tag.InString = tag && tag.Body && inString(tag.Body);
+        // если курсор на закрывающемся теге, то это уже не CSMode
+        if (tag.CSMode && !tag.CSInline && !tag.CSSingle)
+        {
+            var start = text.lastIndexOf("<" + tag.Name) + 2;
+            var document = vscode.window.activeTextEditor.document;
+            var pos = document.positionAt(start);
+            var endRange = findCloseTag("<", tag.Name, ">", document, pos);
+            if (endRange)
+            {
+                endRange = new vscode.Range(endRange.start.translate(0, 1), endRange.end);
+                if (endRange.contains(document.positionAt(text.length))) tag.CSMode = false;
+            }
+        }
         if (tag.CSMode)
         {
             if (tag.CSSingle)
