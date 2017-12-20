@@ -798,7 +798,7 @@ function inString(text: string): boolean
     return !text.match(regStr);*/
 
     var rest = text;
-    var i = posiveMin(rest.indexOf("'"), rest.indexOf("\""));
+    var i = positiveMin(rest.indexOf("'"), rest.indexOf("\""));
     while (rest.length > 0 && i !== null)
     {
         if (i !== null)
@@ -808,14 +808,14 @@ function inString(text: string): boolean
             var next = rest.indexOf(ch);
             if (next < 0) return true;
             rest = rest.substr(next + 1);
-            i = posiveMin(rest.indexOf("'"), rest.indexOf("\""));
+            i = positiveMin(rest.indexOf("'"), rest.indexOf("\""));
         }
     }
     return false;
 }
 
 
-function posiveMin(a, b)
+function positiveMin(a, b)
 {
     if (a < 0)
         if (b < 0) return null;
