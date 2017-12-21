@@ -64,11 +64,6 @@
   "explorer.openEditors.visible": 99
   ```
 
-* **Полезные расширения**
-
-  * `Auto Rename Tag` - при редактировании имени тега автоматически редактирует парный тег. [Скачать можно тут](https://marketplace.visualstudio.com/items?itemName=formulahendry.auto-rename-tag).
-
-
 # Функционал
 
 ### Подсветка синтаксиса
