@@ -895,6 +895,7 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
     }
     else
     {
+        nn.pop();
         var mt = res ? res : prevMatch;
         if (!mt || !mt[1]) return null;
         var tag = new CurrentTag(mt[1]);
