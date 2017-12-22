@@ -71,8 +71,7 @@
 		},
 		{
 			"scope": [
-				"string.value.id",
-				"entity.other.attribute-name.localname.xml tib.iterator.name"
+				"string.value.id"
 			],
 			"settings": {
 				"foreground": "#d3d46b"
