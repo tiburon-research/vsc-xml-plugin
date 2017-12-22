@@ -439,7 +439,7 @@ function autoComplete()
             }
 
             //Id страниц
-            var opened = text.match(/Page\s*=\s*(['"])\w*$/);
+            var opened = text.match(/(Page|Apply)\s*=\s*(['"])\w*$/);
             if (opened)
             {
                 var pages = CurrentNodes.GetIds("Page");
@@ -448,7 +448,7 @@ function autoComplete()
                     var ci = new vscode.CompletionItem(element, vscode.CompletionItemKind.Reference);
                     ci.detail = "Id страницы";
                     ci.insertText = element;
-                    if (needClose) ci.insertText = element + opened[1];
+                    if (needClose) ci.insertText = element + opened[2];
                     completionItems.push(ci);
                 });
             }
