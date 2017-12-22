@@ -320,12 +320,12 @@ function autoComplete()
         provideCompletionItems(document, position, token, context)
         {
             var completionItems = [];
-            var parent = getCurrentTag(getPreviousText(document, position));
+            var tag = getCurrentTag(getPreviousText(document, position));
             var curLine = getPreviousText(document, position, true);
-            if (parent && !parent.Closed && AutoCompleteArray.Attributes[parent.Id] && !parent.InString)
+            if (tag && !tag.CSMode && !tag.Closed && AutoCompleteArray.Attributes[tag.Id] && !tag.InString)
             {
-                var existAttrs = parent.attributeNames();
-                AutoCompleteArray.Attributes[parent.Id].forEach(element =>
+                var existAttrs = tag.attributeNames();
+                AutoCompleteArray.Attributes[tag.Id].forEach(element =>
                 {
                     if (existAttrs.indexOf(element.Name) < 0)
                     {
@@ -920,7 +920,7 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
             tag.CSSingle ||
             mt[1] && !!mt[1].match(new RegExp(_AllowCodeTags)) && !isSpaced;
         if (mt[4]) tag.Closed = true;
-        tag.CSMode = tag.CSMode && tag.Closed;
+        tag.CSMode = tag.CSMode && (tag.Closed || tag.CSSingle || tag.CSInline);
         tag.Parents = nn;
         tag.Position = vscode.window.activeTextEditor.document.positionAt(originalText.lastIndexOf("<" + mt[1]));
         if (mt[2]) tag.setAttributes(mt[2]);
