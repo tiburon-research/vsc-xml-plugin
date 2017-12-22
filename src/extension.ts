@@ -586,12 +586,12 @@ function makeIndent(): void
                 action: { indentAction: vscode.IndentAction.Indent }
             },
             {
-                beforeText: new RegExp(`\\[([a-z]\\w*#?)([^/>]*(?!/)\\])\\s*`, 'i'),
+                beforeText: new RegExp(`\\[([a-z]\\w*#?)([^/\\]]*(?!/)\\])\\s*`, 'i'),
                 afterText: /^\[\/([a-z]\w*#?)\s*\]$/i,
                 action: { indentAction: vscode.IndentAction.IndentOutdent }
             },
             {
-                beforeText: new RegExp(`\\[([a-z]\\w*#?)([^/>]*(?!/)\\])\\s*$`, 'i'),
+                beforeText: new RegExp(`\\[([a-z]\\w*#?)([^/\\]]*(?!/)\\])\\s*$`, 'i'),
                 action: { indentAction: vscode.IndentAction.Indent }
             },
         ],
