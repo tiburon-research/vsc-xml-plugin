@@ -632,21 +632,22 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
     var curLine = getPreviousText(editor.document, editor.selection.start, true)
 
     // закрывание [тегов]
-    var tagT = text.match(/\[([a-zA-Z][\w\d]*)([^\]\[]*)?(\/)?\]$/);
+    var tagT = text.match(/\[([a-zA-Z][\w\d]*(#)?)(\s[^\]\[]*)?(\/)?\]$/);
     if
     (
         change[change.length - 1] == "]" &&
-        (!tag.CSMode || tag.InCSString) &&
+        (!tag.CSMode || tag.InCSString || tagT[2]) &&
         tag.Parents.indexOf("CustomText1") + tag.Parents.indexOf("CustomText2") == -2 &&
         tag.Name != "CustomText1" && tag.Name != "CustomText2" &&
         !!tagT &&
         !!tagT[1] &&
-        !tagT[3] &&
+        !tagT[4] &&
         !isSelfClosedTag(tagT[1])
     )
     {
         inProcess = true;
-        editor.insertSnippet(new vscode.SnippetString("$1[/" + tagT[1] + "]"), originalPosition).then(() =>
+        var str = tagT[2] ? "$0;[/c#]" : "$0[/" + tagT[1] + "]";
+        editor.insertSnippet(new vscode.SnippetString(str), originalPosition).then(() =>
         {
             inProcess = false;
         });
