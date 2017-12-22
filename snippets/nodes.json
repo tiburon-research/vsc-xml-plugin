@@ -89,6 +89,13 @@
         ],
         "description": "Структура Validate"
     },
+    "Filter": {
+        "prefix": "<Filter>",
+        "body":[
+            "<Filter>return $0;</Filter>"
+        ],
+        "description": "Структура Filter"
+    },
     "blockFolding":{
         "prefix": "<!--block",
         "body": [
