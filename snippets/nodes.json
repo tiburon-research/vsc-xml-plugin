@@ -4,8 +4,8 @@
 		"body": [
             "<Page Id=\"${1:Id}\">",
                 "\t<Question Id=\"${1:Id}\" Type=\"${2|RadioButton,CheckBox,Text,Memo,Integer,Number,File,Date|}\">",
-                    "\t\t<Header></Header>",
-                    "\t\t$3",
+                    "\t\t<Header>$3</Header>",
+                    "\t\t$0",
                 "\t</Question>",
             "</Page>\n"
 		],
@@ -15,7 +15,7 @@
 		"prefix": "<Page",
 		"body": [
             "<Page Id=\"${1:Id}\">",
-                "\t<Header>$2</Header>",
+                "\t<Header>$0</Header>",
             "</Page>\n"
 		],
 		"description": "Краткая структура Page"
@@ -24,8 +24,8 @@
         "prefix": "<Question",
 		"body": [
             "<Question Id=\"${1:Id}\" Type=\"${2|RadioButton,CheckBox,Text,Memo,Integer,Number,File,Date|}\">",
-                "\t<Header></Header>",
-                "\t$3",
+                "\t<Header>$3</Header>",
+                "\t$0",
             "</Question>"
 		],
 		"description": "Структура Question"
@@ -33,7 +33,7 @@
     "Answer":{
         "prefix": "<Answer",
         "body": [
-            "<Answer Id=\"${1:Id}\"><Text>$2</Text></Answer>"
+            "<Answer Id=\"${1:Id}\"><Text>$0</Text></Answer>"
         ],
         "description": "Структура Answer"
     },
@@ -48,7 +48,7 @@
         "prefix": "<List",
         "body": [
             "<List Id=\"${1:Id}\">",
-            "\t<Item Id=\"${2:Id}\"><Text>$3</Text></Item>",
+            "\t$0",
             "</List>"
         ],
         "description": "Структура List"
@@ -67,7 +67,7 @@
         "prefix": "<Redirect",
         "body": [
             "<Redirect>",
-            "\t$2",
+            "\t$0",
             "\treturn false;",
             "</Redirect>"
         ],
@@ -76,7 +76,7 @@
     "RedirectStatus":{
         "prefix": "<Redirect",
         "body": [
-            "<Redirect Status=\"${1:19}\">return $2</Redirect>"
+            "<Redirect Status=\"${1:19}\">return $0;</Redirect>"
         ],
         "description": "Структура Redirect со статусом"
     },
@@ -84,7 +84,7 @@
         "prefix": "<Validate",
         "body": [
             "<Validate Message=\"Проверьте правильность введённых данных\" PinAnswer=\"\" PinQuestion=\"\">",
-            "\treturn $1;",
+            "\treturn $0;",
             "</Validate>"
         ],
         "description": "Структура Validate"
@@ -93,7 +93,7 @@
         "prefix": "<!--block",
         "body": [
             "<!--#block ${1:Name}-->\n",
-            "$2",
+            "\t$0",
             "\n<!--#endblock-->"
         ],
         "description": "Сворачиваемый блок"
@@ -102,7 +102,7 @@
         "prefix": "<![CDATA[",
         "body": [
             "<![CDATA[",
-            "\t$1",
+            "\t$0",
             "]]>"
         ],
         "description": "CDATA"
@@ -112,7 +112,7 @@
         "body": [
             "<CustomText1>",
             "\t<![CDATA[",
-            "\t\t$1",
+            "\t\t$0",
             "\t]]>",
             "</CustomText1>"
         ],
@@ -123,17 +123,19 @@
         "body": [
             "<CustomText2>",
             "\t<![CDATA[",
-            "\t\t$1",
+            "\t\t<style>",
+            "\t\t\t$0",
+            "\t\t</style>",
             "\t]]>",
             "</CustomText2>"
         ],
-        "description": "CustomText2"
+        "description": "CustomText2 (+style)"
     },
     "Repeat":{
         "prefix": "<Repeat",
         "body": [
             "<Repeat ${1|List,Length,Range|}=\"$2\">",
-            "\t$3",
+            "\t$0",
             "</Repeat>"
         ],
         "description": "Структура Repeat"
@@ -142,7 +144,7 @@
         "prefix": "<Quota",
         "body":[
             "<Quota Id=\"$1\" Apply=\"$2\" Limit=\"$3\">",
-            "\t$4",
+            "\t$0",
             "</Quota>"
         ]
     },
@@ -155,21 +157,15 @@
     "ftpPath":{
         "prefix": "@StoreUrl",
         "body":[
-            "@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2"
+            "@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$0"
         ],
         "description": "Стандартный путь к материалам проета"
     },
     "src":{
-        "prefix": "img src=\"",
+        "prefix": "[img src=\"",
         "body": [
-            "img src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\""
+            "[img src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\"]"
         ],
         "description": "Стандартный путь к материалам проета"
-    },
-    "inlineCsharp":{
-        "prefix": "[c#",
-            "body":[
-                "[c#]$1[/c#]"
-            ]
     }
 }
