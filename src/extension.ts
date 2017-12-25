@@ -895,38 +895,46 @@ function getCurrentTag(text: string): CurrentTag
 // рекурсивный поиск незакрытых тегов
 function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatchArray = null): CurrentTag
 {
-    var res = text.match(/<([\w\d]+)([^/>]*)((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
+    //var res = text.match(/<([\w\d]+)([^/>]*)((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
+    var res = text.match(/<([\w\d]+)(\s*(\w+=(("[^"]*")|('[^']*')))?)*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
+    const
+        // группы regex    
+        gr_name = 1,
+        gr_attrs = 2,
+        gr_after = 7,
+        gr_close = 8,
+        gr_body = 9;
     var nn = nodes;
-    if (res && res[1]) nn.push(res[1]);
-    if (res && res[1] && res[3] && res[5])
+    if (res && res[gr_name]) nn.push(res[gr_name]);
+    if (res && res[gr_name] && res[gr_body])
     {
-        var rem = res[3];
+        var rem = res[gr_body];
         return parseTags(rem, originalText, nn, res);
     }
     else
     {
         nn.pop();
         var mt = res ? res : prevMatch;
-        if (!mt || !mt[1]) return null;
-        var tag = new CurrentTag(mt[1]);
+        if (!mt || !mt[gr_name]) return null;
+        var tag = new CurrentTag(mt[gr_name]);
         var str = mt[0];
         var lastc = str.lastIndexOf("[c#");
         var lastcEnd = str.lastIndexOf("]");
-        var isSpaced = !!mt[3] && !!mt[3].substr(0, mt[3].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+
+        var isSpaced = !!mt[gr_after] && !!mt[gr_after].substr(0, mt[gr_after].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+
         tag.CSSingle = !!text.match(/\$[\w\d_]+$/);
         tag.CSInline = (lastc > str.lastIndexOf("[/c#") && lastc < lastcEnd && lastcEnd >= 0);
         tag.CSMode =
             tag.CSInline ||
             tag.CSSingle ||
-            mt[1] && !!mt[1].match(new RegExp(_AllowCodeTags)) && !isSpaced;
-        if (mt[4]) tag.Closed = true;
+            mt[gr_name] && !!mt[gr_name].match(new RegExp(_AllowCodeTags)) && !isSpaced;
+        if (mt[gr_close]) tag.Closed = true;
         tag.CSMode = tag.CSMode && (tag.Closed || tag.CSSingle || tag.CSInline);
         tag.Parents = nn;
-        tag.Position = vscode.window.activeTextEditor.document.positionAt(originalText.lastIndexOf("<" + mt[1]));
-        if (mt[2]) tag.setAttributes(mt[2]);
-        if (mt[5]) tag.Body = mt[5];
+        tag.Position = vscode.window.activeTextEditor.document.positionAt(originalText.lastIndexOf("<" + mt[gr_name]));
+        if (mt[gr_attrs]) tag.setAttributes(mt[gr_attrs]);
+        if (mt[gr_body]) tag.Body = mt[gr_body];
         tag.LastParent = nn[nn.length - 1];
-        if (mt[1] == "Item") tag.Id = tag.LastParent + "Item";
+        if (mt[gr_name] == "Item") tag.Id = tag.LastParent + "Item";
         return tag;
     }
 }
