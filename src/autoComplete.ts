@@ -1948,6 +1948,19 @@ export const Attributes = {
     ],
     "QuotaItem": [
         {
+            "Name": "Page",
+            "Type": "string",
+            Result: "'${1|'+getAllPages()+'|}'"
+        },
+        {
+            "Name": "Question",
+            "Type": "string"
+        },
+        {
+            "Name": "Answer",
+            "Type": "string"
+        },
+        {
             "Name": "Operator",
             "Default": "And",
             "Type": "LogicalOperator"
