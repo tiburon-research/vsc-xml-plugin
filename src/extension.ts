@@ -293,7 +293,7 @@ function autoComplete()
                             break;
                         }
                     if (!parent || !ItemSnippets[parent]) parent = "List";
-                    var res = new vscode.SnippetString(ItemSnippets[parent]);
+                    var res = new vscode.SnippetString(ItemSnippets[parent].replace("Page=\"$1\"", "Page=\"${1|" + getAllPages() + "|}\""));
                     if (res)
                     {
                         var ci = new vscode.CompletionItem("Item", vscode.CompletionItemKind.Snippet);
@@ -709,6 +709,7 @@ function updateNodesIds(editor: vscode.TextEditor, names?: string[])
         var item = new SurveyNode(res[1], res[idIndex], pos);
         CurrentNodes.Add(item);
     }
+    CurrentNodes.Add(new SurveyNode("Page", "pre_data", null));
 }
 
 
@@ -717,18 +718,28 @@ function updateNodesIds(editor: vscode.TextEditor, names?: string[])
 
 // -------------------- доп функции
 
+function getAllPages(): string
+{
+    return CurrentNodes.GetIds('Page').join(',');
+}
+
+function getAllLists(): string
+{
+    return CurrentNodes.GetIds('List').join(',');
+}
+
 function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range
 {
     var fullText = document.getText();
     var prevText = getPreviousText(document, position);
     var textAfter = fullText.substr(prevText.length);
     var curIndex = prevText.length + textAfter.indexOf(clBracket);
-    
+
     var rest = textAfter;
     var op = rest.indexOf(opBracket + tagName);
     var cl = rest.indexOf(opBracket + "/" + tagName);
     if (cl < 0) return null;
-    
+
     var cO = 0;
     var cC = 0;
     while (cl > -1 && ((op > -1) || (cC != cO)))
@@ -763,12 +774,12 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 {
     var prevText = getPreviousText(document, position);
     var curIndex = prevText.lastIndexOf(opBracket);
-    
+
     var rest = prevText.substr(0, curIndex);
     var op = rest.lastIndexOf(opBracket + tagName);
     var cl = rest.lastIndexOf(opBracket + "/" + tagName);
     if (op < 0) return null;
-    
+
     var cO = 0;
     var cC = 0;
     while (op > -1 && ((cl > -1) || op != cl))
@@ -787,7 +798,7 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
         cl = rest.lastIndexOf(opBracket + "/" + tagName);
         if (cO == cC) break;
     }
-    
+
     rest = rest.substr(0, rest.indexOf(clBracket, op) + 1);
     var clLast = rest.lastIndexOf(clBracket) + 1;
 
