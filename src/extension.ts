@@ -92,7 +92,6 @@ export function activate(context: vscode.ExtensionContext)
         var originalPosition = editor.selection.start.translate(0, 1);
         var text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
         var tag = getCurrentTag(text);
-        if (tag.CSMode) console.log(tag.CSInline);
         updateNodesIds(editor);
         insertAutoCloseTag(event, editor, tag, text);
         insertSpecialSnippets(event, editor, text, tag);
@@ -347,7 +346,7 @@ function autoComplete()
         }
     }, " ");
 
-    //Functions, Variables, Enums, Classes, Custom Methods, Snippets
+    //Functions, Variables, Enums, Classes, Custom Methods, C# Snippets
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
@@ -413,50 +412,64 @@ function autoComplete()
         }
     }, '.');
 
-    //Node Ids
+    //Значения атрибутов
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
             var completionItems = [];
             var tag = getCurrentTag(getPreviousText(document, position));
-            if (!tag) return;
+            if (!tag || tag.Closed) return;
             var text = getPreviousText(document, position, true);
             var needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
 
-            // Id листов
             var curAttr = text.match(/(\w+)=(["'])(\w*)$/);
-            if
-            (
-                !tag.Closed && curAttr && tag.Name == "Repeat" && curAttr[1].toLowerCase() == "list" ||
-                tag.CSMode && text.match(/CurrentSurvey\.Lists\["\w*$/)
-            )
-            {
-                var lists = CurrentNodes.GetIds("List");
-                lists.forEach(element =>
-                {
-                    var ci = new vscode.CompletionItem(element, vscode.CompletionItemKind.Reference);
-                    ci.detail = "Id листа";
-                    ci.insertText = element;
-                    if (needClose) ci.insertText = element + curAttr[2];
-                    completionItems.push(ci);
-                });
-            }
+            if (!curAttr) return;
 
-            //Id страниц
-            var opened = text.match(/(Page|Apply)\s*=\s*(['"])\w*$/);
-            if (opened)
+            switch (curAttr[1]) 
             {
-                var pages = CurrentNodes.GetIds("Page");
-                pages.forEach(element =>
-                {
-                    var ci = new vscode.CompletionItem(element, vscode.CompletionItemKind.Reference);
-                    ci.detail = "Id страницы";
-                    ci.insertText = element;
-                    if (needClose) ci.insertText = element + opened[2];
-                    completionItems.push(ci);
-                });
-            }
+                case "List":// Id листов
+                    if (tag.Name == "Repeat")
+                    {
+                        var lists = CurrentNodes.GetIds("List");
+                        lists.forEach(element =>
+                        {
+                            var ci = new vscode.CompletionItem(element, vscode.CompletionItemKind.Reference);
+                            ci.detail = "Id листа";
+                            ci.insertText = element;
+                            if (needClose) ci.insertText = element + curAttr[2];
+                            completionItems.push(ci);
+                        });
+                    }
+                    break;
 
+                case "Page": // Id страниц
+                case "Apply":
+                    var pages = CurrentNodes.GetIds("Page");
+                    pages.forEach(element =>
+                    {
+                        var ci = new vscode.CompletionItem(element, vscode.CompletionItemKind.Reference);
+                        ci.detail = "Id страницы";
+                        ci.insertText = element;
+                        if (needClose) ci.insertText = element + curAttr[2];
+                        completionItems.push(ci);
+                    });
+
+                default: // Default Values
+                    var attr: TibAttribute = (AutoCompleteArray.Attributes[tag.Id] as TibAttribute[]).find(function (e, i)
+                    {
+                        return e.Name == curAttr[1];
+                    });
+                    if (attr && attr.Values)
+                    {
+                        attr.Values.forEach(v =>
+                        {
+                            var ci = new vscode.CompletionItem(v, vscode.CompletionItemKind.Enum);
+                            ci.insertText = v;
+                            completionItems.push(ci);
+                        });
+                    }    
+                    break;
+            }
 
             return completionItems;
         },
@@ -871,7 +884,7 @@ function getCurrentTag(text: string): CurrentTag
     pure = pure.replace(reg, "");
     pure = pure.replace(regEnd, "$1");
     if (pure.match(/<\s*$/)) pure = pure.substr(0, pure.lastIndexOf("<")); // иначе regExp в parseTags работает неправильно
-    
+
     var tag = parseTags(pure, text);
     if (!tag) return new CurrentTag("xml");
     var tstart = text.lastIndexOf("<" + tag.Name);
@@ -953,7 +966,6 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         var isSpaced = !!mt[gr_after] && !!mt[gr_after].substr(0, mt[gr_after].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+ то он не считается c#
         tag.CSSingle = !!text.match(/\$[\w\d_]+$/);
         tag.CSInline = (lastc > 0 && lastc > lastcEnd);
-        console.log(str);
         tag.CSMode =
             tag.CSInline ||
             tag.CSSingle ||
