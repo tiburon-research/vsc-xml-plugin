@@ -143,6 +143,7 @@ export class TibAttribute
     Description: string = "";
     Documentation: string = "";
     Values: Array<string> = [];
+    Result: ""; // callback
 
     constructor(obj: Object)
     {
@@ -150,11 +151,13 @@ export class TibAttribute
             this[key] = obj[key];
     }
 
-    ToCompletionItem()
+    ToCompletionItem(callback = null): vscode.CompletionItem
     {
         var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Property);
-        var snip = this.Name + "=\"$";
-        if (this.Values.length) snip += "{1|" + this.Values.join(",") + "|}"; else snip += "1";
+        var snip = this.Name + "=\"";
+        if (this.Values.length) snip += "${1|" + this.Values.join(",") + "|}";
+        else if (callback === null || !this.Result) snip += "$1";
+        else snip += callback(this.Result);
         snip += "\"";
         var res = new vscode.SnippetString(snip);
 

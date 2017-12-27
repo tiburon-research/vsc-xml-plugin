@@ -1601,6 +1601,7 @@ export const Attributes = {
     "ConditionItem": [
         {
             "Name": "Page",
+            Result: "'${1|'+getAllPages()+'|}'",
             "Type": "String"
         },
         {
@@ -1637,6 +1638,7 @@ export const Attributes = {
     "Redirect": [
         {
             "Name": "Page",
+            Result: "'${1|'+getAllPages()+'|}'",
             "Type": "String"
         },
         {
@@ -1680,6 +1682,7 @@ export const Attributes = {
         },
         {
             "Name": "Page",
+            Result: "'${1|'+getAllPages()+'|}'",
             "Type": "String"
         },
         {
@@ -1765,6 +1768,7 @@ export const Attributes = {
         },
         {
             "Name": "List",
+            Result: "'${1|'+getAllLists()+'|}'",
             "Type": "String"
         },
         {

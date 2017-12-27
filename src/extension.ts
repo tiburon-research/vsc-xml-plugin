@@ -330,7 +330,10 @@ function autoComplete()
                     if (existAttrs.indexOf(element.Name) < 0)
                     {
                         var attr = new TibAttribute(element);
-                        var ci = attr.ToCompletionItem();
+                        var ci = attr.ToCompletionItem(function (query)
+                        {
+                            return eval(query);
+                        });
                         completionItems.push(ci);
                     }
                 });
