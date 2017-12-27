@@ -138,15 +138,6 @@
         ],
         "description": "CustomText2 (+style)"
     },
-    "Repeat":{
-        "prefix": "<Repeat",
-        "body": [
-            "<Repeat ${1|List,Length,Range|}=\"$2\">",
-            "\t$0",
-            "</Repeat>"
-        ],
-        "description": "Структура Repeat"
-    },
     "Quota":{
         "prefix": "<Quota",
         "body":[
