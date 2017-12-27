@@ -870,9 +870,10 @@ function getCurrentTag(text: string): CurrentTag
     if (pure.match(/<\s*$/)) pure = pure.substr(0, pure.lastIndexOf("<")); // иначе regExp в parseTags работает неправильно
     var tag = parseTags(pure, text);
     if (!tag) return new CurrentTag("xml");
+    var tstart = text.lastIndexOf("<" + tag.Name);
     if (tag.Closed)
     {
-        tag.Body = text.substr(text.indexOf(">", text.lastIndexOf("<" + tag.Name)) + 1);
+        tag.Body = text.substr(text.indexOf(">", tstart) + 1);
         tag.InString = tag && tag.Body && inString(tag.Body);
         // если курсор на закрывающемся теге, то это уже не CSMode
         if (tag.CSMode && !tag.CSInline && !tag.CSSingle)
@@ -902,6 +903,10 @@ function getCurrentTag(text: string): CurrentTag
             }
             else tag.InCSString = tag.InString;
         }
+    }
+    else
+    {
+        tag.InString = inString(text.substr(tstart));
     }
     return tag;
 }
