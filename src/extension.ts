@@ -92,6 +92,7 @@ export function activate(context: vscode.ExtensionContext)
         var originalPosition = editor.selection.start.translate(0, 1);
         var text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
         var tag = getCurrentTag(text);
+        if (tag.CSMode) console.log(tag.CSInline);
         updateNodesIds(editor);
         insertAutoCloseTag(event, editor, tag, text);
         insertSpecialSnippets(event, editor, text, tag);
@@ -860,14 +861,17 @@ function execute(link: string)
 
 function getCurrentTag(text: string): CurrentTag
 {
-    var pure = text.replace(/(?:<!--)([\s\S]*?)(-->)/, "");
-    pure = pure.replace(/(?:<!\[CDATA\[)([\s\S]*?)(\]\]>)/, "");
-    // удаление закрытых _AllowCodeTag из остатка кода
+    var pure = text.replace(/(?:<!--)([\s\S]*?)(-->)/g, "");
+    pure = pure.replace(/(?:<!\[CDATA\[)([\s\S]*?)(\]\]>)/g, "");
+    // костыль для [/c#]: убираем / чтобы в regex можно было искать [^/>]
+    pure = pure.replace(/\[\/c#/g, "[*c#");
+    // удаление закрытых _AllowCodeTag из остатка кода (чтобы не искать <int>)
     var reg = new RegExp("<(" + _AllowCodeTags + ")[^/>]*((/>)|(>((?![\\t ]+\\s*\n)[\\s\\S]*?)(<\\/\\1\\s*>)))", "g");
-    var regEnd = new RegExp("(<(" + _AllowCodeTags + ")([^/>]*>)?)((?![\\t ]+\\s*\n)[\\s\\S]?)*$", "g");
+    var regEnd = new RegExp("(<(" + _AllowCodeTags + ")([^/>]*)?>)((?![\\t ]+\\s*\n)[\\s\\S]*)*$", "g");
     pure = pure.replace(reg, "");
     pure = pure.replace(regEnd, "$1");
     if (pure.match(/<\s*$/)) pure = pure.substr(0, pure.lastIndexOf("<")); // иначе regExp в parseTags работает неправильно
+    
     var tag = parseTags(pure, text);
     if (!tag) return new CurrentTag("xml");
     var tstart = text.lastIndexOf("<" + tag.Name);
@@ -914,15 +918,22 @@ function getCurrentTag(text: string): CurrentTag
 // рекурсивный поиск незакрытых тегов
 function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatchArray = null): CurrentTag
 {
-    //var res = text.match(/<([\w\d]+)([^/>]*)((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
-    var res = text.match(/<([\w\d]+)(\s*(\w+=(("[^"]*")|('[^']*')))?)*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
+    var res = text.match(/<([\w\d]+)([^/>]*)((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
+    const
+        // группы regex    
+        gr_name = 1,
+        gr_attrs = 2,
+        gr_after = 3,
+        gr_close = 4,
+        gr_body = 5;
+    /*var res = text.match(/<([\w\d]+)(\s*(\w+=?(("[^"]*")|('[^']*'))?)?)*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
     const
         // группы regex    
         gr_name = 1,
         gr_attrs = 2,
         gr_after = 7,
         gr_close = 8,
-        gr_body = 9;
+        gr_body = 9;*/
     var nn = nodes;
     if (res && res[gr_name]) nn.push(res[gr_name]);
     if (res && res[gr_name] && res[gr_body])
@@ -931,17 +942,18 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         return parseTags(rem, originalText, nn, res);
     }
     else
-    {
+    {// родители закончились
         nn.pop();
         var mt = res ? res : prevMatch;
         if (!mt || !mt[gr_name]) return null;
-        var tag = new CurrentTag(mt[gr_name]);
+        var tag = new CurrentTag(mt[gr_name]); // inint
         var str = mt[0];
         var lastc = str.lastIndexOf("[c#");
-        var lastcEnd = str.lastIndexOf("]");
-        var isSpaced = !!mt[gr_after] && !!mt[gr_after].substr(0, mt[gr_after].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+
+        var lastcEnd = str.lastIndexOf("[*c#");
+        var isSpaced = !!mt[gr_after] && !!mt[gr_after].substr(0, mt[gr_after].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+ то он не считается c#
         tag.CSSingle = !!text.match(/\$[\w\d_]+$/);
-        tag.CSInline = (lastc > str.lastIndexOf("[/c#") && lastc < lastcEnd && lastcEnd >= 0);
+        tag.CSInline = (lastc > 0 && lastc > lastcEnd);
+        console.log(str);
         tag.CSMode =
             tag.CSInline ||
             tag.CSSingle ||
@@ -953,7 +965,7 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         if (mt[gr_attrs]) tag.setAttributes(mt[gr_attrs]);
         if (mt[gr_body]) tag.Body = mt[gr_body];
         tag.LastParent = nn[nn.length - 1];
-        if (mt[gr_name] == "Item") tag.Id = tag.LastParent + "Item";
+        if (mt[gr_name] == "Item") tag.Id = tag.LastParent + "Item"; //специально для Item разных родителей
         return tag;
     }
 }
