@@ -352,19 +352,24 @@ function autoComplete()
         {
             var completionItems = [];
             var tag = getCurrentTag(getPreviousText(document, position));
-            if (tag.CSMode)
+            if (!tag.CSMode) return;
+
+            var curLine = getPreviousText(document, position, true);
+            var customMethods = Methods.CompletionArray();
+
+            if (customMethods && !tag.InCSString) completionItems = completionItems.concat(customMethods); //Custom Methods
+            var str = getCurrentLineText(document, position).substr(position.character);
+            if (!tag.CSSingle && !curLine.match(/\w+\.\w*$/))
             {
-                var curLine = getPreviousText(document, position, true);
-                var customMethods = Methods.CompletionArray();
-                if (customMethods) completionItems = completionItems.concat(customMethods);
-                var str = getCurrentLineText(document, position).substr(position.character);
-                if (!tag.CSSingle && !tag.InCSString && !curLine.match(/\w+\.\w*$/))
+                if (!tag.InCSString)
                 {
+                    //Functions, Variables, Enums, Classes
                     var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums, TibAutoCompleteList.Classes);
                     ar.forEach(element =>
                     {
                         completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
                     });
+                    //C# Snippets
                     AutoCompleteArray.CSSnippets.forEach(element =>
                     {
                         var ci = new vscode.CompletionItem(element.prefix, vscode.CompletionItemKind.Snippet);
@@ -373,6 +378,20 @@ function autoComplete()
                         completionItems.push(ci);
                     });
                 }
+                else //node Ids
+                {
+                    var qt = curLine.lastIndexOf('"');
+                    if (qt > -1) // от недоверия к tag.InCSString
+                    {
+                        var stuff = curLine.substr(0, qt);
+                        // Lists
+                        if (stuff.match(/CurrentSurvey\.Lists\[\s*$/))
+                            completionItems = completionItems.concat(CurrentNodes.CompletitionItems("List"));
+                        // Pages
+                        if (stuff.match(/Page\s*=\s*$/))
+                            completionItems = completionItems.concat(CurrentNodes.CompletitionItems("Page"));
+                    }
+                }
             }
             return completionItems;
         },
@@ -380,7 +399,7 @@ function autoComplete()
         {
             return item;
         }
-    });
+    }, "\"", "");
 
     //Properties, Methods, EnumMembers
     vscode.languages.registerCompletionItemProvider('tib', {
@@ -894,25 +913,25 @@ function getCurrentTag(text: string): CurrentTag
                 if (endRange.contains(document.positionAt(text.length))) tag.CSMode = false;
             }
         }
-        if (tag.CSMode)
-        {
-            if (tag.CSSingle)
-            {
-                var rest = text.substr(text.lastIndexOf("$"));
-                tag.InCSString = inString(rest);
-            }
-            else if (tag.CSInline)
-            {
-                var rest = text.substr(text.lastIndexOf("[c#"));
-                rest = rest.substr(rest.indexOf("]") + 1);
-                tag.InCSString = inString(rest);
-            }
-            else tag.InCSString = tag.InString;
-        }
     }
     else
     {
         tag.InString = inString(text.substr(tstart));
+    }
+    if (tag.CSMode)
+    {
+        if (tag.CSSingle)
+        {
+            var rest = text.substr(text.lastIndexOf("$"));
+            tag.InCSString = inString(rest);
+        }
+        else if (tag.CSInline)
+        {
+            var rest = text.substr(text.lastIndexOf("[c#"));
+            rest = rest.substr(rest.indexOf("]") + 1);
+            tag.InCSString = inString(rest);
+        }
+        else tag.InCSString = tag.InString;
     }
     return tag;
 }
