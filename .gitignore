@@ -10,3 +10,4 @@ node_modules
 !.vscode/launch.json
 !.vscode/extensions.json
 npm-debug.log
+stuff/deleted.json
