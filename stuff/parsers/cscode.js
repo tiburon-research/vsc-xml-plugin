@@ -1032,14 +1032,14 @@ public bool DataHashExist(string hash)
 `;
 
 
-var res = raw.match(/((public)|(private)|(protected))\s+(\w+)\s+((\w+)(\(.*\))?)\n/g);
+var res = raw.match(/((public)|(private)|(protected))\s+([^\s]+)\s+((\w+)(\(.*\))?)\n/g);
 
 var ar = [];
 
 res.forEach(function(e)
 {
     var obj = {};
-    var parse = e.match(/((public)|(private)|(protected))\s+(\w+)\s+((\w+)(\(.*\))?)/);
+    var parse = e.match(/((public)|(private)|(protected))\s+([^\s]+)\s+((\w+)(\(.*\))?)/);
     obj["Name"] = parse[7];
     obj["Detail"] = parse[5];
     obj["Kind"] = parse[8] ? "Function" : "Property";

@@ -187,18 +187,6 @@ var ManualCode = [
         Name: "And",
         Kind: "EnumMember",
         Parent: "LogicalOperator"
-    },
-    {
-        Name: "AnswerIDs",
-        Kind: "Function",
-        Detail: "string[]",
-        Documentation: "string[] AnswerIDs(string pageId, string questionId)"
-    },
-    {
-        Name: "DataGetCustoms",
-        Kind: "Function",
-        Detail: "string[][]",
-        Documentation: "string[][] DataGetCustoms(int csvId, string key)"
     }
 ];
 
@@ -523,6 +511,66 @@ var KnownCode = [
         "Documentation": "int ExtInterview(int extSurveyId, string interviewRespondent)"
     },
     {
+        "Name": "ExtInterviews",
+        "Detail": "int[]",
+        "Kind": "Function",
+        "Documentation": "int[] ExtInterviews(int extSurveyId, int statusId, string questionId, string answerId, string val)"
+    },
+    {
+        "Name": "ExtInterviews",
+        "Detail": "int[]",
+        "Kind": "Function",
+        "Documentation": "int[] ExtInterviews(int extSurveyId, int statusId, string questionId, string answerId)"
+    },
+    {
+        "Name": "ExtInterviews",
+        "Detail": "int[]",
+        "Kind": "Function",
+        "Documentation": "int[] ExtInterviews(int extSurveyId, string questionId, string answerId, string val)"
+    },
+    {
+        "Name": "ExtInterviews",
+        "Detail": "int[]",
+        "Kind": "Function",
+        "Documentation": "int[] ExtInterviews(int extSurveyId, string questionId, string answerId)"
+    },
+    {
+        "Name": "ExtInterviewsAnswerExists",
+        "Detail": "bool[]",
+        "Kind": "Function",
+        "Documentation": "bool[] ExtInterviewsAnswerExists(int[] interviewList, int statusId, string pageId, string questionId, string answerId)"
+    },
+    {
+        "Name": "ExtInterviewsAnswerExists",
+        "Detail": "bool[]",
+        "Kind": "Function",
+        "Documentation": "bool[] ExtInterviewsAnswerExists(int[] interviewList, string pageId, string questionId, string answerId)"
+    },
+    {
+        "Name": "ExtInterviewsAnswerValue",
+        "Detail": "string[]",
+        "Kind": "Function",
+        "Documentation": "string[] ExtInterviewsAnswerValue(int[] interviewList, int statusId, string pageId, string questionId, string answerId)"
+    },
+    {
+        "Name": "ExtInterviewsAnswerValue",
+        "Detail": "string[]",
+        "Kind": "Function",
+        "Documentation": "string[] ExtInterviewsAnswerValue(int[] interviewList, string pageId, string questionId, string answerId)"
+    },
+    {
+        "Name": "ExtInterviewsAnswerId",
+        "Detail": "string[]",
+        "Kind": "Function",
+        "Documentation": "string[] ExtInterviewsAnswerId(int[] interviewList, int statusId, string pageId, string questionId)"
+    },
+    {
+        "Name": "ExtInterviewsAnswerId",
+        "Detail": "string[]",
+        "Kind": "Function",
+        "Documentation": "string[] ExtInterviewsAnswerId(int[] interviewList, string pageId, string questionId)"
+    },
+    {
         "Name": "AnswerCount",
         "Detail": "int",
         "Kind": "Function",
@@ -545,6 +593,30 @@ var KnownCode = [
         "Detail": "bool",
         "Kind": "Function",
         "Documentation": "bool DataExists(int index, string val)"
+    },
+    {
+        "Name": "DataGetCustom",
+        "Detail": "string[]",
+        "Kind": "Function",
+        "Documentation": "string[] DataGetCustom(int index, string value)"
+    },
+    {
+        "Name": "DataGetCustoms",
+        "Detail": "string[][]",
+        "Kind": "Function",
+        "Documentation": "string[][] DataGetCustoms(int index, string value)"
+    },
+    {
+        "Name": "DataGetCustomSingleRandom",
+        "Detail": "string[]",
+        "Kind": "Function",
+        "Documentation": "string[] DataGetCustomSingleRandom(int index, int key, int updateKey)"
+    },
+    {
+        "Name": "DataGetCustomSingleRandomWithConditions",
+        "Detail": "string[]",
+        "Kind": "Function",
+        "Documentation": "string[] DataGetCustomSingleRandomWithConditions(int index, int key, int updateKey, string[] conditions)"
     },
     {
         "Name": "QuotaCount",
@@ -601,6 +673,12 @@ var KnownCode = [
         "Documentation": "string GetAnswerID(string questionId, string val)"
     },
     {
+        "Name": "GetSurveyUserMails",
+        "Detail": "List<string[]>",
+        "Kind": "Function",
+        "Documentation": "List<string[]> GetSurveyUserMails(int surveyId)"
+    },
+    {
         "Name": "AnswerDelete",
         "Detail": "void",
         "Kind": "Function",
@@ -611,6 +689,30 @@ var KnownCode = [
         "Detail": "void",
         "Kind": "Function",
         "Documentation": "void AnswerDelete(string questionId, string answerId)"
+    },
+    {
+        "Name": "QuestionResults",
+        "Detail": "string[][]",
+        "Kind": "Function",
+        "Documentation": "string[][] QuestionResults(string pageId, string questionId)"
+    },
+    {
+        "Name": "QuestionResults",
+        "Detail": "string[][]",
+        "Kind": "Function",
+        "Documentation": "string[][] QuestionResults(int interviewId, string pageId, string questionId)"
+    },
+    {
+        "Name": "AnswerIDs",
+        "Detail": "string[]",
+        "Kind": "Function",
+        "Documentation": "string[] AnswerIDs(string pageId, string questionId)"
+    },
+    {
+        "Name": "AnswerIDs",
+        "Detail": "string[]",
+        "Kind": "Function",
+        "Documentation": "string[] AnswerIDs(int interviewId, string pageId, string questionId)"
     },
     {
         "Name": "AnswerText",
@@ -647,6 +749,12 @@ var KnownCode = [
         "Detail": "string",
         "Kind": "Function",
         "Documentation": "string PageHeader(string pageId)"
+    },
+    {
+        "Name": "GetMixOrder",
+        "Detail": "string[]",
+        "Kind": "Function",
+        "Documentation": "string[] GetMixOrder(string mixId)"
     },
     {
         "Name": "MixItera",
