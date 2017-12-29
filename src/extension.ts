@@ -293,7 +293,7 @@ function autoComplete()
                             break;
                         }
                     if (!parent || !ItemSnippets[parent]) parent = "List";
-                    var res = new vscode.SnippetString(ItemSnippets[parent].replace("Page=\"$1\"", "Page=\"${1|" + getAllPages() + "|}\""));
+                    var res = new vscode.SnippetString(ItemSnippets[parent].replace("Page=\"$1\"", "Page=\"${1|" + getAllPages().join(",") + "|}\""));
                     if (res)
                     {
                         var ci = new vscode.CompletionItem("Item", vscode.CompletionItemKind.Snippet);
@@ -332,7 +332,7 @@ function autoComplete()
                         var attr = new TibAttribute(element);
                         var ci = attr.ToCompletionItem(function (query)
                         {
-                            return eval(query);
+                            return safeValsEval(query);
                         });
                         completionItems.push(ci);
                     }
@@ -425,51 +425,26 @@ function autoComplete()
             var curAttr = text.match(/(\w+)=(["'])(\w*)$/);
             if (!curAttr) return;
 
-            switch (curAttr[1]) 
+            var atrs: TibAttribute[] = AutoCompleteArray.Attributes[tag.Id];
+            if (!atrs) return;
+
+            var attr = atrs.find(function (e, i)
             {
-                case "List":// Id листов
-                    if (tag.Name == "Repeat")
-                    {
-                        var lists = CurrentNodes.GetIds("List");
-                        lists.forEach(element =>
-                        {
-                            var ci = new vscode.CompletionItem(element, vscode.CompletionItemKind.Reference);
-                            ci.detail = "Id листа";
-                            ci.insertText = element;
-                            if (needClose) ci.insertText = element + curAttr[2];
-                            completionItems.push(ci);
-                        });
-                    }
-                    break;
+                return e.Name == curAttr[1];
+            });
+            if (!attr) return;
 
-                case "Page": // Id страниц
-                case "Apply":
-                    var pages = CurrentNodes.GetIds("Page");
-                    pages.forEach(element =>
-                    {
-                        var ci = new vscode.CompletionItem(element, vscode.CompletionItemKind.Reference);
-                        ci.detail = "Id страницы";
-                        ci.insertText = element;
-                        if (needClose) ci.insertText = element + curAttr[2];
-                        completionItems.push(ci);
-                    });
-
-                default: // Default Values
-                    var attr: TibAttribute = (AutoCompleteArray.Attributes[tag.Id] as TibAttribute[]).find(function (e, i)
-                    {
-                        return e.Name == curAttr[1];
-                    });
-                    if (attr && attr.Values)
-                    {
-                        attr.Values.forEach(v =>
-                        {
-                            var ci = new vscode.CompletionItem(v, vscode.CompletionItemKind.Enum);
-                            ci.insertText = v;
-                            completionItems.push(ci);
-                        });
-                    }    
-                    break;
-            }
+            var attrT = new TibAttribute(attr);
+            var vals = attrT.ValueCompletitions(function (query)
+            {
+                return safeValsEval(query);
+            });
+            vals.forEach(v =>
+            {
+                var ci = new vscode.CompletionItem(v, vscode.CompletionItemKind.Enum);
+                ci.insertText = v;
+                completionItems.push(ci);
+            });
 
             return completionItems;
         },
@@ -732,14 +707,28 @@ function updateNodesIds(editor: vscode.TextEditor, names?: string[])
 
 // -------------------- доп функции
 
-function getAllPages(): string
+function safeValsEval(query): string[]
 {
-    return CurrentNodes.GetIds('Page').join(',');
+    var res = [];
+    try
+    {
+        res = eval(query);
+    }
+    catch (error)
+    {
+        console.log(error);
+    }
+    return res;
 }
 
-function getAllLists(): string
+function getAllPages(): string[]
 {
-    return CurrentNodes.GetIds('List').join(',');
+    return CurrentNodes.GetIds('Page');
+}
+
+function getAllLists(): string[]
+{
+    return CurrentNodes.GetIds('List');
 }
 
 function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range

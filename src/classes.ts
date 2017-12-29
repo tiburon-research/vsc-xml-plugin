@@ -143,7 +143,7 @@ export class TibAttribute
     Description: string = "";
     Documentation: string = "";
     Values: Array<string> = [];
-    Result: ""; // callback
+    Result: ""; // callback: string[]
 
     constructor(obj: Object)
     {
@@ -151,25 +151,34 @@ export class TibAttribute
             this[key] = obj[key];
     }
 
-    ToCompletionItem(callback = null): vscode.CompletionItem
+    ToCompletionItem(callback): vscode.CompletionItem
     {
         var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Property);
-        var snip = this.Name + "=\"";
-        if (this.Values.length) snip += "${1|" + this.Values.join(",") + "|}";
-        else if (callback === null || !this.Result) snip += "$1";
-        else snip += callback(this.Result);
-        snip += "\"";
+        var snip = this.Name + '="$';
+        var valAr: string[] = this.ValueCompletitions(callback);
+        if (valAr.length > 0) snip += "{1|" + valAr.join(",") + "|}";
+        else snip += "1";
+        snip += '"';
         var res = new vscode.SnippetString(snip);
-
+        item.insertText = res;
         item.detail = (this.Detail ? this.Detail : this.Name) + (this.Type ? (" (" + this.Type + ")") : "");
         var doc = "";
         if (this.Default) doc += "Значение по умолчанию: `" + this.Default + "`";
         doc += "\nПоддержка кадовых вставок: `" + (this.AllowCode ? "да" : "нет") + "`";
         item.documentation = new vscode.MarkdownString(doc);
-        item.insertText = res;
-
         return item;
     }
+
+    ValueCompletitions(callback): string[]
+    {
+        var vals = "";
+        if (this.Values && this.Values.length) vals = JSON.stringify(this.Values);
+        else if (!!this.Result) vals = this.Result;
+        var res: string[] = callback(vals);
+        if (!res) res = [];
+        return res;
+    }
+
 }
 
 
@@ -226,7 +235,7 @@ export class TibMethods extends KeyedCollection<TibMethod>
 
     CompletionArray(): vscode.CompletionItem[]
     {
-        return this.Values().map(function(e)
+        return this.Values().map(function (e)
         {
             return e.ToCompletionItem();
         });
@@ -234,7 +243,7 @@ export class TibMethods extends KeyedCollection<TibMethod>
 
     HoverArray(word: string): any[]
     {
-        return this.Values().map(function(e)
+        return this.Values().map(function (e)
         {
             if (e.Name == word) return e.ToHoverItem();
         });
@@ -357,7 +366,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
             {
                 res = nodes[i];
                 break;
-            }    
+            }
         };
         return res;
     }
@@ -365,12 +374,26 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
     Clear(names?: string[])
     {
         if (!names) super.Clear();
-        else 
-        names.forEach(element => {
-            this.items[element] = [];
-        });    
+        else
+            names.forEach(element =>
+            {
+                this.items[element] = [];
+            });
     }
-    
+
+    CompletitionItems(name: string, closeQt: string = ""): vscode.CompletionItem[]
+    {
+        var res: vscode.CompletionItem[] = [];
+        this.Item(name).forEach(element =>
+        {
+            var ci = new vscode.CompletionItem(element.Id, vscode.CompletionItemKind.Enum);
+            ci.detail = name;
+            ci.insertText = new vscode.SnippetString(element.Id + closeQt);
+            res.push(ci);
+        });    
+        return res;
+    }
+
 }
 
 
@@ -414,9 +437,9 @@ export namespace TibTransform
                     if (txt) res += txt[0];
                 }
                 res += "</" + to + ">\n"
-            }    
+            }
         });
-        return res.substr(0, res.length-1);
+        return res.substr(0, res.length - 1);
     }
 
 }

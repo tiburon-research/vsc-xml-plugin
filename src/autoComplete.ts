@@ -1601,7 +1601,7 @@ export const Attributes = {
     "ConditionItem": [
         {
             "Name": "Page",
-            Result: "'${1|'+getAllPages()+'|}'",
+            Result: "getAllPages()",
             "Type": "String"
         },
         {
@@ -1638,7 +1638,7 @@ export const Attributes = {
     "Redirect": [
         {
             "Name": "Page",
-            Result: "'${1|'+getAllPages()+'|}'",
+            Result: "getAllPages()",
             "Type": "String"
         },
         {
@@ -1682,7 +1682,7 @@ export const Attributes = {
         },
         {
             "Name": "Page",
-            Result: "'${1|'+getAllPages()+'|}'",
+            Result: "getAllPages()",
             "Type": "String"
         },
         {
@@ -1768,7 +1768,7 @@ export const Attributes = {
         },
         {
             "Name": "List",
-            Result: "'${1|'+getAllLists()+'|}'",
+            Result: "getAllLists()",
             "Type": "String"
         },
         {
@@ -1950,7 +1950,7 @@ export const Attributes = {
         {
             "Name": "Page",
             "Type": "string",
-            Result: "'${1|'+getAllPages()+'|}'"
+            Result: "getAllPages()"
         },
         {
             "Name": "Question",
