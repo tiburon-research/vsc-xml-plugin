@@ -928,7 +928,8 @@ export const Attributes = {
         },
         {
             "Name": "StatusAltSuccess",
-            "Type": "String"
+            "Type": "String",
+            Auto: "51"
         },
         {
             "Name": "StatusAltScreenoutEarly",
@@ -982,14 +983,16 @@ export const Attributes = {
         {
             "Name": "Action",
             "Default": "Replace",
-            "Type": "String"
+            "Type": "String",
+            Auto: "Append"
         }
     ],
     "CustomText2": [
         {
             "Name": "Action",
             "Default": "Replace",
-            "Type": "String"
+            "Type": "String",
+            Auto: "Append"
         }
     ],
     "Defaults": [
@@ -1451,7 +1454,7 @@ export const Attributes = {
         {
             Name: "Orientation",
             Default: "Vertical",
-            Values: ["Horizontal", "Vertical"]
+            Auto: "Horizontal"
         },
         {
             "Name": "Type",
@@ -1545,7 +1548,8 @@ export const Attributes = {
         {
             "Name": "Imperative",
             "Default": "true",
-            "Type": "Boolean"
+            "Type": "Boolean",
+            Auto: "false"
         },
         {
             "Name": "ImperativeAll",
@@ -1803,7 +1807,8 @@ export const Attributes = {
         },
         {
             "Name": "Apply",
-            "Type": "String"
+            "Type": "String",
+            Result: "getAllPages()"
         },
         {
             "Name": "Monadic",

@@ -137,7 +137,8 @@ export class TibAttribute
 {
     Name: string = "";
     Type: string = "";
-    Default = null;
+    Default = null; // значение по умолчанию (если не задано)
+    Auto = ""; // значение, подставляемое автоматически при вставке атрибута
     AllowCode: boolean = false;
     Detail: string = "";
     Description: string = "";
@@ -154,10 +155,16 @@ export class TibAttribute
     ToCompletionItem(callback): vscode.CompletionItem
     {
         var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Property);
-        var snip = this.Name + '="$';
-        var valAr: string[] = this.ValueCompletitions(callback);
-        if (valAr.length > 0) snip += "{1|" + valAr.join(",") + "|}";
-        else snip += "1";
+        var snip = this.Name + '="';
+        var valAr: string[];
+        var auto = this.AutoValue();
+        if (!auto)
+        {
+            valAr = this.ValueCompletitions(callback);
+            if (valAr.length > 0) snip += "${1|" + valAr.join(",") + "|}";
+            else snip += "$1";
+        }
+        else snip += auto;
         snip += '"';
         var res = new vscode.SnippetString(snip);
         item.insertText = res;
@@ -179,6 +186,11 @@ export class TibAttribute
         return res;
     }
 
+    AutoValue()
+    {
+        if (this.Auto) return this.Auto;
+        if (this.Type == "Boolean") return "true";
+    }
 }
 
 
