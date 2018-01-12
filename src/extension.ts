@@ -656,7 +656,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
     if
     (
         change[change.length - 1] == "]" &&
-        (!tag.CSMode || tag.InCSString || tagT[2]) &&
+        (!tag.CSMode || tag.InCSString || !!tagT && tagT[2]) &&
         tag.Parents.indexOf("CustomText1") + tag.Parents.indexOf("CustomText2") == -2 &&
         tag.Name != "CustomText1" && tag.Name != "CustomText2" &&
         !!tagT &&
