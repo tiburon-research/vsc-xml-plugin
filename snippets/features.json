@@ -1,0 +1,110 @@
+{
+    "RepeatInline":{
+        "prefix": "$repeat",
+        "body":[
+            "\\$repeat(${1:source}){$2[,]}"
+        ]
+    },
+    "ftpPath":{
+        "prefix": "@StoreUrl",
+        "body":[
+            "@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$0"
+        ],
+        "description": "Стандартный путь к материалам проета"
+    },
+    "src":{
+        "prefix": "[img src=\"",
+        "body": [
+            "[img src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\"]"
+        ],
+        "description": "Стандартный путь к материалам проета"
+    },
+    "blockFolding":{
+        "prefix": "<!--block",
+        "body": [
+            "<!--#block ${1:Name}-->\n",
+            "\t$0",
+            "\n<!--#endblock-->"
+        ],
+        "description": "Сворачиваемый блок"
+    },
+    "SexList":{
+        "prefix": "_sexList",
+        "body": [
+            "<List Id=\"sexList\">",
+            "\t<Item Id=\"1\" Var=\"Мужчины\"><Text>Man</Text></Item>",
+            "\t<Item Id=\"2\" Var=\"Женщины\"><Text>Woman</Text></Item>",
+            "</List>"
+        ],
+        "description": "Структура List"
+    },
+    "ResetAnswer":{
+        "prefix": "_reset",
+        "body":[
+            "<Answer Id=\"${1:99}\" Reset=\"true\" Fix=\"true\" NoUseInQstFilter=\"true\"><Ui Isolate=\"1\"/><Text>${2:Затрудняюсь ответить}</Text></Answer>"
+        ]
+    },
+    "StepQuestionsUi": {
+        "prefix": "_stepQuestions",
+        "body":[
+            "<Ui Step=\"1\" HeaderFix=\"1\"/>"
+        ]
+    },
+    "IntScaleUi": {
+        "prefix": "_scaleInt",
+        "body":[
+            "<Ui Extend=\"Scale\" Gradient=\"1\" LabelStart=\"$1\" LabelEnd=\"$2\"/>"
+        ],
+        "description": "Градиентная шкала с цифрами"
+    },
+    "TextScaleUi": {
+        "prefix": "_scaleText",
+        "body":[
+            "<Ui Extend=\"Scale\" Gradient=\"1\"/>"
+        ],
+        "description": "Градиентная шкала с метками"
+    },
+    "TextScaleVerticalUi": {
+        "prefix": "_scaleText",
+        "body":[
+            "<Ui Extend=\"Scale\" Gradient=\"1\" Orientation=\"Vertical\"/>"
+        ],
+        "description": "Вертикальная градиентная шкала с метками"
+    },
+    "YandexMetrika": {
+        "prefix": "_yandexMetrika",
+        "body":[
+            "<CustomText2 Action=\"Append\">",
+            "\t<![CDATA[",
+            "\t\t<!-- Yandex.Metrika counter -->",
+            "\t\t<script type=\"text/javascript\">",
+            "\t\tvar yaParams = {'project': '[c#]InterviewPars.ProjectID;[/c#]', 'interview': '[c#]InterviewPars.RespID;[/c#]'};",
+            "\t\t(function (d, w, c) {",
+            "\t\t\t(w[c] = w[c] || []).push(function() {",
+            "\t\t\t\ttry {",
+            "\t\t\t\t\tw.yaCounter26653611 = new Ya.Metrika({id:26653611,",
+            "\t\t\t\t\t\twebvisor:true,",
+            "\t\t\t\t\t\tclickmap:true,",
+            "\t\t\t\t\t\ttrackLinks:true,",
+            "\t\t\t\t\t\taccurateTrackBounce:true,",
+            "\t\t\t\t\t\tparams:window.yaParams||{} });",
+            "\t\t\t\t} catch(e) { }",
+            "\t\t\t});",
+            "\t\t\tvar n = d.getElementsByTagName(\"script\")[0],",
+            "\t\t\t\ts = d.createElement(\"script\"),",
+            "\t\t\t\tf = function () { n.parentNode.insertBefore(s, n); };",
+            "\t\t\ts.type = \"text/javascript\";",
+            "\t\t\ts.async = true;",
+            "\t\t\ts.src = (d.location.protocol == \"https:\" ? \"https:\" : \"http:\") + \"//mc.yandex.ru/metrika/watch.js\";",
+            "\t\t\tif (w.opera == \"[object Opera]\") {",
+            "\t\t\t\td.addEventListener(\"DOMContentLoaded\", f, false);",
+            "\t\t\t} else { f(); }",
+            "\t\t})(document, window, \"yandex_metrika_callbacks\");",
+            "\t\t</script>",
+            "\t\t<noscript><div><img src=\"//mc.yandex.ru/watch/26653611\" style=\"position:absolute; left:-9999px;\" alt=\"\" /></div></noscript>",
+            "\t\t<!-- /Yandex.Metrika counter -->",
+            " \t]]>",
+            "</CustomText2>"
+        ]   
+    }
+}

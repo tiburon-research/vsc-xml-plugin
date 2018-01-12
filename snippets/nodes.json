@@ -53,16 +53,6 @@
         ],
         "description": "Структура List"
     },
-    "SexList":{
-        "prefix": "_sexList",
-        "body": [
-            "<List Id=\"sexList\">",
-            "\t<Item Id=\"1\" Var=\"Мужчины\"><Text>Man</Text></Item>",
-            "\t<Item Id=\"2\" Var=\"Женщины\"><Text>Woman</Text></Item>",
-            "</List>"
-        ],
-        "description": "Структура List"
-    },
     "RedirectCode":{
         "prefix": "<Redirect",
         "body": [
@@ -95,15 +85,6 @@
             "<Filter>return $0;</Filter>"
         ],
         "description": "Структура Filter"
-    },
-    "blockFolding":{
-        "prefix": "<!--block",
-        "body": [
-            "<!--#block ${1:Name}-->\n",
-            "\t$0",
-            "\n<!--#endblock-->"
-        ],
-        "description": "Сворачиваемый блок"
     },
     "CDATA":{
         "prefix": "<![CDATA[",
@@ -145,25 +126,5 @@
             "\t$0",
             "</Quota>"
         ]
-    },
-    "RepeatInline":{
-        "prefix": "$repeat",
-        "body":[
-            "\\$repeat(${1:source}){$2[,]}"
-        ]
-    },
-    "ftpPath":{
-        "prefix": "@StoreUrl",
-        "body":[
-            "@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$0"
-        ],
-        "description": "Стандартный путь к материалам проета"
-    },
-    "src":{
-        "prefix": "[img src=\"",
-        "body": [
-            "[img src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\"]"
-        ],
-        "description": "Стандартный путь к материалам проета"
     }
 }

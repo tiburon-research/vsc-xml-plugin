@@ -59,6 +59,10 @@
             {
                 "language": "tib",
                 "path": "./snippets/nodes.json"
+            },
+            {
+                "language": "tib",
+                "path": "./snippets/features.json"
             }
         ],
         "commands":[
