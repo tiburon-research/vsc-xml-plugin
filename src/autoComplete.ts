@@ -36,6 +36,12 @@ var ManualCode = [
         Parent: "InterviewPars"
     },
     {
+        Name: "SurveyID",
+        Kind: "Property",
+        Detail: "int",
+        Parent: "InterviewPars"
+    },
+    {
         Name: "PageId",
         Kind: "Property",
         Parent: "InterviewPars\\.GetInstance\\(\\)"

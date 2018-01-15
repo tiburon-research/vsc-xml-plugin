@@ -44,6 +44,12 @@
             "<Answer Id=\"${1:99}\" Reset=\"true\" Fix=\"true\" NoUseInQstFilter=\"true\"><Ui Isolate=\"1\"/><Text>${2:Затрудняюсь ответить}</Text></Answer>"
         ]
     },
+    "ResetAnswerShort":{
+        "prefix": "_resetShort",
+        "body":[
+            "<Answer Id=\"${1:99}\" Reset=\"true\" Fix=\"true\"><Text>${2:Затрудняюсь ответить}</Text></Answer>"
+        ]
+    },
     "StepQuestionsUi": {
         "prefix": "_stepQuestions",
         "body":[
