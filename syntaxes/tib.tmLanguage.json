@@ -675,13 +675,13 @@
 		{
 			"patterns": [
 				{
-					"match": "((I|i)(D|d))=((\"([^\"]+)\")|('([^']+)'))",
+					"match": "(?:^|\\s+)(?i)(id)\\s*=\\s*((\"([^\"]+)\")|('([^']+)'))",
 					"captures": {
 						"1": 
 						{
 							"name": "entity.other.attribute-name.localname.xml"
 						},
-						"6":
+						"4":
 						{
 							"name": "string.value.id",
 							"patterns": [
@@ -690,7 +690,7 @@
 								}
 							]
 						},
-						"8":
+						"6":
 						{
 							"name": "string.value.id",
 							"patterns": [
@@ -1203,6 +1203,14 @@
 			"patterns": [
 				{
 					"captures": {
+						"0":
+						{
+							"patterns": [
+								{
+									"include": "#node-id"
+								}
+							]
+						},
 						"1": {
 							"name": "entity.other.attribute-name.namespace.xml"
 						},
@@ -1215,9 +1223,6 @@
 						"4": {
 							"name": "entity.other.attribute-name.localname.xml",
 							"patterns": [
-								{
-									"include": "#node-id"
-								},
 								{
 									"include": "#inline-css"
 								},
