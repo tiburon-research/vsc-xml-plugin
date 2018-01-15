@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings } from "./classes";
 
 // константы
 
@@ -48,6 +48,8 @@ var ItemSnippets = {
 var Methods = new TibMethods();
 
 var CurrentNodes: SurveyNodes = new SurveyNodes();
+
+var Settings = new ExtensionSettings();
 
 
 export function activate(context: vscode.ExtensionContext)
@@ -681,10 +683,12 @@ function saveMethods(editor: vscode.TextEditor): void
 {
     Methods.Clear();
     var text = editor.document.getText();
+    if (Settings.Item("ignoreComments")) text = clearXMLComments(text);
     var mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
     if (!mtd || !mtd[3]) return;
     var reg = new RegExp(/((public)|(private)|(protected))\s*([\w\d_<>\[\],\s]+)\s+(([\w\d_]+)\s*(\([^)]*\))?)/, "g");
     var str = mtd[3];
+    if (Settings.Item("ignoreComments")) str = clearCSComments(str);
     var m;
     while (m = reg.exec(str))
     {
@@ -708,6 +712,7 @@ function updateNodesIds(editor: vscode.TextEditor, names?: string[])
     var nNames = names;
     if (!nNames) nNames = _NodeStoreNames;
     var txt = editor.document.getText();
+    if (Settings.Item("ignoreComments")) txt = clearXMLComments(txt);
     var reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]+Id=(\"|')([^\"']+)(\"|')", "g");
     var res;
     var idIndex = nNames.length + 3;
@@ -1031,4 +1036,32 @@ function occurrenceCount(source: string, find: string): number
 function clearFromCSTags(text: string): string
 {
     return text.replace(/\[c#([^\]]*)\]([\s\S]+?)\[\/c#([^\]]*)\]/g, "*c#$1*$2*/c#$3*");
+}
+
+function clearXMLComments(txt: string): string
+{
+    var mt = txt.match(/<!--([\s\S]+?)-->/g);
+    var res = txt;
+    var rep = "";
+    if (!mt) return txt;
+    mt.forEach(element =>
+    {
+        rep = element.replace(/./g, ' ');
+        res = res.replace(element, rep);
+    });
+    return res;
+}
+
+function clearCSComments(txt: string): string
+{
+    var mt = txt.match(/\/\*([\s\S]+?)\*\//g);
+    var res = txt;
+    var rep = "";
+    if (!mt) return txt;
+    mt.forEach(element =>
+    {
+        rep = element.replace(/./g, ' ');
+        res = res.replace(element, rep);
+    });
+    return res;
 }
