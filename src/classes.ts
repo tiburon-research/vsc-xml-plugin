@@ -455,3 +455,12 @@ export namespace TibTransform
     }
 
 }
+
+
+export class ExtensionSettings extends KeyedCollection<any>
+{
+    constructor()
+    {
+        super();
+    }
+}
