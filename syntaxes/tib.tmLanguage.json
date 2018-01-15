@@ -1202,6 +1202,7 @@
 		"tagStuff": {
 			"patterns": [
 				{
+					"match": "(?:^|\\s+)(Id\\s*=((\"[^\"]+\")|('[^']+')))",
 					"captures": {
 						"0":
 						{
@@ -1210,7 +1211,11 @@
 									"include": "#node-id"
 								}
 							]
-						},
+						}
+					}
+				},
+				{
+					"captures": {
 						"1": {
 							"name": "entity.other.attribute-name.namespace.xml"
 						},
