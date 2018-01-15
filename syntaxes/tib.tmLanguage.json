@@ -18,6 +18,7 @@
 				},
 				"3":
 				{
+					"name": "meta.tag.xml",
 					"patterns": [
 						{
 							"include": "#tagStuff"
@@ -80,6 +81,7 @@
 				},
 				"3":
 				{
+					"name": "meta.tag.xml",
 					"patterns": [
 						{
 							"include": "#tagStuff"
@@ -145,6 +147,7 @@
 				},
 				"3":
 				{
+					"name": "meta.tag.xml",
 					"patterns": [
 						{
 							"include": "#tagStuff"
@@ -676,6 +679,7 @@
 			"patterns": [
 				{
 					"match": "(?:^|\\s+)(?i)(id)\\s*=\\s*((\"([^\"]+)\")|('([^']+)'))",
+					"name": "entity.other.stuff.tag",
 					"captures": {
 						"1": 
 						{
@@ -983,23 +987,23 @@
 		{
 			"begin": "\\s?((style)=(\"))",
 			"end": "\"",
-			"name": "string.quoted.double.xml",
+			"name": "entity.other.stuff.tag",
 			"beginCaptures":
 			{
 				"2":
 				{
-					"name": "entity.other.attribute-name.localname.xml"
+					"name": "entity.other.attribute-name.html"
 				},
 				"3": 
 				{
-					"name": "punctuation.definition.string.begin.xml"
+					"name": "punctuation.definition.string.begin.html"
 				}
 			},
 			"endCaptures":
 			{
 				"0": 
 				{
-					"name": "punctuation.definition.string.end.xml"
+					"name": "punctuation.definition.string.end.html"
 				}
 			},
 			"patterns": [
@@ -1016,23 +1020,23 @@
 		{
 			"begin": "\\s?((style)=('))",
 			"end": "'",
-			"name": "string.quoted.single.xml",
+			"name": "entity.other.stuff.tag",
 			"beginCaptures":
 			{
 				"2":
 				{
-					"name": "entity.other.attribute-name.localname.xml"
+					"name": "entity.other.attribute-name.html"
 				},
 				"3": 
 				{
-					"name": "punctuation.definition.string.begin.xml"
+					"name": "punctuation.definition.string.begin.html"
 				}
 			},
 			"endCaptures":
 			{
 				"0": 
 				{
-					"name": "punctuation.definition.string.end.xml"
+					"name": "punctuation.definition.string.end.html"
 				}
 			},
 			"patterns": [
@@ -1253,6 +1257,19 @@
 					}
 				},
 				{
+					"match": "(?:^|\\s+)(style\\s*=((\"[^\"]*\")|('[^']*')))",
+					"captures": {
+						"0":
+						{
+							"patterns": [
+								{
+									"include": "#inline-css"
+								}
+							]
+						}
+					}
+				},
+				{
 					"captures": {
 						"1": {
 							"name": "entity.other.attribute-name.namespace.xml"
@@ -1263,12 +1280,16 @@
 						"3": {
 							"name": "punctuation.separator.namespace.xml"
 						},
-						"4": {
-							"name": "entity.other.attribute-name.localname.xml",
+						"4":
+						{
+							"name": "entity.other.stuff.tag"
+						},
+						"5":
+						{
+							"name": "entity.other.attribute-name"
+						},
+						"7": {
 							"patterns": [
-								{
-									"include": "#inline-css"
-								},
 								{
 									"include": "#doublequotedString"
 								},
@@ -1282,12 +1303,13 @@
 									"include": "#tib-iterator"
 								}
 							]
+						},
+						"6":
+						{
+							"name": "entity.other.attribute-delimiter"
 						}
 					},
-					"match": "(?:^|\\s+)(?:([-\\w.]+)((:)))?(([-\\w.:]+)\\s*=((\"[^\"]*\")|('[^']*')))"
-				},
-				{
-					"include": "#inline-css"
+					"match": "(?:^|\\s+)(?:([-\\w.]+)((:)))?(([-\\w.:]+)\\s*(=)((\"[^\"]*\")|('[^']*')))"
 				}
 			]
 		},
