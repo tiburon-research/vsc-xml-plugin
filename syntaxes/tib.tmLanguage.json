@@ -981,8 +981,27 @@
 
 		"inline-css-double":
 		{
-			"begin": "\\s?(style=\")",
+			"begin": "\\s?((style)=(\"))",
 			"end": "\"",
+			"name": "string.quoted.double.xml",
+			"beginCaptures":
+			{
+				"2":
+				{
+					"name": "entity.other.attribute-name.localname.xml"
+				},
+				"3": 
+				{
+					"name": "punctuation.definition.string.begin.xml"
+				}
+			},
+			"endCaptures":
+			{
+				"0": 
+				{
+					"name": "punctuation.definition.string.end.xml"
+				}
+			},
 			"patterns": [
 				{
 					"include": "#rule-list-innards"
@@ -995,8 +1014,27 @@
 
 		"inline-css-single":
 		{
-			"begin": "\\s?(style=')",
+			"begin": "\\s?((style)=('))",
 			"end": "'",
+			"name": "string.quoted.single.xml",
+			"beginCaptures":
+			{
+				"2":
+				{
+					"name": "entity.other.attribute-name.localname.xml"
+				},
+				"3": 
+				{
+					"name": "punctuation.definition.string.begin.xml"
+				}
+			},
+			"endCaptures":
+			{
+				"0": 
+				{
+					"name": "punctuation.definition.string.end.xml"
+				}
+			},
 			"patterns": [
 				{
 					"include": "#rule-list-innards"
