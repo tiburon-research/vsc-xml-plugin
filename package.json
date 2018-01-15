@@ -87,7 +87,19 @@
                 "key": "ctrl+alt+t",
                 "command": "tib.insertTag"
             }
-        ]        
+        ],
+        "configuration":
+        {
+            "title": "Параметры Tiburon XML Helper",
+            "properties": {
+                "tib.ignoreComments":
+                {
+                    "title": "Игнорировать комментарии",
+                    "type": "boolean",
+                    "default": true
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",

@@ -56,6 +56,13 @@ export function activate(context: vscode.ExtensionContext)
 {
     var editor = vscode.window.activeTextEditor;
 
+    Settings.update(vscode.workspace.getConfiguration('tib'));
+
+    vscode.workspace.onDidChangeConfiguration(event =>
+    {
+        Settings.update(vscode.workspace.getConfiguration('tib'));
+    })
+
     function reload()
     {
         if (!editor || editor.document.languageId != "tib") return;

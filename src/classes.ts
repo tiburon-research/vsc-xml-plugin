@@ -463,4 +463,9 @@ export class ExtensionSettings extends KeyedCollection<any>
     {
         super();
     }
+
+    update(config: vscode.WorkspaceConfiguration): void
+    {
+        for (var key in config) this.AddPair(key.toString(), config[key]);
+    }
 }
