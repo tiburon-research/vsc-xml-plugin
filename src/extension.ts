@@ -202,8 +202,7 @@ function higlight()
             var tag = getCurrentTag(text);
             var curRange = document.getWordRangeAtPosition(position);
             var word = document.getText(curRange);
-
-            if (tag.CSMode) return;
+            if (tag.CSMode && word != 'c#') return; // такой костыль потому что при нахождении на [/c#] хз что там дальше и tag.CSMode == true
             var res = [];
             var fullText = document.getText();
             var after = getCurrentLineText(document, position).substr(position.character);
@@ -231,7 +230,8 @@ function higlight()
 
                 case "[":
                     // открывающийся
-                    var endpos = document.positionAt(fullText.indexOf("]", text.length) + 1);
+                    var txt = word != "c#" ? clearFromCSTags(fullText) : fullText;
+                    var endpos = document.positionAt(txt.indexOf("]", text.length) + 1);
                     curRange = new vscode.Range(curRange.start.translate(0, -1), endpos);
                     res.push(new vscode.DocumentHighlight(curRange));
 
@@ -256,7 +256,8 @@ function higlight()
 
                 case "[/":
                     // закрывающийся
-                    var endpos = document.positionAt(fullText.indexOf("]", text.length) + 1);
+                    var txt = word != "c#" ? clearFromCSTags(fullText) : fullText;
+                    var endpos = document.positionAt(txt.indexOf("]", text.length) + 1);
                     curRange = new vscode.Range(curRange.start.translate(0, -2), endpos);
                     res.push(new vscode.DocumentHighlight(curRange));
 
@@ -755,9 +756,11 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
     var fullText = document.getText();
     var prevText = getPreviousText(document, position);
     var textAfter = fullText.substr(prevText.length);
-    var curIndex = prevText.length + textAfter.indexOf(clBracket);
 
     var rest = textAfter;
+    if (tagName != 'c#') rest = clearFromCSTags(rest);
+
+    var curIndex = prevText.length + rest.indexOf(clBracket);
     var op = rest.indexOf(opBracket + tagName);
     var cl = rest.indexOf(opBracket + "/" + tagName);
     if (cl < 0) return null;
@@ -795,8 +798,8 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 function findOpenTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range
 {
     var prevText = getPreviousText(document, position);
+    if (tagName != 'c#') prevText = clearFromCSTags(prevText);
     var curIndex = prevText.lastIndexOf(opBracket);
-
     var rest = prevText.substr(0, curIndex);
     var op = rest.lastIndexOf(opBracket + tagName);
     var cl = rest.lastIndexOf(opBracket + "/" + tagName);
@@ -1022,4 +1025,10 @@ function moveSelectionRight(selection: vscode.Selection, shift: number): vscode.
 function occurrenceCount(source: string, find: string): number
 {
     return source.split(find).length - 1;
+}
+
+// костыль для неучитывания c# вставок
+function clearFromCSTags(text: string): string
+{
+    return text.replace(/\[c#([^\]]*)\]([\s\S]+?)\[\/c#([^\]]*)\]/g, "*c#$1*$2*/c#$3*");
 }
