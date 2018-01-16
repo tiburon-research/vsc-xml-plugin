@@ -122,7 +122,20 @@ function registerCommands()
 
     vscode.commands.registerCommand('tib.insertTag', () => 
     {
-        vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]"));
+        inProcess = true;
+        vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]")).then(() => 
+        {
+            inProcess = false;
+        });
+    });
+
+    vscode.commands.registerCommand('tib.cdata', () => 
+    {
+        inProcess = true;
+        vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<![CDATA[\n\t$TM_SELECTED_TEXT\n]]>")).then(() => 
+        {
+            inProcess = false;
+        });
     });
 
     vscode.commands.registerCommand('tib.transform.AnswersToItems', () => 

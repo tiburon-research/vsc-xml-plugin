@@ -80,12 +80,21 @@
                 "command": "tib.insertTag",
                 "title": "Обернуть текст в тег",
                 "category": "tib"
+            },
+            {
+                "command": "tib.cdata",
+                "title": "Обернуть в CDATA",
+                "category": "tib"
             }
         ],
         "keybindings":[
             {
                 "key": "ctrl+alt+t",
                 "command": "tib.insertTag"
+            },
+            {
+                "key": "ctrl+alt+c",
+                "command": "tib.cdata"
             }
         ],
         "configuration":
