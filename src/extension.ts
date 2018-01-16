@@ -865,15 +865,13 @@ function isSelfClosedTag(tag: string): boolean
 
 function inString(text: string): boolean
 {
-    // не учитывает кавычки в кавычках
-    //return !((occurrenceCount(text, "'") % 2 === 0) && (occurrenceCount(text, "\"") % 2 === 0) && (occurrenceCount(text, "`") % 2 === 0));
-
     /*
     // выполняется очень долго
     var regStr = /^((([^'"]*)(("[^"]*")|('[^']*'))*)*)$/;
-    return !text.match(regStr);*/
+    return !text.match(regStr);
+    */
 
-    var rest = text;
+    var rest = text.replace(/\\"/g, "  "); // убираем экранированные кавычки
     var i = positiveMin(rest.indexOf("'"), rest.indexOf("\""));
     while (rest.length > 0 && i !== null)
     {
