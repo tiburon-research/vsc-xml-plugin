@@ -201,6 +201,55 @@
 		},
 
 
+		{
+			"begin": "(\\$)(repeat)\\(([@\\)\\(\\w\\[\\]]+)\\)((\\{)(.+)(\\[)([^\\]]+)(\\])(\\}))",
+			"end": "",
+			"name": "entity.name.repeat-inline.tib",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.inline-prefix"
+				},
+				"2": {
+					"name": "entity.name.function"
+				},
+				"3": {
+					"name": "entity.name.repeat-source",
+					"patterns": [
+						{
+							"include": "#tib-iterator"
+						}
+					]
+				},
+				"4": {
+					"name": "entity.name.repeat-iterator"
+				},
+				"5": {
+					"name": "punctuation.curlybrace.open"
+				},
+				"6":{
+					"name": "entity.name.repeat-iterator",
+					"patterns": [
+						{
+							"include": "#tib-iterator"
+						}
+					]
+				},
+				"7": {
+					"name": "punctuation.squarebracket.open"
+				},
+				"8": {
+					"name": "entity.name.repeat-delimiter"
+				},
+				"9": {
+					"name": "punctuation.squarebracket.close"
+				},
+				"10": {
+					"name": "punctuation.curlybrace.close"
+				}
+			}
+		},
+
+
 
 		{
 			"begin": "(<)((?i:script))\\b",
@@ -759,8 +808,8 @@
 					]
 				},
 				{
-					"begin": "(\\$)([A-Za-z0-9_]+)\\(((([^\\(\\)]+)|([^\\(\\)]*@\\w+(\\([^\\(\\)]*(([^\\(\\)]+)|([^\\(\\)]*@\\w+\\([^\\(\\)]+\\)[^\\(\\)]*))\\))*[^\\(\\)]*)),?)*",
-					"end": "\\)",
+					"begin": "(\\$)(?!repeat\\()([A-Za-z0-9_]+\\()(\"?(([^\\(\\)]+)|([^\\(\\)]*@\\w+(\\([^\\(\\)]*(([^\\(\\)]+)|([^\\(\\)]*@\\w+\\([^\\(\\)]+\\)[^\\(\\)]*))\\))*[^\\(\\)]*)),?)*\\)",
+					"end": "",
 					"beginCaptures":
 					{
 						"1":
@@ -782,9 +831,6 @@
 								},
 								{
 									"include": "#punctuation-comma"
-								},
-								{
-									"include": "#tib-iterator"
 								}
 							]
 						}

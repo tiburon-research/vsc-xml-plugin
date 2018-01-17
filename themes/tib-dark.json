@@ -13,6 +13,15 @@
 	},
 	"tokenColors": [
 		
+		
+		{
+			"scope": [
+				"entity.name.repeat-iterator"
+			],
+			"settings": {
+				"foreground": "#CE9178"
+			}
+		},
 		{
 			"scope":[
 				"tib.iterator.prefix",
@@ -28,7 +37,9 @@
 		{
 			"scope":[
 				"entity.name.tag.cdata.tib",
-				"punctuation.definition.cdata.bracket.tib"
+				"punctuation.definition.cdata.bracket.tib",
+				"punctuation.squarebracket.open",
+				"punctuation.squarebracket.close"
 			],
 			"settings": {
 				"foreground": "#7c7c7c"
@@ -36,7 +47,9 @@
 		},
 		{
 			"scope":[
-				"entity.name.inline-prefix"
+				"entity.name.inline-prefix",
+				"entity.name.repeat-inline.tib punctuation.curlybrace.open",
+				"entity.name.repeat-inline.tib punctuation.curlybrace.close"
 			],
 			"settings": {
 				"foreground": "#DCDCAA"
@@ -62,7 +75,8 @@
 			"scope":[
 				"string.quoted.double.xml",
 				"string.quoted.single.xml",
-				"entity.stuff.tag.html.tib string.value.id"
+				"entity.stuff.tag.html.tib string.value.id",
+				"entity.name.repeat-source"
 			],
 			"settings": {
 				"foreground": "#9c9c9c"
