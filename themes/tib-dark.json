@@ -31,7 +31,7 @@
 				"tib.iterator.bracket"
 			],
 			"settings": {
-				"foreground": "#4e9678"
+				"foreground": "#539a73"
 			}
 		},
 		{
@@ -68,7 +68,7 @@
 				"entity.other.attribute-name"
 			],
 			"settings": {
-				"foreground": "#5978b3"
+				"foreground": "#65c1de"
 			}
 		},
 		{
