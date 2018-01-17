@@ -469,3 +469,22 @@ export class ExtensionSettings extends KeyedCollection<any>
         for (var key in config) this.AddPair(key.toString(), config[key]);
     }
 }
+
+
+export class ContextChange
+{
+    constructor(contextChange: vscode.TextDocumentContentChangeEvent, selection: vscode.Selection)
+    {
+        this.Change = contextChange;
+        this.Selection = selection;
+        this.Start = selection.start;
+        this.End = selection.end;
+        this.Active = selection.active;
+    }
+
+    Start: vscode.Position;
+    End: vscode.Position;
+    Active: vscode.Position;
+    Change: vscode.TextDocumentContentChangeEvent;
+    Selection: vscode.Selection;
+}

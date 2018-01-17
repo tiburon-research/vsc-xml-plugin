@@ -1083,3 +1083,22 @@ function clearCSComments(txt: string): string
     });
     return res;
 }
+
+
+function getContextChanges(selections: vscode.Selection[], changes: vscode.TextDocumentContentChangeEvent[]): ContextChange[]
+{
+    var res: ContextChange[] = [];
+    selections.forEach(selection =>
+    {
+        for (var i = 0; i < changes.length; i++)
+        {
+            if (selection.start.character == changes[i].range.start.character &&
+                selection.start.line == changes[i].range.start.line)
+            {
+                res.push(new ContextChange(changes[i], selection));
+                continue;
+            }
+        }
+    });
+    return res;
+}
