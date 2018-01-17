@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange } from "./classes";
 
 // константы
 
@@ -636,32 +636,48 @@ function makeIndent(): void
 
 function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag, text: string): void
 {
-    if (inProcess || !editor || !event || !event.contentChanges[0]) return;
+    if (inProcess || !editor || !event || !event.contentChanges.length) return;
+    var changes = getContextChanges(editor.selections, event.contentChanges);
 
-    var isRightAngleBracket = event.contentChanges[0].text == ">";
-    if (!isRightAngleBracket) return;
-    var originalPosition = editor.selection.start.translate(0, 1);
+    // сохраняем начальное положение
+    var prevSels = editor.selections.map(function (e) { return new vscode.Selection(e.start.translate(0, 1), e.end.translate(0, 1)); });
 
-    if (isRightAngleBracket && (!tag.CSMode || tag.Body == ""))
+    var changesCount = 0;
+
+    // проверяем только рандомный tag (который передаётся из activate), чтобы не перегружать процесс
+    // хреново но быстро
+    if (!tag.CSMode || tag.Body == "")
     {
-        var curLine = getCurrentLineText(editor.document, originalPosition);
-        var prev = curLine.substr(0, editor.selection.start.character + 1);
-        var after = curLine.substr(editor.selection.start.character + 1);
-        var result = prev.match(/<([\w\d_]+)[^>\/]*>?$/);
-        if (!result) return;
-        var closed = after.match(new RegExp("^[^<]*(<\\/)?" + result[1]));
-        if (!closed)
+        changes.forEach(change =>
         {
-            inProcess = true;
-            editor.edit((editBuilder) =>
+            var originalPosition = change.Active.translate(0, 1);
+            if (change.Change.text == ">")
             {
-                editBuilder.insert(originalPosition, "</" + result[1] + ">");
-            }).then(() =>
-            {
-                editor.selection = new vscode.Selection(originalPosition, originalPosition);
-                inProcess = false;
-            });
-        }
+                var curLine = getCurrentLineText(editor.document, originalPosition);
+                var prev = curLine.substr(0, change.Active.character + 1);
+                var after = curLine.substr(change.Active.character + 1);
+                var result = prev.match(/<([\w\d_]+)[^>\/]*>?$/);
+                if (result)
+                {
+                    var closed = after.match(new RegExp("^[^<]*(<\\/)?" + result[1]));
+                    if (!closed)
+                    {
+                        changesCount++;
+                        inProcess = true;
+                        editor.insertSnippet(new vscode.SnippetString("</" + result[1] + ">"), originalPosition, { undoStopAfter: false, undoStopBefore: false }).then(() =>
+                        {
+                            // ожидаем конца всех изменений
+                            if (changesCount <= 1)
+                            {
+                                editor.selections = prevSels;
+                                inProcess = false;
+                            }
+                            else changesCount--;
+                        });
+                    }
+                }
+            }
+        });
     }
 }
 
