@@ -2081,8 +2081,8 @@ export const Attributes = {
         },
         {
             "Name": "Operator",
-            "Default": "And",
-            "Type": "LogicalOperator"
+            "Default": "Exists",
+            "Values": ["Exists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
         },
         {
             Name: "Value"
@@ -2096,8 +2096,8 @@ export const Attributes = {
     "RedirectItem": [
         {
             "Name": "Operator",
-            "Default": "And",
-            "Type": "LogicalOperator"
+            "Default": "Exists",
+            "Values": ["Exists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
         },
         {
             Name: "Value"
@@ -2106,8 +2106,8 @@ export const Attributes = {
     "ValidateItem": [
         {
             "Name": "Operator",
-            "Default": "And",
-            "Type": "LogicalOperator"
+            "Default": "Exists",
+            "Values": ["Exists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
         },
         {
             Name: "Value"
