@@ -59,10 +59,10 @@
 			},
 			"patterns":[
 				{
-					"include": "#statement"
+					"include": "#cdata"
 				},
 				{
-					"include": "#cdata"
+					"include": "#statement"
 				}
 			]
 		},
@@ -188,10 +188,10 @@
 			},
 			"patterns":[
 				{
-					"include": "#csharp"
+					"include": "#cdata"
 				},
 				{
-					"include": "#cdata"
+					"include": "#csharp"
 				}
 			]
 		},
