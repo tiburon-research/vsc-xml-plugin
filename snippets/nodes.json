@@ -125,6 +125,7 @@
             "<Quota Id=\"$1\" Apply=\"$2\" Limit=\"$3\">",
             "\t$0",
             "</Quota>"
-        ]
+        ],
+        "description": "Структура Quota"
     }
 }

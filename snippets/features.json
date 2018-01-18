@@ -3,7 +3,8 @@
         "prefix": "$repeat",
         "body":[
             "\\$repeat(${1:source}){$2[,]}"
-        ]
+        ],
+        "description": "Строчный повтор"
     },
     "ftpPath":{
         "prefix": "@StoreUrl",
@@ -42,19 +43,22 @@
         "prefix": "_reset",
         "body":[
             "<Answer Id=\"${1:99}\" Reset=\"true\" Fix=\"true\" NoUseInQstFilter=\"true\"><Ui Isolate=\"1\"/><Text>${2:Затрудняюсь ответить}</Text></Answer>"
-        ]
+        ],
+        "description": "Исключающий ответ"
     },
     "ResetAnswerShort":{
         "prefix": "_resetShort",
         "body":[
             "<Answer Id=\"${1:99}\" Reset=\"true\" Fix=\"true\"><Text>${2:Затрудняюсь ответить}</Text></Answer>"
-        ]
+        ],
+        "description": "Исключающий ответ (кратко)"
     },
     "StepQuestionsUi": {
         "prefix": "_stepQuestions",
         "body":[
             "<Ui Step=\"1\" HeaderFix=\"1\"/>"
-        ]
+        ],
+        "description": "Ui вопроса"
     },
     "IntScaleUi": {
         "prefix": "_scaleInt",
@@ -111,6 +115,7 @@
             "\t\t<!-- /Yandex.Metrika counter -->",
             " \t]]>",
             "</CustomText2>"
-        ]   
+        ],
+        "description": "Яндекс.Метрика"
     }
 }
