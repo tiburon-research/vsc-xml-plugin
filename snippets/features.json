@@ -88,6 +88,76 @@
         ],
         "description": "Вертикальная градиентная шкала с метками"
     },
+    "ShapeUi": {
+        "prefix": "_shape",
+        "body":[
+            "<Ui Extend=\"Shape\" Color=\"#F0FF00\" Opacity=\"0.3\" OpacitySelected=\"0.6\" WidthBorder=\"2\" ColorBorder=\"#f00\" Src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1\"/>"
+        ],
+        "description": "Областной клик-тест/полка"
+    },
+    "SliderDiscreteUi": {
+        "prefix": "_sliderDiscrete",
+        "body":[
+            "<Ui Extend=\"Slider\" Type=\"Discrete\"/>"
+        ],
+        "description": "Дискретный Slider"
+    },
+    "SliderContinousUi": {
+        "prefix": "_sliderContinous",
+        "body":[
+            "<Ui Extend=\"Slider\" Type=\"Continuous\" MinVal=\"0\" MaxVal=\"250\" SliderStep=\"1\" LabelEnd=\" руб.\" LabelTop=\"1\" ValueShow=\"1\"/>"
+        ],
+        "description": "Непрерывный Slider"
+    },
+    "StarsUi": {
+        "prefix": "_stars",
+        "body":[
+            "<Ui Extend=\"Stars\" ClearCaption=\"Оценки нет\" HoverColor=\"#fde16d\" SelectedColor=\"#fde16d\" BackColor=\"#aaa\"/>"
+        ],
+        "description": "Звёзды"
+    },
+    "ClickTextUi": {
+        "prefix": "_clickText",
+        "body":[
+            "<Ui Extend=\"ClickText\" SelectedFontColor=\"black\" SelectedBackgroundColor=\"orange\" SplittingType=\"1\"/>"
+        ],
+        "description": "Текстовый ClickTest"
+    },
+    "DragItemRangeUi": {
+        "prefix": "_dragItemRange",
+        "body":[
+            "<Ui Extend=\"DragItem\" Type=\"Range\" SourceContainer=\"0,0\" TargetContainer=\"0,0\" DragItemAllowClick=\"1\"/>"
+        ],
+        "description": "DragItem Range"
+    },
+    "DragItemCardUi": {
+        "prefix": "_dragItemCard",
+        "body":[
+            "<Ui Extend=\"DragItem\" Type=\"Card\" SourceContainer=\"550,0\" TargetContainer=\"0,0\" DragItemAllowClick=\"1\" FontSizeSource=\"1rem\" FontSizeTarget=\".8rem\"/>"
+        ],
+        "description": "DragItem Card"
+    },
+    "MaxDiffUi": {
+        "prefix": "_maxDiff",
+        "body":[
+            "<Ui Extend=\"MaxDiff\" LabelMost=\"$1\" LabelLeast=\"$2\"/>"
+        ],
+        "description": "MaxDiff"
+    },
+    "VideoUi": {
+        "prefix": "_video",
+        "body":[
+            "<Ui Extend=\"MediaPlayer\" Type=\"Video\" Src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.mp4,@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.webm,@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.ogv\" PlayAuto=\"1\" SeekEnable=\"1\"/>"
+        ],
+        "description": "MediaPlayer Video"
+    },
+    "AudioUi": {
+        "prefix": "_audio",
+        "body":[
+            "<Ui Extend=\"MediaPlayer\" Type=\"Audio\" Src='@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.mp3;@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.ogg' PlayAuto=\"1\" PlayRedirect=\"1\" PauseEnable=\"0\" SeekEnable=\"1\"/>"
+        ],
+        "description": "MediaPlayer Audio"
+    },
     "YandexMetrika": {
         "prefix": "_yandexMetrika",
         "body":[
@@ -124,5 +194,74 @@
             "</CustomText2>"
         ],
         "description": "Яндекс.Метрика"
+    },
+    "DataExpand": {
+        "prefix": "_expand",
+        "body":[
+            "[div data-expand='${1|2|3|}']",
+            "\t[div class='smallTextBlock']",
+            "\t\t${2:основной текст}",
+            "\t[/div]",
+            "\t[div class='popUpText']",
+            "\t\t${3:увеличенный текст}",
+	        "\t[/div]",
+            "[/div]"
+        ],
+        "description": "Увеличение по клику (2) или по наведению (3)"
+    },
+    "SumCounter": {
+        "prefix": "_counter",
+        "body":[
+            "<Footer>",
+            "\tСумма:",
+    	    "\t[c# Side=\"Client\"]AnswerIDs(\"${1:PageId}\", \"${2:QuestionId}\").Select(x => int.Parse(AnswerValue(\"${2:QuestionId}\", x))).Sum().ToString();[/c#]%",
+            "</Footer>",
+            "<Validate Message=\"Cумма должна быть 100%!\" PinQuestion=\"${2:QuestionId}\">",
+            "\treturn AnswerIDs(\"${1:PageId}\", \"${2:QuestionId}\").Select(x => int.Parse(AnswerValue(\"${2:QuestionId}\", x))).Sum() == 100;",
+            "</Validate>"
+        ],
+        "description": "Счётчик"
+    },
+    "GetCell": {
+        "prefix": "_#getConceptCell",
+        "body":[
+            "public string cell()",
+            "{",
+            "\treturn AnswerValue(\"RespInfo\", \"Cell\", \"1\");",
+            "}"
+        ],
+        "description": "Метод для получения ячейки"
+    },
+    "GetShape": {
+        "prefix": "_#getShape",
+        "body":[
+            "public string getShape(int shNum) ",
+            "{",
+            "\t/* число квадратиков */",
+            "\tint X = 14;",
+            "\tint Y = 25;",
+            "",
+            "\t/* размер картинки в пикселях */",
+            "\tint W = 466;",
+            "\tint H = 600;",
+            "",
+            "\t/* размер квадратика */",
+            "\tdouble sizeX = (double)W/X;",
+            "\tdouble sizeY = (double)H/Y;",
+            "",
+            "\t/* номер строки и столбца */",
+            "\tint C = (shNum-1) % X + 1;",
+            "\tint R = (shNum-1) / X + 1;",
+            "",
+            "\t/* левый верхний угол квадратика */",
+            "\tdouble top = (double)(R-1)*sizeY;",
+            "\tdouble left = (double)(C-1)*sizeX;",
+            "",
+            "\tstring ret = left.ToString() + \",\" + top.ToString() + \",\" + (left+sizeX).ToString() + \",\" + top.ToString() + \",\" + (left+sizeX).ToString() + \",\" + (top+sizeY).ToString() + \",\" + left.ToString() + \",\" + (top+sizeY).ToString();",
+            "", 
+            "\treturn ret;",
+            "}"
+        ],
+        "description": "Метод для сеточного клик-теста"
     }
 }
