@@ -103,7 +103,7 @@
             "properties": {
                 "tib.ignoreComments":
                 {
-                    "title": "Игнорировать комментарии",
+                    "description": "Игнорировать комментарии",
                     "type": "boolean",
                     "default": true
                 }
