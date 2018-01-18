@@ -1706,7 +1706,8 @@ export const Attributes = {
         {
             "Name": "Side",
             "Default": "Server",
-            "Type": "ProcessSide"
+            "Type": "ProcessSide",
+            Auto: "Client"
         }
     ],
     "Condition": [
