@@ -81,6 +81,8 @@
 
 ### XML шаблоны (Snippets)
 
+Подробнее о создании своих шаблонов можно [почитать тут](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_creating-your-own-snippets)..
+
 При вводе расширение предлагает имеющиеся шаблоны (например, Page, Question и т.д.), которые принимаются нажатием клавиши `Tab`. Каждое следующее нажатие `Tab` перемещает курсор к следующей позиции, где предполагается ввод.
 
 ![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/PageSnippet.gif?raw=true)
@@ -100,9 +102,15 @@
 
 * Путь для материалов: после ввода `src="` расширение предлагает подставить путь `src="@StoreUrl/t/tib_####"/` с номером проекта из имени файла.
 
-* Вставка `sexList`: при вводе `_sexList` появляется предложение об автозавершении.
+* Други полезные шаблоны, вставляющиеся по префиксу `_`
 
 ![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/sexList.gif?raw=true)
+
+### Автозавершение атрибутов и значений
+
+Для всех основных тегов (кроме Ui) предлагается список возможных атрибутов. Если атрибут имееи предопределённый список значений, то этот список также подставляется. Для нестроковых атрибутов по умолчанию подставляется подставляется значение по умолчанию.
+
+![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/quota.gif?raw=true)
 
 ### Переход к определению
 
@@ -116,7 +124,7 @@
 
 ![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/hovers.gif?raw=true)
 
-### команды
+### Команды
 
 Для всех команд может быть назначено сочетание клавиш в настройках.
 Для вызова команды без сочетания клавиш нужно вызвать командную строку (`ctrl`+`shift`+`P`) и ввести название нужной команды.
@@ -124,20 +132,22 @@
 
 * Оборачивание в тег
 
-Выделенный текст можно обернуть в тег с помощью сочетаний клавиш `ctrl`+`Alt`+`T` (команда `tib.insertTag`). После нажатия `tab` курсор переходит в позицию атрибутов для тега. По следующему нажатию - в положение после закрывающегося тега.
+Выделенный текст можно обернуть в тег с помощью сочетаний клавиш `ctrl`+`Alt`+`T` (команда `tib.insertTag`). После нажатия `tab` курсор переходит в позицию атрибутов для тега. По следующему нажатию - в положение после закрывающегося тега. По умолчанию оборачивается в тег `[u]`.
 
 ![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/tag.gif?raw=true)
 
+* Оборачивание в CDATA
+
+Оборачивает выделенный текст в `<![CDATA[` `]]>`. По умолчанию назначено сочетание клавиш `Ctrl`+`Alt`+`C`.
+
 * Преобразования `Answer` <-> `Item`
 
-Преобразование выделенных элементов с учётом только `Id` и `Text`;
+Преобразование выделенных элементов с учётом только `Id` и `Text`.
+
 
 ### Тема
 
 Для выбора темы нужно перейти: `Файл -> Параметры -> Цветовая тема`. На данный момент доступна пока только тёмная (`Tiburon Dark`).
-
-![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/theme.jpg?raw=true)
-
 О том, как точнее настроить тему под себя можно [почитать тут](https://code.visualstudio.com/docs/getstarted/themes#_customize-a-color-theme).
 
 Список сущностей:
@@ -155,7 +165,10 @@
 - `"entity.name.tag.allowcode"`,
 - `"entity.name.tag.html.tib"`,
 - `"entity.stuff.tag.html.tib"` (атрибуты html-тегов),
-- `"string.value.id"` (значение XML атрибута `Id`).
+- `"string.value.id"` (значение XML атрибута `Id`),
+- `"entity.name.repeat-iterator"` (итератор в строчном repeat),
+- `"entity.name.repeat-source"` (источник в строчном repeat),
+- `"entity.name.repeat-inline.tib"` (строчный repeat целиком).
 
 
 # Особенности
