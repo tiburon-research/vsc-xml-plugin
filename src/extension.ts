@@ -806,7 +806,7 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
     var cl = rest.indexOf(opBracket + "/" + tagName);
     if (cl < 0) return null;
 
-    var cO = 0;
+    var cO = 1;
     var cC = 0;
     while (cl > -1 && ((op > -1) || (cC != cO)))
     {
@@ -821,17 +821,18 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
             cC++;
         }
 
+        if (cO == cC) break;       
         op = rest.indexOf(opBracket + tagName);
         cl = rest.indexOf(opBracket + "/" + tagName);
-        if (cO == cC) break;
     }
 
-    rest = rest.substr(cl);
+    //rest = rest.substr(cl);
     var clLast = rest.indexOf(clBracket);
 
     if (cl < 0 || clLast < 0) return null;
-    var startPos = document.positionAt(fullText.length - rest.length);
+    var startPos = document.positionAt(fullText.length - rest.length - 1);
     var endPos = document.positionAt(fullText.length - rest.length + clLast + 1);
+
     return new vscode.Range(startPos, endPos);
 }
 
@@ -841,13 +842,14 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
     var prevText = getPreviousText(document, position);
     if (tagName != 'c#') prevText = clearFromCSTags(prevText);
     var curIndex = prevText.lastIndexOf(opBracket);
-    var rest = prevText.substr(0, curIndex);
+    var txt = prevText.substr(0, curIndex);
+    var rest = txt;
     var op = rest.lastIndexOf(opBracket + tagName);
     var cl = rest.lastIndexOf(opBracket + "/" + tagName);
     if (op < 0) return null;
 
     var cO = 0;
-    var cC = 0;
+    var cC = 1;
     while (op > -1 && ((cl > -1) || op != cl))
     {
         if (cl > op && cl > -1)
@@ -860,17 +862,17 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
             rest = rest.substr(0, op);
             cO++;
         }
+        if (cO == cC) break;
         op = rest.lastIndexOf(opBracket + tagName);
         cl = rest.lastIndexOf(opBracket + "/" + tagName);
-        if (cO == cC) break;
     }
 
-    rest = rest.substr(0, rest.indexOf(clBracket, op) + 1);
+    //rest = rest.substr(0, rest.indexOf(clBracket, op) + 1);
     var clLast = rest.lastIndexOf(clBracket) + 1;
 
     if (op < 0 || clLast < 0) return null;
-    var startPos = document.positionAt(op);
-    var endPos = document.positionAt(clLast);
+    var startPos = document.positionAt(rest.length);
+    var endPos = document.positionAt(txt.indexOf(clBracket, rest.length + 1) + 1);
     return new vscode.Range(startPos, endPos);
 }
 
