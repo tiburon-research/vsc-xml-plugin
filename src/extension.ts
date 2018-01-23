@@ -134,7 +134,10 @@ function registerCommands()
     vscode.commands.registerCommand('tib.cdata', () => 
     {
         inProcess = true;
-        vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<![CDATA[\n\t$TM_SELECTED_TEXT\n]]>")).then(() => 
+        var multi = vscode.window.activeTextEditor.document.getText(vscode.window.activeTextEditor.selection).indexOf("\n") > -1;
+        var pre = multi ? "\n\t" : " ";
+        var post = multi ? "\n" : " ";
+        vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<![CDATA[" + pre + "$TM_SELECTED_TEXT" + post + "]]>")).then(() => 
         {
             inProcess = false;
         });
