@@ -42,7 +42,9 @@ var ItemSnippets = {
     Validate: "<Item Page=\"$1\" Question=\"$2\" Answer=\"$3\"/>",
     Redirect: "<Item Page=\"$1\" Question=\"$2\" Answer=\"$3\"/>",
     Filter: "<Item Page=\"$1\" Question=\"$2\" Answer=\"$3\"/>",
-    Constants: "<Item Id=\"$1\"><Value>$2</Value></Item>"
+    Constants: "<Item Id=\"$1\"><Value>$2</Value></Item>",
+    Split: "<Item Id=\"$1\" Text=\"http://storage.internetopros.ru/Content/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2.jpg,${3:Описание}\"/>",
+    Stat: "<Item Id=\"$1\" Name=\"${2:Total}\" Source=\"1_X,2_X,3_X\"/>"
 }
 
 var Methods = new TibMethods();
