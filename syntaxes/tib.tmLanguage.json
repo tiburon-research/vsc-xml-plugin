@@ -789,7 +789,7 @@
 					}
 				},
 				{
-					"begin": "(\\$)(repeat)\\(([@\\)\\(\\w\\[\\]]+)\\)((\\{)(.+)(\\[)([^\\]]+)(\\])(\\}))",
+					"begin": "(\\$)(repeat)\\(([@\\)\\(\\w\\[\\]]+)\\)((\\{)(.+?)((\\[)([^\\]]+)(\\]))?(\\}))",
 					"end": "",
 					"name": "entity.name.repeat-inline.tib",
 					"beginCaptures": {
@@ -821,16 +821,16 @@
 								}
 							]
 						},
-						"7": {
+						"8": {
 							"name": "punctuation.squarebracket.open"
 						},
-						"8": {
+						"9": {
 							"name": "entity.name.repeat-delimiter"
 						},
-						"9": {
+						"10": {
 							"name": "punctuation.squarebracket.close"
 						},
-						"10": {
+						"11": {
 							"name": "punctuation.curlybrace.close"
 						}
 					}
