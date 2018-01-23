@@ -963,6 +963,10 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
     else
     {
         tag.InString = inString(text.substr(tstart));
+        // добавляем атрибуты после курсора
+        var after = document.getText().substr(text.length);
+        var cl = after.match(/^((\s*[\w-]+=(("[^"]*")|('[^']*'))?)*)/);
+        if (!!cl) tag.setAttributes(cl[1]);
     }
     if (tag.CSMode)
     {
