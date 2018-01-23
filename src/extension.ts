@@ -102,7 +102,7 @@ export function activate(context: vscode.ExtensionContext)
         if (!editor || editor.document.languageId != "tib") return;
         var originalPosition = editor.selection.start.translate(0, 1);
         var text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
-        var tag = getCurrentTag(text);
+        var tag = getCurrentTag(editor.document, originalPosition, text);
         updateNodesIds(editor);
         insertAutoCloseTag(event, editor, tag, text);
         insertSpecialSnippets(event, editor, text, tag);
@@ -223,7 +223,7 @@ function higlight()
         provideDocumentHighlights(document, position)
         {
             var text = getPreviousText(document, position);
-            var tag = getCurrentTag(text);
+            var tag = getCurrentTag(document, position, text);
             var curRange = document.getWordRangeAtPosition(position);
             var word = document.getText(curRange);
             if (tag.CSMode && word != 'c#') return; // такой костыль потому что при нахождении на [/c#] хз что там дальше и tag.CSMode == true
@@ -304,8 +304,7 @@ function autoComplete()
         provideCompletionItems(document, position, token, context)
         {
             var completionItems = [];
-            var textTo = getPreviousText(document, position);
-            var tag = getCurrentTag(textTo);
+            var tag = getCurrentTag(document, position);
             if (tag && !tag.CSMode)
             {
                 if ("Item".indexOf(tag.Name) > -1)
@@ -345,7 +344,7 @@ function autoComplete()
         provideCompletionItems(document, position, token, context)
         {
             var completionItems = [];
-            var tag = getCurrentTag(getPreviousText(document, position));
+            var tag = getCurrentTag(document, position);
             var curLine = getPreviousText(document, position, true);
             if (tag && !tag.CSMode && !tag.Closed && AutoCompleteArray.Attributes[tag.Id] && !tag.InString)
             {
@@ -376,7 +375,7 @@ function autoComplete()
         provideCompletionItems(document, position, token, context)
         {
             var completionItems = [];
-            var tag = getCurrentTag(getPreviousText(document, position));
+            var tag = getCurrentTag(document, position);
             if (!tag.CSMode) return;
 
             var curLine = getPreviousText(document, position, true);
@@ -431,7 +430,7 @@ function autoComplete()
         provideCompletionItems(document, position, token, context)
         {
             var completionItems = [];
-            var tag = getCurrentTag(getPreviousText(document, position));
+            var tag = getCurrentTag(document, position);
             if (tag.CSMode && !tag.InCSString && !tag.CSSingle)
             {
                 var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Properties.concat(TibAutoCompleteList.Methods, TibAutoCompleteList.EnumMembers);
@@ -461,7 +460,7 @@ function autoComplete()
         provideCompletionItems(document, position, token, context)
         {
             var completionItems = [];
-            var tag = getCurrentTag(getPreviousText(document, position));
+            var tag = getCurrentTag(document, position);
             if (!tag || tag.Closed) return;
             var text = getPreviousText(document, position, true);
             var needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
@@ -506,7 +505,7 @@ function helper()
         provideSignatureHelp(document, position, token)
         {
             var sign = new vscode.SignatureHelp();
-            var tag = getCurrentTag(getPreviousText(document, position));
+            var tag = getCurrentTag(document, position);
             if (tag.CSMode)
             {
                 var lastLine = getPreviousText(document, position, true);
@@ -538,7 +537,7 @@ function hoverDocs()
         provideHover(document, position, token)
         {
             var res = [];
-            var tag = getCurrentTag(getPreviousText(document, position));
+            var tag = getCurrentTag(document, position);
             if (!tag.CSMode) return;
             var range = document.getWordRangeAtPosition(position);
             var text = document.getText(range);
@@ -578,7 +577,7 @@ function definitions()
     vscode.languages.registerDefinitionProvider('tib', {
         provideDefinition(document, position, token)
         {
-            var tag = getCurrentTag(getPreviousText(document, position));
+            var tag = getCurrentTag(document, position);
             var res: vscode.Location;
             if (tag.CSMode && !tag.InCSString)
             {
@@ -640,6 +639,7 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
 {
     if (inProcess || !editor || !event || !event.contentChanges.length) return;
     var changes = getContextChanges(editor.selections, event.contentChanges);
+    var fullText = editor.document.getText();
 
     // сохраняем начальное положение
     var prevSels = editor.selections.map(function (e) { return new vscode.Selection(e.start.translate(0, 1), e.end.translate(0, 1)); });
@@ -925,8 +925,9 @@ function execute(link: string)
 }
 
 
-function getCurrentTag(text: string): CurrentTag
+function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, text: string = ""): CurrentTag
 {
+    var text = text || getPreviousText(document, position);
     var pure = text.replace(/(?:<!--)([\s\S]*?)(-->)/g, "");
     pure = pure.replace(/(?:<!\[CDATA\[)([\s\S]*?)(\]\]>)/g, "");
     // костыль для [/c#]: убираем / чтобы в regex можно было искать [^/>]
