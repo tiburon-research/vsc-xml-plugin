@@ -188,7 +188,8 @@ function getData()
     {
         var item = new TibAutoCompleteItem(element);
         var ind = names[link[element.Kind]].indexOf(element.Name);
-        if (ind > -1)
+        // на самом деле тут надо сравнивать родителей
+        if (ind > -1 && !item.Parent)
         {
             if (!TibAutoCompleteList[link[element.Kind]][ind].Overloads) TibAutoCompleteList[link[element.Kind]][ind].Overloads = [];
             var len = len = TibAutoCompleteList[link[element.Kind]][ind].Overloads.length;
