@@ -5404,6 +5404,9 @@
 		{
 			"patterns": [
 				{
+					"include": "#cs-inline"
+				},
+				{
 					"include": "#comment-block"
 				},
 				{
@@ -5420,9 +5423,6 @@
 				},
 				{
 					"include": "#rule-list"
-				},
-				{
-					"include": "#cs-inline"
 				}
 			]
 		},
@@ -6842,6 +6842,9 @@
 			},
 			"name": "meta.property-list.css",
 			"patterns": [
+				{
+					"include": "#cs-inline"
+				},
 				{
 					"include": "#rule-list-innards"
 				}
