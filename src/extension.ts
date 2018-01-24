@@ -1029,22 +1029,22 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
 // рекурсивный поиск незакрытых тегов
 function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatchArray = null): CurrentTag
 {
-    var res = text.match(/<([\w\d]+)([^/>]*)((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
-    const
-        // группы regex    
-        gr_name = 1,
-        gr_attrs = 2,
-        gr_after = 3,
-        gr_close = 4,
-        gr_body = 5;
-    /*var res = text.match(/<([\w\d]+)(\s*(\w+=?(("[^"]*")|('[^']*'))?)?)*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
+    /*
+        нужно сохранять причину изменений, чтобы 100 раз не переделывать туда-обратно
+        
+        - в значениях атрибутов могут быть /, поэтому [^>]* не подходит
+        - ещё одна скобка в группе атрибутов всё вешает: ((\s*[\w-]+(=(("[^"]*")|('[^']*'))?)?)*)
+    */
+
+    //var res = text.match(/<(\w+)([^>]*)((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
+    var res = text.match(/<(\w+)((\s*[\w-]+=(("[^"]*")|('[^']*'))?)*)\s*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
     const
         // группы regex    
         gr_name = 1,
         gr_attrs = 2,
         gr_after = 7,
         gr_close = 8,
-        gr_body = 9;*/
+        gr_body = 9;
     var nn = nodes;
     if (res && res[gr_name]) nn.push(res[gr_name]);
     if (res && res[gr_name] && res[gr_body])
