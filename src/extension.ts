@@ -361,7 +361,7 @@ function autoComplete()
                     else
                     {
                         ci.detail = "Структура Answer";
-                        ci.insertText =  new vscode.SnippetString("<Answer Id=\"${1:1}\"><Text>$2</Text></Answer>");
+                        ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:1}\"><Text>$2</Text></Answer>");
                         ci.documentation = ci.insertText.value;
                     }
                     completionItems.push(ci);
@@ -698,7 +698,7 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
                 // проверяем, не закрыт ли уже этот тег
                 var afterFull = fullText.substr(editor.document.offsetAt(originalPosition));
                 var tagOp = afterFull.indexOf("<" + result[1]);
-                var tagCl = afterFull.indexOf("</"+result[1]);
+                var tagCl = afterFull.indexOf("</" + result[1]);
 
                 if (result && ((tagCl == -1 || tagOp > -1 && tagOp < tagCl) || result[1].match(/^(Repeat)|(Condition)|(Block)$/)))
                 {
@@ -975,10 +975,11 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         
         - в значениях атрибутов могут быть /, поэтому [^>]* не подходит
         - ещё одна скобка в группе атрибутов всё вешает: ((\s*[\w-]+(=(("[^"]*")|('[^']*'))?)?)*)
+        - при [обязательной кавычке после значения атрибута] не работает во время редактирования значения атрибута
     */
 
     //var res = text.match(/<(\w+)([^>]*)((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
-    var res = text.match(/<(\w+)((\s*[\w-]+=(("[^"]*")|('[^']*'))?)*)\s*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
+    var res = text.match(/<(\w+)((\s*[\w-]+=(("[^"]*"?)|('[^']*'?))?)*)\s*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
     const
         // группы regex    
         gr_name = 1,
