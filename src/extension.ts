@@ -662,8 +662,13 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
                 var curLine = getCurrentLineText(editor.document, originalPosition);
                 var prev = curLine.substr(0, change.Active.character + 1);
                 var after = curLine.substr(change.Active.character + 1);
-                var result = prev.match(/<([\w\d_]+)[^>\/]*>?$/);
-                if (result)
+                var result = prev.match(/<(\w+)[^>\/]*>?$/);
+                // проверяем, не закрыт ли уже этот тег
+                var afterFull = fullText.substr(editor.document.offsetAt(originalPosition));
+                var tagOp = afterFull.indexOf("<" + result[1]);
+                var tagCl = afterFull.indexOf("</"+result[1]);
+
+                if (result && ((tagCl == -1 || tagOp > -1 && tagOp < tagCl) || result[1].match(/^(Repeat)|(Condition)|(Block)$/)))
                 {
                     var closed = after.match(new RegExp("^[^<]*(<\\/)?" + result[1]));
                     if (!closed)
