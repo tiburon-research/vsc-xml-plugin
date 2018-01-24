@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection } from "./classes";
 
 // константы
 
@@ -311,9 +311,10 @@ function autoComplete()
             var tag = getCurrentTag(document, position);
             if (tag && !tag.CSMode)
             {
+                //Item
                 if ("Item".indexOf(tag.Name) > -1)
                 {
-                    var parent;
+                    let parent;
                     for (let key in ItemSnippets)
                         if (tag.Parents.indexOf(key) > -1)
                         {
@@ -321,18 +322,48 @@ function autoComplete()
                             break;
                         }
                     if (!parent || !ItemSnippets[parent]) parent = "List";
-                    var res = new vscode.SnippetString(ItemSnippets[parent].replace("Page=\"$1\"", "Page=\"${1|" + getAllPages().join(",") + "|}\""));
+                    let res = new vscode.SnippetString(ItemSnippets[parent].replace("Page=\"$1\"", "Page=\"${1|" + getAllPages().join(",") + "|}\""));
                     if (res)
                     {
-                        var ci = new vscode.CompletionItem("Item", vscode.CompletionItemKind.Snippet);
-                        var from_pos = tag.Position;
-                        var range = new vscode.Range(from_pos.translate(0, 1), position);
+                        let ci = new vscode.CompletionItem("Item", vscode.CompletionItemKind.Snippet);
+                        let from_pos = tag.Position;
+                        let range = new vscode.Range(from_pos.translate(0, 1), position);
 
                         ci.detail = "Структура Item для " + parent;
                         ci.insertText = res;
                         ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
                         completionItems.push(ci);
                     }
+                }
+                // Answer
+                else if ("Answer".indexOf(tag.Name) > -1)
+                {
+                    let ci = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
+                    let from_pos = tag.Position;
+                    let range = new vscode.Range(from_pos.translate(0, 1), position);
+                    ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
+
+                    if (tag.LastParent == "Repeat")
+                    {
+                        ci.detail = "Структура Answer в Repeat";
+                        // ищем Length/Range/List
+                        let txt = getPreviousText(document, position);
+                        txt = txt.substr(txt.lastIndexOf("<Repeat"));
+                        txt = txt.substr(0, txt.indexOf(">"));
+                        let attrs = getAttributes(txt);
+                        if (attrs.Contains("List"))
+                            ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:@ID}\"><Text>${2:@Text}</Text></Answer>");
+                        else
+                            ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:@Itera}\"><Text>${2:@Itera}</Text></Answer>");
+                        ci.documentation = ci.insertText.value;
+                    }
+                    else
+                    {
+                        ci.detail = "Структура Answer";
+                        ci.insertText =  new vscode.SnippetString("<Answer Id=\"${1:1}\"><Text>$2</Text></Answer>");
+                        ci.documentation = ci.insertText.value;
+                    }
+                    completionItems.push(ci);
                 }
             }
             return completionItems;
@@ -1134,4 +1165,9 @@ function getContextChanges(selections: vscode.Selection[], changes: vscode.TextD
         }
     });
     return res;
+}
+
+function getAttributes(str: string): KeyedCollection<string>
+{
+    return CurrentTag.getAttributesArray(str);
 }
