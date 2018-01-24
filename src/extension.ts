@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
 import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection } from "./classes";
+import * as XML from './documentFunctions';
 
 // константы
 
@@ -760,7 +761,7 @@ function saveMethods(editor: vscode.TextEditor): void
 {
     Methods.Clear();
     var text = editor.document.getText();
-    if (Settings.Item("ignoreComments")) text = clearXMLComments(text);
+    if (Settings.Item("ignoreComments")) text = XML.clearXMLComments(text);
     var mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
     if (!mtd || !mtd[3]) return;
     var reg = new RegExp(/((public)|(private)|(protected))\s*([\w\d_<>\[\],\s]+)\s+(([\w\d_]+)\s*(\([^)]*\))?)/, "g");
@@ -789,7 +790,7 @@ function updateNodesIds(editor: vscode.TextEditor, names?: string[])
     var nNames = names;
     if (!nNames) nNames = _NodeStoreNames;
     var txt = editor.document.getText();
-    if (Settings.Item("ignoreComments")) txt = clearXMLComments(txt);
+    if (Settings.Item("ignoreComments")) txt = XML.clearXMLComments(txt);
     var reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]+Id=(\"|')([^\"']+)(\"|')", "g");
     var res;
     var idIndex = nNames.length + 3;
@@ -836,44 +837,12 @@ function getAllLists(): string[]
 function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range
 {
     var fullText = document.getText();
+    if (tagName != 'c#') fullText = clearFromCSTags(fullText);
     var prevText = getPreviousText(document, position);
-    var textAfter = fullText.substr(prevText.length);
-
-    var rest = textAfter;
-    if (tagName != 'c#') rest = clearFromCSTags(rest);
-
-    var curIndex = prevText.length + rest.indexOf(clBracket);
-    var op = rest.indexOf(opBracket + tagName);
-    var cl = rest.indexOf(opBracket + "/" + tagName);
-    if (cl < 0) return null;
-
-    var cO = 1;
-    var cC = 0;
-    while (cl > -1 && ((op > -1) || (cC != cO)))
-    {
-        if (op < cl && op > -1)
-        {
-            rest = rest.substr(op + 1);
-            cO++;
-        }
-        else if (cO != cC)
-        {
-            rest = rest.substr(cl + 1);
-            cC++;
-        }
-
-        if (cO == cC) break;       
-        op = rest.indexOf(opBracket + tagName);
-        cl = rest.indexOf(opBracket + "/" + tagName);
-    }
-
-    //rest = rest.substr(cl);
-    var clLast = rest.indexOf(clBracket);
-
-    if (cl < 0 || clLast < 0) return null;
-    var startPos = document.positionAt(fullText.length - rest.length - 1);
-    var endPos = document.positionAt(fullText.length - rest.length + clLast + 1);
-
+    var res = XML.findCloseTag(opBracket, tagName, clBracket, prevText, fullText);
+    if (!res || res.length < 2) return null;
+    var startPos = document.positionAt(res[0]);
+    var endPos = document.positionAt(res[1] + 1);
     return new vscode.Range(startPos, endPos);
 }
 
@@ -882,38 +851,10 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 {
     var prevText = getPreviousText(document, position);
     if (tagName != 'c#') prevText = clearFromCSTags(prevText);
-    var curIndex = prevText.lastIndexOf(opBracket);
-    var txt = prevText.substr(0, curIndex);
-    var rest = txt;
-    var op = rest.lastIndexOf(opBracket + tagName);
-    var cl = rest.lastIndexOf(opBracket + "/" + tagName);
-    if (op < 0) return null;
-
-    var cO = 0;
-    var cC = 1;
-    while (op > -1 && ((cl > -1) || op != cl))
-    {
-        if (cl > op && cl > -1)
-        {
-            rest = rest.substr(0, cl);
-            cC++;
-        }
-        else if (cO != cC)
-        {
-            rest = rest.substr(0, op);
-            cO++;
-        }
-        if (cO == cC) break;
-        op = rest.lastIndexOf(opBracket + tagName);
-        cl = rest.lastIndexOf(opBracket + "/" + tagName);
-    }
-
-    //rest = rest.substr(0, rest.indexOf(clBracket, op) + 1);
-    var clLast = rest.lastIndexOf(clBracket) + 1;
-
-    if (op < 0 || clLast < 0) return null;
-    var startPos = document.positionAt(rest.length);
-    var endPos = document.positionAt(txt.indexOf(clBracket, rest.length + 1) + 1);
+    var res = XML.findOpenTag(opBracket, tagName, clBracket, prevText);
+    if (!res || res.length < 2) return null;
+    var startPos = document.positionAt(res[0]);
+    var endPos = document.positionAt(res[1] + 1);
     return new vscode.Range(startPos, endPos);
 }
 
@@ -1118,20 +1059,6 @@ function occurrenceCount(source: string, find: string): number
 function clearFromCSTags(text: string): string
 {
     return text.replace(/\[c#([^\]]*)\]([\s\S]+?)\[\/c#([^\]]*)\]/g, "*c#$1*$2*/c#$3*");
-}
-
-function clearXMLComments(txt: string): string
-{
-    var mt = txt.match(/<!--([\s\S]+?)-->/g);
-    var res = txt;
-    var rep = "";
-    if (!mt) return txt;
-    mt.forEach(element =>
-    {
-        rep = element.replace(/./g, ' ');
-        res = res.replace(element, rep);
-    });
-    return res;
 }
 
 function clearCSComments(txt: string): string
