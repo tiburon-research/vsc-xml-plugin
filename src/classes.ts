@@ -23,7 +23,7 @@ export class KeyedCollection<T>
         return this.count;
     }
 
-    protected AddPair(key: string, value: T)
+    public AddPair(key: string, value: T)
     {
         if (!this.items.hasOwnProperty(key))
             this.count++;
@@ -310,18 +310,27 @@ export class CurrentTag
 
     setAttributes(str: string)
     {
-        var res = str.match(/\s*([\w\d]+)=(("([^"]+)?")|(('([^']+)?')))\s*/g);
-        if (res)
+        var attrs = CurrentTag.getAttributesArray(str);
+        var parent = this;
+        attrs.forEach(function(key, val)
         {
-            res.forEach(element =>
+            parent.Attributes.push(new InlineAttribute(key, val));
+        });
+    }
+
+    static getAttributesArray(str: string): KeyedCollection<string>
+    {
+        var mt = str.match(/\s*([\w\d]+)=(("([^"]+)?")|(('([^']+)?')))\s*/g);
+        var res: KeyedCollection<string> = new KeyedCollection<string>();
+        if (mt)
+        {
+            mt.forEach(element =>
             {
                 var parse = element.match(/\s*([\w\d]+)=(("([^"]+)?")|(('([^']+)?')))\s*/);
-                if (parse)
-                {
-                    this.Attributes.push(new InlineAttribute(parse[1], parse[2]));
-                }
+                if (parse) res.AddPair(parse[1], parse[2]);
             });
         }
+        return res;
     }
 }
 
