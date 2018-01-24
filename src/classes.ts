@@ -5,6 +5,8 @@ import * as vscode from 'vscode';
 // -------------------- классы
 
 
+export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)"; // XML теги, которые могут содержать c#
+
 export class KeyedCollection<T>
 {
     protected items: { [index: string]: T } = {};
