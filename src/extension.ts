@@ -170,6 +170,43 @@ function registerCommands()
             inProcess = false;
         });
     });
+
+    // стандартная команда для форматирования
+    vscode.commands.registerCommand('editor.action.formatDocument', () => 
+    {
+        var editor = vscode.window.activeTextEditor;
+        
+        var range;
+        // любо весь документ
+        if (editor.selection.start.isEqual(editor.selection.end))
+            range = getFullRange(editor);
+        else
+        {
+            // либо выделяем строки целиком
+            let sel = new vscode.Selection(
+                new vscode.Position(editor.selection.start.line, 0),
+                new vscode.Position(editor.selection.end.line, editor.document.lineAt(editor.selection.end.line).range.end.character)
+            );
+            editor.selection = sel;
+            range = sel;
+        }
+        var text = editor.document.getText(range);
+        var tag = getCurrentTag(editor.document, editor.selection.start);
+
+        // тут можно потом добавить язык, например, из tag.Language
+        var res = XML.format(text, "XML", "\t", tag.Parents.length + 1);
+        if (!res || res.Errors.length) return;
+
+        inProcess = true;
+
+        editor.edit((editBuilder) =>
+        {
+            editBuilder.replace(range, res.Result);
+        }).then(() =>
+        {
+            inProcess = false;
+        });
+    })
 }
 
 
@@ -839,9 +876,9 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
     if (tagName != 'c#') fullText = clearFromCSTags(fullText);
     var prevText = getPreviousText(document, position);
     var res = XML.findCloseTag(opBracket, tagName, clBracket, prevText, fullText);
-    if (!res || res.length < 2) return null;
-    var startPos = document.positionAt(res[0]);
-    var endPos = document.positionAt(res[1] + 1);
+    if (!res || res.Length < 2) return null;
+    var startPos = document.positionAt(res.From);
+    var endPos = document.positionAt(res.To + 1);
     return new vscode.Range(startPos, endPos);
 }
 
@@ -851,9 +888,9 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
     var prevText = getPreviousText(document, position);
     if (tagName != 'c#') prevText = clearFromCSTags(prevText);
     var res = XML.findOpenTag(opBracket, tagName, clBracket, prevText);
-    if (!res || res.length < 2) return null;
-    var startPos = document.positionAt(res[0]);
-    var endPos = document.positionAt(res[1] + 1);
+    if (!res || res.Length < 2) return null;
+    var startPos = document.positionAt(res.From);
+    var endPos = document.positionAt(res.To + 1);
     return new vscode.Range(startPos, endPos);
 }
 
@@ -1097,4 +1134,10 @@ function getContextChanges(selections: vscode.Selection[], changes: vscode.TextD
 function getAttributes(str: string): KeyedCollection<string>
 {
     return CurrentTag.getAttributesArray(str);
+}
+
+
+function getFullRange(editor: vscode.TextEditor): vscode.Range
+{
+    return new vscode.Range(0, 0, editor.document.lineCount - 1, editor.document.lineAt(editor.document.lineCount - 1).text.length);
 }
