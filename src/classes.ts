@@ -530,9 +530,9 @@ export class TagInfo
             var clt = XML.findCloseTag("<", this.Name, ">", before, text);
             if (clt)
             {
-                this.CloseTag = { From: clt[0], To: clt[1] + 1 };
+                this.CloseTag = { From: clt.From, To: clt.To + 1 };
                 this.Closed = true;
-                this.Body = { From: to, To: clt[0] };
+                this.Body = { From: to, To: clt.From };
             }
             else
             {
