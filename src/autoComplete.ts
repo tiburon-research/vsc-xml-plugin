@@ -58,6 +58,12 @@ var ManualCode = [
         Parent: "InterviewPars\\.GetInstance\\(\\)"
     },
     {
+        Name: "IsMobile",
+        Kind: "Property",
+        Detail: "bool",
+        Parent: "InterviewPars\\.GetInstance\\(\\)"
+    },
+    {
         Name: "Pages",
         Kind: "Property",
         Parent: "CurrentSurvey"
@@ -95,6 +101,7 @@ var ManualCode = [
     {
         Name: "Contains",
         Kind: "Method",
+        Detail: "bool",
         Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
     },
     {
@@ -106,6 +113,7 @@ var ManualCode = [
     {
         Name: "ItemsIdArray",
         Kind: "Property",
+        Detail: "string[]",
         Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
     },
     {
@@ -125,6 +133,17 @@ var ManualCode = [
         Kind: "Property",
         Detail: "string",
         Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items\\[.*\\]"
+    },
+    {
+        Name: "Items",
+        Kind: "Property",
+        Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
+    },
+    {
+        Name: "Values",
+        Kind: "Property",
+        Detail: "IEnumerable",
+        Parent: "CurrentSurvey\\.Lists\\[.*?\\]\\.Items\\.Items"
     },
     {
         Name: "Questions",
@@ -1372,6 +1391,10 @@ export const Attributes = {
     ],
     "Page": [
         {
+            Name: "Id",
+            Type: "String"
+        },
+        {
             "Name": "SyncId",
             "AllowCode": "true",
             "Type": "String"
@@ -1445,6 +1468,10 @@ export const Attributes = {
     ],
     "ListItem": [
         {
+            Name: "Id",
+            Type: "String"
+        },
+        {
             "Name": "Text",
             "AllowCode": "true",
             "Type": "String"
@@ -1452,11 +1479,19 @@ export const Attributes = {
     ],
     "List": [
         {
+            Name: "Id",
+            Type: "String"
+        },
+        {
             "Name": "SaveToDb",
             "Type": "Boolean"
         }
     ],
     "Question": [
+        {
+            Name: "Id",
+            Type: "String"
+        },
         {
             Name: "Orientation",
             Default: "Vertical",
@@ -1605,6 +1640,10 @@ export const Attributes = {
     ],
     "Answer": [
         {
+            Name: "Id",
+            Type: "String"
+        },
+        {
             "Name": "SyncId",
             "AllowCode": "true",
             "Type": "String"
@@ -1686,7 +1725,8 @@ export const Attributes = {
         },
         {
             "Name": "Type",
-            "Type": "QuestionType"
+            "Type": "QuestionType",
+            Auto: "Text"
         },
         {
             "Name": "Length",
@@ -1766,7 +1806,8 @@ export const Attributes = {
         },
         {
             "Name": "Status",
-            "Type": "Integer"
+            "Type": "Integer",
+            Auto: "19"
         },
         {
             "Name": "Operator",
@@ -1785,6 +1826,10 @@ export const Attributes = {
         }
     ],
     "Quota": [
+        {
+            Name: "Id",
+            Type: "String"
+        },
         {
             "Name": "Limit",
             "Type": "Integer"
@@ -1828,6 +1873,10 @@ export const Attributes = {
         }
     ],
     "Block": [
+        {
+            Name: "Id",
+            Type: "String"
+        },
         {
             "Name": "Items",
             "Type": "String"
@@ -1935,11 +1984,19 @@ export const Attributes = {
     ],
     "SplitItem": [
         {
+            Name: "Id",
+            Type: "String"
+        },
+        {
             "Name": "Text",
             "Type": "String"
         }
     ],
     "Statistic": [
+        {
+            Name: "Id",
+            Type: "String"
+        },
         {
             "Name": "BindInterval",
             "Type": "Integer"
@@ -1970,7 +2027,8 @@ export const Attributes = {
         },
         {
             "Name": "Status",
-            "Type": "String"
+            "Type": "String",
+            Auto: "18"
         },
         {
             "Name": "Quota",
@@ -2000,6 +2058,10 @@ export const Attributes = {
         }
     ],
     "StatisticItem": [
+        {
+            Name: "Id",
+            Type: "String"
+        },
         {
             "Name": "Name",
             "Type": "String"

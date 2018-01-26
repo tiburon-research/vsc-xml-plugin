@@ -30,13 +30,6 @@
 		],
 		"description": "Структура Question"
     },
-    "Answer":{
-        "prefix": "<Answer",
-        "body": [
-            "<Answer Id=\"${1:Id}\"><Text>$0</Text></Answer>"
-        ],
-        "description": "Структура Answer"
-    },
     "Block":{
         "prefix": "<Block",
         "body":[
@@ -69,6 +62,13 @@
             "<Redirect Status=\"${1:19}\">return $0;</Redirect>"
         ],
         "description": "Структура Redirect со статусом"
+    },
+    "Redirect18":{
+        "prefix": "<Redirect",
+        "body": [
+            "<Redirect Status=\"18\"/>"
+        ],
+        "description": "Финальный Redirect"
     },
     "Validate":{
         "prefix": "<Validate",

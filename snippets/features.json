@@ -158,6 +158,25 @@
         ],
         "description": "MediaPlayer Audio"
     },
+    "CompletePage": {
+        "prefix": "_completePage",
+        "body":[
+            "<Page Id=\"${1:complete}\" End=\"true\">",
+            "\t<Header>$0</Header>",
+            "</Page>"
+        ]
+    },
+    "RespInfo": {
+		"prefix": "_respInfo",
+		"body": [
+            "<Page Id=\"RespInso\">",
+                "\t<Filter>false;</Filter>",
+                "\t<Header>Опросные данные</Header>",
+                "\t$0",
+            "</Page>\n"
+		],
+		"description": "Краткая структура Page"
+    },
     "YandexMetrika": {
         "prefix": "_yandexMetrika",
         "body":[
