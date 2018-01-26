@@ -82,28 +82,49 @@ function formatXMLblock(text: string, tab: string = "\t", indent: number = 0): s
     var tags = get1LevelNodes(oldText);
 
     // если внутри тегов нет, то возвращаем внутренность с отступом?
-    if (tags.length == 0) return oldText;//formatText(oldText, ind);
+    if (tags.length == 0) return formatText(oldText, ind);
+
     var newText = oldText;
 
     tags.forEach(tag =>
     {
-        // если теги есть, то рекурсивно форматируем внутренности каждого
         let body = oldText.slice(tag.Body.From, tag.Body.To);
-        let formattedBody = body;
-        let openTag = oldText.slice(tag.OpenTag.From, tag.OpenTag.To);
-        let closeTag = oldText.slice(tag.CloseTag.From, tag.CloseTag.To);
-        let oldFull = oldText.slice(tag.OpenTag.From, tag.CloseTag.To); // это, что надо заменить на новое
-        // форматируем только если есть несколько строк, иначе просто добавляем отступ
-        var newFul;
-        if (body.indexOf("\n") > -1)
+        // если теги есть, то рекурсивно форматируем внутренности каждого
+        // если это не C# или если он в одну строку
+        if (!tag.IsAllowCodeTag || body.indexOf("\n") == -1)
         {
-            formattedBody = formatXMLblock(body, tab, indent + 1);
-            if (tag.Closed && !tag.SelfClosed) closeTag = ind + closeTag;
-        }
+            var lang = getTagLanguage(tag.Name);
+            let formattedBody = body;
+            let openTag = oldText.slice(tag.OpenTag.From, tag.OpenTag.To);
+            let closeTag = oldText.slice(tag.CloseTag.From, tag.CloseTag.To);
+            let oldFull = oldText.slice(tag.OpenTag.From, tag.CloseTag.To); // это, что надо заменить на новое
+            // форматируем только если есть несколько строк, иначе просто добавляем отступ
+            var newFul;
+            if (body.indexOf("\n") > -1)
+            {
+                switch (lang)
+                {
+                    // для JS и CSS очищаем старую табуляцию, форматируем, добавляем нужную табуляцию
+                    case "CSS":
+                        formattedBody = formatLanguageBody(body, tab, indent + 1, formatCSS);
+                        break;
 
-        // формируем результат
-        newFul = ind + openTag + formattedBody + closeTag;
-        newText = newText.replace(oldFull, newFul);
+                    case "JS":
+                        formattedBody = formatLanguageBody(body, tab, indent + 1, formatJS);
+                        break;
+
+                    // для XML просто форматируем как блок
+                    default:
+                        formattedBody = formatXMLblock(body, tab, indent + 1);
+                        break;
+                }
+                if (tag.Closed && !tag.SelfClosed) closeTag = ind + closeTag;
+            }
+
+            // формируем результат
+            newFul = ind + openTag + formattedBody + closeTag;
+            newText = newText.replace(oldFull, newFul);
+        }
     });
 
     // форматируем между тегами?
@@ -112,19 +133,49 @@ function formatXMLblock(text: string, tab: string = "\t", indent: number = 0): s
 }
 
 
-function formatText(text: string, ind: string): string
+function formatLanguageBody(text: string, tab: string, indent: number = 0, langFunc): string
 {
-    var txt = text.replace(/\n[\t ]*/g, "\n" + ind);
-    return txt.replace(/\n[\t ]+$/, "\n");
+    var cs = getEmbeddedCS(text);
+    var del = getReplaceDelimiter(text);
+    var newText = encodeCS(text, cs, del);
+    var ind = tab.repeat(indent);
+    newText = newText.replace(/(\n|^)[\t ]/g, '$1');
+    newText = langFunc(newText, tab, indent);
+    newText = "\n" + ind + formatText(newText, ind) + "\n";
+    newText = getCSBack(newText, cs, del);
+    return newText;
 }
 
 
-function formatCSS(text: string, tab: string = "\t", indent: number = 0): FormatResult
+// создаём минимальный отступ
+function formatText(text: string, ind: string): string
 {
-    var res = new FormatResult();
-    res.Result = text;
-    var newText = text;
+    ind = ind || "\t";
+    var tab = ind[0];
+    var mt = text.match(new RegExp("(\n|^)[\t ]*\\S", "g"));
+    var newInd = ind;
 
+    if (mt && mt.length > 0)
+    {
+        // находим минимальный существующий отступ;
+        var min = -1;
+        for (let i = 0; i < mt.length; i++)
+        {
+            let reg = mt[i].match(/(\n|^)([\t ]*)\S/);
+            if (reg && reg[2] !== null && (reg[2].length < min || min == -1)) min = reg[2].length;
+        }
+        // сдвигаем на разницу
+        var d = ind.length - min;
+        if (d > 0) newInd = tab.repeat(d);
+    }
+    // двигаем только непустые строки
+    return text.replace(/(\n|^)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
+}
+
+
+function formatCSS(text: string, tab: string = "\t", indent: number = 0): string
+{
+    var newText = text;
     newText = beautify.css(newText,
         {
             indent_size: 1,
@@ -132,18 +183,13 @@ function formatCSS(text: string, tab: string = "\t", indent: number = 0): Format
             indent_with_tabs: tab == "\t",
             indent_level: indent
         });
-
-    res.Result = newText;
-    return res;
+    return newText;
 }
 
 
-function formatJS(text: string, tab: string = "\t", indent: number = 0): FormatResult
+function formatJS(text: string, tab: string = "\t", indent: number = 0): string
 {
-    var res = new FormatResult();
-    res.Result = text;
     var newText = text;
-
     newText = beautify.js(newText,
         {
             indent_size: 1,
@@ -151,9 +197,7 @@ function formatJS(text: string, tab: string = "\t", indent: number = 0): FormatR
             indent_with_tabs: tab == "\t",
             indent_level: indent
         });
-
-    res.Result = newText;
-    return res;
+    return newText;
 }
 
 
@@ -161,7 +205,6 @@ function formatCSharp(text: string, tab: string = "\t", indent: number = 0): For
 {
     return null;
 }
-
 
 
 export function findCloseTag(opBracket: string, tagName: string, clBracket: string, prevText: string, fullText: string): TextRange
@@ -285,6 +328,7 @@ function getEmbeddedCS(text: string): KeyedCollection<string>
     {
         i++;
         cs.AddPair("" + i, resCS[0]);
+        newText = newText.replace(new RegExp(escapeStringRegexp(resCS[0]), "g"), "");
         resCS = regCS.exec(newText);
     }
     return cs;
@@ -292,26 +336,65 @@ function getEmbeddedCS(text: string): KeyedCollection<string>
 
 
 // кодируем вставки в тексте
-function codeCS(text: string, cs: KeyedCollection<string>): string
+function encodeCS(text: string, cs: KeyedCollection<string>, del: string): string
 {
-    var reg = new RegExp(/(\[c#)([\s\S]+)$/);
     var newText = text;
     cs.forEach(function (i, e)
     {
-        let res = e.match(reg);
-        newText = newText.replace(e, res[1] + i + res[2]);
+        newText = newText.replace(new RegExp(escapeStringRegexp(e), "g"), del + i + del);
     });
     return newText;
 }
 
 
 // возвращаем c# вставки
-function getCSBack(text: string, cs: KeyedCollection<string>): string
+function getCSBack(text: string, cs: KeyedCollection<string>, del: string): string
 {
     var newText = text;
+    del = escapeStringRegexp(del);
     cs.forEach(function (i, e)
     {
-        newText = newText.replace(new RegExp("(\\[c#)(" + i + ")(([^\\]]*)\\]([\\s\\S]+?)?\\[\\/c#[^\\]]*\\])", "g"), e);
+        newText = newText.replace(new RegExp(del + i + del, "g"), e);
     })
     return newText;
+}
+
+
+// получаем разделитель, для временной замены вставок
+function getReplaceDelimiter(text: string, length: number = 5): string
+{
+    var dels = ["_", "\\"];
+    var del = null;
+
+    for (let i = 0; i < dels.length; i++) 
+    {
+        let curDel = dels[i].repeat(length);
+        let mt = text.match(new RegExp(escapeStringRegexp(curDel + "\\d+" + curDel), "g"));
+        if (!mt || mt.length == 0) return curDel;
+    }
+
+    return del;
+}
+
+
+function getTagLanguage(tagName: string): string
+{
+    var res = "";
+    if (tagName.match(new RegExp("^(" + _AllowCodeTags + ")$"))) return "C#";
+
+    switch (tagName.toLocaleLowerCase())
+    {
+        case "script":
+            res = "JS";
+            break;
+
+        case "style":
+            res = "CSS";
+            break;
+
+        default:
+            res = "XML"
+            break;
+    }
+    return res;
 }
