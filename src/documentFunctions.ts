@@ -140,7 +140,7 @@ function formatLanguageBody(text: string, tab: string, indent: number = 0, langF
     var ind = tab.repeat(indent);
     newText = newText.replace(/(\n|^)[\t ]/g, '$1');
     newText = langFunc(newText, tab, indent);
-    newText = "\n" + ind + formatText(newText, ind) + "\n";
+    newText = "\n" + formatText(newText, ind) + "\n";
     newText = getCSBack(newText, cs, del);
     return newText;
 }
@@ -152,7 +152,7 @@ function formatText(text: string, ind: string): string
     ind = ind || "\t";
     var tab = ind[0];
     var mt = text.match(new RegExp("(\n|^)[\t ]*\\S", "g"));
-    var newInd = ind;
+    var newInd = "";
 
     if (mt && mt.length > 0)
     {
