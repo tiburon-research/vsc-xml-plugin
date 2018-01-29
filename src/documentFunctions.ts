@@ -2,7 +2,6 @@
 
 import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange } from "./classes";
 import * as beautify from 'js-beautify';
-import * as escapeStringRegexp from 'escape-string-regexp';
 
 // форматирование, проверка и другие операции с текстом документа
 
@@ -328,7 +327,7 @@ function getEmbeddedCS(text: string): KeyedCollection<string>
     {
         i++;
         cs.AddPair("" + i, resCS[0]);
-        newText = newText.replace(new RegExp(escapeStringRegexp(resCS[0]), "g"), "");
+        newText = newText.replace(new RegExp(safeString(resCS[0]), "g"), "");
         resCS = regCS.exec(newText);
     }
     return cs;
@@ -341,7 +340,7 @@ function encodeCS(text: string, cs: KeyedCollection<string>, del: string): strin
     var newText = text;
     cs.forEach(function (i, e)
     {
-        newText = newText.replace(new RegExp(escapeStringRegexp(e), "g"), del + i + del);
+        newText = newText.replace(new RegExp(safeString(e), "g"), del + i + del);
     });
     return newText;
 }
@@ -351,7 +350,7 @@ function encodeCS(text: string, cs: KeyedCollection<string>, del: string): strin
 function getCSBack(text: string, cs: KeyedCollection<string>, del: string): string
 {
     var newText = text;
-    del = escapeStringRegexp(del);
+    del = safeString(del);
     cs.forEach(function (i, e)
     {
         newText = newText.replace(new RegExp(del + i + del, "g"), e);
@@ -369,7 +368,7 @@ function getReplaceDelimiter(text: string, length: number = 5): string
     for (let i = 0; i < dels.length; i++) 
     {
         let curDel = dels[i].repeat(length);
-        let mt = text.match(new RegExp(escapeStringRegexp(curDel + "\\d+" + curDel), "g"));
+        let mt = text.match(new RegExp(safeString(curDel + "\\d+" + curDel), "g"));
         if (!mt || mt.length == 0) return curDel;
     }
 
@@ -397,4 +396,10 @@ function getTagLanguage(tagName: string): string
             break;
     }
     return res;
+}
+
+
+function safeString(text: string): string
+{
+    return text.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
 }
