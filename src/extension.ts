@@ -175,11 +175,15 @@ function registerCommands()
     vscode.commands.registerCommand('editor.action.formatDocument', () => 
     {
         var editor = vscode.window.activeTextEditor;
-        
+
         var range;
+        var indent;
         // любо весь документ
         if (editor.selection.start.isEqual(editor.selection.end))
+        {
             range = getFullRange(editor);
+            indent = 0;
+        }
         else
         {
             // либо выделяем строки целиком
@@ -189,12 +193,13 @@ function registerCommands()
             );
             editor.selection = sel;
             range = sel;
+            indent = tag.Parents.length + 1;
         }
         var text = editor.document.getText(range);
         var tag = getCurrentTag(editor.document, editor.selection.start);
 
         // тут можно потом добавить язык, например, из tag.Language
-        var res = XML.format(text, "XML", "\t", tag.Parents.length + 1);
+        var res = XML.format(text, "XML", "\t", indent);
         if (!res || res.Errors.length) return;
 
         inProcess = true;
