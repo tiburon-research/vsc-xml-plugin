@@ -1,6 +1,6 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange } from "./classes";
+import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language } from "./classes";
 import * as beautify from 'js-beautify';
 
 // форматирование, проверка и другие операции с текстом документа
@@ -16,25 +16,25 @@ export class FormatResult
 }
 
 
-export function format(text: string, language: string, tab: string = "\t", indent: number = 0): FormatResult
+export function format(text: string, language: Language, tab: string = "\t", indent: number = 0): FormatResult
 {
     var func;
 
     switch (language)
     {
-        case "XML":
+        case Language.XML:
             func = formatXML;
             break;
 
-        case "JS":
+        case Language.JS:
             func = formatJS;
             break;
 
-        case "CSS":
+        case Language.CSS:
             func = formatCSS;
             break;
 
-        case "C#":
+        case Language.CSharp:
             func = formatCSharp;
             break;
     }
@@ -90,25 +90,30 @@ function formatXMLblock(text: string, tab: string = "\t", indent: number = 0): s
         let body = oldText.slice(tag.Body.From, tag.Body.To);
         // если теги есть, то рекурсивно форматируем внутренности каждого
         // если это не C# или если он в одну строку
+        let formattedBody = body;
+        let openTag = oldText.slice(tag.OpenTag.From, tag.OpenTag.To);
+        let closeTag = oldText.slice(tag.CloseTag.From, tag.CloseTag.To);
+        let oldFull = oldText.slice(tag.OpenTag.From, tag.CloseTag.To); // это, что надо заменить на новое
         if (!tag.IsAllowCodeTag || body.indexOf("\n") == -1)
         {
-            var lang = getTagLanguage(tag.Name);
-            let formattedBody = body;
-            let openTag = oldText.slice(tag.OpenTag.From, tag.OpenTag.To);
-            let closeTag = oldText.slice(tag.CloseTag.From, tag.CloseTag.To);
-            let oldFull = oldText.slice(tag.OpenTag.From, tag.CloseTag.To); // это, что надо заменить на новое
+
             // форматируем только если есть несколько строк, иначе просто добавляем отступ
             var newFul;
+            var lang = getTagLanguage(tag.Name);
             if (body.indexOf("\n") > -1)
             {
                 switch (lang)
                 {
                     // для JS и CSS очищаем старую табуляцию, форматируем, добавляем нужную табуляцию
-                    case "CSS":
+                    case Language.CSS:
                         formattedBody = formatLanguageBody(body, tab, indent + 1, formatCSS);
                         break;
 
-                    case "JS":
+                    case Language.JS:
+                        formattedBody = formatLanguageBody(body, tab, indent + 1, formatJS);
+                        break;
+
+                    case Language.PlainTetx:
                         formattedBody = formatLanguageBody(body, tab, indent + 1, formatJS);
                         break;
 
@@ -117,13 +122,12 @@ function formatXMLblock(text: string, tab: string = "\t", indent: number = 0): s
                         formattedBody = formatXMLblock(body, tab, indent + 1);
                         break;
                 }
-                if (tag.Closed && !tag.SelfClosed) closeTag = ind + closeTag;
             }
-
-            // формируем результат
-            newFul = ind + openTag + formattedBody + closeTag;
-            newText = newText.replace(oldFull, newFul);
         }
+        if (tag.Closed && !tag.SelfClosed) closeTag = ind + closeTag;
+        // формируем результат
+        newFul = ind + openTag + formattedBody + closeTag;
+        newText = newText.replace(oldFull, newFul);
     });
 
     // форматируем между тегами?
@@ -376,23 +380,31 @@ function getReplaceDelimiter(text: string, length: number = 5): string
 }
 
 
-function getTagLanguage(tagName: string): string
+function getTagLanguage(tagName: string): Language
 {
-    var res = "";
-    if (tagName.match(new RegExp("^(" + _AllowCodeTags + ")$"))) return "C#";
+    var res = Language.XML;
+
+    if (tagName.match(new RegExp("^(" + _AllowCodeTags + ")$"))) return Language.CSharp;
 
     switch (tagName.toLocaleLowerCase())
     {
         case "script":
-            res = "JS";
+            res = Language.JS;
             break;
 
         case "style":
-            res = "CSS";
+            res = Language.CSS;
+            break;
+
+        case "text":
+        case "header":
+        case "holder":
+        case "value":
+            res = Language.PlainTetx;
             break;
 
         default:
-            res = "XML"
+            res = Language.XML;
             break;
     }
     return res;

@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language } from "./classes";
 import * as XML from './documentFunctions';
 
 // константы
@@ -198,7 +198,7 @@ function registerCommands()
         }
         let text = editor.document.getText(range);
         // тут можно потом добавить язык, например, из tag.Language
-        var res = XML.format(text, "XML", "\t", indent);
+        let res = XML.format(text, Language.XML, "\t", indent);
         if (!res || res.Errors.length) return;
 
         inProcess = true;
