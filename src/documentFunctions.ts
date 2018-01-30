@@ -99,10 +99,9 @@ function formatXMLblock(text: string, tab: string = "\t", indent: number = 0): s
 
             // форматируем только если есть несколько строк, иначе просто добавляем отступ
             var newFul;
-            var lang = getTagLanguage(tag.Name);
             if (body.indexOf("\n") > -1)
             {
-                switch (lang)
+                switch (tag.Language)
                 {
                     // для JS и CSS очищаем старую табуляцию, форматируем, добавляем нужную табуляцию
                     case Language.CSS:
@@ -377,37 +376,6 @@ function getReplaceDelimiter(text: string, length: number = 5): string
     }
 
     return del;
-}
-
-
-function getTagLanguage(tagName: string): Language
-{
-    var res = Language.XML;
-
-    if (tagName.match(new RegExp("^(" + _AllowCodeTags + ")$"))) return Language.CSharp;
-
-    switch (tagName.toLocaleLowerCase())
-    {
-        case "script":
-            res = Language.JS;
-            break;
-
-        case "style":
-            res = Language.CSS;
-            break;
-
-        case "text":
-        case "header":
-        case "holder":
-        case "value":
-            res = Language.PlainTetx;
-            break;
-
-        default:
-            res = Language.XML;
-            break;
-    }
-    return res;
 }
 
 

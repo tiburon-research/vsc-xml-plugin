@@ -8,6 +8,8 @@ import * as XML from './documentFunctions'
 
 export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)"; // XML теги, которые могут содержать c#
 
+export enum Language { XML, CSharp, CSS, JS, PlainTetx };
+
 export class KeyedCollection<T>
 {
     protected items: { [index: string]: T } = {};
@@ -522,6 +524,7 @@ export class TagInfo
         if (!!mt)
         {
             this.Name = mt[2];
+            this.Language = TagInfo.getTagLanguage(this.Name);
             this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + _AllowCodeTags + "$"));
             let from = text.indexOf("<" + this.Name);
             let to = text.indexOf(">", from) + 1;
@@ -552,6 +555,37 @@ export class TagInfo
         }
     }
 
+
+    public static getTagLanguage(tagName: string): Language
+    {
+        var res = Language.XML;
+    
+        if (tagName.match(new RegExp("^(" + _AllowCodeTags + ")$"))) return Language.CSharp;
+    
+        switch (tagName.toLocaleLowerCase())
+        {
+            case "script":
+                res = Language.JS;
+                break;
+    
+            case "style":
+                res = Language.CSS;
+                break;
+    
+            case "text":
+            case "header":
+            case "holder":
+            case "value":
+                res = Language.PlainTetx;
+                break;
+    
+            default:
+                res = Language.XML;
+                break;
+        }
+        return res;
+    }
+
     public OpenTag: TextRange;
     public CloseTag: TextRange;
     public Body: TextRange;
@@ -560,4 +594,5 @@ export class TagInfo
     public Found: boolean = false;
     public Closed: boolean;
     public SelfClosed: boolean = false;
+    public Language: Language;
 }
