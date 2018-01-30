@@ -16,7 +16,8 @@ export class FormatResult
 }
 
 
-export function format(text: string, language: Language, tab: string = "\t", indent: number = 0): FormatResult
+// выбираем функцию по Language
+function LanguageFunction(language: Language)
 {
     var func;
 
@@ -39,7 +40,13 @@ export function format(text: string, language: Language, tab: string = "\t", ind
             break;
     }
 
-    return func(text, tab, indent);
+    return func;
+}
+
+export function format(text: string, language: Language, tab: string = "\t", indent: number = 0): FormatResult
+{
+
+    return LanguageFunction(language)(text, tab, indent);
 }
 
 
@@ -103,22 +110,13 @@ function formatXMLblock(text: string, tab: string = "\t", indent: number = 0): s
             {
                 switch (tag.Language)
                 {
-                    // для JS и CSS очищаем старую табуляцию, форматируем, добавляем нужную табуляцию
-                    case Language.CSS:
-                        formattedBody = formatLanguageBody(body, tab, indent + 1, formatCSS);
-                        break;
-
-                    case Language.JS:
-                        formattedBody = formatLanguageBody(body, tab, indent + 1, formatJS);
-                        break;
-
-                    case Language.PlainTetx:
-                        formattedBody = formatLanguageBody(body, tab, indent + 1, formatJS);
-                        break;
-
                     // для XML просто форматируем как блок
-                    default:
+                    case Language.XML:
                         formattedBody = formatXMLblock(body, tab, indent + 1);
+                        break;
+                    // для остальных форматируем согласно языку
+                    default:
+                        formattedBody = formatLanguageBody(body, tab, indent + 1, LanguageFunction(tag.Language));
                         break;
                 }
             }
