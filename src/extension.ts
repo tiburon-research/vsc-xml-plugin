@@ -174,11 +174,12 @@ function registerCommands()
     // стандартная команда для форматирования
     vscode.commands.registerCommand('editor.action.formatDocument', () => 
     {
-        var editor = vscode.window.activeTextEditor;
+        let editor = vscode.window.activeTextEditor;
 
-        var range;
-        var indent;
-        // любо весь документ
+        let range;
+        let indent;
+        let tag = getCurrentTag(editor.document, editor.selection.start);
+        // либо весь документ
         if (editor.selection.start.isEqual(editor.selection.end))
         {
             range = getFullRange(editor);
@@ -190,14 +191,12 @@ function registerCommands()
             let sel = new vscode.Selection(
                 new vscode.Position(editor.selection.start.line, 0),
                 new vscode.Position(editor.selection.end.line, editor.document.lineAt(editor.selection.end.line).range.end.character)
-            );
+            );           
             editor.selection = sel;
             range = sel;
             indent = tag.Parents.length + 1;
         }
-        var text = editor.document.getText(range);
-        var tag = getCurrentTag(editor.document, editor.selection.start);
-
+        let text = editor.document.getText(range);
         // тут можно потом добавить язык, например, из tag.Language
         var res = XML.format(text, "XML", "\t", indent);
         if (!res || res.Errors.length) return;
