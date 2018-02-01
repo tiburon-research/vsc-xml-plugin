@@ -520,37 +520,50 @@ export class TagInfo
 {
     constructor(text: string, offset: number = 0)
     {
-        var mt = text.match(/(?:(\n|^))[\t ]*<(\w+)/);
+        var mt = text.match(/(\n|^)[\t ]*<(\w+)/);
         if (!!mt)
         {
             this.Name = mt[2];
+            let lineFrom = text.indexOf(mt[0]) + mt[1].length;
+            let lineTo = text.length;
             this.Language = TagInfo.getTagLanguage(this.Name);
-            this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + _AllowCodeTags + "$"));
             let from = text.indexOf("<" + this.Name);
             let to = text.indexOf(">", from) + 1;
+            // выделяем AllowCode fake
+            this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !text.substr(to).match(/^([\s\n]*)*<\w/g);
+            if (this.Language == Language.CSharp && !this.IsAllowCodeTag) this.Language = Language.XML;
             this.OpenTag = { From: from, To: to };
-            var before = text.substr(0, this.OpenTag.From + 1);
+            let before = text.substr(0, this.OpenTag.From + 1);
+            let newLine = text.indexOf("\n", to - 1);
+            this.Multiline = newLine > -1;
+            let openTag = text.slice(from, to);
+            this.SelfClosed = !!openTag.match(/\/>$/);
             var clt = XML.findCloseTag("<", this.Name, ">", before, text);
-            if (clt)
+            if (!this.SelfClosed && clt)
             {
                 this.CloseTag = { From: clt.From, To: clt.To + 1 };
                 this.Closed = true;
                 this.Body = { From: to, To: clt.From };
+                let after = text.indexOf("\n", this.CloseTag.To - 1);
+                if (after > -1) lineTo = after;
+                this.Multiline = this.Multiline && newLine < clt.To - 1;
             }
             else
             {
-                let openTag = text.slice(from, to);
-                this.SelfClosed = !!openTag.match(/\/>$/);
-                this.Body = { From: to, To: this.SelfClosed ? to : text.length };
+                this.Body = { From: to, To: (this.SelfClosed ? to : text.length) };
                 this.Closed = this.SelfClosed;
                 this.CloseTag = { From: this.Body.To, To: this.Body.To };
+                lineTo = this.Body.To;
             }
             if (offset != 0)
             {
+                lineTo += offset;
+                lineFrom += offset;
                 this.OpenTag = { From: this.OpenTag.From + offset, To: this.OpenTag.To + offset };
                 if (this.Closed) this.CloseTag = { From: this.CloseTag.From + offset, To: this.CloseTag.To + offset };
                 this.Body = { From: this.Body.From + offset, To: this.Body.To + offset };
             }
+            this.FullLines = { From: lineFrom, To: lineTo };
             this.Found = true;
         }
     }
@@ -559,26 +572,26 @@ export class TagInfo
     public static getTagLanguage(tagName: string): Language
     {
         var res = Language.XML;
-    
+
         if (tagName.match(new RegExp("^(" + _AllowCodeTags + ")$"))) return Language.CSharp;
-    
+
         switch (tagName.toLocaleLowerCase())
         {
             case "script":
                 res = Language.JS;
                 break;
-    
+
             case "style":
                 res = Language.CSS;
                 break;
-    
+
             case "text":
             case "header":
             case "holder":
             case "value":
                 res = Language.PlainTetx;
                 break;
-    
+
             default:
                 res = Language.XML;
                 break;
@@ -595,4 +608,6 @@ export class TagInfo
     public Closed: boolean;
     public SelfClosed: boolean = false;
     public Language: Language;
+    public FullLines: TextRange;
+    public Multiline: boolean;
 }

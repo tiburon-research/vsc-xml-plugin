@@ -23,8 +23,8 @@ function LanguageFunction(language: Language)
 
     switch (language)
     {
-        case Language.XML:
-            func = formatXML;
+        case Language.PlainTetx:
+            func = formatPlainText;
             break;
 
         case Language.JS:
@@ -38,123 +38,99 @@ function LanguageFunction(language: Language)
         case Language.CSharp:
             func = formatCSharp;
             break;
+
+        default:
+            func = formatXML;
+            break;
     }
 
     return func;
 }
 
+
+/*
+    XML форматируем сами, CSS и JS с помощью beautify, C# пока никак
+    для beautify: т.к. у нас везде бывает [c#], то добавляем костыли:
+        - перед форматированием присваиваем (прям в тексте) всем c# вставкам свой Id
+        - сохраняем их в первозданном виде в коллекцию согласно Id
+        - форматируем всё
+        - возвращаем c# вставки по Id
+*/
 export function format(text: string, language: Language, tab: string = "\t", indent: number = 0): FormatResult
 {
-
     return LanguageFunction(language)(text, tab, indent);
 }
 
 
 function formatXML(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
-    /*
-        XML форматируем сами, CSS и JS с помощью beautify, C# пока никак
-        для beautify: т.к. у нас везде бывает [c#], то добавляем костыли:
-            - перед форматированием присваиваем (прям в тексте) всем c# вставкам свой Id
-            - сохраняем их в первозданном виде в коллекцию согласно Id
-            - форматируем всё
-            - возвращаем c# вставки по Id
-    */
     var res = new FormatResult();
     res.Result = text;
-    var newText = text;
 
-    // удаляем лишнее и заменяем некрасивое на красивое
-    newText = newText.replace(/(\n|^)[\t ]+<([\w\/])/g, '$1<$2'); // убираем все отступы перед тегами
-    newText = newText.replace("  ", " "); // двойные пробелы
-    var reg = new RegExp("(<((?!(" + _AllowCodeTags + "))(\\w+))([^>]*)>)[\t ]+", "g"); // отступы после тегов (кроме тех, которые после AllowCodeTags)
-    newText = newText.replace(reg, "$1");
+    let ind = tab.repeat(indent);
 
-    // форматирование
-    newText = formatXMLblock(newText, tab, indent);
+    let oldText = text;
+    let tags = get1LevelNodes(oldText);
+    let newText = oldText;
+
+    // если внутри тегов нет, то возвращаем внутренность с отступом?
+    if (tags.length == 0) newText = formatPlainText(oldText, tab, indent).Result;
+    else
+    {
+        // если теги есть, то рекурсивно форматируем внутренности каждого, убрав отступ перед тегом
+        tags.forEach(tag =>
+        {
+            let body = oldText.slice(tag.Body.From, tag.Body.To);
+            let formattedBody = body;
+            let openTag = oldText.slice(tag.OpenTag.From, tag.OpenTag.To);
+            let closeTag = tag.Closed ? oldText.slice(tag.CloseTag.From, tag.CloseTag.To) : "";
+            let oldFull = oldText.slice(tag.FullLines.From, tag.FullLines.To); // то, что надо заменить на новое
+            let newFul;
+            if (tag.Multiline) formattedBody = formatBody(formattedBody, tab, indent + 1, tag.Language);
+            // отступ для AllowCode fake
+            if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
+                formattedBody = " " + formattedBody;
+            if (tag.Closed && !tag.SelfClosed) closeTag = (tag.Multiline ? ind : "") + closeTag;
+            // формируем результат
+            newFul = ind + openTag + formattedBody + closeTag;
+            newText = newText.replace(oldFull, newFul);
+        });
+    }
+
+    // форматируем между тегами?
 
     res.Result = newText;
     return res;
 }
 
 
-// рекурсивное форматирование блоков
-function formatXMLblock(text: string, tab: string = "\t", indent: number = 0): string
-{
-    var res = "";
-    var ind = tab.repeat(indent);
-
-    var oldText = text;
-    var tags = get1LevelNodes(oldText);
-
-    // если внутри тегов нет, то возвращаем внутренность с отступом?
-    if (tags.length == 0) return formatText(oldText, ind);
-
-    var newText = oldText;
-
-    tags.forEach(tag =>
-    {
-        let body = oldText.slice(tag.Body.From, tag.Body.To);
-        // если теги есть, то рекурсивно форматируем внутренности каждого
-        // если это не C# или если он в одну строку
-        let formattedBody = body;
-        let openTag = oldText.slice(tag.OpenTag.From, tag.OpenTag.To);
-        let closeTag = oldText.slice(tag.CloseTag.From, tag.CloseTag.To);
-        let oldFull = oldText.slice(tag.OpenTag.From, tag.CloseTag.To); // это, что надо заменить на новое
-        if (!tag.IsAllowCodeTag || body.indexOf("\n") == -1)
-        {
-
-            // форматируем только если есть несколько строк, иначе просто добавляем отступ
-            var newFul;
-            if (body.indexOf("\n") > -1)
-            {
-                switch (tag.Language)
-                {
-                    // для XML просто форматируем как блок
-                    case Language.XML:
-                        formattedBody = formatXMLblock(body, tab, indent + 1);
-                        break;
-                    // для остальных форматируем согласно языку
-                    default:
-                        formattedBody = formatLanguageBody(body, tab, indent + 1, LanguageFunction(tag.Language));
-                        break;
-                }
-            }
-        }
-        if (tag.Closed && !tag.SelfClosed) closeTag = ind + closeTag;
-        // формируем результат
-        newFul = ind + openTag + formattedBody + closeTag;
-        newText = newText.replace(oldFull, newFul);
-    });
-
-    // форматируем между тегами?
-
-    return newText;
-}
-
-
-function formatLanguageBody(text: string, tab: string, indent: number = 0, langFunc): string
+function formatBody(text: string, tab: string, indent: number = 0, lang: Language): string
 {
     var cs = getEmbeddedCS(text);
-    var del = getReplaceDelimiter(text);
-    var newText = encodeCS(text, cs, del);
+    var del;
+    var newText = text;
+    if (cs.Keys.length > 0)
+    {
+        del = getReplaceDelimiter(text);
+        newText = encodeCS(newText, cs, del);
+    }
     var ind = tab.repeat(indent);
-    newText = newText.replace(/(\n|^)[\t ]/g, '$1');
-    newText = langFunc(newText, tab, indent);
-    newText = "\n" + formatText(newText, ind) + "\n";
-    newText = getCSBack(newText, cs, del);
+    newText = newText.replace(/(\n|^)[\t ]+$/g, '$1');
+    newText = LanguageFunction(lang)(newText, tab, indent).Result;
+    if (cs.Keys.length > 0) newText = getCSBack(newText, cs, del);
     return newText;
 }
 
 
-// создаём минимальный отступ
-function formatText(text: string, ind: string): string
+function formatPlainText(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
-    ind = ind || "\t";
-    var tab = ind[0];
-    var mt = text.match(new RegExp("(\n|^)[\t ]*\\S", "g"));
+    // убираем дублирование
+    let res = text;
+    if (tab != " ") text.replace("  ", " ");
+    res = text.replace("\n\n", "\n");
+    // отступаем
+    var mt = text.match(/(\n|^)[\t ]*\S/g);
     var newInd = "";
-
     if (mt && mt.length > 0)
     {
         // находим минимальный существующий отступ;
@@ -165,15 +141,17 @@ function formatText(text: string, ind: string): string
             if (reg && reg[2] !== null && (reg[2].length < min || min == -1)) min = reg[2].length;
         }
         // сдвигаем на разницу
-        var d = ind.length - min;
+        var d = indent - min;
         if (d > 0) newInd = tab.repeat(d);
     }
     // двигаем только непустые строки
-    return text.replace(/(\n|^)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
+    res = res.replace(/(\n|^)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
+
+    return { Result: res, Errors: [] };
 }
 
 
-function formatCSS(text: string, tab: string = "\t", indent: number = 0): string
+function formatCSS(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
     var newText = text;
     newText = beautify.css(newText,
@@ -183,11 +161,12 @@ function formatCSS(text: string, tab: string = "\t", indent: number = 0): string
             indent_with_tabs: tab == "\t",
             indent_level: indent
         });
-    return newText;
+    newText = "\n" + newText + "\n";
+    return { Result: newText, Errors: [] };
 }
 
 
-function formatJS(text: string, tab: string = "\t", indent: number = 0): string
+function formatJS(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
     var newText = text;
     newText = beautify.js(newText,
@@ -197,13 +176,14 @@ function formatJS(text: string, tab: string = "\t", indent: number = 0): string
             indent_with_tabs: tab == "\t",
             indent_level: indent
         });
-    return newText;
+    newText = "\n" + newText + "\n";
+    return { Result: newText, Errors: [] };
 }
 
 
 function formatCSharp(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
-    return null;
+    return formatPlainText(text, tab, indent);
 }
 
 
