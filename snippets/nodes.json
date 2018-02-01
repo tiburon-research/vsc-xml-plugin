@@ -49,10 +49,10 @@
     "RedirectCode":{
         "prefix": "<Redirect",
         "body": [
-            "<Redirect>",
+            "<Redirect><![CDATA[",
             "\t$0",
             "\treturn false;",
-            "</Redirect>"
+            "]]></Redirect>"
         ],
         "description": "Структура Redirect"
     },
