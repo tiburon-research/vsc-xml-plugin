@@ -178,12 +178,13 @@ function registerCommands()
 
         let range;
         let indent;
-        let tag = getCurrentTag(editor.document, editor.selection.start);
+        let tag;
         // либо весь документ
         if (editor.selection.start.isEqual(editor.selection.end))
         {
             range = getFullRange(editor);
             indent = 0;
+            tag = getCurrentTag(editor.document, editor.selection.start);
         }
         else
         {
@@ -194,12 +195,13 @@ function registerCommands()
             );           
             editor.selection = sel;
             range = sel;
+            tag = getCurrentTag(editor.document, sel.start);
             indent = tag.Parents.length + 1;
         }
         let text = editor.document.getText(range);
         // тут можно потом добавить язык, например, из tag.Language
         let res = XML.format(text, Language.XML, "\t", indent);
-        if (!res || res.Errors.length) return;
+        if (!res || res.Errors.length) return console.log(res.Errors);
 
         inProcess = true;
 
