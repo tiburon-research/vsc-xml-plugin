@@ -8,6 +8,11 @@ import * as XML from './documentFunctions'
 
 export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)"; // XML теги, которые могут содержать c#
 
+export function logString(a)
+{
+    console.log("'" + a + "'");
+}
+
 export enum Language { XML, CSharp, CSS, JS, PlainTetx };
 
 export class KeyedCollection<T>
