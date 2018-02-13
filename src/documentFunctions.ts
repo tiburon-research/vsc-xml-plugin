@@ -1,6 +1,6 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language } from "./classes";
+import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString } from "./classes";
 import * as beautify from 'js-beautify';
 
 // форматирование, проверка и другие операции с текстом документа
@@ -58,7 +58,14 @@ function LanguageFunction(language: Language)
 */
 export function format(text: string, language: Language, tab: string = "\t", indent: number = 0): FormatResult
 {
-    return LanguageFunction(language)(text, tab, indent);
+    // пока не будет работать стабильно проверяем целостность текста
+    var hash = text.replace(/\s+/g, '');
+    var res: FormatResult = LanguageFunction(language)(text, tab, indent);
+    if (res.Result.replace(/\s+/g, '') != hash)
+    {
+        res.Errors.push("Результат форматирования не прошёл проверку на целостность текста");
+    }
+    return res;
 }
 
 
@@ -86,7 +93,13 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
             let closeTag = tag.Closed ? oldText.slice(tag.CloseTag.From, tag.CloseTag.To) : "";
             let oldFull = oldText.slice(tag.FullLines.From, tag.FullLines.To); // то, что надо заменить на новое
             let newFul;
-            if (tag.Multiline) formattedBody = formatBody(formattedBody, tab, indent + 1, tag.Language);
+            if (tag.Multiline)
+            {
+                // убираем лишние пробелы/переносы
+                formattedBody = formattedBody.replace(/^[\s]*([\s\S]*?)[\s]*$/, "$1");
+                formattedBody = formatBody(formattedBody, tab, indent + 1, tag.Language);
+                formattedBody = "\n" + formattedBody + "\n";
+            }
             // отступ для AllowCode fake
             if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
                 formattedBody = " " + formattedBody;
@@ -127,7 +140,7 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0): 
     // убираем дублирование
     let res = text;
     if (tab != " ") text.replace("  ", " ");
-    res = text.replace("\n\n", "\n");
+    res = text.replace("\n\n\n", "\n\n"); // двойной перенос, всё-таки, иногда отделяет что-то посмыслу, а вот x3 уже перебор
     // отступаем
     var mt = text.match(/(\n|^)[\t ]*\S/g);
     var newInd = "";
@@ -137,15 +150,15 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0): 
         var min = -1;
         for (let i = 0; i < mt.length; i++)
         {
-            let reg = mt[i].match(/(\n|^)([\t ]*)\S/);
+            let reg = mt[i].match(/(\n)([\t ]*)\S/);
             if (reg && reg[2] !== null && (reg[2].length < min || min == -1)) min = reg[2].length;
         }
         // сдвигаем на разницу
         var d = indent - min;
         if (d > 0) newInd = tab.repeat(d);
     }
-    // двигаем только непустые строки
-    res = res.replace(/(\n|^)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
+    // двигаем только непустые строки и первую
+    res = tab.repeat(indent) + res.replace(/(\n)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
 
     return { Result: res, Errors: [] };
 }
