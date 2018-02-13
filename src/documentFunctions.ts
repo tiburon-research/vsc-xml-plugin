@@ -119,18 +119,26 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
 
 function formatBody(text: string, tab: string, indent: number = 0, lang: Language): string
 {
-    var cs = getEmbeddedCS(text);
+    logString(text);
+    var cs: KeyedCollection<string>;
     var del;
     var newText = text;
-    if (cs.Keys.length > 0)
+    var rm = false;
+    if (lang != Language.CSharp && lang != Language.XML)
     {
-        del = getReplaceDelimiter(text);
-        newText = encodeCS(newText, cs, del);
+        cs = getEmbeddedCS(text)
+        if (cs.Count() > 0)
+        {
+            del = getReplaceDelimiter(text);
+            newText = encodeCS(newText, cs, del);
+            rm = true;
+        }
     }
     var ind = tab.repeat(indent);
     newText = newText.replace(/(\n|^)[\t ]+$/g, '$1');
     newText = LanguageFunction(lang)(newText, tab, indent).Result;
-    if (cs.Keys.length > 0) newText = getCSBack(newText, cs, del);
+    if (rm) newText = getCSBack(newText, cs, del);
+    logString(newText);
     return newText;
 }
 
@@ -174,7 +182,8 @@ function formatCSS(text: string, tab: string = "\t", indent: number = 0): Format
             indent_with_tabs: tab == "\t",
             indent_level: indent
         });
-    newText = "\n" + newText + "\n";
+    var ind = tab.repeat(indent);
+    newText = ind + newText.replace(/\n/g, "\n" + ind);
     return { Result: newText, Errors: [] };
 }
 
@@ -189,7 +198,8 @@ function formatJS(text: string, tab: string = "\t", indent: number = 0): FormatR
             indent_with_tabs: tab == "\t",
             indent_level: indent
         });
-    newText = "\n" + newText + "\n";
+    var ind = tab.repeat(indent);
+    newText = ind + newText.replace(/\n/g, "\n" + ind);
     return { Result: newText, Errors: [] };
 }
 
