@@ -93,17 +93,22 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
             let closeTag = tag.Closed ? oldText.slice(tag.CloseTag.From, tag.CloseTag.To) : "";
             let oldFull = oldText.slice(tag.FullLines.From, tag.FullLines.To); // то, что надо заменить на новое
             let newFul;
-            if (tag.Multiline)
+            // если внутри что-то есть
+            if (!body.match(/^\s*$/))
             {
-                // убираем лишние пробелы/переносы
-                formattedBody = formattedBody.replace(/^[\s]*([\s\S]*?)[\s]*$/, "$1");
-                formattedBody = formatBody(formattedBody, tab, indent + 1, tag.Language);
-                formattedBody = "\n" + formattedBody + "\n";
+                if (tag.Multiline)
+                {
+                    // убираем лишние пробелы/переносы
+                    formattedBody = formattedBody.replace(/^[\s]*([\s\S]*?)[\s]*$/, "$1");
+                    formattedBody = formatBody(formattedBody, tab, indent + 1, tag.Language);
+                    formattedBody = "\n" + formattedBody + "\n";
+                }
+                // отступ для AllowCode fake
+                if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
+                    formattedBody = " " + formattedBody;
+                if (tag.Closed && !tag.SelfClosed) closeTag = (tag.Multiline ? ind : "") + closeTag;
             }
-            // отступ для AllowCode fake
-            if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
-                formattedBody = " " + formattedBody;
-            if (tag.Closed && !tag.SelfClosed) closeTag = (tag.Multiline ? ind : "") + closeTag;
+            else formattedBody = "";
             // формируем результат
             newFul = ind + openTag + formattedBody + closeTag;
             newText = newText.replace(oldFull, newFul);
@@ -119,7 +124,6 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
 
 function formatBody(text: string, tab: string, indent: number = 0, lang: Language): string
 {
-    logString(text);
     var cs: KeyedCollection<string>;
     var del;
     var newText = text;
@@ -138,7 +142,6 @@ function formatBody(text: string, tab: string, indent: number = 0, lang: Languag
     newText = newText.replace(/(\n|^)[\t ]+$/g, '$1');
     newText = LanguageFunction(lang)(newText, tab, indent).Result;
     if (rm) newText = getCSBack(newText, cs, del);
-    logString(newText);
     return newText;
 }
 
