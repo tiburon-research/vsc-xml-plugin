@@ -64,6 +64,7 @@ export function format(text: string, language: Language, tab: string = "\t", ind
     if (res.Result.replace(/\s+/g, '') != hash)
     {
         res.Errors.push("Результат форматирования не прошёл проверку на целостность текста");
+        logError(text);
     }
     return res;
 }
@@ -386,4 +387,12 @@ function getReplaceDelimiter(text: string, length: number = 5): string
 function safeString(text: string): string
 {
     return text.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
+}
+
+
+function logError(text: string)
+{
+    console.log("______________ E R R O R ______________");
+    logString(text);
+    console.log("____________________________");
 }
