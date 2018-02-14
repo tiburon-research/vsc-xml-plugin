@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <script src="http://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    </head>
+
+    <body>
+        <input id="get" type="button" value="Собрать инфу!">
+        <div id="process">ожидание</div>
+        <textarea id="res" style="width: 100%; height: 300px;"></textarea>
+        <div id="tmp" style="display: none">
+            <!-- сюда вставлять табличку с MSDN целиком -->
+           
+        </div>
+    </body>
+
+    <script>
+        let $res = $('#res');
+        let $proc = $('#process');
+        let $table = $('#tmp table');
+
+        function getMSDNStaticMethods(table)
+        {
+            let $trs = table.find('img[title*="static"]').closest('tr');
+            let res = [];
+            $trs.each(function(i, e)
+            {
+                let $el = $(e);
+                let docFull = $el.find('td:nth-child(2)').text();
+                let obj = {
+                    Name: docFull.match(/^\w+/)[0],
+                    Description: $el.find('td:nth-child(3)').text(),
+                    Documentation: docFull
+                };
+                res.push(obj);
+            });
+            return res;
+        }
+
+        $('#get').on('click', function()
+        {
+            var res = getMSDNStaticMethods($table);
+            $res.val(JSON.stringify(res)).select().focus();
+        });
+
+    </script>
+
+</html>
