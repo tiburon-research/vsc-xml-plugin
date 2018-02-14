@@ -549,6 +549,7 @@ export class TagInfo
                 this.CloseTag = { From: clt.From, To: clt.To + 1 };
                 this.Closed = true;
                 this.Body = { From: to, To: clt.From };
+                this.HasCDATA = text.indexOf("<![CDATA[", this.Body.From) <= this.Body.To;
                 let after = text.indexOf("\n", this.CloseTag.To - 1);
                 if (after > -1) lineTo = after;
                 this.Multiline = this.Multiline && newLine < clt.To - 1;
@@ -615,4 +616,5 @@ export class TagInfo
     public Language: Language;
     public FullLines: TextRange;
     public Multiline: boolean;
+    public HasCDATA: boolean; // если всё содержимое обёрнуто
 }

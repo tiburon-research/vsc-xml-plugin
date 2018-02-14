@@ -101,8 +101,15 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
                 {
                     // убираем лишние пробелы/переносы
                     formattedBody = formattedBody.replace(/^[\s]*([\s\S]*?)[\s]*$/, "$1");
-                    formattedBody = formatBody(formattedBody, tab, indent + 1, tag.Language);
+                    formattedBody = formatBody(formattedBody, tab, indent + (tag.HasCDATA ? 2 : 1), tag.Language);
                     formattedBody = "\n" + formattedBody + "\n";
+                    // форматируем CDATA
+                    if (tag.HasCDATA)
+                    {
+                        formattedBody = formattedBody.replace(/\n\s*<!\[CDATA\[/, "\n" + ind + tab + "<![CDATA[");
+                        formattedBody = formattedBody.replace(/\n\s*\]\]>/, "\n" + ind + tab + "]]>");
+                        formattedBody = formattedBody.replace(/([^\n]+)\s*\]\]>/, "$1\n" + ind + tab + "]]>");
+                    }
                 }
                 // отступ для AllowCode fake
                 if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
