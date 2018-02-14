@@ -39,6 +39,26 @@
         ],
         "description": "Структура List"
     },
+    "MonthList":{
+        "prefix": "_monthList",
+        "body": [
+            "<List Id=\"monthList\">",
+            "\t<Item Id=\"1\"><Text>Январь</Text></Item>",
+            "\t<Item Id=\"2\"><Text>Февраль</Text></Item>",
+            "\t<Item Id=\"3\"><Text>Март</Text></Item>",
+            "\t<Item Id=\"4\"><Text>Апрель</Text></Item>",
+            "\t<Item Id=\"5\"><Text>Май</Text></Item>",
+            "\t<Item Id=\"6\"><Text>Июнь</Text></Item>",
+            "\t<Item Id=\"7\"><Text>Июль</Text></Item>",
+            "\t<Item Id=\"8\"><Text>Август</Text></Item>",
+            "\t<Item Id=\"9\"><Text>Сентябрь</Text></Item>",
+            "\t<Item Id=\"10\"><Text>Октябрь</Text></Item>",
+            "\t<Item Id=\"11\"><Text>Ноябрь</Text></Item>",
+            "\t<Item Id=\"12\"><Text>Декабрь</Text></Item>",
+            "</List>"
+        ],
+        "description": "Список месяцев"
+    },
     "ResetAnswer":{
         "prefix": "_reset",
         "body":[

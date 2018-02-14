@@ -42,6 +42,12 @@ var ManualCode = [
         Parent: "InterviewPars"
     },
     {
+        Name: "Host",
+        Kind: "Property",
+        Detail: "string",
+        Parent: "InterviewPars"
+    },
+    {
         Name: "PageId",
         Kind: "Property",
         Parent: "InterviewPars\\.GetInstance\\(\\)"
@@ -1331,11 +1337,6 @@ export const Attributes = {
             "Type": "Boolean"
         },
         {
-            "Name": "CountPageTime",
-            "Default": "true",
-            "Type": "Boolean"
-        },
-        {
             "Name": "ShowSupport",
             "Default": "true",
             "Type": "Boolean"
@@ -1397,7 +1398,8 @@ export const Attributes = {
         {
             "Name": "SyncId",
             "AllowCode": "true",
-            "Type": "String"
+            "Type": "String",
+            Auto: "@ID"
         },
         {
             "Name": "Header",
@@ -1476,6 +1478,10 @@ export const Attributes = {
             "AllowCode": "true",
             "Type": "String"
         },
+        {
+            Name: "Var",
+            Type: "String"
+        }
     ],
     "List": [
         {
@@ -1506,7 +1512,8 @@ export const Attributes = {
         {
             "Name": "SyncId",
             "AllowCode": "true",
-            "Type": "String"
+            "Type": "String",
+            Auto: "@ID"
         },
         {
             "Name": "Text",
@@ -1646,7 +1653,8 @@ export const Attributes = {
         {
             "Name": "SyncId",
             "AllowCode": "true",
-            "Type": "String"
+            "Type": "String",
+            Auto: "@ID"
         },
         {
             "Name": "Text",
@@ -1893,7 +1901,8 @@ export const Attributes = {
         {
             "Name": "SyncId",
             "AllowCode": "true",
-            "Type": "String"
+            "Type": "String",
+            Auto: "@ID"
         },
         {
             "Name": "MixId",
@@ -2145,7 +2154,7 @@ export const Attributes = {
         {
             "Name": "Operator",
             "Default": "Exists",
-            "Values": ["Exists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
+            "Values": ["Exists", "NotExists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
         },
         {
             Name: "Value"
@@ -2160,7 +2169,7 @@ export const Attributes = {
         {
             "Name": "Operator",
             "Default": "Exists",
-            "Values": ["Exists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
+            "Values": ["Exists", "NotExists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
         },
         {
             Name: "Value"
@@ -2170,7 +2179,7 @@ export const Attributes = {
         {
             "Name": "Operator",
             "Default": "Exists",
-            "Values": ["Exists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
+            "Values": ["Exists", "NotExists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
         },
         {
             Name: "Value"
