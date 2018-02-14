@@ -618,3 +618,22 @@ export class TagInfo
     public Multiline: boolean;
     public HasCDATA: boolean; // если всё содержимое обёрнуто
 }
+
+
+export function logError(text: string)
+{
+    console.log("______________ E R R O R ______________");
+    logString(text);
+    console.log("____________________________");
+}
+
+
+export function positiveMin(a, b)
+{
+    if (a < 0)
+        if (b < 0) return null;
+        else return b;
+    else
+        if (b < 0) return a;
+        else return Math.min(a, b);
+}

@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin } from "./classes";
 import * as XML from './documentFunctions';
 
 // константы
@@ -201,7 +201,7 @@ function registerCommands()
         let text = editor.document.getText(range);
         // тут можно потом добавить язык, например, из tag.Language
         let res = XML.format(text, Language.XML, "\t", indent);
-        if (!res || res.Errors.length) return console.log(res.Errors);
+        if (!res || res.Errors.length) return;
 
         inProcess = true;
 
@@ -929,18 +929,6 @@ function inString(text: string): boolean
     }
     return false;
 }
-
-
-function positiveMin(a, b)
-{
-    if (a < 0)
-        if (b < 0) return null;
-        else return b;
-    else
-        if (b < 0) return a;
-        else return Math.min(a, b);
-}
-
 
 function execute(link: string)
 {

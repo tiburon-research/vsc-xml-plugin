@@ -1,7 +1,8 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString } from "./classes";
+import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, logError } from "./classes";
 import * as beautify from 'js-beautify';
+import { languages } from "vscode";
 
 // форматирование, проверка и другие операции с текстом документа
 
@@ -394,12 +395,4 @@ function getReplaceDelimiter(text: string, length: number = 5): string
 function safeString(text: string): string
 {
     return text.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
-}
-
-
-function logError(text: string)
-{
-    console.log("______________ E R R O R ______________");
-    logString(text);
-    console.log("____________________________");
 }
