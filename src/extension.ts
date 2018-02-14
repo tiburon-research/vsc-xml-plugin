@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, logError } from "./classes";
 import * as XML from './documentFunctions';
 
 // константы
@@ -14,27 +14,9 @@ const _NodeStoreNames = ["Page", "Question", "Quota", "List"]; // XML теги, 
 
 var inProcess = false; // во избежание рекурсий
 
-var TibAutoCompleteList = {
-    Functions: [],
-    Methods: [],
-    Variables: [],
-    Properties: [],
-    Enums: [],
-    EnumMembers: [],
-    Classes: []
-};
+var TibAutoCompleteList = new KeyedCollection<TibAutoCompleteItem[]>();
 
-var codeAutoCompleteArray = [];
-
-var link = {
-    Function: "Functions",
-    Method: "Methods",
-    Variable: "Variables",
-    Property: "Properties",
-    Enum: "Enums",
-    EnumMember: "EnumMembers",
-    Class: "Classes"
-};
+var codeAutoCompleteArray: TibAutoCompleteItem[] = []; // список всех для C# (все перегрузки отдельно)
 
 var ItemSnippets = {
     List: "<Item Id=\"$1\"><Text>$2</Text></Item>",
@@ -192,7 +174,7 @@ function registerCommands()
             let sel = new vscode.Selection(
                 new vscode.Position(editor.selection.start.line, 0),
                 new vscode.Position(editor.selection.end.line, editor.document.lineAt(editor.selection.end.line).range.end.character)
-            );           
+            );
             editor.selection = sel;
             range = sel;
             tag = getCurrentTag(editor.document, sel.start);
@@ -218,48 +200,51 @@ function registerCommands()
 
 function getData()
 {
-    var names = {
-        Functions: [],
-        Methods: [],
-        Variables: [],
-        Properties: [],
-        Enums: [],
-        EnumMembers: [],
-        Classes: []
-    };
+    // собираем C# Tiburon
     AutoCompleteArray.Code.forEach(element =>
     {
         var item = new TibAutoCompleteItem(element);
-        var ind = names[link[element.Kind]].indexOf(element.Name);
-        // на самом деле тут надо сравнивать родителей
-        if (ind > -1 && !item.Parent)
+        if (!item.Kind || !item.Name) return logError("Нет типа у элемента " + item.Name);
+
+        codeAutoCompleteArray.push(new TibAutoCompleteItem(element)); // сюда добавляем всё
+        // если такого типа ещё нет, то добавляем
+        if (!TibAutoCompleteList.Contains(item.Kind)) TibAutoCompleteList.AddPair(item.Kind, [item])
+        else // если есть то добавляем в массив с учётом перегрузок
         {
-            if (!TibAutoCompleteList[link[element.Kind]][ind].Overloads) TibAutoCompleteList[link[element.Kind]][ind].Overloads = [];
-            var len = len = TibAutoCompleteList[link[element.Kind]][ind].Overloads.length;
-            if (len == 0)
+            // ищем индекс элемента с таким же типом, именем и родителем
+            let ind = TibAutoCompleteList.Item(item.Kind).findIndex(x =>
             {
-                var parent = new TibAutoCompleteItem(TibAutoCompleteList[link[element.Kind]][ind]);
-                TibAutoCompleteList[link[element.Kind]][ind].Overloads.push(parent);
+                return x.Name == item.Name && (!!x.Parent && x.Parent == item.Parent || !x.Parent && !item.Parent);
+            });
+
+            if (ind < 0)
+            {
+                TibAutoCompleteList.Item(item.Kind).push(item);
             }
-            TibAutoCompleteList[link[element.Kind]][ind].Overloads.push(item);
-            var cnt = "Перегрузок: " + TibAutoCompleteList[link[element.Kind]][ind].Overloads.length;
-            TibAutoCompleteList[link[element.Kind]][ind].Description = cnt;
-            TibAutoCompleteList[link[element.Kind]][ind].Documentation = cnt;
-        }
-        else
-        {
-            TibAutoCompleteList[link[element.Kind]].push(item);
-            names[link[element.Kind]].push(element.Name);
+            else // добавляем в перегрузку к имеющемуся (и сам имеющийся тоже, если надо)
+            {
+                let len = TibAutoCompleteList.Item(item.Kind)[ind].Overloads.length;
+                if (len == 0)
+                {
+                    let parent = TibAutoCompleteList.Item(item.Kind)[ind];
+                    TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(parent);
+                    len++;
+                }
+                TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(item);
+                let doc = "Перегрузок: " + (len + 1);
+                TibAutoCompleteList.Item(item.Kind)[ind].Description = doc;
+                TibAutoCompleteList.Item(item.Kind)[ind].Documentation = doc;
+            }
         }
     });
 
-    for (var key in link)
+    /* for (var key in link)
     {
         TibAutoCompleteList[link[key]].forEach(element =>
         {
-            codeAutoCompleteArray.push(element);
+            codeAutoCompleteArray = TibAutoCompleteList.Values[0];
         });
-    }
+    } */
 }
 
 
@@ -466,7 +451,7 @@ function autoComplete()
                 if (!tag.InCSString)
                 {
                     //Functions, Variables, Enums, Classes
-                    var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Variables, TibAutoCompleteList.Enums, TibAutoCompleteList.Classes);
+                    var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Variable"), TibAutoCompleteList.Item("Enum"), TibAutoCompleteList.Item("Class"));
                     ar.forEach(element =>
                     {
                         completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
@@ -511,7 +496,7 @@ function autoComplete()
             var tag = getCurrentTag(document, position);
             if (tag.CSMode && !tag.InCSString && !tag.CSSingle)
             {
-                var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Properties.concat(TibAutoCompleteList.Methods, TibAutoCompleteList.EnumMembers);
+                var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Property").concat(TibAutoCompleteList.Item("Method"), TibAutoCompleteList.Item("EnumMember"));
                 var lastLine = getPreviousText(document, position, true);
                 var str = getCurrentLineText(document, position).substr(position.character);
                 ar.forEach(element =>
@@ -587,7 +572,7 @@ function helper()
             if (tag.CSMode)
             {
                 var lastLine = getPreviousText(document, position, true);
-                var ar = TibAutoCompleteList.Functions.concat(TibAutoCompleteList.Methods);
+                var ar = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Method"));
                 ar.forEach(element =>
                 {
                     var mtch = lastLine.match(/(?:(^)|(.*\b))([\w\d_]+)\($/);
@@ -619,26 +604,15 @@ function hoverDocs()
             if (!tag.CSMode) return;
             var range = document.getWordRangeAtPosition(position);
             var text = document.getText(range);
-            for (var i = 0; i < codeAutoCompleteArray.length; i++)
+            // надо проверить родителя!
+            let suit = codeAutoCompleteArray.filter(x =>
             {
-                var item = codeAutoCompleteArray[i] as TibAutoCompleteItem;
-                if (text == item.Name)
-                {
-                    if (item.Overloads && item.Overloads.length > 0)
-                    {
-                        item.Overloads.forEach(element =>
-                        {
-                            if (element.Documentation) res.push({ language: "csharp", value: element.Documentation });
-                            if (element.Description) res.push(element.Description);
-                        });
-                    }
-                    else
-                    {
-                        if (item.Documentation) res.push({ language: "csharp", value: item.Documentation });
-                        if (item.Description) res.push(item.Description);
-                    }
-                    break;
-                }
+                return x.Name == text;
+            });
+            for (var i = 0; i < suit.length; i++)
+            {
+                if (suit[i].Documentation) res.push({ language: "csharp", value: suit[i].Documentation });
+                else if (suit[i].Description) res.push(suit[i].Description);
             }
             var customMethods = Methods.HoverArray(text);
             if (customMethods) res = res.concat(customMethods);

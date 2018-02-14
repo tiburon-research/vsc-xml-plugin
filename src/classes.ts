@@ -115,7 +115,7 @@ export class TibAutoCompleteItem
     Description: string = "";
     Documentation: string = "";
     Parent: string = "";
-    Overloads = [];
+    Overloads: TibAutoCompleteItem[] = []; // массив перегрузок
     ParentTag: string = "";
 
     constructor(obj: Object)
