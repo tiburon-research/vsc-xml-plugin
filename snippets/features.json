@@ -242,7 +242,7 @@
         "description": "Счётчик"
     },
     "GetCell": {
-        "prefix": "_#getConceptCell",
+        "prefix": "#getConceptCell",
         "body":[
             "public string cell()",
             "{",
@@ -252,7 +252,7 @@
         "description": "Метод для получения ячейки"
     },
     "GetShape": {
-        "prefix": "_#getShape",
+        "prefix": "#getShape",
         "body":[
             "public string getShape(int shNum) ",
             "{",
