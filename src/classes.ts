@@ -129,7 +129,6 @@ export class TibAutoCompleteItem
         var kind: keyof typeof vscode.CompletionItemKind = this.Kind;
         var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind[kind]);
         if (addBracket && (this.Kind == "Function" || this.Kind == "Method")) item.insertText = new vscode.SnippetString(this.Name + "($1)");
-        if (this.Name == "GetInstance") console.log(item.insertText);
         var mds = new vscode.MarkdownString();
         if (this.Description) mds.value = this.Description;
         else mds.value = this.Documentation;
@@ -549,8 +548,7 @@ export class TagInfo
                 this.CloseTag = { From: clt.From, To: clt.To + 1 };
                 this.Closed = true;
                 this.Body = { From: to, To: clt.From };
-                let cdata = text.indexOf("<![CDATA[", this.Body.From);
-                this.HasCDATA = cdata > -1 && cdata < this.Body.To;
+                this.HasCDATA = !!text.slice(this.Body.From, this.Body.To).match(/^\s*<!\[CDATA\[/);
                 let after = text.indexOf("\n", this.CloseTag.To - 1);
                 if (after > -1) lineTo = after;
                 this.Multiline = this.Multiline && newLine < clt.To - 1;
@@ -597,7 +595,8 @@ export class TagInfo
             case "header":
             case "holder":
             case "value":
-            case "label":    
+            case "label":
+            case "var":
                 res = Language.PlainTetx;
                 break;
 
