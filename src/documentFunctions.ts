@@ -62,11 +62,11 @@ export function format(text: string, language: Language, tab: string = "\t", ind
     // пока не будет работать стабильно проверяем целостность текста
     var hash = text.replace(/\s+/g, '');
     var res: FormatResult = LanguageFunction(language)(text, tab, indent);
-    if (res.Result.replace(/\s+/g, '') != hash)
+    /*if (res.Result.replace(/\s+/g, '') != hash)
     {
         res.Errors.push("Результат форматирования не прошёл проверку на целостность текста");
-        logError(text);
-    }
+        logError(res.Result.replace(/\s+/g, ''));
+    }*/
     return res;
 }
 
@@ -86,7 +86,7 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
     if (tags.length == 0) newText = formatPlainText(oldText, tab, indent).Result;
     else
     {
-        // если теги есть, то рекурсивно форматируем внутренности каждого, убрав отступ перед тегом
+        // если теги есть, то рекурсивно форматируем внутренности каждого
         tags.forEach(tag =>
         {
             let body = oldText.slice(tag.Body.From, tag.Body.To);
@@ -94,15 +94,22 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
             let openTag = oldText.slice(tag.OpenTag.From, tag.OpenTag.To);
             let closeTag = tag.Closed ? oldText.slice(tag.CloseTag.From, tag.CloseTag.To) : "";
             let oldFull = oldText.slice(tag.FullLines.From, tag.FullLines.To); // то, что надо заменить на новое
+            if (!oldFull) return;
+            let before = oldText.slice(tag.FullLines.From, tag.OpenTag.From); // то, что идёт перед <тегом> на одной строке
+            let after = oldText.slice(tag.CloseTag.To, tag.FullLines.To); // то, что идёт после </тега> на одной строке
             let newFul;
-            // если внутри что-то есть
+            // форматируем то, что вне тега на тех же строках
+            if (!before.match(/^\s*$/)) before = before.replace(/^\s*(.*?)\s*/g, '$1\n'); else before = '';
+            if (!after.match(/^\s*$/)) after = after.replace(/^\s*(.*)\s*/g, '\n' + ind + '$1'); else after = '';
+            // если внутри что-то есть            
             if (!body.match(/^\s*$/))
             {
                 if (tag.Multiline)
                 {
                     // убираем лишние пробелы/переносы
-                    formattedBody = formattedBody.replace(/^[\s]*([\s\S]*?)[\s]*$/, "$1");
-                    formattedBody = formatBody(formattedBody, tab, indent + (tag.HasCDATA ? 2 : 1), tag.Language);
+                    if (tag.Language != Language.PlainTetx) formattedBody = formattedBody.replace(/^[\s]*([\s\S]*?)[\s]*$/, "$1");
+                    // форматируем согласно содержанию
+                    formattedBody = formatBody(formattedBody, tab, indent + (tag.HasCDATA && tag.Language == Language.XML ? 2 : 1), tag.Language);
                     formattedBody = "\n" + formattedBody + "\n";
                     // форматируем CDATA
                     if (tag.HasCDATA)
@@ -119,7 +126,7 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
             }
             else formattedBody = "";
             // формируем результат
-            newFul = ind + openTag + formattedBody + closeTag;
+            newFul = before + ind + openTag + formattedBody + closeTag + after;
             newText = newText.replace(oldFull, newFul);
         });
     }
@@ -157,30 +164,38 @@ function formatBody(text: string, tab: string, indent: number = 0, lang: Languag
 
 function formatPlainText(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
-    // убираем дублирование
     let res = text;
-    if (tab != " ") text.replace("  ", " ");
-    res = text.replace("\n\n\n", "\n\n"); // двойной перенос, всё-таки, иногда отделяет что-то посмыслу, а вот x3 уже перебор
-    // отступаем
-    var mt = text.match(/(\n|^)[\t ]*\S/g);
-    var newInd = "";
-    if (mt && mt.length > 0)
+    let ind = tab.repeat(indent);
+    let errs = [];
+    // если обёрнут в CDATA, то создаём отступ для неё и потом на 1 больше для внутренности
+    if (res.match(/^\s*<!\[CDATA\[[\s\S]*\]\]>\s*$/))
     {
-        // находим минимальный существующий отступ;
-        var min = -1;
-        for (let i = 0; i < mt.length; i++)
-        {
-            let reg = mt[i].match(/(\n)([\t ]*)\S/);
-            if (reg && reg[2] !== null && (reg[2].length < min || min == -1)) min = reg[2].length;
-        }
-        // сдвигаем на разницу
-        var d = indent - min;
-        if (d > 0) newInd = tab.repeat(d);
+        res = res.replace(/^\s*<!\[CDATA\[\s*\n*/, '');
+        res = res.replace(/\s*\]\]>\s*/, '');
+        let tmpRes = formatPlainText(res, tab, indent + 1);
+        res = ind + "<![CDATA[\n" + tmpRes.Result + "\n" + ind + "]]>";
+        errs = errs.concat(tmpRes.Errors);
     }
-    // двигаем только непустые строки и первую
-    res = tab.repeat(indent) + res.replace(/(\n)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
-
-    return { Result: res, Errors: [] };
+    else
+    {
+        // убираем дублирование
+        if (tab != " ") text.replace("  ", " ");
+        res = text.replace("\n\n\n", "\n\n"); // двойной перенос, всё-таки, иногда отделяет что-то посмыслу, а вот x3 уже перебор
+        // отступаем
+        var min = minIndent(text);
+        var newInd = "";
+        if (min > -1)
+        {
+            // сдвигаем на разницу
+            var d = indent - min;
+            if (d > 0) newInd = tab.repeat(d);
+        }
+        // custom trim
+        res = res.replace(/^\s*/, '').replace(/\s*$/, '')
+        // двигаем только непустые строки и первую
+        res = ind + res.replace(/(\n)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
+    }    
+    return { Result: res, Errors: errs };
 }
 
 
@@ -395,4 +410,17 @@ function getReplaceDelimiter(text: string, length: number = 5): string
 function safeString(text: string): string
 {
     return text.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
+}
+
+
+function minIndent(text: string): number
+{
+    let min = -1;
+    let mt = text.match(/(\n|^)[\t ]*\S/g);
+    for (let i = 0; i < mt.length; i++)
+    {
+        let reg = mt[i].match(/(\n)([\t ]*)\S/);
+        if (reg && reg[2] !== null && (reg[2].length < min || min == -1)) min = reg[2].length;
+    }
+    return min;
 }
