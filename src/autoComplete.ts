@@ -991,7 +991,8 @@ export const Attributes = {
         {
             "Name": "PrefferedDelimiter",
             "Default": "@",
-            "Type": "String"
+            "Type": "String",
+            Auto: "."
         },
         {
             "Name": "Utf8",
