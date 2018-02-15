@@ -1165,18 +1165,17 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
         callback(false);
         return;
     }
-    let scl = isScriptLanguage(langFrom);
     let multiLine = text.indexOf("\n") > -1;
-    let cStart = "<!--";
-    let cEnd = "-->";
+    let cStart = "<!-- ";
+    let cEnd = " -->";
     let sel = selection;
 
-    if (scl)
+    if (isScriptLanguage(langFrom))
     {
-        cStart = "/*";
-        cEnd = "*/";
+        cStart = "/* ";
+        cEnd = " */";
     }
-    if (multiLine) // многострочные выделяем с начала строки
+    /*if (multiLine) // многострочные выделяем с начала строки
     {
         sel = selectLines(document, sel);
         text = editor.document.getText(sel);
@@ -1187,7 +1186,7 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
     {
         cStart += " ";
         cEnd = " " + cEnd;
-    }
+    }*/
 
     let newText = cStart + text + cEnd;
 
