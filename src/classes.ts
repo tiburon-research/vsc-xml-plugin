@@ -131,9 +131,9 @@ export class TibAutoCompleteItem
         if (addBracket && (this.Kind == "Function" || this.Kind == "Method")) item.insertText = new vscode.SnippetString(this.Name + "($1)");
         var mds = new vscode.MarkdownString();
         if (this.Description) mds.value = this.Description;
-        else mds.value = this.Documentation;
+        else if (this.Documentation) mds.value = this.Documentation;
         item.documentation = mds;
-        item.detail = this.Detail;
+        if (this.Detail) item.detail = this.Detail;
         return item;
     }
 
