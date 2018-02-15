@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, logError } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, logError, isScriptLanguage, logString } from "./classes";
 import * as XML from './documentFunctions';
 
 // константы
@@ -153,6 +153,16 @@ function registerCommands()
         });
     });
 
+    // комментирование блока
+    vscode.commands.registerCommand('editor.action.blockComment', () => 
+    {
+        let editor = vscode.window.activeTextEditor;
+        // отсортированные от начала к концу выделения
+        let selections = editor.selections.sort(function (a, b) { return -editor.document.offsetAt(a.start); });
+        // для каждого выделения
+        commentAllBlocks(editor, selections);
+    });
+
     // стандартная команда для форматирования
     vscode.commands.registerCommand('editor.action.formatDocument', () => 
     {
@@ -171,10 +181,7 @@ function registerCommands()
         else
         {
             // либо выделяем строки целиком
-            let sel = new vscode.Selection(
-                new vscode.Position(editor.selection.start.line, 0),
-                new vscode.Position(editor.selection.end.line, editor.document.lineAt(editor.selection.end.line).range.end.character)
-            );
+            let sel = selectLines(editor.document, editor.selection);
             editor.selection = sel;
             range = sel;
             tag = getCurrentTag(editor.document, sel.start);
@@ -213,14 +220,15 @@ function getData()
         statCS.push(tp);
         // добавляем все его статические методы
         let items: object[] = AutoCompleteArray.StaticMethods[key];
-        items.forEach(item => {
+        items.forEach(item =>
+        {
             let aci = new TibAutoCompleteItem(item);
             aci.Parent = key;
             aci.Kind = "Method";
             statCS.push(aci);
         });
     }
-    
+
     // объединённый массив Tiburon + MSDN
     let all = tibCode.concat(statCS);
 
@@ -1000,7 +1008,7 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
     /*
         нужно сохранять причину изменений, чтобы 100 раз не переделывать туда-обратно
         
-        - в значениях атрибутов могут быть /, поэтому [^>]* не подходит
+        - в значениях атрибутов могут быть /, поэтому [^/>]* не подходит
         - ещё одна скобка в группе атрибутов всё вешает: ((\s*[\w-]+(=(("[^"]*")|('[^']*'))?)?)*)
         - при [обязательной кавычке после значения атрибута] не работает во время редактирования значения атрибута
     */
@@ -1131,4 +1139,76 @@ function getAttributes(str: string): KeyedCollection<string>
 function getFullRange(editor: vscode.TextEditor): vscode.Range
 {
     return new vscode.Range(0, 0, editor.document.lineCount - 1, editor.document.lineAt(editor.document.lineCount - 1).text.length);
+}
+
+
+// расширяет выделение до границ строк
+function selectLines(document: vscode.TextDocument, selection: vscode.Selection): vscode.Selection
+{
+    return new vscode.Selection(
+        new vscode.Position(selection.start.line, 0),
+        new vscode.Position(selection.end.line, document.lineAt(selection.end.line).range.end.character)
+    );
+}
+
+function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, callback: Function): void
+{
+    let document = editor.document;
+    let text = document.getText(selection);
+    let tagFrom = getCurrentTag(document, selection.start);
+    let tagTo = getCurrentTag(document, selection.end);
+    let langFrom = tagFrom.getLaguage();
+    let langTo = tagTo.getLaguage();
+    if (langFrom != langTo)
+    {
+        logError("Начало и конец выделенного фрагмента лежат в разных языковых областях");
+        callback(false);
+        return;
+    }
+    let scl = isScriptLanguage(langFrom);
+    let multiLine = text.indexOf("\n") > -1;
+    let cStart = "<!--";
+    let cEnd = "-->";
+    let sel = selection;
+
+    if (scl)
+    {
+        cStart = "/*";
+        cEnd = "*/";
+    }
+    if (multiLine) // многострочные выделяем с начала строки
+    {
+        sel = selectLines(document, sel);
+        text = editor.document.getText(sel);
+        cStart += "\n";
+        cEnd = "\n" + cEnd;
+    }
+    else
+    {
+        cStart += " ";
+        cEnd = " " + cEnd;
+    }
+
+    let newText = cStart + text + cEnd;
+
+    inProcess = true;
+    editor.edit((editBuilder) =>
+    {
+        editBuilder.replace(sel, newText);
+    }, { undoStopAfter: false, undoStopBefore: false}).then(() =>
+    {
+        inProcess = false;
+        callback(true);
+    });
+}
+
+
+function commentAllBlocks(editor: vscode.TextEditor, selections: vscode.Selection[]): void
+{
+    // рекурсивный вызов с уменьшением массива выделений
+    commentBlock(editor, selections.pop(), function (res)
+    {
+        if (!res || selections.length == 0) return;
+        commentAllBlocks(editor, selections);
+    });
 }

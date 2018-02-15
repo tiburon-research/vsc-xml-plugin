@@ -15,6 +15,11 @@ export function logString(a)
 
 export enum Language { XML, CSharp, CSS, JS, PlainTetx };
 
+export function isScriptLanguage(lang: Language): boolean
+{
+    return lang == Language.CSharp || lang == Language.JS || lang == Language.CSS;
+}
+
 export class KeyedCollection<T>
 {
     protected items: { [index: string]: T } = {};
@@ -342,6 +347,12 @@ export class CurrentTag
             });
         }
         return res;
+    }
+
+    getLaguage(): Language
+    {
+        if (this.CSMode) return Language.CSharp; // так быстрее
+        return TagInfo.getTagLanguage(this.Name);
     }
 }
 
