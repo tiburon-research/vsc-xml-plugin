@@ -200,11 +200,34 @@ function registerCommands()
 
 function getData()
 {
-    // собираем C# Tiburon
-    AutoCompleteArray.Code.forEach(element =>
+    let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });
+    let statCS: TibAutoCompleteItem[] = [];
+    for (let key in AutoCompleteArray.StaticMethods)
     {
-        var item = new TibAutoCompleteItem(element);
-        if (!item.Kind || !item.Name) return logError("Нет типа у элемента " + item.Name);
+        // добавляем сам тип в AutoComplete
+        let tp = new TibAutoCompleteItem({
+            Name: key,
+            Kind: "Class",
+            Detail: "Тип данных/класс " + key
+        });
+        statCS.push(tp);
+        // добавляем все его статические методы
+        let items: object[] = AutoCompleteArray.StaticMethods[key];
+        items.forEach(item => {
+            let aci = new TibAutoCompleteItem(item);
+            aci.Parent = key;
+            aci.Kind = "Method";
+            statCS.push(aci);
+        });
+    }
+    
+    // объединённый массив Tiburon + MSDN
+    let all = tibCode.concat(statCS);
+
+    all.forEach(element =>
+    {
+        let item = new TibAutoCompleteItem(element);
+        if (!item.Kind || !item.Name) return;
 
         codeAutoCompleteArray.push(new TibAutoCompleteItem(element)); // сюда добавляем всё
         // если такого типа ещё нет, то добавляем
@@ -237,14 +260,6 @@ function getData()
             }
         }
     });
-
-    /* for (var key in link)
-    {
-        TibAutoCompleteList[link[key]].forEach(element =>
-        {
-            codeAutoCompleteArray = TibAutoCompleteList.Values[0];
-        });
-    } */
 }
 
 
@@ -433,7 +448,7 @@ function autoComplete()
         }
     }, " ");
 
-    //Functions, Variables, Enums, Classes, Custom Methods, C# Snippets
+    //Functions, Variables, Enums, Classes, Custom Methods, C# Snippets, Types
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
@@ -451,10 +466,10 @@ function autoComplete()
                 if (!tag.InCSString)
                 {
                     //Functions, Variables, Enums, Classes
-                    var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Variable"), TibAutoCompleteList.Item("Enum"), TibAutoCompleteList.Item("Class"));
+                    var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Variable"), TibAutoCompleteList.Item("Enum"), TibAutoCompleteList.Item("Class"), TibAutoCompleteList.Item("Type"), TibAutoCompleteList.Item("Struct"));
                     ar.forEach(element =>
                     {
-                        completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
+                        if (element) completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
                     });
                     //C# Snippets
                     AutoCompleteArray.CSSnippets.forEach(element =>
@@ -611,8 +626,16 @@ function hoverDocs()
             });
             for (var i = 0; i < suit.length; i++)
             {
-                if (suit[i].Documentation) res.push({ language: "csharp", value: suit[i].Documentation });
-                else if (suit[i].Description) res.push(suit[i].Description);
+                if (suit[i].Documentation && suit[i].Description)
+                {
+                    let doc = "/* " + suit[i].Description + " */\n" + suit[i].Documentation;
+                    res.push({ language: "csharp", value: doc });
+                }
+                else
+                {
+                    if (suit[i].Documentation) res.push({ language: "csharp", value: suit[i].Documentation });
+                    if (suit[i].Description) res.push(suit[i].Description);
+                }
             }
             var customMethods = Methods.HoverArray(text);
             if (customMethods) res = res.concat(customMethods);
