@@ -358,8 +358,8 @@ function autoComplete()
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
-            var completionItems = [];
-            var tag = getCurrentTag(document, position);
+            let completionItems = [];
+            let tag = getCurrentTag(document, position);
             if (tag && !tag.CSMode)
             {
                 //Item
@@ -429,18 +429,17 @@ function autoComplete()
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
-            var completionItems = [];
-            var tag = getCurrentTag(document, position);
-            var curLine = getPreviousText(document, position, true);
+            let completionItems = [];
+            let tag = getCurrentTag(document, position);
             if (tag && !tag.CSMode && !tag.Closed && AutoCompleteArray.Attributes[tag.Id] && !tag.InString)
             {
-                var existAttrs = tag.attributeNames();
+                let existAttrs = tag.attributeNames();
                 AutoCompleteArray.Attributes[tag.Id].forEach(element =>
                 {
                     if (existAttrs.indexOf(element.Name) < 0)
                     {
-                        var attr = new TibAttribute(element);
-                        var ci = attr.ToCompletionItem(function (query)
+                        let attr = new TibAttribute(element);
+                        let ci = attr.ToCompletionItem(function (query)
                         {
                             return safeValsEval(query);
                         });
@@ -460,21 +459,21 @@ function autoComplete()
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
-            var completionItems = [];
-            var tag = getCurrentTag(document, position);
+            let completionItems = [];
+            let tag = getCurrentTag(document, position);
             if (!tag.CSMode) return;
 
-            var curLine = getPreviousText(document, position, true);
-            var customMethods = Methods.CompletionArray();
+            let curLine = getPreviousText(document, position, true);
+            let customMethods = Methods.CompletionArray();
 
             if (customMethods && !tag.InCSString) completionItems = completionItems.concat(customMethods); //Custom Methods
-            var str = getCurrentLineText(document, position).substr(position.character);
+            let str = getCurrentLineText(document, position).substr(position.character);
             if (!tag.CSSingle && !curLine.match(/\w+\.\w*$/))
             {
                 if (!tag.InCSString)
                 {
                     //Functions, Variables, Enums, Classes
-                    var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Variable"), TibAutoCompleteList.Item("Enum"), TibAutoCompleteList.Item("Class"), TibAutoCompleteList.Item("Type"), TibAutoCompleteList.Item("Struct"));
+                    let ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Variable"), TibAutoCompleteList.Item("Enum"), TibAutoCompleteList.Item("Class"), TibAutoCompleteList.Item("Type"), TibAutoCompleteList.Item("Struct"));
                     ar.forEach(element =>
                     {
                         if (element) completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
@@ -482,7 +481,7 @@ function autoComplete()
                     //C# Snippets
                     AutoCompleteArray.CSSnippets.forEach(element =>
                     {
-                        var ci = new vscode.CompletionItem(element.prefix, vscode.CompletionItemKind.Snippet);
+                        let ci = new vscode.CompletionItem(element.prefix, vscode.CompletionItemKind.Snippet);
                         ci.detail = element.description;
                         ci.insertText = new vscode.SnippetString(element.body.join("\n"));
                         completionItems.push(ci);
@@ -490,10 +489,10 @@ function autoComplete()
                 }
                 else //node Ids
                 {
-                    var qt = curLine.lastIndexOf('"');
+                    let qt = curLine.lastIndexOf('"');
                     if (qt > -1) // от недоверия к tag.InCSString
                     {
-                        var stuff = curLine.substr(0, qt);
+                        let stuff = curLine.substr(0, qt);
                         // Lists
                         if (stuff.match(/CurrentSurvey\.Lists\[\s*$/))
                             completionItems = completionItems.concat(CurrentNodes.CompletitionItems("List"));
@@ -956,6 +955,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
     if (pure.match(/<\s*$/)) pure = pure.substr(0, pure.lastIndexOf("<")); // иначе regExp в parseTags работает неправильно
 
     var tag = parseTags(pure, text);
+    
     if (!tag) return new CurrentTag("xml");
     var tstart = text.lastIndexOf("<" + tag.Name);
     if (tag.Closed)
@@ -1011,6 +1011,9 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         - в значениях атрибутов могут быть /, поэтому [^/>]* не подходит
         - ещё одна скобка в группе атрибутов всё вешает: ((\s*[\w-]+(=(("[^"]*")|('[^']*'))?)?)*)
         - при [обязательной кавычке после значения атрибута] не работает во время редактирования значения атрибута
+        - /<(\w+)((\s*[\w-]+=(("[^"]*"?)|('[^']*'?))?)*)\s*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/   тут обязательно = после имени атрибута. Тоже не понимает при вводе атрибутов
+        - /<(\w+)((\s*[\w-]+=?(("[^"]*"?)|('[^']*'?))?)*)\s*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/   при необязательном = всё виснет
+        - /<(\w+)((\s*[\w-]+=(("[^"]*"?)|('[^']*'?))?)*)\s*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/   а так просто работает долго
     */
 
     //var res = text.match(/<(\w+)([^>]*)((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
