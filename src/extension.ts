@@ -1025,7 +1025,7 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
     */
 
     //var res = text.match(/<(\w+)([^>]*)((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
-    var res = text.match(/<(\w+)((\s*[\w-]+=(("[^"]*"?)|('[^']*'?))?)*)\s*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
+    let res = text.match(/<(\w+)((\s*[\w-]+=(("[^"]*"?)|('[^']*'?))?)*)\s*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
     const
         // группы regex    
         gr_name = 1,
@@ -1033,25 +1033,26 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         gr_after = 7,
         gr_close = 8,
         gr_body = 9;
-    var nn = nodes;
+    let nn = nodes;
     if (res && res[gr_name]) nn.push(res[gr_name]);
     if (res && res[gr_name] && res[gr_body])
     {
-        var rem = res[gr_body];
+        let rem = res[gr_body];
         return parseTags(rem, originalText, nn, res);
     }
     else
     {// родители закончились
         nn.pop();
-        var mt = res ? res : prevMatch;
+        let mt = res ? res : prevMatch;
         if (!mt || !mt[gr_name]) return null;
-        var tag = new CurrentTag(mt[gr_name]); // inint
-        var str = mt[0];
-        var lastc = str.lastIndexOf("[c#");
-        var lastcEnd = str.lastIndexOf("[*c#");
-        var isSpaced = !!mt[gr_after] && !!mt[gr_after].substr(0, mt[gr_after].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+ то он не считается c#
+        let tag = new CurrentTag(mt[gr_name]); // inint
+        let str = mt[0];
+        let lastc = str.lastIndexOf("[c#");
+        let clC = str.indexOf("]", lastc);
+        let lastcEnd = str.lastIndexOf("[*c#");
+        let isSpaced = !!mt[gr_after] && !!mt[gr_after].substr(0, mt[gr_after].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+ то он не считается c#
         tag.CSSingle = !!text.match(/\$[\w\d_]+$/);
-        tag.CSInline = (lastc > 0 && lastc > lastcEnd);
+        tag.CSInline = (lastc > 0 && lastc > lastcEnd && clC > 0 && (clC < lastcEnd || lastcEnd < 0));
         tag.CSMode =
             tag.CSInline ||
             tag.CSSingle ||
