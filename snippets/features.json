@@ -1,11 +1,4 @@
 {
-    "RepeatInline":{
-        "prefix": "$repeat",
-        "body":[
-            "\\$repeat(${1:source}){$2[,]}"
-        ],
-        "description": "Строчный повтор"
-    },
     "ftpPath":{
         "prefix": "@StoreUrl",
         "body":[

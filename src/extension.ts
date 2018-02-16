@@ -486,6 +486,13 @@ function autoComplete()
 
             if (customMethods && !tag.InCSString) completionItems = completionItems.concat(customMethods); //Custom Methods
             let str = getCurrentLineText(document, position).substr(position.character);
+            if (tag.CSSingle) // добавляем snippet для $repeat
+            {
+                let ci = new vscode.CompletionItem("repeat", vscode.CompletionItemKind.Snippet);
+                ci.detail = "Строчный repeat";
+                ci.insertText = new vscode.SnippetString("repeat(${1|" + getAllLists().join(',') + "|}){${2:@ID}[${3:,}]}");
+                completionItems.push(ci);
+            }    
             if (!tag.CSSingle && !curLine.match(/\w+\.\w*$/))
             {
                 if (!tag.InCSString)
