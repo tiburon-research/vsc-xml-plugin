@@ -200,6 +200,15 @@
             "</Page>"
         ]
     },
+    "CompleteRedirectPage": {
+        "prefix": "_completeRedirectPage",
+        "body":[
+            "<Page Id=\"${1:last}\">",
+            "\t<Filter>false;</Filter>",
+            "\t<Redirect Status=\"18\"/>",
+            "</Page>"
+        ]
+    },
     "RespInfo": {
 		"prefix": "_respInfo",
 		"body": [
