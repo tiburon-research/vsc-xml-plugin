@@ -253,7 +253,7 @@
     "DataExpand": {
         "prefix": "_expand",
         "body":[
-            "[div data-expand='${1|2|3|}']",
+            "[div data-expand='${1|1,2,3|}']",
             "\t[div class='smallTextBlock']",
             "\t\t${2:основной текст}",
             "\t[/div]",
