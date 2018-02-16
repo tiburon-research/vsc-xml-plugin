@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, logError, isScriptLanguage, logString } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, logError, isScriptLanguage, logString, getFromCB } from "./classes";
 import * as XML from './documentFunctions';
 
 // константы
@@ -220,6 +220,30 @@ function registerCommands()
             inProcess = false;
         });
     })
+
+    vscode.commands.registerTextEditorCommand('tib.paste', () => 
+    {
+        inProcess = true;
+        let txt = getFromCB();
+        if (txt.match(/[\s\S]*\n$/)) txt = txt.replace(/\n$/,'');
+        let pre = txt.split("\n");
+        let lines = [];
+        let editor = vscode.window.activeTextEditor;
+        if (pre.length != editor.selections.length)
+        {
+            for (let i = 0; i < editor.selections.length; i++)
+            {
+                lines.push(txt);
+            }
+        }
+        else lines = pre.map(s => { return s.trim() })
+        multiPaste(editor, editor.selections, lines, function ()
+        {
+            // ставим курсор в конец
+            editor.selections = editor.selections.map(sel => { return new vscode.Selection(sel.end, sel.end) });
+            inProcess = false;
+        });
+    });
 }
 
 
@@ -492,7 +516,7 @@ function autoComplete()
                 ci.detail = "Строчный repeat";
                 ci.insertText = new vscode.SnippetString("repeat(${1|" + getAllLists().join(',') + "|}){${2:@ID}[${3:,}]}");
                 completionItems.push(ci);
-            }    
+            }
             if (!tag.CSSingle && !curLine.match(/\w+\.\w*$/))
             {
                 if (!tag.InCSString)
@@ -980,7 +1004,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
     if (pure.match(/<\s*$/)) pure = pure.substr(0, pure.lastIndexOf("<")); // иначе regExp в parseTags работает неправильно
 
     var tag = parseTags(pure, text);
-    
+
     if (!tag) return new CurrentTag("xml");
     var tstart = text.lastIndexOf("<" + tag.Name);
     if (tag.Closed)
@@ -1205,7 +1229,7 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
         cStart = "/*";
         cEnd = "*/";
     }
-    
+
     let newText = text;
 
     // закомментировать или раскомментировать
@@ -1215,7 +1239,7 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
     {
         sel = lineSel;
         newText = fulLines.replace(new RegExp("^(\\s*)" + cStart + " ?([\\S\\s]*) ?" + cEnd + "(\\s*)$"), "$1$2$3");
-    }   
+    }
     else
     {
         cStart += " ";
@@ -1223,9 +1247,9 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
         newText = cStart + newText + cEnd;
     }
     editor.edit((editBuilder) =>
-    {        
+    {
         editBuilder.replace(sel, newText);
-    }, { undoStopAfter: false, undoStopBefore: false}).then(() =>
+    }, { undoStopAfter: false, undoStopBefore: false }).then(() =>
     {
         callback(true);
     });
@@ -1243,5 +1267,32 @@ function commentAllBlocks(editor: vscode.TextEditor, selections: vscode.Selectio
             return;
         }
         commentAllBlocks(editor, selections, callback);
+    });
+}
+
+
+// замена текста
+function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text: string, callback: Function): void
+{
+    editor.edit((editBuilder) =>
+    {
+        editBuilder.replace(selection, text);
+    }, { undoStopAfter: false, undoStopBefore: false }).then(() =>
+    {
+        callback();
+    });
+}
+
+// последовательная замена (вставка) текста
+function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[], callback: Function): void
+{
+    pasteText(editor, selections.pop(), lines.pop(), function ()
+    {
+        if (selections.length == 0)
+        {
+            callback();
+            return;
+        }
+        multiPaste(editor, selections, lines, callback);
     });
 }

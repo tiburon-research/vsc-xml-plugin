@@ -90,6 +90,11 @@
                 "command": "tib.commentBlock",
                 "title": "Обернуть в сворачиваемый блок",
                 "category": "tib"
+            },
+            {
+                "command": "tib.paste",
+                "title": "Мультистрочная ставка",
+                "category": "tib"
             }
         ],
         "keybindings":[
@@ -100,6 +105,14 @@
             {
                 "key": "ctrl+alt+c",
                 "command": "tib.cdata"
+            },
+            {
+                "key": "ctrl+alt+b",
+                "command": "tib.commentBlock"
+            },
+            {
+                "key": "ctrl+alt+v",
+                "command": "tib.paste"
             }
         ],
         "configuration":

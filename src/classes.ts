@@ -2,6 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as XML from './documentFunctions'
+import * as clipboard from "clipboardy"
 
 // -------------------- классы
 
@@ -649,4 +650,15 @@ export function positiveMin(a, b)
     else
         if (b < 0) return a;
         else return Math.min(a, b);
+}
+
+
+export function copyToCB(text: string)
+{
+    clipboard.writeSync(text);
+}
+
+export function getFromCB(): string
+{
+    return clipboard.readSync();
 }
