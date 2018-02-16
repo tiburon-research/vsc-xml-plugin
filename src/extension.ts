@@ -158,9 +158,17 @@ function registerCommands()
     {
         let editor = vscode.window.activeTextEditor;
         // отсортированные от начала к концу выделения
-        let selections = editor.selections.sort(function (a, b) { return -editor.document.offsetAt(a.start); });
+        let selections = editor.selections;
+        if (selections.length > 1) selections = selections.sort(function (a, b)
+        {
+            return editor.document.offsetAt(b.start) - editor.document.offsetAt(a.start);
+        });
         // для каждого выделения
-        commentAllBlocks(editor, selections);
+        inProcess = true;
+        commentAllBlocks(editor, selections, function ()
+        {
+            inProcess = false;
+        });
     });
 
     // стандартная команда для форматирования
@@ -1139,6 +1147,7 @@ function getAttributes(str: string): KeyedCollection<string>
 }
 
 
+// весь документ
 function getFullRange(editor: vscode.TextEditor): vscode.Range
 {
     return new vscode.Range(0, 0, editor.document.lineCount - 1, editor.document.lineAt(editor.document.lineCount - 1).text.length);
@@ -1168,49 +1177,53 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
         callback(false);
         return;
     }
-    let multiLine = text.indexOf("\n") > -1;
-    let cStart = "<!-- ";
-    let cEnd = " -->";
+    //let multiLine = text.indexOf("\n") > -1;
+    let cStart = "<!--";
+    let cEnd = "-->";
     let sel = selection;
 
     if (isScriptLanguage(langFrom))
     {
-        cStart = "/* ";
-        cEnd = " */";
+        cStart = "/*";
+        cEnd = "*/";
     }
-    /*if (multiLine) // многострочные выделяем с начала строки
+    
+    let newText = text;
+
+    // закомментировать или раскомментировать
+    let lineSel = selectLines(document, selection);
+    let fulLines = document.getText(lineSel);
+    if (fulLines.match(new RegExp("^\\s*" + cStart + "[\\S\\s]*" + cEnd + "\\s*$")))
     {
-        sel = selectLines(document, sel);
-        text = editor.document.getText(sel);
-        cStart += "\n";
-        cEnd = "\n" + cEnd;
-    }
+        sel = lineSel;
+        newText = fulLines.replace(new RegExp("^(\\s*)" + cStart + " ?([\\S\\s]*) ?" + cEnd + "(\\s*)$"), "$1$2$3");
+    }   
     else
     {
         cStart += " ";
         cEnd = " " + cEnd;
-    }*/
-
-    let newText = cStart + text + cEnd;
-
-    inProcess = true;
+        newText = cStart + newText + cEnd;
+    }
     editor.edit((editBuilder) =>
-    {
+    {        
         editBuilder.replace(sel, newText);
     }, { undoStopAfter: false, undoStopBefore: false}).then(() =>
     {
-        inProcess = false;
         callback(true);
     });
 }
 
 
-function commentAllBlocks(editor: vscode.TextEditor, selections: vscode.Selection[]): void
+function commentAllBlocks(editor: vscode.TextEditor, selections: vscode.Selection[], callback: Function): void
 {
     // рекурсивный вызов с уменьшением массива выделений
     commentBlock(editor, selections.pop(), function (res)
     {
-        if (!res || selections.length == 0) return;
-        commentAllBlocks(editor, selections);
+        if (!res || selections.length == 0)
+        {
+            callback();
+            return;
+        }
+        commentAllBlocks(editor, selections, callback);
     });
 }
