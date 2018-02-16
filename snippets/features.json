@@ -23,11 +23,25 @@
     "blockFolding":{
         "prefix": "<!--block",
         "body": [
-            "<!--#block ${1:Name}-->\n",
+            "<!--#block ${1:Name} -->\n",
             "\t$0",
             "\n<!--#endblock-->"
         ],
         "description": "Сворачиваемый блок"
+    },
+    "blockLight":{
+        "prefix": "<!--*",
+        "body": [
+            "<!--* ${1:Текст} -->\n"
+        ],
+        "description": "Зелёный блок"
+    },
+    "blockWarning":{
+        "prefix": "<!--**",
+        "body": [
+            "<!--** ${1:Текст} -->\n"
+        ],
+        "description": "Красный блок"
     },
     "SexList":{
         "prefix": "_sexList",

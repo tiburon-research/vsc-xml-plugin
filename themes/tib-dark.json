@@ -15,6 +15,53 @@
 		
 		
 		{
+			"scope": "comment",
+			"settings": {
+				"foreground": "#666"
+			}
+		},
+		{
+			"scope": [
+				"punctuation.definition.comment.block"
+			],
+			"settings": {
+				"foreground": "#999"
+			}
+		},
+		{
+			"scope": [
+				"punctuation.definition.comment.block.prefix.tib"
+			],
+			"settings": {
+				"fontStyle": "underline"
+			}
+		},
+		{
+			"scope": [
+				"punctuation.definition.comment.description"
+			],
+			"settings": {
+				"foreground": "#608b4e"
+			}
+		},
+		{
+			"scope": [
+				"punctuation.definition.comment.warning"
+			],
+			"settings": {
+				"foreground": "#ca0d0d"
+			}
+		},
+		{
+			"scope": [
+				"punctuation.definition.comment.block.name.tib"
+			],
+			"settings": {
+				"foreground": "#e8a338",
+				"fontStyle": "bold"
+			}
+		},
+		{
 			"scope": [
 				"entity.name.repeat-iterator"
 			],
@@ -135,12 +182,6 @@
 			"scope": "header",
 			"settings": {
 				"foreground": "#000080"
-			}
-		},
-		{
-			"scope": "comment",
-			"settings": {
-				"foreground": "#608b4e"
 			}
 		},
 		{

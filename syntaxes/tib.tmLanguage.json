@@ -1543,14 +1543,83 @@
 
 
 		"comments": {
-			"begin": "<[!%]--",
-			"captures": {
-				"0": {
-					"name": "punctuation.definition.comment.xml"
-				}
-			},
-			"end": "--%?>",
-			"name": "comment.block.xml"
+			"patterns": [
+				{
+					"begin": "(<!--)(#(end)?block)([\\s\\S]*)(-->)",
+					"end": "",
+					"beginCaptures": {
+						"1":
+						{
+							"name": "punctuation.definition.comment.block.bracket.tib"
+						},
+						"2":
+						{
+							"name": "punctuation.definition.comment.block.prefix.tib"
+						},
+						"4":
+						{
+							"name": "punctuation.definition.comment.block.name.tib"
+						},
+						"5":
+						{
+							"name": "punctuation.definition.comment.block.bracket.tib"
+						}
+					},
+					"name": "punctuation.definition.comment.block"
+				},
+				{
+					"begin": "(<!--)\\*\\s([\\s\\S]*?)",
+					"end": "-->",
+					"beginCaptures": {
+						"1":
+						{
+							"name": "punctuation.definition.comment.description.bracket.tib"
+						},
+						"2":
+						{
+							"name": "punctuation.definition.comment.description.text.tib"
+						}
+					},
+					"endCaptures": {
+						"0":
+						{
+							"name": "punctuation.definition.comment.description.bracket.tib"
+						}
+					},
+					"name": "punctuation.definition.comment.description"
+				},
+				{
+					"begin": "(<!--)\\*\\*\\s([\\s\\S]*?)",
+					"end": "-->",
+					"beginCaptures": {
+						"1":
+						{
+							"name": "punctuation.definition.comment.warning.bracket.tib"
+						},
+						"2":
+						{
+							"name": "punctuation.definition.comment.warning.text.tib"
+						}
+					},
+					"endCaptures": {
+						"0":
+						{
+							"name": "punctuation.definition.comment.warning.bracket.tib"
+						}
+					},
+					"name": "punctuation.definition.comment.warning"
+				},
+				{
+					"begin": "<[!%]--",
+					"captures": {
+						"0": {
+							"name": "punctuation.definition.comment.xml"
+						}
+					},
+					"end": "--%?>",
+					"name": "comment.block.xml"
+				}	
+			]
 		},
 
 
