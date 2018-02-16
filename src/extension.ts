@@ -104,7 +104,9 @@ function registerCommands()
         execute("http://debug.survstat.ru/Survey/Adaptive/?fileName=" + editor.document.fileName);
     });*/
 
-    vscode.commands.registerCommand('tib.insertTag', () => 
+
+
+    vscode.commands.registerTextEditorCommand('tib.insertTag', () => 
     {
         inProcess = true;
         vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]")).then(() => 
@@ -113,7 +115,7 @@ function registerCommands()
         });
     });
 
-    vscode.commands.registerCommand('tib.cdata', () => 
+    vscode.commands.registerTextEditorCommand('tib.cdata', () => 
     {
         inProcess = true;
         var multi = vscode.window.activeTextEditor.document.getText(vscode.window.activeTextEditor.selection).indexOf("\n") > -1;
@@ -125,7 +127,7 @@ function registerCommands()
         });
     });
 
-    vscode.commands.registerCommand('tib.commentBlock', () => 
+    vscode.commands.registerTextEditorCommand('tib.commentBlock', () => 
     {
         inProcess = true;
         vscode.window.activeTextEditor.selection = selectLines(vscode.window.activeTextEditor.document, vscode.window.activeTextEditor.selection);
@@ -135,7 +137,7 @@ function registerCommands()
         });
     });
 
-    vscode.commands.registerCommand('tib.transform.AnswersToItems', () => 
+    vscode.commands.registerTextEditorCommand('tib.transform.AnswersToItems', () => 
     {
         inProcess = true;
         var editor = vscode.window.activeTextEditor;
@@ -149,7 +151,7 @@ function registerCommands()
         });
     });
 
-    vscode.commands.registerCommand('tib.transform.ItemsToAnswers', () => 
+    vscode.commands.registerTextEditorCommand('tib.transform.ItemsToAnswers', () => 
     {
         inProcess = true;
         var editor = vscode.window.activeTextEditor;
@@ -164,7 +166,7 @@ function registerCommands()
     });
 
     // комментирование блока
-    vscode.commands.registerCommand('editor.action.blockComment', () => 
+    vscode.commands.registerTextEditorCommand('editor.action.blockComment', () => 
     {
         let editor = vscode.window.activeTextEditor;
         // отсортированные от начала к концу выделения
@@ -182,7 +184,7 @@ function registerCommands()
     });
 
     // стандартная команда для форматирования
-    vscode.commands.registerCommand('editor.action.formatDocument', () => 
+    vscode.commands.registerTextEditorCommand('editor.action.formatDocument', () => 
     {
         let editor = vscode.window.activeTextEditor;
 
