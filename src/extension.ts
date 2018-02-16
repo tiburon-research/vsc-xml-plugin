@@ -125,6 +125,16 @@ function registerCommands()
         });
     });
 
+    vscode.commands.registerCommand('tib.commentBlock', () => 
+    {
+        inProcess = true;
+        vscode.window.activeTextEditor.selection = selectLines(vscode.window.activeTextEditor.document, vscode.window.activeTextEditor.selection);
+        vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<!--#block $1 -->\n\n$0$TM_SELECTED_TEXT\n\n<!--#endblock-->")).then(() => 
+        {
+            inProcess = false;
+        });
+    });
+
     vscode.commands.registerCommand('tib.transform.AnswersToItems', () => 
     {
         inProcess = true;

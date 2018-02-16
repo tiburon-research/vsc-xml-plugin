@@ -85,6 +85,11 @@
                 "command": "tib.cdata",
                 "title": "Обернуть в CDATA",
                 "category": "tib"
+            },
+            {
+                "command": "tib.commentBlock",
+                "title": "Обернуть в сворачиваемый блок",
+                "category": "tib"
             }
         ],
         "keybindings":[
