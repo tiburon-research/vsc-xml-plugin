@@ -231,20 +231,29 @@ function registerCommands()
         let pre = txt.split("\n");
         let lines = [];
         let editor = vscode.window.activeTextEditor;
+
+
+
         if (pre.length != editor.selections.length)
         {
             for (let i = 0; i < editor.selections.length; i++)
             {
                 lines.push(txt);
             }
+            multiLinePaste(editor, lines);
         }
-        else lines = pre.map(s => { return s.trim() })
-        multiPaste(editor, editor.selections, lines, function ()
+        else
         {
-            // ставим курсор в конец
-            editor.selections = editor.selections.map(sel => { return new vscode.Selection(sel.end, sel.end) });
-            inProcess = false;
-        });
+            lines = pre.map(s => { return s.trim() });
+            if (lines.filter(l => { return l.indexOf("\t") > -1; }).length == lines.length)
+            {    
+                vscode.window.showQuickPick(["Нет", "Да"], { placeHolder: "Разделить запятыми?" }).then(x =>
+                {
+                    multiLinePaste(editor, lines, x == "Да");
+                });
+            }
+            else multiLinePaste(editor, lines);
+        }
     });
 }
 
@@ -1296,5 +1305,18 @@ function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], l
             return;
         }
         multiPaste(editor, selections, lines, callback);
+    });
+}
+
+
+// вынесенный кусок из комманды вставки
+function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: boolean = false): void
+{
+    if (separate) lines = lines.map(s => { return s.replace("\t", ",") });
+    multiPaste(editor, editor.selections, lines, function ()
+    {
+        // ставим курсор в конец
+        editor.selections = editor.selections.map(sel => { return new vscode.Selection(sel.end, sel.end) });
+        inProcess = false;
     });
 }
