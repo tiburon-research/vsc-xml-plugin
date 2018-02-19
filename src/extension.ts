@@ -9,6 +9,7 @@ import * as XML from './documentFunctions';
 
 const _NodeStoreNames = ["Page", "Question", "Quota", "List"]; // XML теги, которые сохраняются в CurrentNodes
 const _DemoPath = "T:\\=Tiburon_NEW\\!!!Проекты\\=OWN\\Deman\\Adaptive\\deman_adaptive.xml"; // путь к демке
+//const _LogPath = process.env["USERPROFILE"] + "\\vsc-tib-log.txt";
 
 
 // глобальные переменные
@@ -206,7 +207,7 @@ function registerCommands()
         // либо весь документ
         if (editor.selection.start.isEqual(editor.selection.end))
         {
-            range = getFullRange(editor);
+            range = getFullRange(editor.document);
             indent = 0;
             tag = getCurrentTag(editor.document, editor.selection.start);
         }
@@ -1240,9 +1241,9 @@ function getAttributes(str: string): KeyedCollection<string>
 
 
 // весь документ
-function getFullRange(editor: vscode.TextEditor): vscode.Range
+function getFullRange(document: vscode.TextDocument): vscode.Range
 {
-    return new vscode.Range(0, 0, editor.document.lineCount - 1, editor.document.lineAt(editor.document.lineCount - 1).text.length);
+    return new vscode.Range(0, 0, document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
 }
 
 
@@ -1359,3 +1360,31 @@ function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: bo
         inProcess = false;
     });
 }
+
+
+/* function saveError(text: string, data)
+{
+    vscode.workspace.openTextDocument(_LogPath).then(doc =>
+    {
+        let txt = doc.getText();
+        txt += "\n\n\n###--Next-Error--###\n" + text;
+        if (!!data)
+        {
+            if (["string", "number"].indexOf(typeof data) == -1) data = JSON.stringify(data);
+            txt += "\n---data---\n" + data + "\n---data---\n"
+        }
+        vscode.window.showTextDocument(doc).then(ed =>
+        {
+            ed.edit(builder =>
+            {
+                builder.replace(getFullRange(ed.document), txt);
+            }).then(a => 
+            {
+                ed.document.save().then(b =>
+                {
+                    vscode.commands.executeCommand("workbench.action.closeActiveEditor")
+                })
+            })
+        })
+    });
+} */
