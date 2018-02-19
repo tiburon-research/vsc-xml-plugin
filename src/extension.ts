@@ -822,12 +822,13 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
                 var prev = curLine.substr(0, change.Active.character + 1);
                 var after = curLine.substr(change.Active.character + 1);
                 var result = prev.match(/<(\w+)[^>\/]*>?$/);
+                if (!result) return;
                 // проверяем, не закрыт ли уже этот тег
                 var afterFull = fullText.substr(editor.document.offsetAt(originalPosition));
                 var tagOp = afterFull.indexOf("<" + result[1]);
                 var tagCl = afterFull.indexOf("</" + result[1]);
 
-                if (result && ((tagCl == -1 || tagOp > -1 && tagOp < tagCl) || result[1].match(/^(Repeat)|(Condition)|(Block)$/)))
+                if ((tagCl == -1 || tagOp > -1 && tagOp < tagCl) || result[1].match(/^(Repeat)|(Condition)|(Block)$/))
                 {
                     var closed = after.match(new RegExp("^[^<]*(<\\/)?" + result[1]));
                     if (!closed)
@@ -861,11 +862,12 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
     var curLine = getPreviousText(editor.document, editor.selection.start, true)
 
     // закрывание [тегов]
-    var tagT = text.match(/\[([a-zA-Z][\w\d]*(#)?)(\s[^\]\[]*)?(\/)?\]$/);
+    var tagT = text.match(/\[([a-zA-Z]\w*(#)?)(\s[^\]\[]*)?(\/)?\]$/);
     if
     (
         change[change.length - 1] == "]" &&
-        (!tag.CSMode || tag.InCSString || !!tagT && tagT[2]) &&
+        !!tagT &&
+        (!tag.CSMode || tag.InCSString) &&
         (((tag.Parents.join("") + tag.Name).indexOf("CustomText") == -1) || !!tagT[2]) &&
         !!tagT &&
         !!tagT[1] &&

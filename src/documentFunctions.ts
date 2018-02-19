@@ -417,10 +417,13 @@ function minIndent(text: string): number
 {
     let min = -1;
     let mt = text.match(/(\n|^)[\t ]*\S/g);
-    for (let i = 0; i < mt.length; i++)
+    if (!!mt)
     {
-        let reg = mt[i].match(/(\n)([\t ]*)\S/);
-        if (reg && reg[2] !== null && (reg[2].length < min || min == -1)) min = reg[2].length;
+        for (let i = 0; i < mt.length; i++)
+        {
+            let reg = mt[i].match(/(\n)([\t ]*)\S/);
+            if (reg && reg[2] !== null && (reg[2].length < min || min == -1)) min = reg[2].length;
+        }
     }
     return min;
 }
