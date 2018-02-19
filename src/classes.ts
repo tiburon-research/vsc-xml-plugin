@@ -634,7 +634,7 @@ export class TagInfo
 }
 
 
-export function logError(text: string)
+export function logError(text: string, data?)
 {
     /* console.log("______________ E R R O R ______________");
     logString(text);

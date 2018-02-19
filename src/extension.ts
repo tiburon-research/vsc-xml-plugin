@@ -51,8 +51,14 @@ export function activate(context: vscode.ExtensionContext)
     function reload()
     {
         if (!editor || editor.document.languageId != "tib") return;
-        saveMethods(editor);
-        updateNodesIds(editor);
+        try
+        {
+            saveMethods(editor);
+            updateNodesIds(editor);
+        } catch (error)
+        {
+            logError("Ошибка при сборе информации", error);
+        }
     }
 
     // общие дествия при старте расширения
@@ -83,13 +89,18 @@ export function activate(context: vscode.ExtensionContext)
     vscode.workspace.onDidChangeTextDocument(event =>
     {
         if (inProcess || !editor || editor.document.languageId != "tib") return;
-        var originalPosition = editor.selection.start.translate(0, 1);
-        var text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
-        var tag = getCurrentTag(editor.document, originalPosition, text);
-        updateNodesIds(editor);
-        insertAutoCloseTag(event, editor, tag, text);
-        insertSpecialSnippets(event, editor, text, tag);
-        saveMethods(editor);
+        try
+        {
+            var originalPosition = editor.selection.start.translate(0, 1);
+            var text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
+            var tag = getCurrentTag(editor.document, originalPosition, text);
+            reload();
+            insertAutoCloseTag(event, editor, tag, text);
+            insertSpecialSnippets(event, editor, text, tag);
+        } catch (error)
+        {
+            logError("Ошибка при обработке изменений", error);
+        }
     });
 }
 
@@ -228,7 +239,7 @@ function registerCommands()
     {
         inProcess = true;
         let txt = getFromCB();
-        if (txt.match(/[\s\S]*\n$/)) txt = txt.replace(/\n$/,'');
+        if (txt.match(/[\s\S]*\n$/)) txt = txt.replace(/\n$/, '');
         let pre = txt.split("\n");
         let lines = [];
         let editor = vscode.window.activeTextEditor;
@@ -247,7 +258,7 @@ function registerCommands()
         {
             lines = pre.map(s => { return s.trim() });
             if (lines.filter(l => { return l.indexOf("\t") > -1; }).length == lines.length)
-            {    
+            {
                 vscode.window.showQuickPick(["Нет", "Да"], { placeHolder: "Разделить запятыми?" }).then(x =>
                 {
                     multiLinePaste(editor, lines, x == "Да");
@@ -281,67 +292,73 @@ function registerCommands()
 
 function getData()
 {
-    let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });
-    let statCS: TibAutoCompleteItem[] = [];
-    for (let key in AutoCompleteArray.StaticMethods)
+    try 
     {
-        // добавляем сам тип в AutoComplete
-        let tp = new TibAutoCompleteItem({
-            Name: key,
-            Kind: "Class",
-            Detail: "Тип данных/класс " + key
-        });
-        statCS.push(tp);
-        // добавляем все его статические методы
-        let items: object[] = AutoCompleteArray.StaticMethods[key];
-        items.forEach(item =>
+        let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });
+        let statCS: TibAutoCompleteItem[] = [];
+        for (let key in AutoCompleteArray.StaticMethods)
         {
-            let aci = new TibAutoCompleteItem(item);
-            aci.Parent = key;
-            aci.Kind = "Method";
-            statCS.push(aci);
-        });
-    }
-
-    // объединённый массив Tiburon + MSDN
-    let all = tibCode.concat(statCS);
-
-    all.forEach(element =>
-    {
-        let item = new TibAutoCompleteItem(element);
-        if (!item.Kind || !item.Name) return;
-
-        codeAutoCompleteArray.push(new TibAutoCompleteItem(element)); // сюда добавляем всё
-        // если такого типа ещё нет, то добавляем
-        if (!TibAutoCompleteList.Contains(item.Kind)) TibAutoCompleteList.AddPair(item.Kind, [item])
-        else // если есть то добавляем в массив с учётом перегрузок
-        {
-            // ищем индекс элемента с таким же типом, именем и родителем
-            let ind = TibAutoCompleteList.Item(item.Kind).findIndex(x =>
-            {
-                return x.Name == item.Name && (!!x.Parent && x.Parent == item.Parent || !x.Parent && !item.Parent);
+            // добавляем сам тип в AutoComplete
+            let tp = new TibAutoCompleteItem({
+                Name: key,
+                Kind: "Class",
+                Detail: "Тип данных/класс " + key
             });
-
-            if (ind < 0)
+            statCS.push(tp);
+            // добавляем все его статические методы
+            let items: object[] = AutoCompleteArray.StaticMethods[key];
+            items.forEach(item =>
             {
-                TibAutoCompleteList.Item(item.Kind).push(item);
-            }
-            else // добавляем в перегрузку к имеющемуся (и сам имеющийся тоже, если надо)
-            {
-                let len = TibAutoCompleteList.Item(item.Kind)[ind].Overloads.length;
-                if (len == 0)
-                {
-                    let parent = TibAutoCompleteList.Item(item.Kind)[ind];
-                    TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(parent);
-                    len++;
-                }
-                TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(item);
-                let doc = "Перегрузок: " + (len + 1);
-                TibAutoCompleteList.Item(item.Kind)[ind].Description = doc;
-                TibAutoCompleteList.Item(item.Kind)[ind].Documentation = doc;
-            }
+                let aci = new TibAutoCompleteItem(item);
+                aci.Parent = key;
+                aci.Kind = "Method";
+                statCS.push(aci);
+            });
         }
-    });
+
+        // объединённый массив Tiburon + MSDN
+        let all = tibCode.concat(statCS);
+
+        all.forEach(element =>
+        {
+            let item = new TibAutoCompleteItem(element);
+            if (!item.Kind || !item.Name) return;
+
+            codeAutoCompleteArray.push(new TibAutoCompleteItem(element)); // сюда добавляем всё
+            // если такого типа ещё нет, то добавляем
+            if (!TibAutoCompleteList.Contains(item.Kind)) TibAutoCompleteList.AddPair(item.Kind, [item])
+            else // если есть то добавляем в массив с учётом перегрузок
+            {
+                // ищем индекс элемента с таким же типом, именем и родителем
+                let ind = TibAutoCompleteList.Item(item.Kind).findIndex(x =>
+                {
+                    return x.Name == item.Name && (!!x.Parent && x.Parent == item.Parent || !x.Parent && !item.Parent);
+                });
+
+                if (ind < 0)
+                {
+                    TibAutoCompleteList.Item(item.Kind).push(item);
+                }
+                else // добавляем в перегрузку к имеющемуся (и сам имеющийся тоже, если надо)
+                {
+                    let len = TibAutoCompleteList.Item(item.Kind)[ind].Overloads.length;
+                    if (len == 0)
+                    {
+                        let parent = TibAutoCompleteList.Item(item.Kind)[ind];
+                        TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(parent);
+                        len++;
+                    }
+                    TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(item);
+                    let doc = "Перегрузок: " + (len + 1);
+                    TibAutoCompleteList.Item(item.Kind)[ind].Description = doc;
+                    TibAutoCompleteList.Item(item.Kind)[ind].Documentation = doc;
+                }
+            }
+        });
+    } catch (error)
+    {
+        logError("Ошибка при инициализации расширения", error);
+    }
 }
 
 
