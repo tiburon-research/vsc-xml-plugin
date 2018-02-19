@@ -8,6 +8,7 @@ import * as XML from './documentFunctions';
 // константы
 
 const _NodeStoreNames = ["Page", "Question", "Quota", "List"]; // XML теги, которые сохраняются в CurrentNodes
+const _DemoPath = "T:\\=Tiburon_NEW\\!!!Проекты\\=OWN\\Deman\\Adaptive\\deman_adaptive.xml"; // путь к демке
 
 
 // глобальные переменные
@@ -254,6 +255,26 @@ function registerCommands()
             }
             else multiLinePaste(editor, lines);
         }
+    });
+
+    vscode.commands.registerCommand('tib.demo', () => 
+    {
+        //vscode.commands.executeCommand("vscode.open", vscode.Uri.file(_DemoPath));
+
+        vscode.workspace.openTextDocument(_DemoPath).then(doc =>
+        { // открываем демку (в памяти)
+            let txt = doc.getText();
+            vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+            { // создаём пустой tib-файл
+                vscode.window.showTextDocument(newDoc).then(editor => 
+                { // отображаем пустой
+                    editor.edit(builder => 
+                    { // заливаем в него демку
+                        builder.insert(new vscode.Position(0, 0), txt)
+                    });
+                });
+            })
+        });
     });
 }
 

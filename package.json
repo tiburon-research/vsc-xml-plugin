@@ -95,6 +95,11 @@
                 "command": "tib.paste",
                 "title": "Мультистрочная ставка",
                 "category": "tib"
+            },
+            {
+                "command": "tib.demo",
+                "title": "Открыть код демки",
+                "category": "tib"
             }
         ],
         "keybindings":[
@@ -113,6 +118,10 @@
             {
                 "key": "ctrl+alt+v",
                 "command": "tib.paste"
+            },
+            {
+                "key": "ctrl+alt+d",
+                "command": "tib.demo"
             }
         ],
         "configuration":
