@@ -636,9 +636,10 @@ export class TagInfo
 
 export function logError(text: string)
 {
-    console.log("______________ E R R O R ______________");
+    /* console.log("______________ E R R O R ______________");
     logString(text);
-    console.log("____________________________");
+    console.log("____________________________"); */
+    vscode.window.showErrorMessage(text);
 }
 
 
