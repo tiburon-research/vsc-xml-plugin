@@ -337,13 +337,13 @@ export class CurrentTag
 
     static getAttributesArray(str: string): KeyedCollection<string>
     {
-        var mt = str.match(/\s*([\w\d]+)=(("([^"]+)?")|(('([^']+)?')))\s*/g);
+        var mt = str.match(/\s*(\w+)=(("([^"]+)?")|(('([^']+)?')))\s*/g);
         var res: KeyedCollection<string> = new KeyedCollection<string>();
         if (mt)
         {
             mt.forEach(element =>
             {
-                var parse = element.match(/\s*([\w\d]+)=(("([^"]+)?")|(('([^']+)?')))\s*/);
+                var parse = element.match(/\s*(\w+)=(("([^"]+)?")|(('([^']+)?')))\s*/);
                 if (parse) res.AddPair(parse[1], parse[2]);
             });
         }

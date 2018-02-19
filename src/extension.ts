@@ -695,7 +695,7 @@ function helper()
                 var ar = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Method"));
                 ar.forEach(element =>
                 {
-                    var mtch = lastLine.match(/(?:(^)|(.*\b))([\w\d_]+)\($/);
+                    var mtch = lastLine.match(/(?:(^)|(.*\b))(\w+)\($/);
                     if (mtch && mtch.length > 3 && element.Name.indexOf(mtch[3]) >= 0)
                     {
                         if (element.Overloads.length == 0) sign.signatures.push(element.ToSignatureInformation());
@@ -884,11 +884,10 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
     (
         change[change.length - 1] == "]" &&
         !!tagT &&
-        (!tag.CSMode || tag.InCSString) &&
-        (((tag.Parents.join("") + tag.Name).indexOf("CustomText") == -1) || !!tagT[2]) &&
-        !!tagT &&
         !!tagT[1] &&
         !tagT[4] &&
+        (!tag.CSMode || tag.InCSString) &&
+        (((tag.Parents.join("") + tag.Name).indexOf("CustomText") == -1) || !!tagT[2]) &&
         !isSelfClosedTag(tagT[1])
     )
     {
@@ -910,7 +909,7 @@ function saveMethods(editor: vscode.TextEditor): void
     if (Settings.Item("ignoreComments")) text = XML.clearXMLComments(text);
     var mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
     if (!mtd || !mtd[3]) return;
-    var reg = new RegExp(/((public)|(private)|(protected))\s*([\w\d_<>\[\],\s]+)\s+(([\w\d_]+)\s*(\([^)]*\))?)/, "g");
+    var reg = new RegExp(/((public)|(private)|(protected))\s*([\w_<>\[\],\s]+)\s+(([\w_]+)\s*(\([^)]*\))?)/, "g");
     var str = mtd[3];
     if (Settings.Item("ignoreComments")) str = clearCSComments(str);
     var m;
@@ -1143,7 +1142,7 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         let clC = str.indexOf("]", lastc);
         let lastcEnd = str.lastIndexOf("[*c#");
         let isSpaced = !!mt[gr_after] && !!mt[gr_after].substr(0, mt[gr_after].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+ то он не считается c#
-        tag.CSSingle = !!text.match(/\$[\w\d_]+$/);
+        tag.CSSingle = !!text.match(/\$\w+$/);
         tag.CSInline = (lastc > 0 && lastc > lastcEnd && clC > 0 && (clC < lastcEnd || lastcEnd < 0));
         tag.CSMode =
             tag.CSInline ||
