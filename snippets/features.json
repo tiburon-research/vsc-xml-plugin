@@ -9,7 +9,7 @@
     "src":{
         "prefix": "[img src=\"",
         "body": [
-            "[img src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\"]"
+            "[img src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\"/]"
         ],
         "description": "Стандартный путь к материалам проета"
     },
@@ -109,7 +109,7 @@
         "description": "Градиентная шкала с метками"
     },
     "TextScaleVerticalUi": {
-        "prefix": "_scaleText",
+        "prefix": "_scaleTextVertical",
         "body":[
             "<Ui Extend=\"Scale\" Gradient=\"1\" Orientation=\"Vertical\"/>"
         ],
@@ -184,6 +184,13 @@
             "<Ui Extend=\"MediaPlayer\" Type=\"Audio\" Src='@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.mp3;@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.ogg' PlayAuto=\"1\" PlayRedirect=\"1\" PauseEnable=\"0\" SeekEnable=\"1\"/>"
         ],
         "description": "MediaPlayer Audio"
+    },
+    "ContentOnlyUi": {
+        "prefix": "_contentOnly",
+        "body":[
+            "<Ui Extend=\"ContentOnly\"/>"
+        ],
+        "description": "ContentOnly"
     },
     "CompletePage": {
         "prefix": "_completePage",
@@ -277,6 +284,11 @@
         ],
         "description": "Счётчик"
     },
+
+
+
+
+
     "GetCell": {
         "prefix": "#getConceptCell",
         "body":[
@@ -318,5 +330,13 @@
             "}"
         ],
         "description": "Метод для сеточного клик-теста"
+    },
+    "IsMoble": {
+        "prefix": "#isMoble",
+        "body":[
+            "InterviewPars.GetInstance().IsMobile"
+        ],
+        "description": "Мобильное устройство"
     }
+
 }
