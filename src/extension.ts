@@ -887,8 +887,8 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
         !!tagT &&
         !!tagT[1] &&
         !tagT[4] &&
-        (!tag.CSMode || tag.InCSString) &&
-        (((tag.Parents.join("") + tag.Name).indexOf("CustomText") == -1) || !!tagT[2]) &&
+        (!tag.CSMode || tag.InCSString || !!tagT[2]) &&
+        (!!tagT[2] || ((tag.Parents.join("") + tag.Name).indexOf("CustomText") == -1)) &&
         !isSelfClosedTag(tagT[1])
     )
     {
@@ -1141,10 +1141,10 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         let str = mt[0];
         let lastc = str.lastIndexOf("[c#");
         let clC = str.indexOf("]", lastc);
-        let lastcEnd = str.lastIndexOf("[*c#");
+        let lastcEnd = str.indexOf("[*c#", lastc);
         let isSpaced = !!mt[gr_after] && !!mt[gr_after].substr(0, mt[gr_after].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+ то он не считается c#
         tag.CSSingle = !!text.match(/\$\w+$/);
-        tag.CSInline = (lastc > 0 && lastc > lastcEnd && clC > 0 && (clC < lastcEnd || lastcEnd < 0));
+        tag.CSInline = (lastc > 0 && clC > 0 && lastcEnd < 0);
         tag.CSMode =
             tag.CSInline ||
             tag.CSSingle ||
