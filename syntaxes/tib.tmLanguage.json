@@ -5432,6 +5432,16 @@
 		"comment": {
 			"patterns": [
 				{
+					"name": "punctuation.definition.comment.description",
+					"begin": "/\\*\\*\\s",
+					"end": "\\*/"
+				},
+				{
+					"name": "punctuation.definition.comment.warning",
+					"begin": "/\\*\\*\\*\\s",
+					"end": "\\*/"
+				},
+				{
 					"name": "comment.block.cs",
 					"begin": "/\\*",
 					"beginCaptures": {
