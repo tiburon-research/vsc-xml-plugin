@@ -5442,7 +5442,7 @@
 					"end": "\\*/"
 				},
 				{
-					"name": "comment.block.cs",
+					"name": "comment.block",
 					"begin": "/\\*",
 					"beginCaptures": {
 						"0": {

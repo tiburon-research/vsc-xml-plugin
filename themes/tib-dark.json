@@ -38,7 +38,8 @@
 		},
 		{
 			"scope": [
-				"punctuation.definition.comment.description"
+				"punctuation.definition.comment.description",
+				"comment.block.cs"
 			],
 			"settings": {
 				"foreground": "#608b4e"
