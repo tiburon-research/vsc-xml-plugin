@@ -124,6 +124,15 @@
                 "command": "tib.demo"
             }
         ],
+        "configurationDefaults": {
+            "[tib]":
+            {
+                "editor.quickSuggestions": 
+                {
+                    "strings": true
+                }
+            }
+        },
         "configuration":
         {
             "title": "Параметры Tiburon XML Helper",
