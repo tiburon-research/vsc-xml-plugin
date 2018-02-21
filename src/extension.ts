@@ -71,6 +71,7 @@ export function activate(context: vscode.ExtensionContext)
     definitions();
     registerCommands();
     higlight();
+    provideFormatter();
 
     // для каждого дукумента свои
     reload();
@@ -103,6 +104,8 @@ export function activate(context: vscode.ExtensionContext)
             logError("Ошибка при обработке изменений", error);
         }
     });
+
+    vscode.window.setStatusBarMessage("Tiburon XML Helper запущен!", 3000);
 }
 
 export function deactivate()
@@ -195,46 +198,6 @@ function registerCommands()
             inProcess = false;
         });
     });
-
-    // стандартная команда для форматирования
-    vscode.commands.registerTextEditorCommand('editor.action.formatDocument', () => 
-    {
-        let editor = vscode.window.activeTextEditor;
-
-        let range;
-        let indent;
-        let tag;
-        // либо весь документ
-        if (editor.selection.start.isEqual(editor.selection.end))
-        {
-            range = getFullRange(editor.document);
-            indent = 0;
-            tag = getCurrentTag(editor.document, editor.selection.start);
-        }
-        else
-        {
-            // либо выделяем строки целиком
-            let sel = selectLines(editor.document, editor.selection);
-            editor.selection = sel;
-            range = sel;
-            tag = getCurrentTag(editor.document, sel.start);
-            indent = tag.Parents.length + 1;
-        }
-        let text = editor.document.getText(range);
-        // тут можно потом добавить язык, например, из tag.Language
-        let res = XML.format(text, Language.XML, "\t", indent);
-        if (!res || res.Errors.length) return;
-
-        inProcess = true;
-
-        editor.edit((editBuilder) =>
-        {
-            editBuilder.replace(range, res.Result);
-        }).then(() =>
-        {
-            inProcess = false;
-        });
-    })
 
     vscode.commands.registerTextEditorCommand('tib.paste', () => 
     {
@@ -711,6 +674,42 @@ function helper()
             return sign;
         }
     }, "(");
+}
+
+
+function provideFormatter()
+{
+    vscode.languages.registerDocumentFormattingEditProvider('tib', {
+        provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[]
+        {
+            let editor = vscode.window.activeTextEditor;
+            let range;
+            let indent;
+            let tag;
+            // либо весь документ
+            if (editor.selection.start.isEqual(editor.selection.end))
+            {
+                range = getFullRange(document);
+                indent = 0;
+                tag = getCurrentTag(document, editor.selection.start);
+            }
+            else
+            {
+                // либо выделяем строки целиком
+                let sel = selectLines(document, editor.selection);
+                editor.selection = sel;
+                range = sel;
+                tag = getCurrentTag(document, sel.start);
+                indent = tag.Parents.length + 1;
+            }
+            let text = document.getText(range);
+            // тут можно потом добавить язык, например, из tag.Language
+            let res = XML.format(text, Language.XML, "\t", indent);
+            if (!res || res.Errors.length) return;
+
+            return [vscode.TextEdit.replace(range, res.Result)];
+        }
+    });
 }
 
 

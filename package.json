@@ -27,6 +27,10 @@
         "onLanguage:tib"
     ],
     "main": "./out/extension",
+    "dependencies": {
+        "js-beautify": "^1.7.5",
+        "clipboardy": "^1.2.2"
+    },
     "contributes": {
         "languages": [
             {
