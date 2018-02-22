@@ -146,6 +146,12 @@
                     "description": "Игнорировать комментарии",
                     "type": "boolean",
                     "default": true
+                },
+                "tib.demoPath":
+                {
+                    "description": "Путь к скрипту демонстрационной анкеты",
+                    "type": "string",
+                    "default": "T:\\=Tiburon_NEW\\!!!Проекты\\=OWN\\Deman\\Adaptive\\deman_adaptive.xml"
                 }
             }
         }
