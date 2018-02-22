@@ -4,22 +4,79 @@ import * as vscode from 'vscode';
 import * as XML from './documentFunctions'
 import * as clipboard from "clipboardy"
 
-// -------------------- классы
+
+
+
+
+// ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------
+
+
+
 
 
 export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)"; // XML теги, которые могут содержать c#
 
-export function logString(a)
-{
-    console.log("'" + a + "'");
-}
 
 export enum Language { XML, CSharp, CSS, JS, PlainTetx };
 
-export function isScriptLanguage(lang: Language): boolean
+/**
+ * @param From Включаемая граница
+ * @param To Не влючамая граница
+*/
+export interface TextRange
 {
-    return lang == Language.CSharp || lang == Language.JS || lang == Language.CSS;
+    From: number;
+    To: number;
+    Length?: number;
 }
+
+
+export namespace TibTransform
+{
+
+    export function AnswersToItems(text: string): string
+    {
+        return TransformElement(text, "Answer", "Item");
+    }
+
+    export function ItemsToAnswers(text: string): string
+    {
+        return TransformElement(text, "Item", "Answer");
+    }
+
+    function TransformElement(text: string, from: string, to: string): string
+    {
+        var ar = text.split("\n");
+        var res = "";
+        ar.forEach(element => 
+        {
+            var mt = element.match(new RegExp("(\\s*)<" + from + "\\s*([^\\/>]+)((\\/>)|(>([\\s\\S]+?)<\\/" + from + ".*>))"));
+            if (!mt) res += element + "\n";
+            else
+            {
+                if (mt[1]) res += mt[1];
+                res += "<" + to;
+                if (mt[2])
+                {
+                    var id = mt[2].match(/Id=["'][^"']+["']/);
+                    if (id) res += " " + id[0];
+                    var txt = mt[2].match(/Text=["'][^"']*["']/);
+                    if (txt) res += " " + txt[0];
+                }
+                res += ">";
+                if (mt[6])
+                {
+                    var txt = mt[6].match(/<Text[^>]*>.*<\/Text\s*>/);
+                    if (txt) res += txt[0];
+                }
+                res += "</" + to + ">\n"
+            }
+        });
+        return res.substr(0, res.length - 1);
+    }
+
+}
+
 
 export class KeyedCollection<T>
 {
@@ -41,6 +98,7 @@ export class KeyedCollection<T>
         return this.count;
     }
 
+    /** Добавляет или заменяет */
     public AddPair(key: string, value: T)
     {
         if (!this.items.hasOwnProperty(key))
@@ -106,22 +164,21 @@ export class KeyedCollection<T>
 }
 
 
-/*
-    для классов TibAutoCompleteItem и TibAttribute:
-    Detail - краткое описание (появляется в редакторе в той же строчке)
-    Description - подробное описание (появляется при клике на i (зависит от настроек))
-    Documentation - кусок кода, сигнатура (показывается при наведении)
-*/
-
 export class TibAutoCompleteItem 
 {
     Name: string;
+    /** тип объекта (vscode.CompletionItemKind) */
     Kind;
+    /** краткое описание (появляется в редакторе в той же строчке) */
     Detail: string = "";
+    /** подробное описание (появляется при клике на i (зависит от настроек)) */
     Description: string = "";
+    /** кусок кода, сигнатура (показывается при наведении) */
     Documentation: string = "";
+    /** Родитель (объект) */
     Parent: string = "";
     Overloads: TibAutoCompleteItem[] = []; // массив перегрузок
+    /** Тег, в котором должно работать */
     ParentTag: string = "";
 
     constructor(obj: Object)
@@ -154,14 +211,21 @@ export class TibAttribute
 {
     Name: string = "";
     Type: string = "";
-    Default = null; // значение по умолчанию (если не задано)
-    Auto = ""; // значение, подставляемое автоматически при вставке атрибута
+    /** значение по умолчанию (если не задано) */
+    Default = null;
+    /** Значение, подставляемое автоматически при вставке атрибута */
+    Auto = "";
     AllowCode: boolean = false;
+    /** краткое описание (появляется в редакторе в той же строчке) */
     Detail: string = "";
+    /** подробное описание (появляется при клике на i (зависит от настроек)) */
     Description: string = "";
+    /** кусок кода, сигнатура (показывается при наведении) */
     Documentation: string = "";
+    /** Значения, которые подставляются в AutoComplete */
     Values: Array<string> = [];
-    Result: ""; // callback: string[]
+    /** код функции, вызываемый потом в callback, чтобы вернуть string[] для Snippet */
+    Result: "";
 
     constructor(obj: Object)
     {
@@ -301,18 +365,24 @@ export class InlineAttribute
 export class CurrentTag
 {
     Name: string = "";
-    Id: string = ""; // отличается ПОКА только для Item - в зависимости от родителя
+    /** отличается ПОКА только для Item - в зависимости от родителя */
+    Id: string = "";
     Attributes: Array<InlineAttribute> = [];
     Body: string = "";
-    Closed: boolean = false; // закрыт не тег, просто есть вторая скобка <Page...>
+    /** закрыт не тег, просто есть вторая скобка <Page...> */
+    OpenTagIsClosed: boolean = false;
     Parents: Array<string> = [];
     LastParent: string = "";
     CSMode: boolean = false;
-    CSSingle: boolean = false; //$Method()
-    CSInline: boolean = false; //[c#]Method();[/c#]
+    /** $Method() */
+    CSSingle: boolean = false;
+    /** [c#]Method();[/c#] */
+    CSInline: boolean = false;
     Position: vscode.Position;
-    InString: boolean = false; // "body$
-    InCSString: boolean = false; // "body1 [c#]Method("str$
+    /** "body$ */
+    InString: boolean = false;
+    /** "body1 [c#]Method("str$ */
+    InCSString: boolean = false;
 
     constructor(name: string)
     {
@@ -444,54 +514,6 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 }
 
 
-
-export namespace TibTransform
-{
-
-    export function AnswersToItems(text: string): string
-    {
-        return TransformElement(text, "Answer", "Item");
-    }
-
-    export function ItemsToAnswers(text: string): string
-    {
-        return TransformElement(text, "Item", "Answer");
-    }
-
-    function TransformElement(text: string, from: string, to: string): string
-    {
-        var ar = text.split("\n");
-        var res = "";
-        ar.forEach(element => 
-        {
-            var mt = element.match(new RegExp("(\\s*)<" + from + "\\s*([^\\/>]+)((\\/>)|(>([\\s\\S]+?)<\\/" + from + ".*>))"));
-            if (!mt) res += element + "\n";
-            else
-            {
-                if (mt[1]) res += mt[1];
-                res += "<" + to;
-                if (mt[2])
-                {
-                    var id = mt[2].match(/Id=["'][^"']+["']/);
-                    if (id) res += " " + id[0];
-                    var txt = mt[2].match(/Text=["'][^"']*["']/);
-                    if (txt) res += " " + txt[0];
-                }
-                res += ">";
-                if (mt[6])
-                {
-                    var txt = mt[6].match(/<Text[^>]*>.*<\/Text\s*>/);
-                    if (txt) res += txt[0];
-                }
-                res += "</" + to + ">\n"
-            }
-        });
-        return res.substr(0, res.length - 1);
-    }
-
-}
-
-
 export class ExtensionSettings extends KeyedCollection<any>
 {
     constructor()
@@ -525,16 +547,9 @@ export class ContextChange
 }
 
 
-export interface TextRange
-{
-    From: number;
-    To: number;
-    Length?: number;
-}
-
-
-// собирает данные для первого встреченного <тега> на новой строке
-// To - позиция следующего символа
+/** 
+ * Собирает данные для первого встреченного <тега> на новой строке
+ */
 export class TagInfo
 {
     constructor(text: string, offset: number = 0)
@@ -627,14 +642,60 @@ export class TagInfo
     public Body: TextRange;
     public Name: string;
     public IsAllowCodeTag: boolean;
+    /** Валидация: получилось ли распарсить */
     public Found: boolean = false;
     public Closed: boolean;
     public SelfClosed: boolean = false;
     public Language: Language;
+    /** от начала строки открывающегося до конца строки закрывающегося */
     public FullLines: TextRange;
     public Multiline: boolean;
-    public HasCDATA: boolean = false; // если всё содержимое обёрнуто
+    /** если всё содержимое обёрнуто */
+    public HasCDATA: boolean = false;
 }
+
+
+export class SnippetObject
+{
+    prefix: string;
+    body: string;
+    description: string;
+
+    constructor(obj: Object)
+    {
+        for (let key in obj)
+        {
+            if (key == "body" && typeof obj[key] != "string")
+                this[key] = obj[key].join("\n");
+            else
+                this[key] = obj[key];
+        }
+    }
+}
+
+
+
+
+
+
+// ------------------------------------------------------------ Functions ------------------------------------------------------------
+
+
+
+
+
+
+export function isScriptLanguage(lang: Language): boolean
+{
+    return lang == Language.CSharp || lang == Language.JS || lang == Language.CSS;
+}
+
+
+export function logString(a)
+{
+    console.log("'" + a + "'");
+}
+
 
 
 export function logError(text: string, data?)
@@ -662,10 +723,12 @@ export function copyToCB(text: string)
     clipboard.writeSync(text);
 }
 
+
 export function getFromCB(): string
 {
     return clipboard.readSync();
 }
+
 
 export function statusMessage(text: string, after: number | Thenable<any>)
 {
@@ -681,4 +744,18 @@ export function statusMessage(text: string, after: number | Thenable<any>)
         th = after;
         vscode.window.setStatusBarMessage(text, th);
     }
+}
+
+
+/**
+ * преобразует стандартый Snippet в CompletionItem
+ */
+export function snippetToCompletitionItem(obj: Object): vscode.CompletionItem
+{
+    let snip = new SnippetObject(obj);
+    let ci = new vscode.CompletionItem(snip.prefix, vscode.CompletionItemKind.Snippet);
+    ci.detail = snip.description;
+    ci.insertText = new vscode.SnippetString(snip.body);
+    vscode.MarkdownString
+    return ci;
 }

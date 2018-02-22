@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, logError, isScriptLanguage, logString, getFromCB, statusMessage } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, logError, isScriptLanguage, logString, getFromCB, statusMessage, snippetToCompletitionItem } from "./classes";
 import * as XML from './documentFunctions';
 
 // константы
@@ -485,7 +485,7 @@ function autoComplete()
         {
             let completionItems = [];
             let tag = getCurrentTag(document, position);
-            if (tag && !tag.CSMode && !tag.Closed && AutoCompleteArray.Attributes[tag.Id] && !tag.InString)
+            if (tag && !tag.CSMode && !tag.OpenTagIsClosed && AutoCompleteArray.Attributes[tag.Id] && !tag.InString)
             {
                 let existAttrs = tag.attributeNames();
                 AutoCompleteArray.Attributes[tag.Id].forEach(element =>
@@ -542,10 +542,7 @@ function autoComplete()
                     //C# Snippets
                     AutoCompleteArray.CSSnippets.forEach(element =>
                     {
-                        let ci = new vscode.CompletionItem(element.prefix, vscode.CompletionItemKind.Snippet);
-                        ci.detail = element.description;
-                        ci.insertText = new vscode.SnippetString(element.body.join("\n"));
-                        completionItems.push(ci);
+                        completionItems.push(snippetToCompletitionItem(element));
                     });
                 }
                 else //node Ids
@@ -607,7 +604,7 @@ function autoComplete()
         {
             var completionItems = [];
             var tag = getCurrentTag(document, position);
-            if (!tag || tag.Closed) return;
+            if (!tag || tag.OpenTagIsClosed) return;
             var text = getPreviousText(document, position, true);
             var needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
 
@@ -1065,7 +1062,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
 
     if (!tag) return new CurrentTag("xml");
     var tstart = text.lastIndexOf("<" + tag.Name);
-    if (tag.Closed)
+    if (tag.OpenTagIsClosed)
     {
         tag.Body = text.substr(text.indexOf(">", tstart) + 1);
         tag.InString = tag && tag.Body && inString(tag.Body);
@@ -1156,8 +1153,8 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
             tag.CSInline ||
             tag.CSSingle ||
             mt[gr_name] && !!mt[gr_name].match(new RegExp(_AllowCodeTags)) && !isSpaced;
-        if (mt[gr_close]) tag.Closed = true;
-        tag.CSMode = tag.CSMode && (tag.Closed || tag.CSSingle || tag.CSInline);
+        if (mt[gr_close]) tag.OpenTagIsClosed = true;
+        tag.CSMode = tag.CSMode && (tag.OpenTagIsClosed || tag.CSSingle || tag.CSInline);
         tag.Parents = nn;
         tag.Position = vscode.window.activeTextEditor.document.positionAt(originalText.lastIndexOf("<" + mt[gr_name]));
         if (mt[gr_attrs]) tag.setAttributes(mt[gr_attrs]);
