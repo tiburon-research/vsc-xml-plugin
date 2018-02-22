@@ -905,26 +905,35 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 function saveMethods(editor: vscode.TextEditor): void
 {
     Methods.Clear();
-    var text = editor.document.getText();
+    let text = editor.document.getText();
     if (Settings.Item("ignoreComments")) text = XML.clearXMLComments(text);
-    var mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
+    let mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
     if (!mtd || !mtd[3]) return;
-    var reg = new RegExp(/((public)|(private)|(protected))\s*([\w_<>\[\],\s]+)\s+(([\w_]+)\s*(\([^)]*\))?)/, "g");
-    var str = mtd[3];
+    let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s*([\w_<>\[\],\s]+)\s+(([\w_]+)\s*(\([^)]*\))?)/, "g");
+    let groups = {
+        Full: 0,
+        Modificator: 1,
+        Properties: 5,
+        Type: 9,
+        FullName: 10,
+        Name: 11,
+        Parameters: 12
+    };
+    let str = mtd[3];
     if (Settings.Item("ignoreComments")) str = clearCSComments(str);
-    var m;
+    let m;
     while (m = reg.exec(str))
     {
-        if (m && m[7])
+        if (m && m[groups.FullName])
         {
-            var start = text.indexOf(m[0]);
-            var isFunc = !!m[8];
-            var end = text.indexOf(isFunc ? ")" : ";", start) + 1;
-            var positionFrom = editor.document.positionAt(start);
-            var positionTo = editor.document.positionAt(end);
-            var rng = new vscode.Range(positionFrom, positionTo);
-            var ur = vscode.Uri.file(editor.document.fileName);
-            Methods.Add(new TibMethod(m[7], m[5] + " " + m[6].trim(), rng, ur, isFunc));
+            let start = text.indexOf(m[groups.Full]);
+            let isFunc = !!m[groups.Parameters];
+            let end = text.indexOf(isFunc ? ")" : ";", start) + 1;
+            let positionFrom = editor.document.positionAt(start);
+            let positionTo = editor.document.positionAt(end);
+            let rng = new vscode.Range(positionFrom, positionTo);
+            let ur = vscode.Uri.file(editor.document.fileName);
+            Methods.Add(new TibMethod(m[groups.Name], m[groups.Full].trim().replace(/\s{2,}/g, " "), rng, ur, isFunc, m[groups.Type]));
         }
     }
 }

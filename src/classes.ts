@@ -218,12 +218,14 @@ export class TibMethod
     Location: vscode.Range;
     Uri: vscode.Uri;
     IsFunction: boolean;
+    Type: string;
 
-    constructor(name: string, sign: string, location: vscode.Range, uri: vscode.Uri, isFunction: boolean = false, fullString: string = "")
+    constructor(name: string, sign: string, location: vscode.Range, uri: vscode.Uri, isFunction: boolean = false, type: string = "")
     {
         this.Name = name;
         this.Signature = sign;
         this.Location = location;
+        this.Type = type;
         this.Uri = uri;
         this.IsFunction = isFunction;
     }
@@ -239,6 +241,7 @@ export class TibMethod
         if (this.IsFunction) item.insertText = new vscode.SnippetString(this.Name + "($1)");
         var mds = new vscode.MarkdownString();
         mds.value = this.Signature;
+        if (this.Type) item.detail = this.Type;
         item.documentation = mds;
         return item;
     }
