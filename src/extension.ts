@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, logError, isScriptLanguage, logString, getFromCB } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, logError, isScriptLanguage, logString, getFromCB, statusMessage } from "./classes";
 import * as XML from './documentFunctions';
 
 // константы
@@ -105,7 +105,7 @@ export function activate(context: vscode.ExtensionContext)
         }
     });
 
-    vscode.window.setStatusBarMessage("Tiburon XML Helper запущен!", 3000);
+    statusMessage("Tiburon XML Helper запущен!", 3000);
 }
 
 export function deactivate()

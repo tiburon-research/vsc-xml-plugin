@@ -666,3 +666,19 @@ export function getFromCB(): string
 {
     return clipboard.readSync();
 }
+
+export function statusMessage(text: string, after: number | Thenable<any>)
+{
+    var num: number;
+    var th: Thenable<any>;
+    if (typeof after == "number")
+    {
+        num = after;
+        vscode.window.setStatusBarMessage(text, num);
+    }
+    else 
+    {
+        th = after;
+        vscode.window.setStatusBarMessage(text, th);
+    }
+}
