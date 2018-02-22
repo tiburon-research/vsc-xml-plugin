@@ -206,8 +206,6 @@ function registerCommands()
         let lines = [];
         let editor = vscode.window.activeTextEditor;
 
-
-
         if (pre.length != editor.selections.length)
         {
             for (let i = 0; i < editor.selections.length; i++)
@@ -1356,7 +1354,7 @@ function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], l
 // вынесенный кусок из комманды вставки
 function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: boolean = false): void
 {
-    if (separate) lines = lines.map(s => { return s.replace("\t", ",") });
+    if (separate) lines = lines.map(s => { return s.replace(/\t/g, ",") });
     multiPaste(editor, editor.selections, lines, function ()
     {
         // ставим курсор в конец
