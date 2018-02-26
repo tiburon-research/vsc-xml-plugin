@@ -127,5 +127,16 @@
             "</Quota>"
         ],
         "description": "Структура Quota"
+    },
+    "Methods":{
+        "prefix": "<Methods",
+        "body": [
+            "<Methods>",
+            "\t<![CDATA[",
+            "\t\t$0",
+            "\t]]>",
+            "</Methods>"
+        ],
+        "description": "Структура Methods"
     }
 }

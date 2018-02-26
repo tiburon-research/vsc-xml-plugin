@@ -212,7 +212,7 @@
     "RespInfo": {
 		"prefix": "_respInfo",
 		"body": [
-            "<Page Id=\"RespInso\">",
+            "<Page Id=\"RespInfo\">",
                 "\t<Filter>false;</Filter>",
                 "\t<Header>Опросные данные</Header>",
                 "\t$0",
