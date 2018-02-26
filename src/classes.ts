@@ -3,7 +3,8 @@
 import * as vscode from 'vscode';
 import * as XML from './documentFunctions'
 import * as clipboard from "clipboardy"
-
+import * as fs from 'fs'
+import * as os from 'os'
 
 
 
@@ -674,6 +675,38 @@ export class SnippetObject
 }
 
 
+export class LogData 
+{
+    /**
+     * Данные для сохранения лога
+     * @param data.FileName имя файла в котором произошла ошибка
+     * @param data.Position позиция на которой произошла ошибка
+     * @param data.FullText полный текст файла на момент ошибки
+     */
+    constructor(data: Object)
+    {
+        for (let key in data)
+            this[key] = data[key];
+        this.UserName = getUserName();
+        let ext = vscode.extensions.getExtension("tiburonscripter");
+        console.log(ext.exports);
+        this.TibVersion = ext.exports;
+    }
+
+    /** преобразует все данные в строку */
+    public toString()
+    {
+
+    }
+
+    private UserName: string;
+    private FileName: string;
+    private FullText: string;
+    private Postion: vscode.Position;
+    private TibVersion: number;
+
+}
+
 
 
 
@@ -698,12 +731,16 @@ export function logString(a)
 
 
 
-export function logError(text: string, data?)
+/** Выводит сообщение об ошибке */
+export function showError(text: string)
 {
-    /* console.log("______________ E R R O R ______________");
-    logString(text);
-    console.log("____________________________"); */
     vscode.window.showErrorMessage(text);
+}
+
+
+export function showWarning(text: string)
+{
+    vscode.window.showWarningMessage(text);
 }
 
 
@@ -747,9 +784,7 @@ export function statusMessage(text: string, after: number | Thenable<any>)
 }
 
 
-/**
- * преобразует стандартый Snippet в CompletionItem
- */
+/** преобразует стандартый Snippet в CompletionItem */
 export function snippetToCompletitionItem(obj: Object): vscode.CompletionItem
 {
     let snip = new SnippetObject(obj);
@@ -758,4 +793,66 @@ export function snippetToCompletitionItem(obj: Object): vscode.CompletionItem
     ci.insertText = new vscode.SnippetString(snip.body);
     vscode.MarkdownString
     return ci;
+}
+
+
+/** проверяет наличие файла/папки */
+export function pathExists(path: string): boolean
+{
+    return fs.existsSync(path);
+}
+
+
+/** Возвращаетмя пользователя */
+export function getUserName()
+{
+    return os.userInfo().username;
+}
+
+
+/** создаёт папку */
+export function createDir(path: string)
+{
+    fs.mkdirSync(path);
+}
+
+
+/** кодирование строки в безопасные символы */
+export function safeEncode(txt: string, replacement = "_"): string
+{
+    let buf = new Buffer(txt, 'binary');
+    return buf.toString('base64').replace(/[^\w\-]/g, replacement);
+}
+
+
+export function sendLogMessage(text: string)
+{
+    console.log(text);
+}
+
+
+/** 
+ * Создаёт лог об ошибке 
+ * @param text Текст ошибки
+ * @param data Данные для лога
+ * @param path Путь для сохранения файла
+ */
+export function saveError(text: string, data: LogData, path: string)
+{
+    if (!pathExists(path))
+    {
+        sendLogMessage("Path was not found!");
+        return;
+    }
+    // генерируем имя файла из текста ошибки и сохраняем в папке с именем пользователя
+    let hash = "" + safeEncode(text);
+    let dir = path + getUserName();
+    if (!pathExists(dir)) createDir(dir);
+    let filename = dir + "/" + hash + ".log";
+    if (pathExists(filename)) return;
+    fs.writeFile(filename, data.toString(), (err) =>
+    {
+        if (!!err) sendLogMessage(JSON.stringify(err));
+        sendLogMessage("Добавлена ошибка:\n`" + text + "`\n\nПуть:\n`" + filename + "`");
+    });
 }

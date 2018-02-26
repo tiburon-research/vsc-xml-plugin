@@ -152,6 +152,12 @@
                     "description": "Путь к скрипту демонстрационной анкеты",
                     "type": "string",
                     "default": "T:\\=Tiburon_NEW\\!!!Проекты\\=OWN\\Deman\\Adaptive\\deman_adaptive.xml"
+                },
+                "tib.logPath":
+                {
+                    "description": "Путь к папке с логами (лучше не менять)",
+                    "type": "string",
+                    "default": "G:\\Разное\\TiburonXMLScripterLogs"
                 }
             }
         }

@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, logError, isScriptLanguage, logString, getFromCB, statusMessage, snippetToCompletitionItem } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromCB, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError } from "./classes";
 import * as XML from './documentFunctions';
 
 // константы
@@ -54,9 +54,9 @@ export function activate(context: vscode.ExtensionContext)
         {
             saveMethods(editor);
             updateNodesIds(editor);
-        } catch (error)
+        } catch (er)
         {
-            logError("Ошибка при сборе информации", error);
+            error("Ошибка при сборе информации", editor);
         }
     }
 
@@ -97,9 +97,9 @@ export function activate(context: vscode.ExtensionContext)
             reload();
             insertAutoCloseTag(event, editor, tag, text);
             insertSpecialSnippets(event, editor, text, tag);
-        } catch (error)
+        } catch (er)
         {
-            logError("Ошибка при обработке изменений", error);
+            error("Ошибка при обработке изменений", editor);
         }
     });
 
@@ -183,8 +183,8 @@ function registerCommands()
     vscode.commands.registerTextEditorCommand('editor.action.blockComment', () => 
     {
         let editor = vscode.window.activeTextEditor;
+        let selections = editor.selections;  
         // отсортированные от начала к концу выделения
-        let selections = editor.selections;
         if (selections.length > 1) selections = selections.sort(function (a, b)
         {
             return editor.document.offsetAt(b.start) - editor.document.offsetAt(a.start);
@@ -316,9 +316,9 @@ function getData()
                 }
             }
         });
-    } catch (error)
+    } catch (er)
     {
-        logError("Ошибка при инициализации расширения", error);
+        error("Ошибка при инициализации расширения", vscode.window.activeTextEditor);
     }
 }
 
@@ -1268,7 +1268,7 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
     let langTo = tagTo.getLaguage();
     if (langFrom != langTo)
     {
-        logError("Начало и конец выделенного фрагмента лежат в разных языковых областях");
+        error("Начало и конец выделенного фрагмента лежат в разных языковых областях");
         callback(false);
         return;
     }
@@ -1364,29 +1364,16 @@ function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: bo
 }
 
 
-/* function saveError(text: string, data)
+/** сообщение (+ отчёт) об ошибке */
+function error(text: string, edt?: vscode.TextEditor)
 {
-    vscode.workspace.openTextDocument(_LogPath).then(doc =>
-    {
-        let txt = doc.getText();
-        txt += "\n\n\n###--Next-Error--###\n" + text;
-        if (!!data)
-        {
-            if (["string", "number"].indexOf(typeof data) == -1) data = JSON.stringify(data);
-            txt += "\n---data---\n" + data + "\n---data---\n"
-        }
-        vscode.window.showTextDocument(doc).then(ed =>
-        {
-            ed.edit(builder =>
-            {
-                builder.replace(getFullRange(ed.document), txt);
-            }).then(a => 
-            {
-                ed.document.save().then(b =>
-                {
-                    vscode.commands.executeCommand("workbench.action.closeActiveEditor")
-                })
-            })
-        })
+    showError(text);
+    if (!edt) return;
+    let editor = edt || vscode.window.activeTextEditor;
+    let data = new LogData({
+        FileName: editor.document.fileName,
+        Postion: editor.selection.active,
+        FullText: editor.document.getText()
     });
-} */
+    saveError(text, data, Settings.Item("logPath"))
+}
