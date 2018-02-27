@@ -12,7 +12,7 @@ export class FormatResult
     constructor()
     { }
 
-    Errors: string[] = [];
+    Error: string;
     Result: string = "";
 }
 
@@ -62,11 +62,10 @@ export function format(text: string, language: Language, tab: string = "\t", ind
     // пока не будет работать стабильно проверяем целостность текста
     var hash = text.replace(/\s+/g, '');
     var res: FormatResult = LanguageFunction(language)(text, tab, indent);
-    /*if (res.Result.replace(/\s+/g, '') != hash)
+    if (res.Result.replace(/\s+/g, '') != hash)
     {
-        res.Errors.push("Результат форматирования не прошёл проверку на целостность текста");
-        logError(res.Result.replace(/\s+/g, ''));
-    }*/
+        res.Error = "Результат форматирования не прошёл проверку на целостность текста";
+    }
     return res;
 }
 
@@ -166,7 +165,7 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0): 
 {
     let res = text;
     let ind = tab.repeat(indent);
-    let errs = [];
+    let err: string;
     // если обёрнут в CDATA, то создаём отступ для неё и потом на 1 больше для внутренности
     if (res.match(/^\s*<!\[CDATA\[[\s\S]*\]\]>\s*$/))
     {
@@ -174,7 +173,7 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0): 
         res = res.replace(/\s*\]\]>\s*/, '');
         let tmpRes = formatPlainText(res, tab, indent + 1);
         res = ind + "<![CDATA[\n" + tmpRes.Result + "\n" + ind + "]]>";
-        errs = errs.concat(tmpRes.Errors);
+        err = tmpRes.Error;
     }
     else
     {
@@ -195,7 +194,7 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0): 
         // двигаем только непустые строки и первую
         res = ind + res.replace(/(\n)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
     }    
-    return { Result: res, Errors: errs };
+    return { Result: res, Error: err };
 }
 
 
@@ -211,7 +210,7 @@ function formatCSS(text: string, tab: string = "\t", indent: number = 0): Format
         });
     var ind = tab.repeat(indent);
     newText = ind + newText.replace(/\n/g, "\n" + ind);
-    return { Result: newText, Errors: [] };
+    return { Result: newText, Error: null };
 }
 
 
@@ -227,7 +226,7 @@ function formatJS(text: string, tab: string = "\t", indent: number = 0): FormatR
         });
     var ind = tab.repeat(indent);
     newText = ind + newText.replace(/\n/g, "\n" + ind);
-    return { Result: newText, Errors: [] };
+    return { Result: newText, Error: null };
 }
 
 

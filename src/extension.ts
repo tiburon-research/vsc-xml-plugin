@@ -699,7 +699,7 @@ function provideFormatter()
             let text = document.getText(range);
             // тут можно потом добавить язык, например, из tag.Language
             let res = XML.format(text, Language.XML, "\t", indent);
-            if (!res || res.Errors.length) return;
+            if (!res || !!res.Error) return;
 
             return [vscode.TextEdit.replace(range, res.Result)];
         }
