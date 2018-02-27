@@ -1,8 +1,9 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString } from "./classes";
+import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData } from "./classes";
 import * as beautify from 'js-beautify';
 import { languages } from "vscode";
+import { error } from "./extension";
 
 // форматирование, проверка и другие операции с текстом документа
 
@@ -59,12 +60,13 @@ function LanguageFunction(language: Language)
 */
 export function format(text: string, language: Language, tab: string = "\t", indent: number = 0): FormatResult
 {
-    // пока не будет работать стабильно проверяем целостность текста
-    var hash = text.replace(/\s+/g, '');
-    var res: FormatResult = LanguageFunction(language)(text, tab, indent);
-    if (res.Result.replace(/\s+/g, '') != hash)
+    let res: FormatResult = LanguageFunction(language)(text, tab, indent);
+    if (!res.Error)
     {
-        res.Error = "Результат форматирования не прошёл проверку на целостность текста";
+        // пока не будет работать стабильно проверяем целостность текста
+        let hash = text.replace(/\s+/g, '');
+        if (res.Result.replace(/\s+/g, '') != hash)
+            res.Error = "Результат форматирования не прошёл проверку на целостность текста";
     }
     return res;
 }
@@ -72,7 +74,7 @@ export function format(text: string, language: Language, tab: string = "\t", ind
 
 function formatXML(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
-    var res = new FormatResult();
+    let res = new FormatResult();
     res.Result = text;
 
     let ind = tab.repeat(indent);
@@ -81,13 +83,17 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
     let tags = get1LevelNodes(oldText);
     let newText = oldText;
 
-    // если внутри тегов нет, то возвращаем внутренность с отступом?
-    if (tags.length == 0) newText = formatPlainText(oldText, tab, indent).Result;
+    // если внутри тегов нет, то возвращаем внутренность с отступом
+    if (tags.length == 0)
+    {
+        res = formatPlainText(oldText, tab, indent);
+    }
     else
     {
         // если теги есть, то рекурсивно форматируем внутренности каждого
         tags.forEach(tag =>
         {
+            if (!!res.Error) return; // если ошибка уже есть, то пропускаем всё
             let body = oldText.slice(tag.Body.From, tag.Body.To);
             let formattedBody = body;
             let openTag = oldText.slice(tag.OpenTag.From, tag.OpenTag.To);
@@ -108,7 +114,12 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
                     // убираем лишние пробелы/переносы
                     if (tag.Language != Language.PlainTetx) formattedBody = formattedBody.replace(/^[\s]*([\s\S]*?)[\s]*$/, "$1");
                     // форматируем согласно содержанию
-                    formattedBody = formatBody(formattedBody, tab, indent + (tag.HasCDATA && tag.Language == Language.XML ? 2 : 1), tag.Language);
+                    let tmpRes = formatBody(formattedBody, tab, indent + (tag.HasCDATA && tag.Language == Language.XML ? 2 : 1), tag.Language);
+                    if (!!tmpRes.Error)
+                    {
+                        res.Error = "Ошибка при форматировании тега";
+                        return;
+                    }
                     formattedBody = "\n" + formattedBody + "\n";
                     // форматируем CDATA
                     if (tag.HasCDATA)
@@ -128,21 +139,23 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
             newFul = before + ind + openTag + formattedBody + closeTag + after;
             newText = newText.replace(oldFull, newFul);
         });
+        res.Result = newText;
     }
 
     // форматируем между тегами?
 
-    res.Result = newText;
     return res;
 }
 
 
-function formatBody(text: string, tab: string, indent: number = 0, lang: Language): string
+function formatBody(text: string, tab: string, indent: number = 0, lang: Language): FormatResult
 {
-    var cs: KeyedCollection<string>;
-    var del;
-    var newText = text;
-    var rm = false;
+    let cs: KeyedCollection<string>;
+    let del;
+    let res = new FormatResult();
+    let newText = text;
+    let rm = false;
+    // кроме XML и C# заменяем вставки
     if (lang != Language.CSharp && lang != Language.XML)
     {
         cs = getEmbeddedCS(text)
@@ -153,11 +166,11 @@ function formatBody(text: string, tab: string, indent: number = 0, lang: Languag
             rm = true;
         }
     }
-    var ind = tab.repeat(indent);
+    let ind = tab.repeat(indent);
     newText = newText.replace(/(\n|^)[\t ]+$/g, '$1');
-    newText = LanguageFunction(lang)(newText, tab, indent).Result;
-    if (rm) newText = getCSBack(newText, cs, del);
-    return newText;
+    res = LanguageFunction(lang)(newText, tab, indent);
+    if (rm && !res.Error) res.Result = getCSBack(newText, cs, del);
+    return res;
 }
 
 
@@ -193,40 +206,56 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0): 
         res = res.replace(/^\s*/, '').replace(/\s*$/, '')
         // двигаем только непустые строки и первую
         res = ind + res.replace(/(\n)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
-    }    
+    }
     return { Result: res, Error: err };
 }
 
 
 function formatCSS(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
-    var newText = text;
-    newText = beautify.css(newText,
-        {
-            indent_size: 1,
-            indent_char: tab,
-            indent_with_tabs: tab == "\t",
-            indent_level: indent
-        });
+    let newText = text;
+    let er: string = null;
+    try
+    {
+        newText = beautify.css(newText,
+            {
+                indent_size: 1,
+                indent_char: tab,
+                indent_with_tabs: tab == "\t",
+                indent_level: indent
+            });
+    }
+    catch (err)
+    {
+        er = "Ошибка форматирования CSS";
+    }
     var ind = tab.repeat(indent);
     newText = ind + newText.replace(/\n/g, "\n" + ind);
-    return { Result: newText, Error: null };
+    return { Result: newText, Error: er };
 }
 
 
 function formatJS(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
     var newText = text;
-    newText = beautify.js(newText,
-        {
-            indent_size: 1,
-            indent_char: tab,
-            indent_with_tabs: tab == "\t",
-            indent_level: indent
-        });
+    let er: string = null;
+    try
+    {
+        newText = beautify.js(newText,
+            {
+                indent_size: 1,
+                indent_char: tab,
+                indent_with_tabs: tab == "\t",
+                indent_level: indent
+            });
+    }
+    catch (err)
+    {
+        er = "Ошибка форматирования JavaScript";
+    }
     var ind = tab.repeat(indent);
     newText = ind + newText.replace(/\n/g, "\n" + ind);
-    return { Result: newText, Error: null };
+    return { Result: newText, Error: er };
 }
 
 
@@ -238,76 +267,93 @@ function formatCSharp(text: string, tab: string = "\t", indent: number = 0): For
 
 export function findCloseTag(opBracket: string, tagName: string, clBracket: string, prevText: string, fullText: string): TextRange
 {
-    var textAfter = fullText.substr(prevText.length);
-    var rest = textAfter;
-
-    var curIndex = prevText.length + rest.indexOf(clBracket);
-    var op = rest.indexOf(opBracket + tagName);
-    var cl = rest.indexOf(opBracket + "/" + tagName);
-    if (cl < 0) return null;
-
-    var cO = 1;
-    var cC = 0;
-    while (cl > -1 && ((op > -1) || (cC != cO)))
+    try
     {
-        if (op < cl && op > -1)
+        let textAfter = fullText.substr(prevText.length);
+        let rest = textAfter;
+
+        let curIndex = prevText.length + rest.indexOf(clBracket);
+        let op = rest.indexOf(opBracket + tagName);
+        let cl = rest.indexOf(opBracket + "/" + tagName);
+        if (cl < 0) return null;
+
+        let cO = 1;
+        let cC = 0;
+        while (cl > -1 && ((op > -1) || (cC != cO)))
         {
-            rest = rest.substr(op + 1);
-            cO++;
-        }
-        else if (cO != cC)
-        {
-            rest = rest.substr(cl + 1);
-            cC++;
+            if (op < cl && op > -1)
+            {
+                rest = rest.substr(op + 1);
+                cO++;
+            }
+            else if (cO != cC)
+            {
+                rest = rest.substr(cl + 1);
+                cC++;
+            }
+
+            if (cO == cC) break;
+            op = rest.indexOf(opBracket + tagName);
+            cl = rest.indexOf(opBracket + "/" + tagName);
         }
 
-        if (cO == cC) break;
-        op = rest.indexOf(opBracket + tagName);
-        cl = rest.indexOf(opBracket + "/" + tagName);
+        //rest = rest.substr(cl);
+        let clLast = rest.indexOf(clBracket);
+
+        if (cl < 0 || clLast < 0) return null;
+        return { From: fullText.length - rest.length - 1, To: fullText.length - rest.length + clLast, Length: clLast + 1 };
+
     }
-
-    //rest = rest.substr(cl);
-    var clLast = rest.indexOf(clBracket);
-
-    if (cl < 0 || clLast < 0) return null;
-    return { From: fullText.length - rest.length - 1, To: fullText.length - rest.length + clLast, Length: clLast + 1 };
+    catch (err)
+    {
+        error("Ошибка при поиске закрывающегося тега");
+    }
+    return null;
 }
 
 
 export function findOpenTag(opBracket: string, tagName: string, clBracket: string, prevText: string): TextRange
 {
-    var curIndex = prevText.lastIndexOf(opBracket);
-    var txt = prevText.substr(0, curIndex);
-    var rest = txt;
-    var op = rest.lastIndexOf(opBracket + tagName);
-    var cl = rest.lastIndexOf(opBracket + "/" + tagName);
-    if (op < 0) return null;
-
-    var cO = 0;
-    var cC = 1;
-    while (op > -1 && ((cl > -1) || op != cl))
+    try
     {
-        if (cl > op && cl > -1)
+        let curIndex = prevText.lastIndexOf(opBracket);
+        let txt = prevText.substr(0, curIndex);
+        let rest = txt;
+        let op = rest.lastIndexOf(opBracket + tagName);
+        let cl = rest.lastIndexOf(opBracket + "/" + tagName);
+        if (op < 0) return null;
+
+        let cO = 0;
+        let cC = 1;
+        while (op > -1 && ((cl > -1) || op != cl))
         {
-            rest = rest.substr(0, cl);
-            cC++;
+            if (cl > op && cl > -1)
+            {
+                rest = rest.substr(0, cl);
+                cC++;
+            }
+            else if (cO != cC)
+            {
+                rest = rest.substr(0, op);
+                cO++;
+            }
+            if (cO == cC) break;
+            op = rest.lastIndexOf(opBracket + tagName);
+            cl = rest.lastIndexOf(opBracket + "/" + tagName);
         }
-        else if (cO != cC)
-        {
-            rest = rest.substr(0, op);
-            cO++;
-        }
-        if (cO == cC) break;
-        op = rest.lastIndexOf(opBracket + tagName);
-        cl = rest.lastIndexOf(opBracket + "/" + tagName);
+
+        //rest = rest.substr(0, rest.indexOf(clBracket, op) + 1);
+        let clLast = rest.lastIndexOf(clBracket) + 1;
+
+        if (op < 0 || clLast < 0) return null;
+        let to = txt.indexOf(clBracket, rest.length + 1);
+        return { From: rest.length, To: to, Length: to - rest.length };
     }
-
-    //rest = rest.substr(0, rest.indexOf(clBracket, op) + 1);
-    var clLast = rest.lastIndexOf(clBracket) + 1;
-
-    if (op < 0 || clLast < 0) return null;
-    var to = txt.indexOf(clBracket, rest.length + 1);
-    return { From: rest.length, To: to, Length: to - rest.length };
+    catch (err)
+    {
+        error("Ошибка при поиске открывающегося тега");
+    }
+    return null;
 }
 
 
@@ -328,18 +374,25 @@ export function clearXMLComments(txt: string): string
 
 function get1LevelNodes(text: string): TagInfo[]
 {
-    var tags: TagInfo[] = [];
-    var rest = text;
-    while (rest.length > 0)
+    let tags: TagInfo[] = [];
+    try
     {
-        let tag = new TagInfo(rest, text.length - rest.length);
-        if (tag && tag.Found)
+        let rest = text;
+        while (rest.length > 0)
         {
-            tags.push(tag);
-            if (tag.Closed) rest = text.substr(tag.CloseTag.To + 1);
+            let tag = new TagInfo(rest, text.length - rest.length);
+            if (tag && tag.Found)
+            {
+                tags.push(tag);
+                if (tag.Closed) rest = text.substr(tag.CloseTag.To + 1);
+                else break;
+            }
             else break;
         }
-        else break;
+    }
+    catch (err)
+    {
+        error("Ошибка при поиске вложенных тегов");
     }
     return tags;
 }
@@ -348,11 +401,11 @@ function get1LevelNodes(text: string): TagInfo[]
 // сохраняем c# вставки
 function getEmbeddedCS(text: string): KeyedCollection<string>
 {
-    var cs = new KeyedCollection<string>();
-    var regCS = new RegExp(/(\[c#)((?!\d)([^\]]*)\]([\s\S]+?)?\[\/c#[^\]]*\])/);
-    var resCS = regCS.exec(text);
-    var i = 0;
-    var newText = text;
+    let cs = new KeyedCollection<string>();
+    let regCS = new RegExp(/(\[c#)((?!\d)([^\]]*)\]([\s\S]+?)?\[\/c#[^\]]*\])/);
+    let resCS = regCS.exec(text);
+    let i = 0;
+    let newText = text;
     while (!!resCS && !!resCS[1])
     {
         i++;
@@ -392,8 +445,8 @@ function getCSBack(text: string, cs: KeyedCollection<string>, del: string): stri
 // получаем разделитель, для временной замены вставок
 function getReplaceDelimiter(text: string, length: number = 5): string
 {
-    var dels = ["_", "\\"];
-    var del = null;
+    let dels = ["_", "\\"];
+    let del = null;
 
     for (let i = 0; i < dels.length; i++) 
     {

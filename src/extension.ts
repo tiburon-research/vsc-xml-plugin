@@ -699,7 +699,13 @@ function provideFormatter()
             let text = document.getText(range);
             // тут можно потом добавить язык, например, из tag.Language
             let res = XML.format(text, Language.XML, "\t", indent);
-            if (!res || !!res.Error) return;
+            if (!res) return;
+            
+            if (!!res.Error)
+            {
+                error(res.Error, editor);
+                return;
+            }    
 
             return [vscode.TextEdit.replace(range, res.Result)];
         }
@@ -1365,7 +1371,7 @@ function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: bo
 
 
 /** сообщение (+ отчёт) об ошибке */
-function error(text: string, edt?: vscode.TextEditor)
+export function error(text: string, edt?: vscode.TextEditor)
 {
     showError(text);
     if (!edt) return;
