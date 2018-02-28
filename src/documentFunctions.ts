@@ -1,6 +1,6 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData } from "./classes";
+import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString } from "./classes";
 import * as beautify from 'js-beautify';
 import { languages } from "vscode";
 import { logError } from "./extension";
@@ -436,7 +436,7 @@ function getCSBack(text: string, cs: KeyedCollection<string>, del: string): stri
     del = safeString(del);
     cs.forEach(function (i, e)
     {
-        newText = newText.replace(new RegExp(del + i + del, "g"), e);
+        newText = newText.replace(new RegExp(safeString(del + i + del), "g"), e);
     })
     return newText;
 }
@@ -451,17 +451,11 @@ function getReplaceDelimiter(text: string, length: number = 5): string
     for (let i = 0; i < dels.length; i++) 
     {
         let curDel = dels[i].repeat(length);
-        let mt = text.match(new RegExp(safeString(curDel + "\\d+" + curDel), "g"));
+        let mt = text.match(new RegExp(safeString(curDel) + "\\d+" + safeString(curDel), "g"));
         if (!mt || mt.length == 0) return curDel;
     }
 
     return del;
-}
-
-
-function safeString(text: string): string
-{
-    return text.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
 }
 
 

@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString } from "./classes";
 import * as XML from './documentFunctions';
 
 // константы
@@ -613,7 +613,7 @@ function autoComplete()
                     var m = false;
                     if (element.Parent)
                     {
-                        var reg = new RegExp(element.Parent + "\\.\\w*$");
+                        var reg = new RegExp(safeString(element.Parent) + "\\.\\w*$");
                         m = !!lastLine.match(reg);
                     }
                     if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
@@ -708,7 +708,7 @@ function provideFormatter()
             let editor = vscode.window.activeTextEditor;
             let range;
             let indent;
-            let tag;
+            let tag: CurrentTag;
             // либо весь документ
             if (editor.selection.start.isEqual(editor.selection.end))
             {
@@ -727,7 +727,7 @@ function provideFormatter()
             }
             let text = document.getText(range);
             // тут можно потом добавить язык, например, из tag.Language
-            let res = XML.format(text, Language.XML, "\t", indent);
+            let res = XML.format(text, tag.getLaguage(), "\t", indent);
             if (!res) return;
 
             if (!!res.Error)
@@ -883,7 +883,7 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
 
                 if ((tagCl == -1 || tagOp > -1 && tagOp < tagCl) || result[1].match(/^(Repeat)|(Condition)|(Block)$/))
                 {
-                    var closed = after.match(new RegExp("^[^<]*(<\\/)?" + result[1]));
+                    var closed = after.match(new RegExp("^[^<]*(<\\/)?" + safeString(result[1])));
                     if (!closed)
                     {
                         changesCount++;
@@ -1374,17 +1374,16 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
         cStart = "/*";
         cEnd = "*/";
     }
-
     let newText = text;
 
     // закомментировать или раскомментировать
     let lineSel = selectLines(document, selection);
     if (!lineSel) return callback(false);
     let fulLines = document.getText(lineSel);
-    if (fulLines.match(new RegExp("^\\s*" + cStart + "[\\S\\s]*" + cEnd + "\\s*$")))
+    if (fulLines.match(new RegExp("^\\s*" + safeString(cStart) + "[\\S\\s]*" + safeString(cEnd) + "\\s*$")))
     {
         sel = lineSel;
-        newText = fulLines.replace(new RegExp("^(\\s*)" + cStart + " ?([\\S\\s]*) ?" + cEnd + "(\\s*)$"), "$1$2$3");
+        newText = fulLines.replace(new RegExp("^(\\s*)" + safeString(cStart) + " ?([\\S\\s]*) ?" + safeString(cEnd) + "(\\s*)$"), "$1$2$3");
     }
     else
     {

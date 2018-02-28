@@ -15,8 +15,8 @@ import * as os from 'os'
 
 
 
-
-export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)"; // XML теги, которые могут содержать c#
+/** RegExp для XML тегов, которые могут содержать C# */
+export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)";
 
 
 export enum Language { XML, CSharp, CSS, JS, PlainTetx };
@@ -52,7 +52,7 @@ export namespace TibTransform
         let res = "";
         ar.forEach(element => 
         {
-            let mt = element.match(new RegExp("(\\s*)<" + from + "\\s*([^\\/>]+)((\\/>)|(>([\\s\\S]+?)<\\/" + from + ".*>))"));
+            let mt = element.match(new RegExp("(\\s*)<" + safeString(from) + "\\s*([^\\/>]+)((\\/>)|(>([\\s\\S]+?)<\\/" + safeString(from) + ".*>))"));
             if (!mt) res += element + "\n";
             else
             {
@@ -860,4 +860,10 @@ export function saveError(text: string, data: LogData, path: string)
         if (!!err) sendLogMessage(JSON.stringify(err));
         sendLogMessage("Добавлена ошибка:\n`" + text + "`\n\nПуть:\n`" + filename + "`");
     });
+}
+
+/** Подготовленная для RegExp строка */
+export function safeString(text: string): string
+{
+    return text.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
 }
