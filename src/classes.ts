@@ -695,22 +695,30 @@ export class LogData
         for (let key in data)
             this[key] = data[key];
         this.UserName = getUserName();
-        let ext = vscode.extensions.getExtension("tiburonscripter");
-        console.log(ext.exports);
-        this.TibVersion = ext.exports;
     }
 
     /** преобразует все данные в строку */
-    public toString()
+    public toString(): string
     {
-
+        let res = "";
+        for (let key in this)
+            if (key != "FullText" && {}.toString.call(this[key]) !== '[object Function]')
+            {
+                res += key + ": " + JSON.stringify(this[key]) + "\r\n";
+            }
+        if (!!this.FullText)
+        {
+            res += "______________ TEXT START _______________\r\n"
+            res += this.FullText;
+            res += "\r\n______________ TEXT END _______________\r\n"
+        }    
+        return res;
     }
 
     private UserName: string;
     private FileName: string;
     private FullText: string;
     private Postion: vscode.Position;
-    private TibVersion: number;
 
 }
 
@@ -855,7 +863,7 @@ export function saveError(text: string, data: LogData, path: string)
     }
     // генерируем имя файла из текста ошибки и сохраняем в папке с именем пользователя
     let hash = "" + safeEncode(text);
-    let dir = path + getUserName();
+    let dir = path + (!!path.match(/[\\\/]$/) ? "" : "\\") + getUserName();
     if (!pathExists(dir)) createDir(dir);
     let filename = dir + "/" + hash + ".log";
     if (pathExists(filename)) return;
