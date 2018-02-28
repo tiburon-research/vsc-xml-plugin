@@ -104,6 +104,11 @@
                 "command": "tib.demo",
                 "title": "Открыть код демки",
                 "category": "tib"
+            },
+            {
+                "command": "tib.debugTestCommand",
+                "title": "Отладочная комманда",
+                "category": "tib"
             }
         ],
         "keybindings":[
@@ -126,6 +131,10 @@
             {
                 "key": "ctrl+alt+d",
                 "command": "tib.demo"
+            },
+            {
+                "key": "ctrl+alt+shift+d",
+                "command": "tib.debugTestCommand"
             }
         ],
         "configurationDefaults": {

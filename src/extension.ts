@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack } from "./classes";
 import * as XML from './documentFunctions';
 
 // константы
@@ -197,6 +197,13 @@ function registerCommands()
         execute("http://debug.survstat.ru/Survey/Adaptive/?fileName=" + editor.document.fileName);
     });*/
 
+
+    // команда для тестирования на отладке
+    vscode.commands.registerTextEditorCommand('tib.debugTestCommand', () => 
+    {
+        if (_pack != "debug") return;
+        logError("Тест");
+    });
 
 
     vscode.commands.registerTextEditorCommand('tib.insertTag', () => 

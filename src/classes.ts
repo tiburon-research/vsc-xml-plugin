@@ -13,6 +13,8 @@ import * as os from 'os'
 // ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------
 
 
+/** Тип сборки */
+export const _pack = "debug";
 
 
 /** RegExp для XML тегов, которые могут содержать C# */
