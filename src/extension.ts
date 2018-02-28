@@ -726,8 +726,8 @@ function provideFormatter()
                 indent = tag.Parents.length + 1;
             }
             let text = document.getText(range);
-            // тут можно потом добавить язык, например, из tag.Language
-            let res = XML.format(text, tag.getLaguage(), "\t", indent);
+            // нужно ли определять язык (выделение может быть какое угодно)
+            let res = XML.format(text, Language.XML, "\t", indent);
             if (!res) return;
 
             if (!!res.Error)
