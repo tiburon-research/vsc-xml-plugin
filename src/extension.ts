@@ -554,6 +554,8 @@ function autoComplete()
             if (!tag.CSMode) return;
 
             let curLine = getPreviousText(document, position, true);
+            if (!curLine.match(/#?\w+$/)) return;
+
             let customMethods = Methods.CompletionArray();
 
             if (customMethods && !tag.InCSString) completionItems = completionItems.concat(customMethods); //Custom Methods
@@ -569,7 +571,6 @@ function autoComplete()
             {
                 if (!tag.InCSString)
                 {
-                    //Functions, Variables, Enums, Classes
                     let ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Variable"), TibAutoCompleteList.Item("Enum"), TibAutoCompleteList.Item("Class"), TibAutoCompleteList.Item("Type"), TibAutoCompleteList.Item("Struct"));
                     ar.forEach(element =>
                     {
