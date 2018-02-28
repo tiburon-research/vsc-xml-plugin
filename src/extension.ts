@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags } from "./classes";
 import * as XML from './documentFunctions';
 
 // константы
@@ -836,6 +836,10 @@ function makeIndent(): void
                 action: { indentAction: vscode.IndentAction.Indent }
             },
             {
+                beforeText: new RegExp("\\[(" + _SelfClosedTags + ")\\]\\s*", 'i'),
+                action: { indentAction: vscode.IndentAction.None }
+            },
+            {
                 beforeText: new RegExp(`\\[([a-z]\\w*#?)([^/\\]]*(?!/)\\])\\s*`, 'i'),
                 afterText: /^\[\/([a-z]\w*#?)\s*\]$/i,
                 action: { indentAction: vscode.IndentAction.IndentOutdent }
@@ -910,12 +914,12 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 {
     if (inProcess || !editor || !event || !event.contentChanges[0]) return;
 
-    var change = event.contentChanges[0].text;
-    var originalPosition = editor.selection.start.translate(0, 1);
-    var curLine = getPreviousText(editor.document, editor.selection.start, true)
+    let change = event.contentChanges[0].text;
+    let originalPosition = editor.selection.start.translate(0, 1);
+    let curLine = getPreviousText(editor.document, editor.selection.start, true)
 
     // закрывание [тегов]
-    var tagT = text.match(/\[([a-zA-Z]\w*(#)?)(\s[^\]\[]*)?(\/)?\]$/);
+    let tagT = text.match(/\[([a-zA-Z]\w*(#)?)(\s[^\]\[]*)?(\/)?\]$/);
     if
     (
         change[change.length - 1] == "]" &&
@@ -928,7 +932,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
     )
     {
         inProcess = true;
-        var str = tagT[2] ? "$0;[/c#]" : "$0[/" + tagT[1] + "]";
+        let str = tagT[2] ? "$0;[/c#]" : "$0[/" + tagT[1] + "]";
         editor.insertSnippet(new vscode.SnippetString(str), originalPosition).then(() =>
         {
             inProcess = false;
@@ -1076,7 +1080,7 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 
 function isSelfClosedTag(tag: string): boolean
 {
-    return !!tag.match(/^((area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr))$/);
+    return !!tag.match("^(" + _SelfClosedTags + ")$");
 }
 
 function inString(text: string): boolean

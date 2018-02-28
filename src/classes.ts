@@ -17,6 +17,8 @@ import * as os from 'os'
 
 /** RegExp для XML тегов, которые могут содержать C# */
 export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)";
+/** RegExp для HTML тегов, которые не нужно закрывать */
+export const _SelfClosedTags = "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)";
 
 
 export enum Language { XML, CSharp, CSS, JS, PlainTetx };
