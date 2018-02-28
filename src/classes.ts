@@ -9,6 +9,7 @@ import * as os from 'os'
 
 
 
+
 // ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------
 
 
@@ -47,11 +48,11 @@ export namespace TibTransform
 
     function TransformElement(text: string, from: string, to: string): string
     {
-        var ar = text.split("\n");
-        var res = "";
+        let ar = text.split("\n");
+        let res = "";
         ar.forEach(element => 
         {
-            var mt = element.match(new RegExp("(\\s*)<" + from + "\\s*([^\\/>]+)((\\/>)|(>([\\s\\S]+?)<\\/" + from + ".*>))"));
+            let mt = element.match(new RegExp("(\\s*)<" + from + "\\s*([^\\/>]+)((\\/>)|(>([\\s\\S]+?)<\\/" + from + ".*>))"));
             if (!mt) res += element + "\n";
             else
             {
@@ -59,15 +60,15 @@ export namespace TibTransform
                 res += "<" + to;
                 if (mt[2])
                 {
-                    var id = mt[2].match(/Id=["'][^"']+["']/);
+                    let id = mt[2].match(/Id=["'][^"']+["']/);
                     if (id) res += " " + id[0];
-                    var txt = mt[2].match(/Text=["'][^"']*["']/);
+                    let txt = mt[2].match(/Text=["'][^"']*["']/);
                     if (txt) res += " " + txt[0];
                 }
                 res += ">";
                 if (mt[6])
                 {
-                    var txt = mt[6].match(/<Text[^>]*>.*<\/Text\s*>/);
+                    let txt = mt[6].match(/<Text[^>]*>.*<\/Text\s*>/);
                     if (txt) res += txt[0];
                 }
                 res += "</" + to + ">\n"
@@ -190,15 +191,17 @@ export class TibAutoCompleteItem
 
     ToCompletionItem(addBracket: boolean = false)
     {
-        var kind: keyof typeof vscode.CompletionItemKind = this.Kind;
-        var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind[kind]);
+
+        let kind: keyof typeof vscode.CompletionItemKind = this.Kind;
+        let item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind[kind]);
         if (addBracket && (this.Kind == "Function" || this.Kind == "Method")) item.insertText = new vscode.SnippetString(this.Name + "($1)");
-        var mds = new vscode.MarkdownString();
+        let mds = new vscode.MarkdownString();
         if (this.Description) mds.value = this.Description;
         else if (this.Documentation) mds.value = this.Documentation;
         item.documentation = mds;
         if (this.Detail) item.detail = this.Detail;
         return item;
+
     }
 
     ToSignatureInformation()
@@ -755,19 +758,21 @@ export function positiveMin(a, b)
 }
 
 
+/** записывает данные в буфер обмена */
 export function copyToCB(text: string)
 {
     clipboard.writeSync(text);
 }
 
 
-export function getFromCB(): string
+/** получает данные из буфера обмена */
+export function getFromClioboard(): string
 {
     return clipboard.readSync();
 }
 
 
-export function statusMessage(text: string, after: number | Thenable<any>)
+export function statusMessage(text: string, after: number | Thenable<any>): void
 {
     var num: number;
     var th: Thenable<any>;

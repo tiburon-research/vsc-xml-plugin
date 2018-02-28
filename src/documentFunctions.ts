@@ -3,7 +3,7 @@
 import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData } from "./classes";
 import * as beautify from 'js-beautify';
 import { languages } from "vscode";
-import { error } from "./extension";
+import { logError } from "./extension";
 
 // форматирование, проверка и другие операции с текстом документа
 
@@ -306,7 +306,7 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
     }
     catch (err)
     {
-        error("Ошибка при поиске закрывающегося тега");
+        logError("Ошибка при поиске закрывающегося тега");
     }
     return null;
 }
@@ -351,7 +351,7 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
     }
     catch (err)
     {
-        error("Ошибка при поиске открывающегося тега");
+        logError("Ошибка при поиске открывающегося тега");
     }
     return null;
 }
@@ -392,7 +392,7 @@ function get1LevelNodes(text: string): TagInfo[]
     }
     catch (err)
     {
-        error("Ошибка при поиске вложенных тегов");
+        logError("Ошибка при поиске вложенных тегов");
     }
     return tags;
 }
