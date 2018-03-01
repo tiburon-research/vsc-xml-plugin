@@ -554,19 +554,22 @@ function autoComplete()
             if (!tag.CSMode) return;
 
             let curLine = getPreviousText(document, position, true);
-            if (!curLine.match(/#?\w+$/)) return;
+            let mt = curLine.match(/(#|\$)?\w+$/);
+            if (!mt) return;
 
-            let customMethods = Methods.CompletionArray();
-
-            if (customMethods && !tag.InCSString) completionItems = completionItems.concat(customMethods); //Custom Methods
             let str = getCurrentLineText(document, position).substr(position.character);
-            if (tag.CSSingle) // добавляем snippet для $repeat
+            if (tag.CSSingle || !!mt[1] && mt[1] == "$") // добавляем snippet для $repeat
             {
                 let ci = new vscode.CompletionItem("repeat", vscode.CompletionItemKind.Snippet);
                 ci.detail = "Строчный repeat";
                 ci.insertText = new vscode.SnippetString("repeat(${1|" + getAllLists().join(',') + "|}){${2:@ID}[${3:,}]}");
                 completionItems.push(ci);
+                if (!tag.CSSingle) return completionItems;
             }
+            
+            let customMethods = Methods.CompletionArray();
+            if (customMethods && !tag.InCSString) completionItems = completionItems.concat(customMethods); //Custom Methods
+
             if (!tag.CSSingle && !curLine.match(/\w+\.\w*$/))
             {
                 if (!tag.InCSString)
@@ -605,27 +608,36 @@ function autoComplete()
         }
     }, "\"", "");
 
-    //Properties, Methods, EnumMembers
+    //Properties, Methods, EnumMembers, Linq
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
-            var completionItems = [];
-            var tag = getCurrentTag(document, position);
+            let completionItems = [];
+            let tag = getCurrentTag(document, position);
             if (tag.CSMode && !tag.InCSString && !tag.CSSingle)
             {
-                var ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Property").concat(TibAutoCompleteList.Item("Method"), TibAutoCompleteList.Item("EnumMember"));
-                var lastLine = getPreviousText(document, position, true);
-                var str = getCurrentLineText(document, position).substr(position.character);
+                let lastLine = getPreviousText(document, position, true);
+                let ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Property").concat(TibAutoCompleteList.Item("Method"), TibAutoCompleteList.Item("EnumMember"));
+                let str = getCurrentLineText(document, position).substr(position.character);
+                let needClose = !str.match(/\w*\(/);
+                let mt = lastLine.match(/(\w+)\.w*$/);
+                let parent: string;
+                if (!!mt && !!mt[1]) parent = mt[1];
                 ar.forEach(element =>
                 {
-                    var m = false;
+                    let m = false;
                     if (element.Parent)
                     {
-                        var reg = new RegExp(safeString(element.Parent) + "\\.\\w*$");
+                        let reg = new RegExp(element.Parent + "\\.\\w*$");
                         m = !!lastLine.match(reg);
                     }
-                    if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
+                    if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "0" + element.Name));
                 });
+                if ((!!parent && classTypes.indexOf(parent) == -1) && Settings.Item("useLinq"))
+                {
+                    let linqAr = TibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "1" + x.Name));
+                    completionItems = completionItems.concat(linqAr);
+                }    
             }
             return completionItems;
         },

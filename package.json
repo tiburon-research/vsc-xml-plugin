@@ -167,6 +167,12 @@
                     "description": "Путь к папке с логами (лучше не менять)",
                     "type": "string",
                     "default": "G:\\Разное\\TiburonXMLScripterLogs"
+                },
+                "tib.useLinq":
+                {
+                    "description": "Подставлять методы из библиотеки System.Linq",
+                    "type": "boolean",
+                    "default": true
                 }
             }
         }
