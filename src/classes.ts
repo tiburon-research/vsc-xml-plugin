@@ -193,9 +193,8 @@ export class TibAutoCompleteItem
             this[key] = obj[key];
     }
 
-    ToCompletionItem(addBracket: boolean = false)
+    ToCompletionItem(addBracket: boolean = false, sortString?: string)
     {
-
         let kind: keyof typeof vscode.CompletionItemKind = this.Kind;
         let item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind[kind]);
         if (addBracket && (this.Kind == "Function" || this.Kind == "Method")) item.insertText = new vscode.SnippetString(this.Name + "($1)");
@@ -203,6 +202,7 @@ export class TibAutoCompleteItem
         if (this.Description) mds.value = this.Description;
         else if (this.Documentation) mds.value = this.Documentation;
         item.documentation = mds;
+        if (sortString) item.sortText = sortString;
         if (this.Detail) item.detail = this.Detail;
         return item;
 
@@ -842,12 +842,6 @@ export function safeEncode(txt: string, replacement = "_"): string
 }
 
 
-export function sendLogMessage(text: string)
-{
-    console.log(text);
-}
-
-
 /** 
  * Создаёт лог об ошибке 
  * @param text Текст ошибки
@@ -873,6 +867,13 @@ export function saveError(text: string, data: LogData, path: string)
         sendLogMessage("Добавлена ошибка:\n`" + text + "`\n\nПуть:\n`" + filename + "`");
     });
 }
+
+
+export function sendLogMessage(text: string)
+{
+    console.log(text);
+}
+
 
 /** Подготовленная для RegExp строка */
 export function safeString(text: string): string

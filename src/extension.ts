@@ -17,12 +17,15 @@ const _NodeStoreNames = ["Page", "Question", "Quota", "List"];
 var inProcess = false;
 
 /** Путь для сохранения логов */
-var LogPath: string;
+var _LogPath: string;
 
 var TibAutoCompleteList = new KeyedCollection<TibAutoCompleteItem[]>();
 
 /** Список всех для C# (все перегрузки отдельно) */
 var codeAutoCompleteArray: TibAutoCompleteItem[] = [];
+
+/** Список классов, типов, структу и т.д. */
+var classTypes: string[] = [];
 
 var ItemSnippets = {
     List: "<Item Id=\"$1\"><Text>$2</Text></Item>",
@@ -118,7 +121,7 @@ function getData()
 {
     try 
     {
-        LogPath = Settings.Item("logPath");
+        _LogPath = Settings.Item("logPath");
 
         let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });
         let statCS: TibAutoCompleteItem[] = [];
@@ -131,6 +134,8 @@ function getData()
                 Detail: "Тип данных/класс " + key
             });
             statCS.push(tp);
+            // и в classTypes
+            classTypes.push(key);
             // добавляем все его статические методы
             let items: object[] = AutoCompleteArray.StaticMethods[key];
             items.forEach(item =>
@@ -229,7 +234,7 @@ function registerCommands()
             });
         } catch (error)
         {
-            logError("Ошибка при оборачивании в CDATA");
+            showError("Ошибка при оборачивании в CDATA");
         }
     });
 
@@ -645,7 +650,7 @@ function autoComplete()
         {
             return item;
         }
-    }, '.');
+    }, "."); 
 
     //Значения атрибутов
     vscode.languages.registerCompletionItemProvider('tib', {
@@ -1045,7 +1050,7 @@ function safeValsEval(query): string[]
     }
     catch (error)
     {
-        saveError("Не получилось выполнить eval()", getLogData(), LogPath);
+        saveError("Не получилось выполнить eval()", getLogData(), _LogPath);
     }
     return res;
 }
@@ -1496,20 +1501,27 @@ function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: bo
 export function logError(text: string, edt?: vscode.TextEditor)
 {
     showError(text);
-    if (!edt) return;
     let editor = edt || vscode.window.activeTextEditor;
-    let data = getLogData(edt);
-    saveError(text, data, LogPath);
+    let data = getLogData(editor);
+    saveError(text, data, _LogPath);
 }
 
 
 /** Возвращает FileName+Postion+FullText */
 function getLogData(edt?: vscode.TextEditor): LogData
 {
-    let editor = edt || vscode.window.activeTextEditor;
-    return new LogData({
-        FileName: editor.document.fileName,
-        Postion: editor.selection.active,
-        FullText: editor.document.getText()
-    });
+    let res: LogData;
+    try
+    {
+        let editor = edt || vscode.window.activeTextEditor;
+        res = new LogData({
+            FileName: editor.document.fileName,
+            Postion: editor.selection.active,
+            FullText: editor.document.getText()
+        });
+    } catch (error)
+    {
+        logError("Ошибка доступа к редактору");
+    }
+    return res;
 }
