@@ -170,12 +170,14 @@ function getData()
                 {
                     TibAutoCompleteList.Item(item.Kind).push(item);
                 }
-                else // добавляем в перегрузку к имеющемуся (и сам имеющийся тоже, если надо)
+                else
                 {
+                    // добавляем в перегрузку к имеющемуся (и сам имеющийся тоже, если надо)
+//                    if (!TibAutoCompleteList.Item(item.Kind)[ind].Overloads) TibAutoCompleteList.Item(item.Kind)[ind].Overloads = [];
                     let len = TibAutoCompleteList.Item(item.Kind)[ind].Overloads.length;
                     if (len == 0)
                     {
-                        let parent = TibAutoCompleteList.Item(item.Kind)[ind];
+                        let parent = new TibAutoCompleteItem(TibAutoCompleteList.Item(item.Kind)[ind]);
                         TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(parent);
                         len++;
                     }
@@ -183,7 +185,7 @@ function getData()
                     let doc = "Перегрузок: " + (len + 1);
                     TibAutoCompleteList.Item(item.Kind)[ind].Description = doc;
                     TibAutoCompleteList.Item(item.Kind)[ind].Documentation = doc;
-                }
+                }    
             }
         });
     } catch (er)
