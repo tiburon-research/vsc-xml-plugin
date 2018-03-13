@@ -114,20 +114,13 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
                     // убираем лишние пробелы/переносы
                     if (tag.Language != Language.PlainTetx) formattedBody = formattedBody.replace(/^[\s]*([\s\S]*?)[\s]*$/, "$1");
                     // форматируем согласно содержанию
-                    let tmpRes = formatBody(formattedBody, tab, indent + (tag.HasCDATA && tag.Language == Language.XML ? 2 : 1), tag.Language);
+                    let tmpRes = formatBody(formattedBody, tab, indent + 1 /* + (tag.HasCDATA && tag.Language == Language.XML ? 2 : 1) */, tag.Language);
                     if (!!tmpRes.Error)
                     {
                         res.Error = "Ошибка при форматировании тега";
                         return;
                     }
                     formattedBody = "\n" + tmpRes.Result + "\n";
-                    // форматируем CDATA
-                    if (tag.HasCDATA)
-                    {
-                        formattedBody = formattedBody.replace(/\n\s*<!\[CDATA\[/, "\n" + ind + tab + "<![CDATA[");
-                        formattedBody = formattedBody.replace(/\n\s*\]\]>/, "\n" + ind + tab + "]]>");
-                        formattedBody = formattedBody.replace(/([^\n]+)\s*\]\]>/, "$1\n" + ind + tab + "]]>");
-                    }
                 }
                 // отступ для AllowCode fake
                 if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
@@ -139,7 +132,7 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
             newFul = before + ind + openTag + formattedBody + closeTag + after;
             newText = newText.replace(oldFull, newFul);
         });
-        res.Result = newText;
+        res.Result = formatCDATA(newText);
     }
 
     // форматируем между тегами?
@@ -179,34 +172,22 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0): 
     let res = text;
     let ind = tab.repeat(indent);
     let err: string;
-    // если обёрнут в CDATA, то создаём отступ для неё и потом на 1 больше для внутренности
-    if (res.match(/^\s*<!\[CDATA\[[\s\S]*\]\]>\s*$/))
+    // убираем дублирование
+    if (tab != " ") text.replace("  ", " ");
+    res = text.replace("\n\n\n", "\n\n"); // двойной перенос, всё-таки, иногда отделяет что-то посмыслу, а вот x3 уже перебор
+    // отступаем
+    var min = minIndent(text);
+    var newInd = "";
+    if (min > -1)
     {
-        res = res.replace(/^\s*<!\[CDATA\[\s*\n*/, '');
-        res = res.replace(/\s*\]\]>\s*/, '');
-        let tmpRes = formatPlainText(res, tab, indent + 1);
-        res = ind + "<![CDATA[\n" + tmpRes.Result + "\n" + ind + "]]>";
-        err = tmpRes.Error;
+        // сдвигаем на разницу
+        var d = indent - min;
+        if (d > 0) newInd = tab.repeat(d);
     }
-    else
-    {
-        // убираем дублирование
-        if (tab != " ") text.replace("  ", " ");
-        res = text.replace("\n\n\n", "\n\n"); // двойной перенос, всё-таки, иногда отделяет что-то посмыслу, а вот x3 уже перебор
-        // отступаем
-        var min = minIndent(text);
-        var newInd = "";
-        if (min > -1)
-        {
-            // сдвигаем на разницу
-            var d = indent - min;
-            if (d > 0) newInd = tab.repeat(d);
-        }
-        // custom trim
-        res = res.replace(/^\s*/, '').replace(/\s*$/, '')
-        // двигаем только непустые строки и первую
-        res = ind + res.replace(/(\n)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
-    }
+    // custom trim
+    res = res.replace(/^\s*/, '').replace(/\s*$/, '')
+    // двигаем только непустые строки и первую
+    res = ind + res.replace(/(\n)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
     return { Result: res, Error: err };
 }
 
@@ -463,7 +444,8 @@ function getReplaceDelimiter(text: string, length: number = 5): string
 function minIndent(text: string): number
 {
     let min = -1;
-    let mt = text.match(/(\n|^)[\t ]*\S/g);
+    let pure = text.replace(/[\t ]*((<!\[CDATA\[]])|(\]\]>))[\t ]*/g, "") ; // убираем CDATA
+    let mt = pure.match(/(\n|^)[\t ]*\S/g);
     if (!!mt)
     {
         for (let i = 0; i < mt.length; i++)
@@ -473,4 +455,26 @@ function minIndent(text: string): number
         }
     }
     return min;
+}
+
+
+/** располагает CDATA впритык к тегу */
+function formatCDATA(text: string): string
+{
+    return text.replace(/>\s*<!\[CDATA\[/g, "><![CDATA[").replace(/([\t ]*)\]\]>\n*([\t ]*)</g, "$2]]><");
+    /*let regex = /(\s*<!\[CDATA\[)([\s\S]*)(\]\]>[\t ]*)(\n(\s*))?/;
+    let res = text;
+    let result = regex.exec(res);
+    let old = res;
+    while (!!result)
+    {
+        let tmp = result[0];
+        let ins = result[2] || "";
+        let ind = result[5] || "";
+        let repl = ins.indexOf("\n") > -1 ? ("<![CDATA[\n" + ins + "\n" + ind + "]]>") : ("<![CDATA[" + ins + "]]>");
+        res = res.replace(tmp, repl);
+        old = old.replace(tmp, "");
+        result = regex.exec(old);
+    }
+    return res;*/
 }

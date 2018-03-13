@@ -98,24 +98,20 @@
     "CustomText1":{
         "prefix": "<CustomText1",
         "body": [
-            "<CustomText1>",
-            "\t<![CDATA[",
-            "\t\t$0",
-            "\t]]>",
-            "</CustomText1>"
+            "<CustomText1><![CDATA[",
+            "\t$0",
+            "]]></CustomText1>"
         ],
         "description": "CustomText1"
     },
     "CustomText2":{
         "prefix": "<CustomText2",
         "body": [
-            "<CustomText2>",
-            "\t<![CDATA[",
-            "\t\t<style>",
-            "\t\t\t$0",
-            "\t\t</style>",
-            "\t]]>",
-            "</CustomText2>"
+            "<CustomText2><![CDATA[",
+            "\t<style>",
+            "\t\t$0",
+            "\t</style>",
+            "]]></CustomText2>"
         ],
         "description": "CustomText2 (+style)"
     },
@@ -131,11 +127,11 @@
     "Methods":{
         "prefix": "<Methods",
         "body": [
-            "<Methods>",
-            "\t<![CDATA[",
-            "\t\t$0",
-            "\t]]>",
-            "</Methods>"
+            "<Methods><![CDATA[",
+            "",
+            "\t$0",
+            "",
+            "]]></Methods>"
         ],
         "description": "Структура Methods"
     }
