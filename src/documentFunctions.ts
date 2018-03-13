@@ -356,7 +356,7 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
     return null;
 }
 
-
+/** заменяет блок комментариев на пробелы */
 export function clearXMLComments(txt: string): string
 {
     var mt = txt.match(/<!--([\s\S]+?)-->/g);
@@ -371,20 +371,21 @@ export function clearXMLComments(txt: string): string
     return res;
 }
 
-
+/** получает теги 0 вложенности */
 function get1LevelNodes(text: string): TagInfo[]
 {
     let tags: TagInfo[] = [];
+    let pure = clearXMLComments(text);
     try
     {
-        let rest = text;
+        let rest = pure;
         while (rest.length > 0)
         {
-            let tag = new TagInfo(rest, text.length - rest.length);
+            let tag = new TagInfo(rest, pure.length - rest.length);
             if (tag && tag.Found)
             {
                 tags.push(tag);
-                if (tag.Closed) rest = text.substr(tag.CloseTag.To + 1);
+                if (tag.Closed) rest = pure.substr(tag.CloseTag.To + 1);
                 else break;
             }
             else break;
