@@ -120,7 +120,7 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
                         res.Error = "Ошибка при форматировании тега";
                         return;
                     }
-                    formattedBody = "\n" + formattedBody + "\n";
+                    formattedBody = "\n" + tmpRes.Result + "\n";
                     // форматируем CDATA
                     if (tag.HasCDATA)
                     {
