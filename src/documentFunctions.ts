@@ -63,6 +63,8 @@ export function format(text: string, language: Language, tab: string = "\t", ind
     let res: FormatResult = LanguageFunction(language)(text, tab, indent);
     if (!res.Error)
     {
+        // для XML форматируем CDATA. Тут - чтобы не рекурсивно
+        if (language == Language.XML) res.Result = formatCDATA(res.Result);
         // пока не будет работать стабильно проверяем целостность текста
         let hash = text.replace(/\s+/g, '');
         if (res.Result.replace(/\s+/g, '') != hash)
@@ -132,7 +134,7 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
             newFul = before + ind + openTag + formattedBody + closeTag + after;
             newText = newText.replace(oldFull, newFul);
         });
-        res.Result = formatCDATA(newText);
+        res.Result = newText;
     }
 
     // форматируем между тегами?
