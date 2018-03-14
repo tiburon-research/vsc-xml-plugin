@@ -228,7 +228,7 @@ function registerCommands()
         {
             inProcess = true;
             var multi = vscode.window.activeTextEditor.document.getText(vscode.window.activeTextEditor.selection).indexOf("\n") > -1;
-            var pre = multi ? "\n\t" : " ";
+            var pre = multi ? "\n" : " ";
             var post = multi ? "\n" : " ";
             vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<![CDATA[" + pre + "$TM_SELECTED_TEXT" + post + "]]>")).then(() => 
             {
@@ -709,10 +709,11 @@ function helper()
             let sign = new vscode.SignatureHelp();
             let lastLine = getPreviousText(document, position, true);
             let ar = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Method"));
+            let mtch = lastLine.match(/(?:(^)|(.*\b))(\w+)\([^\(\)]*$/);
+            if (!mtch || mtch.length < 3) return sign;
             ar.forEach(element =>
             {
-                let mtch = lastLine.match(/(?:(^)|(.*\b))(\w+)\([^\(\)]*$/);
-                if (mtch && mtch.length > 3 && element.Name.indexOf(mtch[3]) >= 0)
+                if (element.Name == mtch[3])
                 {
                     if (element.Overloads.length == 0) sign.signatures.push(element.ToSignatureInformation());
                     else element.Overloads.forEach(el =>
