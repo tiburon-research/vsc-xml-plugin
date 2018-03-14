@@ -173,7 +173,7 @@ function getData()
                 else
                 {
                     // добавляем в перегрузку к имеющемуся (и сам имеющийся тоже, если надо)
-//                    if (!TibAutoCompleteList.Item(item.Kind)[ind].Overloads) TibAutoCompleteList.Item(item.Kind)[ind].Overloads = [];
+                    //if (!TibAutoCompleteList.Item(item.Kind)[ind].Overloads) TibAutoCompleteList.Item(item.Kind)[ind].Overloads = [];
                     let len = TibAutoCompleteList.Item(item.Kind)[ind].Overloads.length;
                     if (len == 0)
                     {
@@ -185,7 +185,7 @@ function getData()
                     let doc = "Перегрузок: " + (len + 1);
                     TibAutoCompleteList.Item(item.Kind)[ind].Description = doc;
                     TibAutoCompleteList.Item(item.Kind)[ind].Documentation = doc;
-                }    
+                }
             }
         });
     } catch (er)
@@ -206,14 +206,14 @@ function registerCommands()
 
 
     // команда для тестирования на отладке
-    vscode.commands.registerTextEditorCommand('tib.debugTestCommand', () => 
+    vscode.commands.registerCommand('tib.debugTestCommand', () => 
     {
         if (_pack != "debug") return;
         logError("Тест");
     });
 
 
-    vscode.commands.registerTextEditorCommand('tib.insertTag', () => 
+    vscode.commands.registerCommand('tib.insertTag', () => 
     {
         inProcess = true;
         vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]")).then(() => 
@@ -222,7 +222,7 @@ function registerCommands()
         });
     });
 
-    vscode.commands.registerTextEditorCommand('tib.cdata', () => 
+    vscode.commands.registerCommand('tib.cdata', () => 
     {
         try
         {
@@ -240,7 +240,7 @@ function registerCommands()
         }
     });
 
-    vscode.commands.registerTextEditorCommand('tib.commentBlock', () => 
+    vscode.commands.registerCommand('tib.commentBlock', () => 
     {
         inProcess = true;
         let newSel = selectLines(vscode.window.activeTextEditor.document, vscode.window.activeTextEditor.selection);
@@ -251,7 +251,7 @@ function registerCommands()
         });
     });
 
-    vscode.commands.registerTextEditorCommand('tib.transform.AnswersToItems', () => 
+    vscode.commands.registerCommand('tib.transform.AnswersToItems', () => 
     {
         let editor = vscode.window.activeTextEditor;
         try
@@ -271,7 +271,7 @@ function registerCommands()
         }
     });
 
-    vscode.commands.registerTextEditorCommand('tib.transform.ItemsToAnswers', () => 
+    vscode.commands.registerCommand('tib.transform.ItemsToAnswers', () => 
     {
         let editor = vscode.window.activeTextEditor;
         try
@@ -292,7 +292,7 @@ function registerCommands()
     });
 
     // комментирование блока
-    vscode.commands.registerTextEditorCommand('editor.action.blockComment', () => 
+    vscode.commands.registerCommand('editor.action.blockComment', () => 
     {
         let editor = vscode.window.activeTextEditor;
         let selections = editor.selections;
@@ -309,7 +309,7 @@ function registerCommands()
         });
     });
 
-    vscode.commands.registerTextEditorCommand('tib.paste', () => 
+    vscode.commands.registerCommand('tib.paste', () => 
     {
         inProcess = true;
         let txt = getFromClioboard();
@@ -573,7 +573,7 @@ function autoComplete()
                 completionItems.push(ci);
                 if (!tag.CSSingle) return completionItems;
             }
-            
+
             let customMethods = Methods.CompletionArray();
             if (customMethods && !tag.InCSString) completionItems = completionItems.concat(customMethods); //Custom Methods
 
@@ -640,11 +640,12 @@ function autoComplete()
                     }
                     if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "0" + element.Name));
                 });
+                // добавляем Linq
                 if ((!!parent && classTypes.indexOf(parent) == -1) && Settings.Item("useLinq"))
                 {
                     let linqAr = TibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "1" + x.Name));
                     completionItems = completionItems.concat(linqAr);
-                }    
+                }
             }
             return completionItems;
         },
@@ -652,7 +653,7 @@ function autoComplete()
         {
             return item;
         }
-    }, "."); 
+    }, ".");
 
     //Значения атрибутов
     vscode.languages.registerCompletionItemProvider('tib', {
