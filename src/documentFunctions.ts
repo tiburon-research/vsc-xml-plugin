@@ -68,7 +68,10 @@ export function format(text: string, language: Language, tab: string = "\t", ind
         // пока не будет работать стабильно проверяем целостность текста
         let hash = text.replace(/\s+/g, '');
         if (res.Result.replace(/\s+/g, '') != hash)
-            res.Error = "Результат форматирования не прошёл проверку на целостность текста";
+        {
+            if (_pack != "debug") res.Error = "Результат форматирования не прошёл проверку на целостность текста";
+            else showWarning("Результат форматирования не прошёл проверку на целостность текста");
+        }
     }
     return res;
 }
