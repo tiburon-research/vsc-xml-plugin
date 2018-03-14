@@ -116,7 +116,7 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
                     // убираем лишние пробелы/переносы
                     if (tag.Language != Language.PlainTetx) formattedBody = formattedBody.replace(/^[\s]*([\s\S]*?)[\s]*$/, "$1");
                     // форматируем согласно содержанию
-                    let tmpRes = formatBody(formattedBody, tab, indent + 1 /* + (tag.HasCDATA && tag.Language == Language.XML ? 2 : 1) */, tag.Language);
+                    let tmpRes = formatBody(formattedBody, tab, indent + 1, tag.Language);
                     if (!!tmpRes.Error)
                     {
                         res.Error = "Ошибка при форматировании тега";
@@ -133,7 +133,6 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
             else formattedBody = "";
             // формируем результат
             newFul = before + ind + formatTag(openTag) + formattedBody + formatTag(closeTag) + after;
-            logString(newFul);
             newText = newText.replace(oldFull, newFul);
         });
         res.Result = newText;
@@ -465,22 +464,13 @@ function minIndent(text: string): number
 /** располагает CDATA впритык к тегу */
 function formatCDATA(text: string): string
 {
-    return text.replace(/>\s*<!\[CDATA\[/g, "><![CDATA[").replace(/([\t ]*)\]\]>\n*([\t ]*)</g, "$2]]><");
-    /*let regex = /(\s*<!\[CDATA\[)([\s\S]*)(\]\]>[\t ]*)(\n(\s*))?/;
-    let res = text;
-    let result = regex.exec(res);
-    let old = res;
-    while (!!result)
-    {
-        let tmp = result[0];
-        let ins = result[2] || "";
-        let ind = result[5] || "";
-        let repl = ins.indexOf("\n") > -1 ? ("<![CDATA[\n" + ins + "\n" + ind + "]]>") : ("<![CDATA[" + ins + "]]>");
-        res = res.replace(tmp, repl);
-        old = old.replace(tmp, "");
-        result = regex.exec(old);
-    }
-    return res;*/
+    let res = text.replace(/>\s*<!\[CDATA\[/g, "><![CDATA[");
+    res = res.replace(/[\t ]*\]\]>[\t ]*</g, "]]><"); // однострочная
+    res = res.replace(/\s*\]\]>[\t ]*?(\n[\t ]*)</g, "$1]]><"); // многострочная
+    // пробелы
+    res = res.replace(/<!\[CDATA\[[\t ]*(\S)/g, "<![CDATA[ $1");
+    res = res.replace(/(\S)[\t ]*\]\]>/g, "$1 ]]>");
+    return res;
 }
 
 
