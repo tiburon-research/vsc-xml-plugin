@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning } from "./classes";
 import * as XML from './documentFunctions';
 
 // константы
@@ -1412,13 +1412,21 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
     let lineSel = selectLines(document, selection);
     if (!lineSel) return callback(false);
     let fulLines = document.getText(lineSel);
+    // если закомментировано всё
     if (fulLines.match(new RegExp("^\\s*" + safeString(cStart) + "[\\S\\s]*" + safeString(cEnd) + "\\s*$")))
     {
         sel = lineSel;
-        newText = fulLines.replace(new RegExp("^(\\s*)" + safeString(cStart) + " ?([\\S\\s]*) ?" + safeString(cEnd) + "(\\s*)$"), "$1$2$3");
+        logString(fulLines)
+        newText = fulLines.replace(new RegExp("^(\\s*)" + safeString(cStart) + "( +?)([\\S\\s]*)( +?)" + safeString(cEnd) + "(\\s*)$"), "$1$3$5");
     }
+    // иначе проверяем на наличие комментов внутри
     else
     {
+        if (fulLines.match(new RegExp("(" + safeString(cStart) + ")|(" + safeString(cEnd) + ")")))
+        {
+            showWarning("Внутри выделенной области уже есть комментарии");
+            return callback(false);
+        }
         cStart += " ";
         cEnd = " " + cEnd;
         newText = cStart + newText + cEnd;
