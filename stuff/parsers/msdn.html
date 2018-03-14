@@ -41,7 +41,7 @@
         $('#get').on('click', function()
         {
             var res = getMSDNStaticMethods($table);
-            $res.val(JSON.stringify(res)).select().focus();
+            $res.val(JSON.stringify(res).replace(/\s*\\n\s*/g, "")).select().focus();
         });
 
     </script>
