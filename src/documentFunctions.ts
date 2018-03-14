@@ -186,6 +186,7 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0): 
         // сдвигаем на разницу
         var d = indent - min;
         if (d > 0) newInd = tab.repeat(d);
+        else newInd = tab.repeat(indent);
     }
     // custom trim
     res = res.replace(/^\s*/, '').replace(/\s*$/, '')
