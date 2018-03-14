@@ -1,6 +1,6 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString } from "./classes";
+import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning } from "./classes";
 import * as beautify from 'js-beautify';
 import { languages } from "vscode";
 import { logError } from "./extension";
@@ -165,7 +165,7 @@ function formatBody(text: string, tab: string, indent: number = 0, lang: Languag
     let ind = tab.repeat(indent);
     newText = newText.replace(/(\n|^)[\t ]+$/g, '$1');
     res = LanguageFunction(lang)(newText, tab, indent);
-    if (rm && !res.Error) res.Result = getCSBack(newText, cs, del);
+    if (rm && !res.Error) res.Result = getCSBack(res.Result, cs, del);
     return res;
 }
 
@@ -419,7 +419,6 @@ function encodeCS(text: string, cs: KeyedCollection<string>, del: string): strin
 function getCSBack(text: string, cs: KeyedCollection<string>, del: string): string
 {
     var newText = text;
-    del = safeString(del);
     cs.forEach(function (i, e)
     {
         newText = newText.replace(new RegExp(safeString(del + i + del), "g"), e);
@@ -448,7 +447,7 @@ function getReplaceDelimiter(text: string, length: number = 5): string
 function minIndent(text: string): number
 {
     let min = -1;
-    let pure = text.replace(/[\t ]*((<!\[CDATA\[]])|(\]\]>))[\t ]*/g, "") ; // убираем CDATA
+    let pure = text.replace(/[\t ]*((<!\[CDATA\[]])|(\]\]>))[\t ]*/g, ""); // убираем CDATA
     let mt = pure.match(/(\n|^)[\t ]*\S/g);
     if (!!mt)
     {
@@ -497,7 +496,7 @@ function formatTag(tag: string): string
                 attrs += " " + r.trim();
             });
             res = result[1] + attrs + result[3];
-        }    
-    }    
+        }
+    }
     return res;
 }
