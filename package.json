@@ -106,6 +106,16 @@
                 "category": "tib"
             },
             {
+                "command": "tib.selectTag.closest",
+                "title": "Выделить текущий тег",
+                "category": "tib"
+            },
+            {
+                "command": "tib.selectTag.global",
+                "title": "Выделить родительский тег",
+                "category": "tib"
+            },
+            {
                 "command": "tib.debugTestCommand",
                 "title": "Отладочная комманда",
                 "category": "tib"
@@ -131,6 +141,14 @@
             {
                 "key": "ctrl+alt+d",
                 "command": "tib.demo"
+            },
+            {
+                "key": "ctrl+alt+p",
+                "command": "tib.selectTag.closest"
+            },
+            {
+                "key": "ctrl+alt+g",
+                "command": "tib.selectTag.global"
             },
             {
                 "key": "ctrl+alt+shift+d",
