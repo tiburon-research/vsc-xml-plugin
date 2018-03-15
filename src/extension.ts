@@ -210,9 +210,48 @@ function registerCommands()
     {
         if (_pack != "debug") return;
         logError("Тест");
+        console.log('_____ start debug test _____');
+
+        sendLogMessage("text");
+        //saveError("Тест", getLogData(), _LogPath);
+
+        console.log('_____ end debug test _____');
     });
 
 
+    // выделение ближайшего <тега>
+    vscode.commands.registerCommand('tib.selectTag.closest', () => 
+    {
+        let editor = vscode.window.activeTextEditor;
+        let tag = getCurrentTag(editor.document, editor.selection.active);
+        if (!tag) return;
+        let from = tag.Position;
+        let cl = findCloseTag("<", tag.Name, ">", editor.document, from.translate(0, 1));
+        if (!cl) return;
+        let to = cl.end;
+        let range = new vscode.Selection(from, to);
+        editor.selection = range;
+    });
+
+    // выделение родительского <тега>
+    vscode.commands.registerCommand('tib.selectTag.global', () => 
+    {
+        let editor = vscode.window.activeTextEditor;
+        let txt = getPreviousText(editor.document, editor.selection.active);
+        let tag = getCurrentTag(editor.document, editor.selection.active, txt);
+        if (!tag || tag.Parents.length < 2) return;
+        let par = tag.Parents[1];
+        let start = txt.lastIndexOf("<" + par);
+        let from = editor.document.positionAt(start);
+        let cl = findCloseTag("<", par, ">", editor.document, from.translate(0, 1));
+        if (!cl) return;
+        let to = cl.end;
+        let range = new vscode.Selection(from, to);
+        let res = selectLines(editor.document, range);
+        editor.selection = res;
+    });
+
+    // оборачивание в [тег]
     vscode.commands.registerCommand('tib.insertTag', () => 
     {
         inProcess = true;
@@ -1369,7 +1408,7 @@ function getFullRange(document: vscode.TextDocument): vscode.Range
 }
 
 
-// расширяет выделение до границ строк
+/** расширяет выделение до границ строк */
 function selectLines(document: vscode.TextDocument, selection: vscode.Selection): vscode.Selection
 {
     if (!selection)
