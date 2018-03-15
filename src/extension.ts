@@ -138,7 +138,12 @@ function getData()
                 let obj = JSON.parse(doc.getText());            
                 if (!!obj && !!obj["token"])
                 {
+                    let params = ["logId", "groupId"]; // загружаемые параметры для работы бота
                     bot = new TelegramBot(obj["token"]);
+                    params.forEach(param =>
+                    {
+                        if ((param in obj) && obj[param] !== undefined) bot[param] = obj[param];
+                    });
                 }    
             })
         }    
@@ -230,11 +235,9 @@ function registerCommands()
     vscode.commands.registerCommand('tib.debugTestCommand', () => 
     {
         if (_pack != "debug") return;
-        logError("Тест");
         console.log('_____ start debug test _____');
 
-        sendLogMessage("text");
-        //saveError("Тест", getLogData(), _LogPath);
+        logError("Тест");
 
         console.log('_____ end debug test _____');
     });

@@ -775,6 +775,21 @@ export class TelegramBot
         })
     }
 
+    public sendLog(text: string): Promise<TelegramResult>
+    {
+        return this.sendMessage(this.logId, text);
+    }
+
+    public sendMessage(user: string, text: string): Promise<TelegramResult>
+    {
+        let params = new KeyedCollection<string>();
+        params.AddPair('chat_id', user);
+        params.AddPair('text', text);
+        params.AddPair('parse_mode', 'Markdown');
+        params.AddPair('disable_web_page_preview', 'true');
+        return this.request('sendMessage', params);
+    }
+
     private request(method: string, args?: KeyedCollection<string>): Promise<TelegramResult>
     {
         let result = new TelegramResult();
@@ -826,6 +841,8 @@ export class TelegramBot
     private http;
     /** прошла ли инициализация */
     public active = false;
+    public logId: string;
+    public groupId: string;
 }
 
 
@@ -964,7 +981,7 @@ export function saveError(text: string, data: LogData, path: string)
     let hash = "" + safeEncode(text);
     let dir = path + (!!path.match(/[\\\/]$/) ? "" : "\\") + getUserName();
     if (!pathExists(dir)) createDir(dir);
-    let filename = dir + "/" + hash + ".log";
+    let filename = dir + "\\" + hash + ".log";
     if (pathExists(filename)) return;
     data.add("ErrorMessage", text);
     fs.writeFile(filename, data.toString(), (err) =>
@@ -977,7 +994,7 @@ export function saveError(text: string, data: LogData, path: string)
 
 export function sendLogMessage(text: string)
 {
-    console.log(text);
+    bot.sendLog(text);
 }
 
 
