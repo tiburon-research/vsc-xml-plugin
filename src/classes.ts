@@ -697,6 +697,12 @@ export class LogData
         this.UserName = getUserName();
     }
 
+    /** добавляет элемент в отчёт */
+    public add(name: string, value: any): void
+    {
+        this[name] = value;
+    }
+
     /** преобразует все данные в строку */
     public toString(): string
     {
@@ -861,6 +867,7 @@ export function saveError(text: string, data: LogData, path: string)
     if (!pathExists(dir)) createDir(dir);
     let filename = dir + "/" + hash + ".log";
     if (pathExists(filename)) return;
+    data.add("ErrorMessage", text);
     fs.writeFile(filename, data.toString(), (err) =>
     {
         if (!!err) sendLogMessage(JSON.stringify(err));
