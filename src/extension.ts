@@ -128,25 +128,29 @@ function getData()
     try 
     {
         _LogPath = Settings.Item("logPath");
-        
+        if (!pathExists(_LogPath)) showWarning("Отчёты об ошибках сохраняться не будут т.к. недоступен путь:\n\"" + _LogPath + "\"");
+
         // запускаем бота
         let dataPath = _LogPath + "\\data.json";
         if (pathExists(dataPath))
         {
             vscode.workspace.openTextDocument(dataPath).then(doc =>
             {
-                let obj = JSON.parse(doc.getText());            
+                let obj = JSON.parse(doc.getText());
                 if (!!obj && !!obj["token"])
                 {
                     let params = ["logId", "groupId"]; // загружаемые параметры для работы бота
-                    bot = new TelegramBot(obj["token"]);
-                    params.forEach(param =>
+                    bot = new TelegramBot(obj["token"], function (res)
                     {
-                        if ((param in obj) && obj[param] !== undefined) bot[param] = obj[param];
+                        if (!res) return showWarning("Отправка логов недоступна");
+                        params.forEach(param =>
+                        {
+                            if ((param in obj) && obj[param] !== undefined) bot[param] = obj[param];
+                        });
                     });
-                }    
+                }
             })
-        }    
+        }
 
         // получаем AutoComplete
         let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });

@@ -752,42 +752,54 @@ class TelegramResult
 
 export class TelegramBot
 {
-    constructor(botToken: string)
+    constructor(botToken: string, callback?: (active: boolean) => any)
     {
         this.http = require('https');
         this.token = botToken;
-        this.check();
+        this.check().then(res =>
+        {
+            this.active = res;
+            callback(this.active);
+        }).catch(res =>
+        {
+            this.active = false;
+            callback(this.active);
+        });
     }
 
     public check(): Promise<boolean>
     {
         return new Promise<boolean>((resolve, reject) =>
-        {   
+        {
             this.request('getMe').then(res =>
             {
-                this.active = res.ok;
                 resolve(res.ok);
             }).catch(res =>
             {
-                this.active = false;
                 reject(false);
             })
         })
     }
 
-    public sendLog(text: string): Promise<TelegramResult>
+    public sendLog(text: string): void
     {
-        return this.sendMessage(this.logId, text);
+        this.sendMessage(this.logId, text);
     }
 
-    public sendMessage(user: string, text: string): Promise<TelegramResult>
+    public sendMessage(user: string, text: string): void
     {
-        let params = new KeyedCollection<string>();
-        params.AddPair('chat_id', user);
-        params.AddPair('text', text);
-        params.AddPair('parse_mode', 'Markdown');
-        params.AddPair('disable_web_page_preview', 'true');
-        return this.request('sendMessage', params);
+        if (this.active)
+        {
+            let params = new KeyedCollection<string>();
+            params.AddPair('chat_id', user);
+            params.AddPair('text', text);
+            params.AddPair('parse_mode', 'Markdown');
+            params.AddPair('disable_web_page_preview', 'true');
+            this.request('sendMessage', params).catch(res =>
+            {
+                showError("Ошибка при отправке сообщения");
+            })
+        }
     }
 
     private request(method: string, args?: KeyedCollection<string>): Promise<TelegramResult>
@@ -795,30 +807,37 @@ export class TelegramBot
         let result = new TelegramResult();
         return new Promise<TelegramResult>((resolve, reject) =>
         {
-            let url = this.buildURL(method, args);
-            this.http.get(url, (res) =>
+            try
             {
-                res.setEncoding("utf8");
-                let body = "";
-                res.on("data", data =>
+                let url = this.buildURL(method, args);
+                this.http.get(url, (res) =>
                 {
-                    body += data;
-                });
-                res.on("end", () =>
-                {
-                    result.update(body);
-                    if (!result.ok)
+                    res.setEncoding("utf8");
+                    let body = "";
+                    res.on("data", data =>
                     {
-                        showError("Ошибка при отправке сообщения");
-                        reject(result);
-                    }
-                    else resolve(result);
+                        body += data;
+                    });
+                    res.on("end", () =>
+                    {
+                        result.update(body);
+                        if (!result.ok)
+                        {
+                            reject(result);
+                        }
+                        else resolve(result);
+                    });
+                }).on('error', (e) =>
+                {
+                    reject(result);
+                    showError("Ошибка при отправке отчёта об ошибке =)");
                 });
-            }).on('error', (e) =>
+            }
+            catch (error)
             {
                 reject(result);
-                showError("Ошибка при отправке отчёта об ошибке =)");
-            });
+                showError("Ошибка обработки запроса");
+            }
         });
     }
 
