@@ -5,6 +5,7 @@ import * as XML from './documentFunctions'
 import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as os from 'os'
+import { bot } from './extension'
 
 
 
@@ -16,12 +17,10 @@ import * as os from 'os'
 /** Тип сборки */
 export const _pack = "debug";
 
-
 /** RegExp для XML тегов, которые могут содержать C# */
 export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)";
 /** RegExp для HTML тегов, которые не нужно закрывать */
 export const _SelfClosedTags = "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)";
-
 
 export enum Language { XML, CSharp, CSS, JS, PlainTetx };
 
@@ -162,7 +161,7 @@ export class KeyedCollection<T>
         this.count = 0;
     }
 
-    public forEach(callback)
+    public forEach(callback: (key: string, val: T) => any)
     {
         for (var key in this.items)
             callback(key, this.Item(key));
@@ -717,7 +716,7 @@ export class LogData
             res += "______________ TEXT START _______________\r\n"
             res += this.FullText;
             res += "\r\n______________ TEXT END _______________\r\n"
-        }    
+        }
         return res;
     }
 
@@ -728,6 +727,106 @@ export class LogData
 
 }
 
+
+
+class TelegramResult
+{
+    constructor(data?: string)
+    {
+        if (!!data) this.update(data);
+    }
+
+    /** добавление/обновлени данных */
+    public update(data: string)
+    {
+        let obj = JSON.parse(data);
+        if (!obj) return;
+        for (let key in obj)
+            this[key] = obj[key];
+    }
+
+    public ok: boolean = false;
+    public result: Object = {};
+}
+
+
+export class TelegramBot
+{
+    constructor(botToken: string)
+    {
+        this.http = require('https');
+        this.token = botToken;
+        this.check();
+    }
+
+    public check(): Promise<boolean>
+    {
+        return new Promise<boolean>((resolve, reject) =>
+        {   
+            this.request('getMe').then(res =>
+            {
+                this.active = res.ok;
+                resolve(res.ok);
+            }).catch(res =>
+            {
+                this.active = false;
+                reject(false);
+            })
+        })
+    }
+
+    private request(method: string, args?: KeyedCollection<string>): Promise<TelegramResult>
+    {
+        let result = new TelegramResult();
+        return new Promise<TelegramResult>((resolve, reject) =>
+        {
+            let url = this.buildURL(method, args);
+            this.http.get(url, (res) =>
+            {
+                res.setEncoding("utf8");
+                let body = "";
+                res.on("data", data =>
+                {
+                    body += data;
+                });
+                res.on("end", () =>
+                {
+                    result.update(body);
+                    if (!result.ok)
+                    {
+                        showError("Ошибка при отправке сообщения");
+                        reject(result);
+                    }
+                    else resolve(result);
+                });
+            }).on('error', (e) =>
+            {
+                reject(result);
+                showError("Ошибка при отправке отчёта об ошибке =)");
+            });
+        });
+    }
+
+    /** url для запроса */
+    private buildURL(method: string, args?: KeyedCollection<string>): string
+    {
+        let res = this.host + "bot" + this.token + "/" + method;
+        if (!args || args.Count() == 0) return res;
+        let params = [];
+        args.forEach((key, value) =>
+        {
+            params.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+        });
+        res += "?" + params.join('&');
+        return res;
+    }
+
+    private host = "https://api.telegram.org/";
+    private token: string;
+    private http;
+    /** прошла ли инициализация */
+    public active = false;
+}
 
 
 

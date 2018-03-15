@@ -2,14 +2,20 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot } from "./classes";
 import * as XML from './documentFunctions';
+
+
+
+/** объект для управления ботом */
+var bot: TelegramBot;
+
+export { bot };
 
 // константы
 
 /** XML теги, которые сохраняются в CurrentNodes */
 const _NodeStoreNames = ["Page", "Question", "Quota", "List"];
-
 
 // глобальные переменные
 
@@ -122,7 +128,22 @@ function getData()
     try 
     {
         _LogPath = Settings.Item("logPath");
+        
+        // запускаем бота
+        let dataPath = _LogPath + "\\data.json";
+        if (pathExists(dataPath))
+        {
+            vscode.workspace.openTextDocument(dataPath).then(doc =>
+            {
+                let obj = JSON.parse(doc.getText());            
+                if (!!obj && !!obj["token"])
+                {
+                    bot = new TelegramBot(obj["token"]);
+                }    
+            })
+        }    
 
+        // получаем AutoComplete
         let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });
         let statCS: TibAutoCompleteItem[] = [];
         for (let key in AutoCompleteArray.StaticMethods)
