@@ -117,7 +117,7 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
                 if (tag.Multiline)
                 {
                     // убираем лишние пробелы/переносы
-                    if (tag.Language != Language.PlainTetx) formattedBody = formattedBody.replace(/^[\s]*([\s\S]*?)[\s]*$/, "$1");
+                    if (tag.Language != Language.PlainTetx && tag.Language != Language.CSharp) formattedBody = formattedBody.replace(/^[\s]*([\s\S]*?)[\s]*$/, "$1");
                     // форматируем согласно содержанию
                     let tmpRes = formatBody(formattedBody, tab, indent + 1, tag.Language);
                     if (!!tmpRes.Error)
@@ -125,8 +125,9 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
                         res.Error = "Ошибка при форматировании тега";
                         return;
                     }
-                    if (tag.Language != Language.PlainTetx) formattedBody = "\n" + tmpRes.Result + "\n";
-                    else formattedBody = tmpRes.Result;
+                    /* if (tag.Language != Language.PlainTetx) */
+                    formattedBody = "\n" + tmpRes.Result + "\n";
+                    //else formattedBody = tmpRes.Result;
                 }
                 // отступ для AllowCode fake
                 if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
@@ -175,26 +176,51 @@ function formatBody(text: string, tab: string, indent: number = 0, lang: Languag
 
 function formatPlainText(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
-    let res = text;
+    // заменяем неправильный отступ:
+    let strings = text.split('\n');
+    for (let i = 0; i < strings.length; i++)
+    {
+        let m = strings[i].match(/^[\t ]+/);
+        if (!m) continue;
+        // считаем \t за {,4} пробела
+        let tabs = m[0].match(/\t+/);
+        let spaces = m[0].match(/ +/);
+        let count = (!!tabs ? tabs[0].length : 0) + (!!spaces ? Math.ceil(spaces[0].length / 4) : 0);
+        let newInd = tab.repeat(count);
+        strings[i] = strings[i].replace(/^[\t ]+/, newInd);
+    }
+    let res = strings.join('\n');
+    
     let ind = tab.repeat(indent);
     let err: string;
     // убираем дублирование
-    if (tab != " ") text.replace("  ", " ");
-    res = text.replace("\n\n\n", "\n\n"); // двойной перенос, всё-таки, иногда отделяет что-то посмыслу, а вот x3 уже перебор
+    if (tab != " ") res = res.replace("  ", " ");
+    res = res.replace("\n\n\n", "\n\n"); // двойной перенос, всё-таки, иногда отделяет что-то посмыслу, а вот x3 уже перебор
+    
+    let min = minIndent(text);
+    let newInd = "";
     // отступаем
-    var min = minIndent(text);
-    var newInd = "";
     if (min > -1)
     {
+        let d = indent - min;
+        // custom trim
+        res = res.replace(/\s+$/, '');
+        if (d <= 0) res = res.replace(/^\s*\n+/, '');
+        else res = res.replace(/^\s+/, '');
         // сдвигаем на разницу
-        var d = indent - min;
-        if (d > 0) newInd = tab.repeat(d);
-        else newInd = tab.repeat(indent);
+        if (d > 0) // если отступ меньше нужного
+        {
+            newInd = tab.repeat(d);
+            // двигаем только непустые строки
+            res = ind + res.replace(/(\n\^)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
+        }
+        else if (d < 0) // если больше нужного - убираем лишние
+        {
+            newInd = tab.repeat(indent);
+            d = 0 - d;
+            res = res.replace(new RegExp("(\\n|^)([\\t ]{" + d + "})(\\s*\\S)", "g"), "$1$3");
+        }
     }
-    // custom trim
-    res = res.replace(/^\s*/, '').replace(/\s*$/, '')
-    // двигаем только непустые строки и первую
-    res = ind + res.replace(/(\n)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
     return { Result: res, Error: err };
 }
 
