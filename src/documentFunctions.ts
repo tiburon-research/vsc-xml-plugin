@@ -63,8 +63,16 @@ export function format(text: string, language: Language, tab: string = "\t", ind
     let res: FormatResult = LanguageFunction(language)(text, tab, indent);
     if (!res.Error)
     {
-        // для XML форматируем CDATA. Тут - чтобы не рекурсивно
-        if (language == Language.XML) res.Result = formatCDATA(res.Result);
+        // для XML дополнительно. Тут - чтобы не рекурсивно
+        if (language == Language.XML)
+        {
+            let tmp = res.Result;
+            // форматируем сворачиваемые блоки
+            tmp = formatFoldingBlocks(tmp);
+            // форматируем CDATA
+            tmp = formatCDATA(tmp);
+            res.Result = tmp;
+        }    
         // пока не будет работать стабильно проверяем целостность текста
         let hash = text.replace(/\s+/g, '');
         if (res.Result.replace(/\s+/g, '') != hash)
@@ -526,4 +534,10 @@ function formatTag(tag: string): string
         }
     }
     return res;
+}
+
+
+function formatFoldingBlocks(text: string): string
+{
+    return text.replace(/(^|\n)[\t ]+(<!--#(end)?block\s*)/g, "$1$2");
 }
