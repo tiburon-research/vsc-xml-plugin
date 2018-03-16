@@ -518,11 +518,11 @@ function formatTag(tag: string): string
         let result = res.match(/^(\s*<\w+)(\s.*?)?(\/?>\s*)$/);
         if (!!result && !!result[2])
         {
-            let results = result[2].match(/\s*\w+=(("[^"]*")|('[^']*'))\s*/g);
+            let results = result[2].match(/\s*\w+\s*=\s*(("[^"]*")|('[^']*'))\s*/g);
             let attrs = "";
             results.forEach(r =>
             {
-                attrs += " " + r.trim();
+                attrs += r.replace(/\s*(\w+)\s*=\s*(("[^"]*")|('[^']*'))\s*/, " $1=$2");
             });
             res = result[1] + attrs + result[3];
         }
