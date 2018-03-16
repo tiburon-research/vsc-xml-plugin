@@ -125,9 +125,7 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
                         res.Error = "Ошибка при форматировании тега";
                         return;
                     }
-                    /* if (tag.Language != Language.PlainTetx) */
                     formattedBody = "\n" + tmpRes.Result + "\n";
-                    //else formattedBody = tmpRes.Result;
                 }
                 // отступ для AllowCode fake
                 if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
@@ -493,7 +491,7 @@ function minIndent(text: string): number
 /** располагает CDATA впритык к тегу */
 function formatCDATA(text: string): string
 {
-    let res = text.replace(/>\s*<!\[CDATA\[/g, "><![CDATA[");
+    let res = text.replace(/>\s*<!\[CDATA\[[\t ]*/g, "><![CDATA[");
     res = res.replace(/[\t ]*\]\]>[\t ]*</g, "]]><"); // однострочная
     res = res.replace(/\s*\]\]>[\t ]*?(\n[\t ]*)</g, "$1]]><"); // многострочная
     // пробелы
