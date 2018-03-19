@@ -259,7 +259,7 @@ export class TibAttribute
         item.detail = (this.Detail ? this.Detail : this.Name) + (this.Type ? (" (" + this.Type + ")") : "");
         var doc = "";
         if (this.Default) doc += "Значение по умолчанию: `" + this.Default + "`";
-        doc += "\nПоддержка кадовых вставок: `" + (this.AllowCode ? "да" : "нет") + "`";
+        doc += "\nПоддержка кодовых вставок: `" + (this.AllowCode ? "да" : "нет") + "`";
         item.documentation = new vscode.MarkdownString(doc);
         return item;
     }
