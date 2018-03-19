@@ -116,6 +116,11 @@
                 "category": "tib"
             },
             {
+                "command": "tib.linqToggle",
+                "title": "Переключение подстановки Linq (вкл/выкл)",
+                "category": "tib"
+            },
+            {
                 "command": "tib.debugTestCommand",
                 "title": "Отладочная комманда",
                 "category": "tib"
@@ -149,6 +154,10 @@
             {
                 "key": "ctrl+alt+g",
                 "command": "tib.selectTag.global"
+            },
+            {
+                "key": "ctrl+alt+l",
+                "command": "tib.linqToggle"
             },
             {
                 "key": "ctrl+alt+shift+d",

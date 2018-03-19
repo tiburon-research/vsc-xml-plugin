@@ -17,6 +17,8 @@ export { bot };
 /** XML теги, которые сохраняются в CurrentNodes */
 const _NodeStoreNames = ["Page", "Question", "Quota", "List"];
 
+
+
 // глобальные переменные
 
 /** Во избежание рекурсивыных изменений */
@@ -51,6 +53,9 @@ var CurrentNodes: SurveyNodes = new SurveyNodes();
 
 /** Настройки расширения */
 var Settings = new ExtensionSettings();
+
+/** флаг использования Linq */
+var _useLinq = true;
 
 
 export function activate(context: vscode.ExtensionContext)
@@ -127,8 +132,10 @@ function getData()
 {
     try 
     {
+        // сохраняем нужные значения
         _LogPath = Settings.Item("logPath");
         if (!pathExists(_LogPath)) showWarning("Отчёты об ошибках сохраняться не будут т.к. недоступен путь:\n\"" + _LogPath + "\"");
+        _useLinq = Settings.Item("useLinq");
 
         // запускаем бота
         let dataPath = _LogPath + "\\data.json";
@@ -431,6 +438,13 @@ function registerCommands()
             })
         });
     });
+
+
+    vscode.commands.registerCommand('tib.linqToggle', () => 
+    {
+        _useLinq = !_useLinq;
+        vscode.window.showInformationMessage( "Подстановка Linq " + (_useLinq ? "включена" : "отключена") )
+    });
 }
 
 
@@ -708,7 +722,7 @@ function autoComplete()
                     if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "0" + element.Name));
                 });
                 // добавляем Linq
-                if ((!!parent && classTypes.indexOf(parent) == -1) && Settings.Item("useLinq"))
+                if ((!parent || classTypes.indexOf(parent) == -1) && _useLinq)
                 {
                     let linqAr = TibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "1" + x.Name));
                     completionItems = completionItems.concat(linqAr);
