@@ -344,6 +344,7 @@ function formatBetweenTags(text: string, tab: string = "\t", indent: number = 0)
                     res.Error = spRes.Error;
                     continue;
                 }
+                spRes.Result = spRes.Result.replace(/^[\t ]+/, " ");
                 newText = newText.replace(repl, spRes.Result);
             }
         }
