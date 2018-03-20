@@ -72,7 +72,7 @@ export function format(text: string, language: Language, tab: string = "\t", ind
             // форматируем CDATA
             tmp = formatCDATA(tmp);
             res.Result = tmp;
-        }    
+        }
         // пока не будет работать стабильно проверяем целостность текста
         let hash = text.replace(/\s+/g, '');
         if (res.Result.replace(/\s+/g, '') != hash)
@@ -116,16 +116,17 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
             let before = oldText.slice(tag.FullLines.From, tag.OpenTag.From); // то, что идёт перед <тегом> на одной строке
             let after = oldText.slice(tag.CloseTag.To, tag.FullLines.To); // то, что идёт после </тега> на одной строке
             let newFul;
-            // форматируем то, что вне тега на тех же строках
-            if (!before.match(/^\s*$/)) before = before.replace(/^\s*(.*?)\s*/g, '$1\n'); else before = '';
-            if (!after.match(/^\s*$/)) after = after.replace(/^\s*(.*)\s*/g, '\n' + ind + '$1'); else after = '';
+            // форматируем то, что вне тега на тех же строках\
+            if (!before.match(/^\s*$/)) before = before.replace(/^\s*(\S.*)\s*/, '$1\n'); else before = '';
+            if (!after.match(/^\s*$/)) after = after.replace(/^\s*(\S.*)\s*/, ' $1'); else after = '';
+
             // если внутри что-то есть            
             if (!body.match(/^\s*$/))
             {
                 if (tag.Multiline)
                 {
                     // убираем лишние пробелы/переносы
-                    if (tag.Language != Language.PlainTetx && tag.Language != Language.CSharp) formattedBody = formattedBody.replace(/^[\s]*([\s\S]*?)[\s]*$/, "$1");
+                    formattedBody = formattedBody.replace(/^\s*?(([\t ]*)(\S[\s\S]*\S))\s*$/, "$2$3");
                     // форматируем согласно содержанию
                     let tmpRes = formatBody(formattedBody, tab, indent + 1, tag.Language);
                     if (!!tmpRes.Error)
@@ -145,10 +146,10 @@ function formatXML(text: string, tab: string = "\t", indent: number = 0): Format
             newFul = before + ind + formatTag(openTag) + formattedBody + formatTag(closeTag) + after;
             newText = newText.replace(oldFull, newFul);
         });
-        res.Result = newText;
-    }
 
-    // форматируем между тегами?
+        // форматируем между тегами
+        if (!res.Error) res = formatBetweenTags(newText, tab, indent);
+    }
 
     return res;
 }
@@ -176,11 +177,16 @@ function formatBody(text: string, tab: string, indent: number = 0, lang: Languag
     newText = newText.replace(/(\n|^)[\t ]+$/g, '$1');
     res = LanguageFunction(lang)(newText, tab, indent);
     if (rm && !res.Error) res.Result = getCSBack(res.Result, cs, del);
+    // для случаев <Text>текст\n.*
+    if (res.Result.match(/^\n*\S/))
+    {
+        res.Result = res.Result.replace(/^(\n*)(\S)/, "$1" + ind + "$2");
+    }
     return res;
 }
 
 
-function formatPlainText(text: string, tab: string = "\t", indent: number = 0): FormatResult
+function formatPlainText(text: string, tab: string = "\t", indent: number = 0, preserveEdges = false): FormatResult
 {
     // заменяем неправильный отступ:
     let strings = text.split('\n');
@@ -196,13 +202,13 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0): 
         strings[i] = strings[i].replace(/^[\t ]+/, newInd);
     }
     let res = strings.join('\n');
-    
-    let ind = tab.repeat(indent);
+
+    //let ind = tab.repeat(indent);
     let err: string;
     // убираем дублирование
     if (tab != " ") res = res.replace("  ", " ");
     res = res.replace("\n\n\n", "\n\n"); // двойной перенос, всё-таки, иногда отделяет что-то посмыслу, а вот x3 уже перебор
-    
+
     let min = minIndent(text);
     let newInd = "";
     // отступаем
@@ -210,15 +216,18 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0): 
     {
         let d = indent - min;
         // custom trim
-        res = res.replace(/\s+$/, '');
-        if (d <= 0) res = res.replace(/^\s*\n+/, '');
-        else res = res.replace(/^\s+/, '');
+        if (!preserveEdges)
+        {
+            res = res.replace(/\s+$/, '');
+            if (d <= 0) res = res.replace(/^\s*\n+/, '');
+            //else res = res.replace(/^\s+/, '');
+        }
         // сдвигаем на разницу
         if (d > 0) // если отступ меньше нужного
         {
             newInd = tab.repeat(d);
             // двигаем только непустые строки
-            res = ind + res.replace(/(\n\^)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
+            res = res.replace(/(\n|^)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
         }
         else if (d < 0) // если больше нужного - убираем лишние
         {
@@ -227,13 +236,20 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0): 
             res = res.replace(new RegExp("(\\n|^)([\\t ]{" + d + "})(\\s*\\S)", "g"), "$1$3");
         }
     }
+
+    // для случаев <Text>текст\n.*
+    if (text.match(/^\S/))
+    {
+        res = tab.repeat(indent) + res.replace(/^(\n?)[\t ]/, "$1");
+    }
+
     return { Result: res, Error: err };
 }
 
 
 function formatCSS(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
-    let newText = text;
+    let newText = text.replace(/(^|\n)\s+/, "$1");
     let er: string = null;
     try
     {
@@ -257,7 +273,7 @@ function formatCSS(text: string, tab: string = "\t", indent: number = 0): Format
 
 function formatJS(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
-    var newText = text;
+    var newText = text.replace(/(^|\n)\s+/, "$1");
     let er: string = null;
     try
     {
@@ -282,6 +298,63 @@ function formatJS(text: string, tab: string = "\t", indent: number = 0): FormatR
 function formatCSharp(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
     return formatPlainText(text, tab, indent);
+}
+
+
+/** форматирование XML между тегами */
+function formatBetweenTags(text: string, tab: string = "\t", indent: number = 0): FormatResult
+{
+    let res = new FormatResult();
+    let newText = text;
+    let spaces = get1LevelNodes(text);
+
+    if (spaces.length > 0)
+    {
+        for (let i = 0; i < spaces.length; i++)
+        {
+            let space = spaces[i];
+            if (i == 0) // перед первым
+            {
+                let repl = text.slice(0, space.OpenTag.From);
+                if (repl.match(/^\s*$/)) continue;
+                let spRes = formatPlainText(repl, tab, indent, true);
+                if (!!spRes.Error)
+                {
+                    res.Error = spRes.Error;
+                    continue;
+                }
+                newText = newText.replace(repl, spRes.Result);
+            }
+            if (i == spaces.length - 1) // после последнего (он может быть и первым)
+            {
+                let repl = text.slice(space.CloseTag.To, text.length);
+                if (repl.match(/^\s*$/)) continue;
+                let spRes = formatPlainText(repl, tab, indent, true);
+                if (!!spRes.Error)
+                {
+                    res.Error = spRes.Error;
+                    continue;
+                }
+                newText = newText.replace(repl, spRes.Result);
+            }
+            if (i < spaces.length - 1) // между
+            {
+                let repl = text.slice(space.CloseTag.To, spaces[i + 1].OpenTag.From);
+                if (repl.match(/^\s*$/)) continue;
+                let spRes = formatPlainText(repl, tab, indent, true);
+                if (!!spRes.Error)
+                {
+                    res.Error = spRes.Error;
+                    continue;
+                }
+                newText = newText.replace(repl, spRes.Result);
+            }
+        }
+    }
+    
+    res.Result = newText;
+
+    return res;
 }
 
 
