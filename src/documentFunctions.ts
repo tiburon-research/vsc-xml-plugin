@@ -60,19 +60,13 @@ function LanguageFunction(language: Language)
 */
 export function format(text: string, language: Language, tab: string = "\t", indent: number = 0): FormatResult
 {
-    let res: FormatResult = LanguageFunction(language)(text, tab, indent);
+    let txt = text;
+    if (language == Language.XML) txt = preFormatXML(text);
+    let res: FormatResult = LanguageFunction(language)(txt, tab, indent);
     if (!res.Error)
     {
-        // для XML дополнительно. Тут - чтобы не рекурсивно
-        if (language == Language.XML)
-        {
-            let tmp = res.Result;
-            // форматируем сворачиваемые блоки
-            tmp = formatFoldingBlocks(tmp);
-            // форматируем CDATA
-            tmp = formatCDATA(tmp);
-            res.Result = tmp;
-        }
+        // дополнительная (одноразовая) постобработка XML
+        if (language == Language.XML) res = postFormatXML(res);
         // пока не будет работать стабильно проверяем целостность текста
         let hash = text.replace(/\s+/g, '');
         if (res.Result.replace(/\s+/g, '') != hash)
@@ -351,7 +345,7 @@ function formatBetweenTags(text: string, tab: string = "\t", indent: number = 0)
             }
         }
     }
-    
+
     res.Result = newText;
 
     return res;
@@ -613,4 +607,27 @@ function formatTag(tag: string): string
 function formatFoldingBlocks(text: string): string
 {
     return text.replace(/(^|\n)[\t ]+(<!--#(end)?block\s*)/g, "$1$2");
+}
+
+
+/** предобработка XML */
+function preFormatXML(text: string): string
+{
+    let res = text;
+    // переносим открытый тег на новую строку
+    res = res.replace(/(^|\n)([\t ]*)((((?!<!)\S)(.*?\S)?)[\t ]*)(<\w+(\s+\w+=(("[^"]*")|('[^']')))*\s*\/?>)[\t ]*\r?\n/g, "$1$2$4\n$2$7\n");
+    return res;
+}
+
+
+/** постобработка XML */
+function postFormatXML(res: FormatResult): FormatResult
+{
+    let tmp = res.Result;
+    // форматируем сворачиваемые блоки
+    tmp = formatFoldingBlocks(tmp);
+    // форматируем CDATA
+    tmp = formatCDATA(tmp);
+    res.Result = tmp;
+    return res;
 }
