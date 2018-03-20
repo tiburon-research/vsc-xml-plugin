@@ -1,12 +1,14 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning } from "./classes";
+import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings } from "./classes";
 import * as beautify from 'js-beautify';
 import { languages } from "vscode";
 import { logError } from "./extension";
 
 // форматирование, проверка и другие операции с текстом документа
 
+
+var _settings: ExtensionSettings;
 
 export class FormatResult 
 {
@@ -58,8 +60,9 @@ function LanguageFunction(language: Language)
         - форматируем всё
         - возвращаем c# вставки по Id
 */
-export function format(text: string, language: Language, tab: string = "\t", indent: number = 0): FormatResult
+export function format(text: string, language: Language, settings: ExtensionSettings, tab: string = "\t", indent: number = 0): FormatResult
 {
+    _settings = settings;
     let txt = text;
     if (language == Language.XML) txt = preFormatXML(text);
     let res: FormatResult = LanguageFunction(language)(txt, tab, indent);
@@ -255,7 +258,8 @@ function formatCSS(text: string, tab: string = "\t", indent: number = 0): Format
                 indent_size: 1,
                 indent_char: tab,
                 indent_with_tabs: tab == "\t",
-                indent_level: indent
+                indent_level: indent,
+                brace_style: _settings.Item("formatSettings").brace_style
             });
     }
     catch (err)
@@ -279,7 +283,8 @@ function formatJS(text: string, tab: string = "\t", indent: number = 0): FormatR
                 indent_size: 1,
                 indent_char: tab,
                 indent_with_tabs: tab == "\t",
-                indent_level: indent
+                indent_level: indent,
+                brace_style: _settings.Item("formatSettings").brace_style
             });
     }
     catch (err)

@@ -470,7 +470,7 @@ function registerCommands()
         }
         let text = editor.document.getText(range);
         // нужно ли определять язык (выделение может быть какое угодно)
-        let res = XML.format(text, Language.XML, "\t", indent);
+        let res = XML.format(text, Language.XML, Settings, "\t", indent);
 
         if (!res) return;
 

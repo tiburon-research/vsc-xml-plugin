@@ -200,6 +200,15 @@
                     "description": "Подставлять методы из библиотеки System.Linq",
                     "type": "boolean",
                     "default": true
+                },
+                "tib.formatSettings":
+                {
+                    "description": "Настройки форматирования",
+                    "type": "object",
+                    "default":
+                    {
+                        "brace_style": "expand"
+                    }
                 }
             }
         }
