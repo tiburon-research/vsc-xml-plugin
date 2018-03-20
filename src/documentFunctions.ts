@@ -207,7 +207,7 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0, p
     let err: string;
     // убираем дублирование
     if (tab != " ") res = res.replace("  ", " ");
-    res = res.replace("\n\n\n", "\n\n"); // двойной перенос, всё-таки, иногда отделяет что-то посмыслу, а вот x3 уже перебор
+    res = res.replace(/([\t ]*\r?\n){4,}/g, "\n\n\n"); // две пустые строки, всё-таки, иногда отделяет что-то посмыслу, а вот 3 уже перебор
 
     let min = minIndent(text);
     let newInd = "";
