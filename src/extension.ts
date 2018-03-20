@@ -443,7 +443,7 @@ function registerCommands()
     vscode.commands.registerCommand('tib.linqToggle', () => 
     {
         _useLinq = !_useLinq;
-        vscode.window.showInformationMessage( "Подстановка Linq " + (_useLinq ? "включена" : "отключена") )
+        vscode.window.showInformationMessage("Подстановка Linq " + (_useLinq ? "включена" : "отключена"))
     });
 }
 
@@ -633,7 +633,7 @@ function autoComplete()
         }
     }, " ");
 
-    //Functions, Variables, Enums, Classes, Custom Methods, C# Snippets, Types
+    //Functions, Variables, Enums, Classes, Custom Methods, C# Snippets, Types, node Ids
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
@@ -722,7 +722,7 @@ function autoComplete()
                     if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "0" + element.Name));
                 });
                 // добавляем Linq
-                if ((!parent || classTypes.indexOf(parent) == -1) && _useLinq)
+                if (lastLine.match(/\.\w*$/) && (!parent || classTypes.indexOf(parent) == -1) && _useLinq)
                 {
                     let linqAr = TibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "1" + x.Name));
                     completionItems = completionItems.concat(linqAr);
