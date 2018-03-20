@@ -237,6 +237,9 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0, p
         res = tab.repeat(indent) + res.replace(/^(\n?)[\t ]/, "$1");
     }
 
+    // обрезаем хвосты
+    res = res.replace(/(\n|^)(.*\S)[\t ]+(\r?\n)/, "$1$2$3");
+
     return { Result: res, Error: err };
 }
 
