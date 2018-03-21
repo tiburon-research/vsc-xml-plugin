@@ -573,8 +573,8 @@ function getReplaceDelimiter(text: string, length: number = 5): string
 function minIndent(text: string): number
 {
     let min = -1;
-    let pure = text.replace(/[\t ]*((<!\[CDATA\[]])|(\]\]>))[\t ]*/g, ""); // убираем CDATA
-    pure = pure.replace(/[\t ]*<!--#(end)?block.*-->[\t ]*/, ""); // убирвем FoldingBlock
+    let pure = text.replace(/((<!\[CDATA\[)|(\]\]>))/g, ""); // убираем CDATA
+    pure = pure.replace(/<!--#(end)?block.*-->/g, ""); // убираем FoldingBlock
     let mt = pure.match(/(\n|^)[\t ]*\S/g);
     if (!!mt)
     {
@@ -592,11 +592,10 @@ function minIndent(text: string): number
 function formatCDATA(text: string): string
 {
     let res = text.replace(/>\s*<!\[CDATA\[[\t ]*/g, "><![CDATA[");
-    res = res.replace(/[\t ]*\]\]>[\t ]*</g, "]]><"); // однострочная
+    res = res.replace(/(\S)[\t ]*\]\]>[\t ]*</g, "$1 ]]><"); // однострочная + пробел
     res = res.replace(/\s*\]\]>[\t ]*?(\n[\t ]*)</g, "$1]]><"); // многострочная
     // пробелы
     res = res.replace(/<!\[CDATA\[[\t ]*(\S)/g, "<![CDATA[ $1");
-    res = res.replace(/(\S)[\t ]*\]\]>/g, "$1 ]]>");
     return res;
 }
 
