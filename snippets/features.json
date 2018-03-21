@@ -203,7 +203,7 @@
     "CompleteRedirectPage": {
         "prefix": "_completeRedirectPage",
         "body":[
-            "<Page Id=\"${1:last}\">",
+            "<Page Id=\"${1:last}\" CountProgress=\"false\" StructIgnore=\"true\">",
             "\t<Filter>false;</Filter>",
             "\t<Redirect Status=\"18\"/>",
             "</Page>"

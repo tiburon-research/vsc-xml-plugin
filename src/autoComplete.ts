@@ -43,6 +43,11 @@ var ManualCode = [
         Parent: "InterviewPars"
     },
     {
+        Name: "ProjectId",
+        Kind: "Property",
+        Parent: "InterviewPars"
+    },
+    {
         Name: "PageId",
         Kind: "Property",
         Parent: "InterviewPars\\.GetInstance\\(\\)"
@@ -1312,7 +1317,7 @@ export const Attributes = {
         },
         {
             "Name": "ShowProgress",
-            "Default": "true",
+            "Default": "false",
             "Type": "Boolean"
         },
         {
@@ -1440,7 +1445,7 @@ export const Attributes = {
         },
         {
             "Name": "CountProgress",
-            "Default": "true",
+            "Default": "false",
             "Type": "Boolean"
         },
         {
