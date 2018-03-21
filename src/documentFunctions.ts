@@ -569,10 +569,12 @@ function getReplaceDelimiter(text: string, length: number = 5): string
 }
 
 
+/** определяет минимальный отступ без учёта CDATA и FoldingBlock */
 function minIndent(text: string): number
 {
     let min = -1;
     let pure = text.replace(/[\t ]*((<!\[CDATA\[]])|(\]\]>))[\t ]*/g, ""); // убираем CDATA
+    pure = pure.replace(/[\t ]*<!--#(end)?block.*-->[\t ]*/, ""); // убирвем FoldingBlock
     let mt = pure.match(/(\n|^)[\t ]*\S/g);
     if (!!mt)
     {
@@ -642,7 +644,7 @@ function formatTag(tag: string): string
 
 function formatFoldingBlocks(text: string): string
 {
-    return text.replace(/(^|\n)[\t ]+(<!--#(end)?block\s*)/g, "$1$2");
+    return text.replace(/(^|\n)[\t ]+(<!--#(end)?block)/g, "$1$2");
 }
 
 
