@@ -250,7 +250,7 @@ function formatPlainText(text: string, tab: string = "\t", indent: number = 0, p
 
 function formatCSS(text: string, tab: string = "\t", indent: number = 0): FormatResult
 {
-    let newText = text.replace(/(^|\n)\s+/, "$1");
+    let newText = text.replace(/(^|\n)[\t ]+/g, "$1");
     let er: string = null;
     try
     {
