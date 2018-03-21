@@ -2,6 +2,7 @@
 
 import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings } from "./classes";
 import * as beautify from 'js-beautify';
+import * as cssbeautify from 'cssbeautify';
 import { languages } from "vscode";
 import { logError } from "./extension";
 
@@ -253,13 +254,10 @@ function formatCSS(text: string, tab: string = "\t", indent: number = 0): Format
     let er: string = null;
     try
     {
-        newText = beautify.css(newText,
+        newText = cssbeautify(newText,
             {
-                indent_size: 1,
-                indent_char: tab,
-                indent_with_tabs: tab == "\t",
-                indent_level: indent,
-                brace_style: _settings.Item("formatSettings").brace_style
+                indent: "\t",
+                openbrace: (_settings.Item("formatSettings").brace_style.indexOf("expand") > -1 ? "separate-line" : "end-of-line")
             });
     }
     catch (err)
