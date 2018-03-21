@@ -208,7 +208,7 @@
                     "type": "object",
                     "default":
                     {
-                        "brace_style": "expand"
+                        "braceStyle": "expand"
                     }
                 }
             }
