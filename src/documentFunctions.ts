@@ -186,59 +186,68 @@ function formatBody(text: string, tab: string, indent: number = 0, lang: Languag
 
 function formatPlainText(text: string, tab: string = "\t", indent: number = 0, preserveEdges = false): FormatResult
 {
-    // заменяем неправильный отступ:
-    let strings = text.split('\n');
-    for (let i = 0; i < strings.length; i++)
-    {
-        let m = strings[i].match(/^[\t ]+/);
-        if (!m) continue;
-        // считаем \t за {,4} пробела
-        let tabs = m[0].match(/\t+/);
-        let spaces = m[0].match(/ +/);
-        let count = (!!tabs ? tabs[0].length : 0) + (!!spaces ? Math.ceil(spaces[0].length / 4) : 0);
-        let newInd = tab.repeat(count);
-        strings[i] = strings[i].replace(/^[\t ]+/, newInd);
-    }
-    let res = strings.join('\n');
-
-    //let ind = tab.repeat(indent);
+    let res = text;
     let err: string;
-    // убираем дублирование
-    if (tab != " ") res = res.replace("  ", " ");
-    res = res.replace(/([\t ]*\r?\n){4,}/g, "\n\n\n"); // две пустые строки, всё-таки, иногда отделяет что-то посмыслу, а вот 3 уже перебор
 
-    let min = minIndent(text);
-    let newInd = "";
-    // отступаем
-    if (min > -1)
+    try
     {
-        let d = indent - min;
-        // custom trim
-        if (!preserveEdges)
+        // заменяем неправильный отступ:
+        let strings = text.split('\n');
+        for (let i = 0; i < strings.length; i++)
         {
-            res = res.replace(/\s+$/, '');
-            if (d <= 0) res = res.replace(/^\s*\n+/, '');
-            //else res = res.replace(/^\s+/, '');
+            let m = strings[i].match(/^[\t ]+/);
+            if (!m) continue;
+            // считаем \t за {,4} пробела
+            let tabs = m[0].match(/\t+/);
+            let spaces = m[0].match(/ +/);
+            let count = (!!tabs ? tabs[0].length : 0) + (!!spaces ? Math.ceil(spaces[0].length / 4) : 0);
+            let newInd = tab.repeat(count);
+            strings[i] = strings[i].replace(/^[\t ]+/, newInd);
         }
-        // сдвигаем на разницу
-        if (d > 0) // если отступ меньше нужного
+        res = strings.join('\n');
+
+        //let ind = tab.repeat(indent);
+        // убираем дублирование
+        if (tab != " ") res = res.replace("  ", " ");
+        res = res.replace(/([\t ]*\r?\n){4,}/g, "\n\n\n"); // две пустые строки, всё-таки, иногда отделяет что-то посмыслу, а вот 3 уже перебор
+
+        let min = minIndent(text);
+        let newInd = "";
+        // отступаем
+        if (min > -1)
         {
-            newInd = tab.repeat(d);
-            // двигаем только непустые строки
-            res = res.replace(/(\n|^)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
+            let d = indent - min;
+            // custom trim
+            if (!preserveEdges)
+            {
+                res = res.replace(/\s+$/, '');
+                if (d <= 0) res = res.replace(/^\s*\n+/, '');
+                //else res = res.replace(/^\s+/, '');
+            }
+            // сдвигаем на разницу
+            if (d > 0) // если отступ меньше нужного
+            {
+                newInd = tab.repeat(d);
+                // двигаем только непустые строки
+                res = res.replace(/(\n|^)([\t ]*)(\S)/g, "$1" + newInd + "$2$3");
+            }
+            else if (d < 0) // если больше нужного - убираем лишние
+            {
+                newInd = tab.repeat(indent);
+                d = 0 - d;
+                res = res.replace(new RegExp("(\\n|^)([\\t ]{" + d + "})(\\s*\\S)", "g"), "$1$3");
+            }
         }
-        else if (d < 0) // если больше нужного - убираем лишние
+
+        // для случаев <Text>текст\n.*
+        if (text.match(/^\S/))
         {
-            newInd = tab.repeat(indent);
-            d = 0 - d;
-            res = res.replace(new RegExp("(\\n|^)([\\t ]{" + d + "})(\\s*\\S)", "g"), "$1$3");
+            res = tab.repeat(indent) + res.replace(/^(\n?)[\t ]/, "$1");
         }
     }
-
-    // для случаев <Text>текст\n.*
-    if (text.match(/^\S/))
+    catch (error)
     {
-        res = tab.repeat(indent) + res.replace(/^(\n?)[\t ]/, "$1");
+        err = "Ошибка при форматировании области PlainText";
     }
 
     // обрезаем хвосты
@@ -257,7 +266,7 @@ function formatCSS(text: string, tab: string = "\t", indent: number = 0): Format
         newText = cssbeautify(newText,
             {
                 indent: "\t",
-                openbrace: (_settings.Item("formatSettings").brace_style.indexOf("expand") > -1 ? "separate-line" : "end-of-line")
+                openbrace: (_settings.Item("formatSettings").braceStyle.indexOf("expand") > -1 ? "separate-line" : "end-of-line")
             });
     }
     catch (err)
@@ -282,7 +291,7 @@ function formatJS(text: string, tab: string = "\t", indent: number = 0): FormatR
                 indent_char: tab,
                 indent_with_tabs: tab == "\t",
                 indent_level: indent,
-                brace_style: _settings.Item("formatSettings").brace_style
+                brace_style: _settings.Item("formatSettings").braceStyle
             });
     }
     catch (err)
@@ -308,49 +317,56 @@ function formatBetweenTags(text: string, tab: string = "\t", indent: number = 0)
     let newText = text;
     let spaces = get1LevelNodes(text);
 
-    if (spaces.length > 0)
+    try
     {
-        for (let i = 0; i < spaces.length; i++)
+        if (spaces.length > 0)
         {
-            let space = spaces[i];
-            if (i == 0) // перед первым
+            for (let i = 0; i < spaces.length; i++)
             {
-                let repl = text.slice(0, space.OpenTag.From);
-                if (repl.match(/^\s*$/)) continue;
-                let spRes = formatPlainText(repl, tab, indent, true);
-                if (!!spRes.Error)
+                let space = spaces[i];
+                if (i == 0) // перед первым
                 {
-                    res.Error = spRes.Error;
-                    continue;
+                    let repl = text.slice(0, space.OpenTag.From);
+                    if (repl.match(/^\s*$/)) continue;
+                    let spRes = formatPlainText(repl, tab, indent, true);
+                    if (!!spRes.Error)
+                    {
+                        res.Error = spRes.Error;
+                        continue;
+                    }
+                    newText = newText.replace(repl, spRes.Result);
                 }
-                newText = newText.replace(repl, spRes.Result);
-            }
-            if (i == spaces.length - 1) // после последнего (он может быть и первым)
-            {
-                let repl = text.slice(space.CloseTag.To, text.length);
-                if (repl.match(/^\s*$/)) continue;
-                let spRes = formatPlainText(repl, tab, indent, true);
-                if (!!spRes.Error)
+                if (i == spaces.length - 1) // после последнего (он может быть и первым)
                 {
-                    res.Error = spRes.Error;
-                    continue;
+                    let repl = text.slice(space.CloseTag.To, text.length);
+                    if (repl.match(/^\s*$/)) continue;
+                    let spRes = formatPlainText(repl, tab, indent, true);
+                    if (!!spRes.Error)
+                    {
+                        res.Error = spRes.Error;
+                        continue;
+                    }
+                    newText = newText.replace(repl, spRes.Result);
                 }
-                newText = newText.replace(repl, spRes.Result);
-            }
-            if (i < spaces.length - 1) // между
-            {
-                let repl = text.slice(space.CloseTag.To, spaces[i + 1].OpenTag.From);
-                if (repl.match(/^\s*$/)) continue;
-                let spRes = formatPlainText(repl, tab, indent, true);
-                if (!!spRes.Error)
+                if (i < spaces.length - 1) // между
                 {
-                    res.Error = spRes.Error;
-                    continue;
+                    let repl = text.slice(space.CloseTag.To, spaces[i + 1].OpenTag.From);
+                    if (repl.match(/^\s*$/)) continue;
+                    let spRes = formatPlainText(repl, tab, indent, true);
+                    if (!!spRes.Error)
+                    {
+                        res.Error = spRes.Error;
+                        continue;
+                    }
+                    spRes.Result = spRes.Result.replace(/^[\t ]+/, " ");
+                    newText = newText.replace(repl, spRes.Result);
                 }
-                spRes.Result = spRes.Result.replace(/^[\t ]+/, " ");
-                newText = newText.replace(repl, spRes.Result);
             }
         }
+    }
+    catch (error)
+    {
+        res.Error = "Ошибка форматирования области между тегами";
     }
 
     res.Result = newText;
@@ -587,30 +603,39 @@ function formatCDATA(text: string): string
 function formatTag(tag: string): string
 {
     let res = tag;
-    let closing = !!res.match(/^\s*<\//);
-    if (closing) // закрывающий
+
+    try
     {
-        res = res.replace(/^(\s*<\/)(\w+)(\s.*)(>\s*)$/, "$1$2$4"); // всё, кроме имени
-    }
-    else
-    {
-        // форматируем все атрибуты
-        let result = res.match(/^(\s*<\w+)(\s.*?)?(\/?>\s*)$/);
-        if (!!result && !!result[2])
+        let closing = !!res.match(/^\s*<\//);
+        if (closing) // закрывающий
         {
-            let results = result[2].match(/^\s*\w+\s*=\s*(("[^"]*")|('[^']*'))\s*$/g);
-            let attrs = result[2];
-            if (!!results)
+            res = res.replace(/^(\s*<\/)(\w+)(\s.*)(>\s*)$/, "$1$2$4"); // всё, кроме имени
+        }
+        else
+        {
+            // форматируем все атрибуты
+            let result = res.match(/^(\s*<\w+)(\s.*?)?(\/?>\s*)$/);
+            if (!!result && !!result[2])
             {
-                attrs = "";
-                results.forEach(r =>
+                let results = result[2].match(/^\s*\w+\s*=\s*(("[^"]*")|('[^']*'))\s*$/g);
+                let attrs = result[2];
+                if (!!results)
                 {
-                    attrs += r.replace(/\s*(\w+)\s*=\s*(("[^"]*")|('[^']*'))\s*/, " $1=$2");
-                });
+                    attrs = "";
+                    results.forEach(r =>
+                    {
+                        attrs += r.replace(/\s*(\w+)\s*=\s*(("[^"]*")|('[^']*'))\s*/, " $1=$2");
+                    });
+                }
+                res = result[1] + attrs + result[3];
             }
-            res = result[1] + attrs + result[3];
         }
     }
+    catch (error)
+    {
+        logError("Ошибка при форматировании атрибутов тега");
+    }
+
     return res;
 }
 
