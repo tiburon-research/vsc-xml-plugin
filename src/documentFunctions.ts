@@ -331,17 +331,13 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
             // CDATA форматировать не надо
             let hasCDATA = !!res.match(/^\s*<!\[CDATA\[[\s\S]*\]\]>\s*$/);
             if (hasCDATA) res = res.replace(/^\s*<!\[CDATA\[*([\s\S]*)\]\]>\s*$/, "$1");
-            console.log(1);
             res = clearIndents(res);
             res = await CSFormatter(res);
-            console.log(2);
             let multiline = res.indexOf("\n") > -1;
             let space = multiline ? "\n" : " ";
             if (hasCDATA) res = res.replace(/^([\s\S]*)$/, "<![CDATA[" + space + "$1" + space + "]]>");
-            console.log(3);
             let ind = tab.repeat(indent);
             res = res.replace(/\n([\t ]*\S)/g, "\n" + ind + "$1");
-            console.log(4);
         }
         else
         {

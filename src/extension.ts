@@ -855,6 +855,11 @@ function helper()
                     });
                 }
             });
+            // Custom Methods
+            console.log(mtch[3]);
+            Methods.SignatureArray(mtch[3]).forEach(element => {
+                sign.signatures.push(element);
+            });
             sign.activeSignature = 0;
             return sign;
         }

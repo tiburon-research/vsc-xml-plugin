@@ -321,6 +321,11 @@ export class TibMethod
     {
         return { language: "csharp", value: this.Signature };
     }
+
+    ToSignatureInformation()
+    {
+        return new vscode.SignatureInformation(this.Name, new vscode.MarkdownString(this.Signature));
+    }
 }
 
 
@@ -350,6 +355,14 @@ export class TibMethods extends KeyedCollection<TibMethod>
         {
             if (e.Name == word) return e.ToHoverItem();
         });
+    }
+
+    SignatureArray(word: string)
+    {
+        return this.Values().map(function (e)
+        {
+            if (e.Name == word) return e.ToSignatureInformation();
+        }).filter(x => !!x);
     }
 }
 
