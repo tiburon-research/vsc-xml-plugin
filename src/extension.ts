@@ -242,7 +242,7 @@ function registerCommands()
 
 
     // команда для тестирования на отладке
-    vscode.commands.registerCommand('tib.debugTestCommand', () => 
+    registerCommand('tib.debugTestCommand', () => 
     {
         if (_pack != "debug") return;
         console.log('_____ start debug test _____');
@@ -254,7 +254,7 @@ function registerCommands()
 
 
     // выделение ближайшего <тега>
-    vscode.commands.registerCommand('tib.selectTag.closest', () => 
+    registerCommand('tib.selectTag.closest', () => 
     {
         let editor = vscode.window.activeTextEditor;
         let tag = getCurrentTag(editor.document, editor.selection.active);
@@ -268,7 +268,7 @@ function registerCommands()
     });
 
     // выделение родительского <тега>
-    vscode.commands.registerCommand('tib.selectTag.global', () => 
+    registerCommand('tib.selectTag.global', () => 
     {
         let editor = vscode.window.activeTextEditor;
         let txt = getPreviousText(editor.document, editor.selection.active);
@@ -286,7 +286,7 @@ function registerCommands()
     });
 
     // оборачивание в [тег]
-    vscode.commands.registerCommand('tib.insertTag', () => 
+    registerCommand('tib.insertTag', () => 
     {
         inProcess = true;
         vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]")).then(() => 
@@ -295,7 +295,7 @@ function registerCommands()
         });
     });
 
-    vscode.commands.registerCommand('tib.cdata', () => 
+    registerCommand('tib.cdata', () => 
     {
         try
         {
@@ -313,7 +313,7 @@ function registerCommands()
         }
     });
 
-    vscode.commands.registerCommand('tib.commentBlock', () => 
+    registerCommand('tib.commentBlock', () => 
     {
         inProcess = true;
         let newSel = selectLines(vscode.window.activeTextEditor.document, vscode.window.activeTextEditor.selection);
@@ -324,7 +324,7 @@ function registerCommands()
         });
     });
 
-    vscode.commands.registerCommand('tib.transform.AnswersToItems', () => 
+    registerCommand('tib.transform.AnswersToItems', () => 
     {
         let editor = vscode.window.activeTextEditor;
         try
@@ -344,7 +344,7 @@ function registerCommands()
         }
     });
 
-    vscode.commands.registerCommand('tib.transform.ItemsToAnswers', () => 
+    registerCommand('tib.transform.ItemsToAnswers', () => 
     {
         let editor = vscode.window.activeTextEditor;
         try
@@ -365,7 +365,7 @@ function registerCommands()
     });
 
     // комментирование блока
-    vscode.commands.registerCommand('editor.action.blockComment', () => 
+    registerCommand('editor.action.blockComment', () => 
     {
         let editor = vscode.window.activeTextEditor;
         let selections = editor.selections;
@@ -382,7 +382,7 @@ function registerCommands()
         });
     });
 
-    vscode.commands.registerCommand('tib.paste', () => 
+    registerCommand('tib.paste', () => 
     {
         inProcess = true;
         let txt = getFromClioboard();
@@ -413,7 +413,7 @@ function registerCommands()
         }
     });
 
-    vscode.commands.registerCommand('tib.demo', () => 
+    registerCommand('tib.demo', () => 
     {
         //vscode.commands.executeCommand("vscode.open", vscode.Uri.file(_DemoPath));
         let path = Settings.Item("demoPath");
@@ -439,14 +439,14 @@ function registerCommands()
     });
 
     // переключение Linq
-    vscode.commands.registerCommand('tib.linqToggle', () => 
+    registerCommand('tib.linqToggle', () => 
     {
         _useLinq = !_useLinq;
         vscode.window.showInformationMessage("Подстановка Linq " + (_useLinq ? "включена" : "отключена"))
     });
 
     // форматирование
-    vscode.commands.registerCommand('editor.action.formatDocument', () => 
+    registerCommand('editor.action.formatDocument', () => 
     {
         let editor = vscode.window.activeTextEditor;
         let range;
@@ -1615,4 +1615,20 @@ function getLogData(edt?: vscode.TextEditor): LogData
         logError("Ошибка доступа к редактору");
     }
     return res;
+}
+
+
+function isTib()
+{
+    return vscode.window.activeTextEditor.document.languageId == "tib";
+}
+
+
+function registerCommand(name: string, command: Function): void
+{
+    vscode.commands.registerCommand(name, () => 
+    {
+        if (!isTib()) return;
+        command();
+    });
 }

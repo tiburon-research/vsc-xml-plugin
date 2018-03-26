@@ -15,7 +15,7 @@ import { bot } from './extension'
 
 
 /** Тип сборки */
-export const _pack: string = "release";
+export const _pack: string = "debug";
 
 /** RegExp для XML тегов, которые могут содержать C# */
 export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)";
