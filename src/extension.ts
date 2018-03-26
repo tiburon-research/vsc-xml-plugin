@@ -27,6 +27,9 @@ var inProcess = false;
 /** Путь для сохранения логов */
 var _LogPath: string;
 
+/** функция для форматирования C# из расширения Leopotam.csharpfixformat */
+export var CSFormatter: (text: string) => Promise<string>;
+
 var TibAutoCompleteList = new KeyedCollection<TibAutoCompleteItem[]>();
 
 /** Список всех для C# (все перегрузки отдельно) */
@@ -135,6 +138,17 @@ function getData()
         _LogPath = Settings.Item("logPath");
         if (!pathExists(_LogPath)) showWarning("Отчёты об ошибках сохраняться не будут т.к. недоступен путь:\n\"" + _LogPath + "\"");
         _useLinq = Settings.Item("useLinq");
+
+        // получаем фунцию форматирования C#
+        let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
+        if (!!csharpfixformat)
+        {
+            if (!csharpfixformat.isActive) csharpfixformat.activate().then(function (a)
+            {
+                CSFormatter = getCSFormatter(csharpfixformat);
+            });
+            else getCSFormatter(csharpfixformat);
+        }
 
         // запускаем бота
         let dataPath = _LogPath + "\\data.json";
@@ -470,19 +484,17 @@ function registerCommands()
         }
         let text = editor.document.getText(range);
         // нужно ли определять язык (выделение может быть какое угодно)
-        let res = XML.format(text, Language.XML, Settings, "\t", indent);
-
-        if (!res) return;
-
-        if (!!res.Error)
+        let res = text;
+        XML.format(text, Language.XML, Settings, "\t", indent).then((res) => 
         {
-            logError(res.Error, editor);
-            return;
-        }
-        vscode.window.activeTextEditor.edit(builder =>
-        {
-            builder.replace(range, res.Result);
-        })
+            vscode.window.activeTextEditor.edit(builder =>
+            {
+                builder.replace(range, res);
+            })
+        }, (er) =>
+            {
+                logError(er, editor);
+            });
     });
 
 }
@@ -1631,4 +1643,22 @@ function registerCommand(name: string, command: Function): void
         if (!isTib()) return;
         command();
     });
+}
+
+
+/** получаем функцию для форматирования C# */
+function getCSFormatter(ext: vscode.Extension<any>): (source: string) => Promise<string>
+{
+    const getOptions = ext.exports['getOptions'];
+    const format: (txt: string, opts?) => Promise<string> = ext.exports['process'];
+    if (getOptions == undefined || format == undefined)
+    {
+        showWarning("Модуль форматирования C# не установлен!\nНе найдено расширения C# FixFormat. C# будет форматироваться как обычный текст.");
+        return null;
+    }
+    return (text: string) =>
+    {
+        let globalOptions = getOptions({});
+        return format(text, globalOptions);
+    }
 }
