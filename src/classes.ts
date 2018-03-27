@@ -6,8 +6,7 @@ import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as os from 'os'
 import { bot } from './extension'
-
-
+import { JSDOM } from '../node_modules/jsdom'
 
 
 
@@ -1034,4 +1033,20 @@ export function sendLogMessage(text: string)
 export function safeString(text: string): string
 {
     return text.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
+}
+
+
+export function initJquery(text: string, options: Object = {})
+{
+    let $dom;
+    try
+    {
+        const dom = new JSDOM("<Root>" + text + "</Root>", options);
+        let $ = require("jquery")(dom.window);
+        $dom = $($.parseXML("<Root>" + text + "</Root>")).find('Root');
+    }
+    catch (error)
+    {
+    }
+    return $dom;
 }

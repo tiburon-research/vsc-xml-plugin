@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, initJquery } from "./classes";
 import * as XML from './documentFunctions';
 
 
@@ -259,11 +259,14 @@ function registerCommands()
     registerCommand('tib.debugTestCommand', () => 
     {
         if (_pack != "debug") return;
-        console.log('_____ start debug test _____');
+        let editor = vscode.window.activeTextEditor;
+        let text = editor.document.getText(editor.selection);
+        /* XML.parse(text).then(x =>
+        {
+            console.log(x);
+        }); */
 
-        logError("Тест");
-
-        console.log('_____ end debug test _____');
+        let $ = initJquery(text, { includeNodeLocations: true });
     });
 
 
@@ -856,8 +859,8 @@ function helper()
                 }
             });
             // Custom Methods
-            console.log(mtch[3]);
-            Methods.SignatureArray(mtch[3]).forEach(element => {
+            Methods.SignatureArray(mtch[3]).forEach(element =>
+            {
                 sign.signatures.push(element);
             });
             sign.activeSignature = 0;
