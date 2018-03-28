@@ -263,10 +263,9 @@ function registerCommands()
         let text = editor.document.getText(editor.selection);
 
         let $ = getJQuery(text);
-        let $dom = $.XMLDOM(text, $);
+        let $dom = $.XMLDOM(text);
         let block = $.XML('<Block Items="$repeat(sexList){@ID[,]}"/>');
-        $dom.find("#A1 Header").text('Новый текст');
-        $dom.find('Page#Q1').append(block);
+        $dom.find("#A1 Header").text('Новый текст').closest('Page').append(block);
         editor.edit(builder => 
         {
             builder.replace(editor.selection, $dom.html());

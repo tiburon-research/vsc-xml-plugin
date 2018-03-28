@@ -1041,22 +1041,23 @@ export function safeString(text: string): string
 export function getJQuery(text: string): any
 {
     let $dom;
-    const dom = new JSDOM("<Root>" + text + "</Root>");
-    let JQuery = _JQuery(dom.window);
-    let $: any;
+    const dom = new JSDOM("<Root>" + text + "</Root>"); // нормальный объект DOM
+    let JQuery = _JQuery(dom.window); // JQuery для работы требуется объект window
 
     // преобразуем селекторы при вызове методов
     for (let key in JQuery)
     {
         if (typeof JQuery[key] == "function")
         {
+            // изменяем входные параметры
             let f = JQuery[key];
             JQuery[key] = function (...params)
             {
                 let sParams = safeParams(params);
-                //logString(sParams);
-                return f(...sParams);
+                return f.apply(this, sParams);
             }
+            // сохраняем свойства объекта
+            Object.assign(JQuery[key], f);
         }
     }
 
