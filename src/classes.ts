@@ -7,6 +7,7 @@ import * as fs from 'fs'
 import * as os from 'os'
 import { bot } from './extension'
 import { JSDOM } from '../node_modules/jsdom'
+import * as _JQuery from 'jquery'
 
 
 
@@ -14,7 +15,7 @@ import { JSDOM } from '../node_modules/jsdom'
 
 
 /** Тип сборки */
-export const _pack: string = "debug";
+export const _pack: ("debug" | "release") = "debug";
 
 /** RegExp для XML тегов, которые могут содержать C# */
 export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)";
@@ -38,17 +39,17 @@ export interface TextRange
 export namespace TibTransform
 {
 
-    export function AnswersToItems(text: string): string
+    export function AnswersToItems(text: string): Promise<string>
     {
         return TransformElement(text, "Answer", "Item");
     }
 
-    export function ItemsToAnswers(text: string): string
+    export function ItemsToAnswers(text: string): Promise<string>
     {
         return TransformElement(text, "Item", "Answer");
     }
 
-    function TransformElement(text: string, from: string, to: string): string
+    async function TransformElement(text: string, from: string, to: string): Promise<string>
     {
         let ar = text.split("\n");
         let res = "";
@@ -62,9 +63,9 @@ export namespace TibTransform
                 res += "<" + to;
                 if (mt[2])
                 {
-                    let id = mt[2].match(/Id=["'][^"']+["']/);
+                    let id = mt[2].match(/Id=(('[^']*')|("[^"]*"))/);
                     if (id) res += " " + id[0];
-                    let txt = mt[2].match(/Text=["'][^"']*["']/);
+                    let txt = mt[2].match(/Text=(('[^']*')|("[^"]*"))/);
                     if (txt) res += " " + txt[0];
                 }
                 res += ">";
@@ -1036,17 +1037,56 @@ export function safeString(text: string): string
 }
 
 
-export function initJquery(text: string, options: Object = {})
+/** возвращает JQuery, модернизированный под XML */
+export function getJQuery(text: string): any
 {
     let $dom;
-    try
+    const dom = new JSDOM("<Root>" + text + "</Root>");
+    let JQuery = _JQuery(dom.window);
+    let $: any;
+
+    // преобразуем селекторы при вызове методов
+    for (let key in JQuery)
     {
-        const dom = new JSDOM("<Root>" + text + "</Root>", options);
-        let $ = require("jquery")(dom.window);
-        $dom = $($.parseXML("<Root>" + text + "</Root>")).find('Root');
+        if (typeof JQuery[key] == "function")
+        {
+            let f = JQuery[key];
+            JQuery[key] = function (...params)
+            {
+                let sParams = safeParams(params);
+                //logString(sParams);
+                return f(...sParams);
+            }
+        }
     }
-    catch (error)
+
+    // создаёт JQuery-объект XML
+    JQuery.XML = function (el: string)
     {
+        return JQuery(JQuery.parseXML('<Root>' + el + '</Root>')).find('Root').children();
     }
-    return $dom;
+
+    // создаёт родительский объект (DOM)
+    JQuery.XMLDOM = function (el: string)
+    {
+        return JQuery(JQuery.parseXML('<Root>' + el + '</Root>')).find('Root');
+    }
+
+    return JQuery;
+}
+
+
+/** преобразует селектор для XML */
+function safeSelector(selector: string): string
+{
+    let safeSel = selector;
+    safeSel = safeSel.replace(/#([a-zA-Z0-9_\-@\)\(]+)/, '[Id="$1"]');
+    return safeSel;
+}
+
+
+/** преобразует строковые параметры $ для XML */
+function safeParams(params: any[]): any[]
+{
+    return params.map(s => (typeof s == "string") ? safeSelector(s) : s);
 }

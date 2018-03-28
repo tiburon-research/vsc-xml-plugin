@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, initJquery } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, getJQuery } from "./classes";
 import * as XML from './documentFunctions';
 
 
@@ -261,12 +261,16 @@ function registerCommands()
         if (_pack != "debug") return;
         let editor = vscode.window.activeTextEditor;
         let text = editor.document.getText(editor.selection);
-        /* XML.parse(text).then(x =>
-        {
-            console.log(x);
-        }); */
 
-        let $ = initJquery(text, { includeNodeLocations: true });
+        let $ = getJQuery(text);
+        let $dom = $.XMLDOM(text, $);
+        let block = $.XML('<Block Items="$repeat(sexList){@ID[,]}"/>');
+        $dom.find("#A1 Header").text('Новый текст');
+        $dom.find('Page#Q1').append(block);
+        editor.edit(builder => 
+        {
+            builder.replace(editor.selection, $dom.html());
+        })
     });
 
 
@@ -347,14 +351,17 @@ function registerCommands()
         try
         {
             inProcess = true;
-            editor.edit((editBuilder) =>
+            let text = editor.document.getText(editor.selection);
+            TibTransform.AnswersToItems(text).then(res =>
             {
-                let text = editor.document.getText(editor.selection);
-                editBuilder.replace(editor.selection, TibTransform.AnswersToItems(text));
-            }).then(() =>
-            {
-                inProcess = false;
-            });
+                editor.edit((editBuilder) =>
+                {
+                    editBuilder.replace(editor.selection, res);
+                }).then(() =>
+                {
+                    inProcess = false;
+                });
+            })
         } catch (error)
         {
             logError("Ошибка преобразования AnswersToItems", editor);
@@ -367,14 +374,17 @@ function registerCommands()
         try
         {
             inProcess = true;
-            editor.edit((editBuilder) =>
+            let text = editor.document.getText(editor.selection);
+            TibTransform.ItemsToAnswers(text).then(res =>
             {
-                let text = editor.document.getText(editor.selection);
-                editBuilder.replace(editor.selection, TibTransform.ItemsToAnswers(text));
-            }).then(() =>
-            {
-                inProcess = false;
-            });
+                editor.edit((editBuilder) =>
+                {
+                    editBuilder.replace(editor.selection, res);
+                }).then(() =>
+                {
+                    inProcess = false;
+                });
+            })
         } catch (error)
         {
             logError("Ошибка преобразования ItemsToAnswers", editor);

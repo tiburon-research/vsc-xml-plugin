@@ -6,6 +6,7 @@ import * as cssbeautify from 'cssbeautify';
 import { languages } from "vscode";
 import { logError, CSFormatter } from "./extension";
 
+
 // форматирование, проверка и другие операции с текстом документа
 
 
