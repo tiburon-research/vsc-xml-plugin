@@ -6,8 +6,8 @@ import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as os from 'os'
 import { bot } from './extension'
-import { JSDOM } from '../node_modules/jsdom'
-import * as _JQuery from 'jquery'
+/* import { JSDOM } from '../node_modules/jsdom'
+import * as _JQuery from 'jquery' */
 
 
 
@@ -1038,11 +1038,14 @@ export function safeString(text: string): string
 
 
 /** возвращает JQuery, модернизированный под XML */
-export function getJQuery(text: string): any
+/* export function getJQuery(text: string): any
 {
     let $dom;
     const dom = new JSDOM("<Root>" + text + "</Root>"); // нормальный объект DOM
+    console.log(dom.window.document.documentElement.innerHTML);
     let JQuery = _JQuery(dom.window); // JQuery для работы требуется объект window
+
+    console.log(JQuery(JQuery.parseXML('<Root><Text Title=\'my "best" text\'><![CDATA[ Yes & No ]]></Text></Root>')).find('Root').html());
 
     // преобразуем селекторы при вызове методов
     for (let key in JQuery)
@@ -1064,30 +1067,46 @@ export function getJQuery(text: string): any
     // создаёт JQuery-объект XML
     JQuery.XML = function (el: string)
     {
-        return JQuery(JQuery.parseXML('<Root>' + el + '</Root>')).find('Root').children();
+        let pure = el.replace(/<!\[CDATA\[([\s\S]*)\]\]>/, "<Cdata>$1</Cdata>");
+        return JQuery(JQuery.parseXML('<Root>' + pure + '</Root>')).find('Root').children();
+    }
+
+    // получает XML-разметку
+    JQuery.fn.xml = function (formatFunction: (text: string) => Promise<string>): Promise<string>
+    {
+        let el = JQuery(this[0]);
+        return new Promise((resolve, reject) =>
+        {
+            let res = el.html();
+            res = res.replace(/<Cdata>([\s\S]*)<\/Cdata>/, "<![CDATA[$1]]>");
+            res = XML.htmlToXml(res);
+            if (!!formatFunction) res = formatFunction(res).then(x => resolve(x)).catch(x => reject(x));
+            else resolve(res);
+        })
     }
 
     // создаёт родительский объект (DOM)
     JQuery.XMLDOM = function (el: string)
     {
-        return JQuery(JQuery.parseXML('<Root>' + el + '</Root>')).find('Root');
+        let pure = el.replace(/<!\[CDATA\[([\s\S]*)\]\]>/, "<Cdata>$1</Cdata>");
+        return JQuery(JQuery.parseXML('<Root>' + pure + '</Root>')).find('Root');
     }
 
     return JQuery;
-}
+} */
 
 
 /** преобразует селектор для XML */
-function safeSelector(selector: string): string
+/* function safeSelector(selector: string): string
 {
     let safeSel = selector;
     safeSel = safeSel.replace(/#([a-zA-Z0-9_\-@\)\(]+)/, '[Id="$1"]');
     return safeSel;
-}
+} */
 
 
 /** преобразует строковые параметры $ для XML */
-function safeParams(params: any[]): any[]
+/* function safeParams(params: any[]): any[]
 {
     return params.map(s => (typeof s == "string") ? safeSelector(s) : s);
-}
+} */

@@ -720,3 +720,10 @@ export function clearIndents(text: string): string
 {
     return text.replace(/(^|\n)[\t ]+/g, "$1");
 }
+
+
+/** преобразовывает стандартный HTML к нашему XML */
+/* export function htmlToXml(html: string): string
+{
+    return html;
+} */

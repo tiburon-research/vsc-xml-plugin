@@ -2,9 +2,9 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, getJQuery } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot } from "./classes";
 import * as XML from './documentFunctions';
-
+//import { JSDOM } from '../node_modules/jsdom'
 
 
 /** объект для управления ботом */
@@ -260,16 +260,31 @@ function registerCommands()
     {
         if (_pack != "debug") return;
         let editor = vscode.window.activeTextEditor;
-        let text = editor.document.getText(editor.selection);
+        let selection = editor.selection;
+        let text = editor.document.getText(selection);
+        //let selection = getFullRange(editor.document);
+        //let text = editor.document.getText();
 
-        let $ = getJQuery(text);
-        let $dom = $.XMLDOM(text);
-        let block = $.XML('<Block Items="$repeat(sexList){@ID[,]}"/>');
-        $dom.find("#A1 Header").text('Новый текст').closest('Page').append(block);
-        editor.edit(builder => 
+        /* let DOMParser = require('xmldom').DOMParser;
+        let doc = new DOMParser().parseFromString(text,'application/xml');
+        console.info(doc.getElementsByTagName('Tag'))
+        console.info(doc.documentElement.nodeValue) */
+
+        /* const dom = new JSDOM("<Root>" + text + "</Root>", {contentType: "text/html"});
+        console.log(dom.window.document.querySelector('Root').innerHTML); */
+
+        //let $ = getJQuery(text);
+        //let $dom = $.XMLDOM(text);
+        //console.log($dom.html());
+        /* let block = $.XML('<Block Items="$repeat(sexList){@ID[,]}"/>');
+        $dom.find("#A1 Header").text('Новый текст').closest('Page').append(block); */
+        /* $dom.xml(formatText).then(x =>
         {
-            builder.replace(editor.selection, $dom.html());
-        })
+            editor.edit(builder => 
+            {
+                builder.replace(selection, x);
+            })
+        }); */
     });
 
 
@@ -1678,4 +1693,12 @@ function getCSFormatter(ext: vscode.Extension<any>): (source: string) => Promise
         let globalOptions = getOptions({});
         return format(text, globalOptions);
     }
+}
+
+
+function formatText(text: string): Promise<string>
+{
+    let editor = vscode.window.activeTextEditor;
+    let range = getFullRange(editor.document);
+    return XML.format(text, Language.XML, Settings, "\t", 0);
 }
