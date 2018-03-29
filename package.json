@@ -2,7 +2,7 @@
     "name": "tiburonscripter",
     "displayName": "Tiburon XML Helper",
     "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "publisher": "TiburonResearch",
     "author": {
         "name": "GuRu",
@@ -17,6 +17,7 @@
     },
     "icon": "stuff/icon.png",
     "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/README.md",
+    "license": "MIT",
     "engines": {
         "vscode": "^1.17.0"
     },

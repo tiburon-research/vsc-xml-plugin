@@ -15,7 +15,7 @@ import * as _JQuery from 'jquery' */
 
 
 /** Тип сборки */
-export const _pack: ("debug" | "release") = "debug";
+export const _pack: ("debug" | "release") = "release";
 
 /** RegExp для XML тегов, которые могут содержать C# */
 export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)";
