@@ -293,8 +293,8 @@ function registerCommands()
         let editor = vscode.window.activeTextEditor;
         let txt = getPreviousText(editor.document, editor.selection.active);
         let tag = getCurrentTag(editor.document, editor.selection.active, txt);
-        if (!tag || tag.Parents.length < 2) return;
-        let par = tag.Parents[1];
+        if (!tag || tag.Parents.length < 1) return;
+        let par = tag.Parents.length == 1 ? tag.Name : tag.Parents[1];
         let start = txt.lastIndexOf("<" + par);
         let from = editor.document.positionAt(start);
         let cl = findCloseTag("<", par, ">", editor.document, from.translate(0, 1));
@@ -1470,7 +1470,7 @@ function getAttributes(str: string): KeyedCollection<string>
 }
 
 
-// весь документ
+/** Range всего документа */
 function getFullRange(document: vscode.TextDocument): vscode.Range
 {
     return new vscode.Range(0, 0, document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
