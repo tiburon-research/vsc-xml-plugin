@@ -6,8 +6,8 @@ import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as os from 'os'
 import { bot } from './extension'
-/* import { JSDOM } from '../node_modules/jsdom'
-import * as _JQuery from 'jquery' */
+import { JSDOM } from '../node_modules/jsdom'
+import * as _JQuery from 'jquery'
 
 
 
@@ -15,7 +15,7 @@ import * as _JQuery from 'jquery' */
 
 
 /** Тип сборки */
-export const _pack: ("debug" | "release") = "release";
+export const _pack: ("debug" | "release") = "debug";
 
 /** RegExp для XML тегов, которые могут содержать C# */
 export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)";
@@ -23,6 +23,8 @@ export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)";
 export const _SelfClosedTags = "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)";
 
 export enum Language { XML, CSharp, CSS, JS, PlainTetx };
+
+
 
 /**
  * @param From Включаемая граница
@@ -34,6 +36,23 @@ export interface TextRange
     To: number;
     Length?: number;
 }
+
+
+
+/** Результат кодирования C# вставок */
+export interface CSEncodeResult
+{
+    Result: string;
+    CSCollection: KeyedCollection<string>;
+    Delimiter: string;
+}
+
+
+export interface DOMSurveyData
+{
+    Delimiter: string;
+    CSCollection: KeyedCollection<string>;
+}    
 
 
 export namespace TibTransform
@@ -880,6 +899,8 @@ export class TelegramBot
 
 
 
+
+
 // ------------------------------------------------------------ Functions ------------------------------------------------------------
 
 
@@ -1038,14 +1059,14 @@ export function safeString(text: string): string
 
 
 /** возвращает JQuery, модернизированный под XML */
-/* export function getJQuery(text: string): any
+export function getJQuery(text: string): any
 {
     let $dom;
     const dom = new JSDOM("<Root>" + text + "</Root>"); // нормальный объект DOM
-    console.log(dom.window.document.documentElement.innerHTML);
+    //console.log(dom.window.document.documentElement.innerHTML);
     let JQuery = _JQuery(dom.window); // JQuery для работы требуется объект window
 
-    console.log(JQuery(JQuery.parseXML('<Root><Text Title=\'my "best" text\'><![CDATA[ Yes & No ]]></Text></Root>')).find('Root').html());
+    //console.log(JQuery(JQuery.parseXML('<Root><Text Title=\'my "best" text\'><![CDATA[ Yes & No ]]></Text></Root>')).find('Root').html());
 
     // преобразуем селекторы при вызове методов
     for (let key in JQuery)
@@ -1064,12 +1085,17 @@ export function safeString(text: string): string
         }
     }
 
+    // создаём пустые данные
+    JQuery.SurveyData = {} as DOMSurveyData;
+
     // создаёт JQuery-объект XML
-    JQuery.XML = function (el: string)
+    /* JQuery.XML = function (el: string)
     {
-        let pure = el.replace(/<!\[CDATA\[([\s\S]*)\]\]>/, "<Cdata>$1</Cdata>");
-        return JQuery(JQuery.parseXML('<Root>' + pure + '</Root>')).find('Root').children();
-    }
+        let obj = XML.htmlToXml(el);
+        (JQuery.SurveyData as DOMSurveyData).Delimiter = obj.Delimiter;
+        (JQuery.SurveyData as DOMSurveyData).CSCollection = obj.CSCollection;
+        return JQuery(JQuery.parseXML('<Root>' + obj.Result + '</Root>')).find('Root').children();
+    } */
 
     // получает XML-разметку
     JQuery.fn.xml = function (formatFunction: (text: string) => Promise<string>): Promise<string>
@@ -1078,8 +1104,11 @@ export function safeString(text: string): string
         return new Promise((resolve, reject) =>
         {
             let res = el.html();
-            res = res.replace(/<Cdata>([\s\S]*)<\/Cdata>/, "<![CDATA[$1]]>");
-            res = XML.htmlToXml(res);
+            res = XML.XmlToHtml({
+                Result: res,
+                CSCollection: (JQuery.SurveyData as DOMSurveyData).CSCollection,
+                Delimiter: (JQuery.SurveyData as DOMSurveyData).Delimiter
+            });
             if (!!formatFunction) res = formatFunction(res).then(x => resolve(x)).catch(x => reject(x));
             else resolve(res);
         })
@@ -1088,25 +1117,27 @@ export function safeString(text: string): string
     // создаёт родительский объект (DOM)
     JQuery.XMLDOM = function (el: string)
     {
-        let pure = el.replace(/<!\[CDATA\[([\s\S]*)\]\]>/, "<Cdata>$1</Cdata>");
-        return JQuery(JQuery.parseXML('<Root>' + pure + '</Root>')).find('Root');
+        let obj = XML.htmlToXml(el);
+        (JQuery.SurveyData as DOMSurveyData).Delimiter = obj.Delimiter;
+        (JQuery.SurveyData as DOMSurveyData).CSCollection = obj.CSCollection;
+        return JQuery(JQuery.parseXML('<Root>' + obj.Result + '</Root>')).find('Root');
     }
 
     return JQuery;
-} */
+}
 
 
 /** преобразует селектор для XML */
-/* function safeSelector(selector: string): string
+function safeSelector(selector: string): string
 {
     let safeSel = selector;
     safeSel = safeSel.replace(/#([a-zA-Z0-9_\-@\)\(]+)/, '[Id="$1"]');
     return safeSel;
-} */
+}
 
 
 /** преобразует строковые параметры $ для XML */
-/* function safeParams(params: any[]): any[]
+function safeParams(params: any[]): any[]
 {
     return params.map(s => (typeof s == "string") ? safeSelector(s) : s);
-} */
+}

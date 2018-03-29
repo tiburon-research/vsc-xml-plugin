@@ -1,6 +1,6 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings } from "./classes";
+import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, CSEncodeResult } from "./classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { languages } from "vscode";
@@ -554,7 +554,7 @@ function get1LevelNodes(text: string): TagInfo[]
 }
 
 
-// сохраняем c# вставки
+/** сохраняем c# вставки */
 function getEmbeddedCS(text: string): KeyedCollection<string>
 {
     let cs = new KeyedCollection<string>();
@@ -576,6 +576,7 @@ function getEmbeddedCS(text: string): KeyedCollection<string>
 // кодируем вставки в тексте
 function encodeCS(text: string, cs: KeyedCollection<string>, del: string): string
 {
+    if (!del || cs.Count() == 0) return text;
     var newText = text;
     cs.forEach(function (i, e)
     {
@@ -588,6 +589,7 @@ function encodeCS(text: string, cs: KeyedCollection<string>, del: string): strin
 // возвращаем c# вставки
 function getCSBack(text: string, cs: KeyedCollection<string>, del: string): string
 {
+    if (!del || cs.Count() == 0) return text;
     var newText = text;
     cs.forEach(function (i, e)
     {
@@ -722,8 +724,23 @@ export function clearIndents(text: string): string
 }
 
 
-/** преобразовывает стандартный HTML к нашему XML */
-/* export function htmlToXml(html: string): string
+/** преобразовывает XML к безопасному для парсинга как HTML */
+export function htmlToXml(html: string): CSEncodeResult
 {
-    return html;
-} */
+    // TODO: заменить символы внутри CDATA
+    let res = html.replace(/<!\[CDATA\[([\s\S]*)\]\]>/, "<Cdata>$1</Cdata>");
+    let del = getReplaceDelimiter(res);
+    let cs = getEmbeddedCS(res);
+    res = encodeCS(res, cs, del);
+    return { Result: res, Delimiter: del, CSCollection: cs };
+}
+
+
+/** преобразовывает безопасный XML в нормальный */
+export function XmlToHtml(xml: CSEncodeResult): string
+{
+    let res = getCSBack(xml.Result, xml.CSCollection, xml.Delimiter);
+    res = res.replace(/<Cdata>([\s\S]*)<\/Cdata>/, "<![CDATA[$1]]>");
+    res = res.replace(/"(\[c#[\s\S]*\/c#\])"/, "'$1'");
+    return res;
+}

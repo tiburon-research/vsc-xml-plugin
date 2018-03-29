@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, getJQuery } from "./classes";
 import * as XML from './documentFunctions';
 //import { JSDOM } from '../node_modules/jsdom'
 
@@ -273,18 +273,19 @@ function registerCommands()
         /* const dom = new JSDOM("<Root>" + text + "</Root>", {contentType: "text/html"});
         console.log(dom.window.document.querySelector('Root').innerHTML); */
 
-        //let $ = getJQuery(text);
-        //let $dom = $.XMLDOM(text);
+        let $ = getJQuery(text);
+        console.log(1)
+        let $dom = $.XMLDOM(text);
         //console.log($dom.html());
         /* let block = $.XML('<Block Items="$repeat(sexList){@ID[,]}"/>');
         $dom.find("#A1 Header").text('Новый текст').closest('Page').append(block); */
-        /* $dom.xml(formatText).then(x =>
+        $dom.xml(formatText).then(x =>
         {
             editor.edit(builder => 
             {
                 builder.replace(selection, x);
             })
-        }); */
+        });
     });
 
 

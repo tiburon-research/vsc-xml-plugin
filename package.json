@@ -29,9 +29,11 @@
     ],
     "main": "./out/extension",
     "dependencies": {
-        "js-beautify": "^1.7.5",
         "clipboardy": "^1.2.2",
-        "cssbeautify": "^0.3.1"
+        "cssbeautify": "^0.3.1",
+        "jquery": "^3.3.1",
+        "js-beautify": "^1.7.5",
+        "jsdom": "^11.6.2"
     },
     "contributes": {
         "languages": [
@@ -71,7 +73,7 @@
                 "path": "./snippets/features.json"
             }
         ],
-        "commands":[
+        "commands": [
             {
                 "command": "tib.transform.AnswersToItems",
                 "title": "Answers -> Items",
@@ -128,7 +130,7 @@
                 "category": "tib"
             }
         ],
-        "keybindings":[
+        "keybindings": [
             {
                 "key": "ctrl+alt+t",
                 "command": "tib.insertTag"
@@ -167,48 +169,39 @@
             }
         ],
         "configurationDefaults": {
-            "[tib]":
-            {
-                "editor.quickSuggestions": 
-                {
+            "[tib]": {
+                "editor.quickSuggestions": {
                     "strings": true
                 }
             }
         },
-        "configuration":
-        {
+        "configuration": {
             "title": "Параметры Tiburon XML Helper",
             "properties": {
-                "tib.ignoreComments":
-                {
+                "tib.ignoreComments": {
                     "description": "Игнорировать комментарии",
                     "type": "boolean",
                     "default": true
                 },
-                "tib.demoPath":
-                {
+                "tib.demoPath": {
                     "description": "Путь к скрипту демонстрационной анкеты",
                     "type": "string",
                     "default": "T:\\=Tiburon_NEW\\!!!Проекты\\=OWN\\Deman\\Adaptive\\deman_adaptive.xml"
                 },
-                "tib.logPath":
-                {
+                "tib.logPath": {
                     "description": "Путь к папке с логами (лучше не менять)",
                     "type": "string",
                     "default": "G:\\Разное\\TiburonXMLScripterLogs"
                 },
-                "tib.useLinq":
-                {
+                "tib.useLinq": {
                     "description": "Подставлять методы из библиотеки System.Linq",
                     "type": "boolean",
                     "default": true
                 },
-                "tib.formatSettings":
-                {
+                "tib.formatSettings": {
                     "description": "Настройки форматирования",
                     "type": "object",
-                    "default":
-                    {
+                    "default": {
                         "braceStyle": "expand"
                     }
                 }
