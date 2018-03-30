@@ -4,7 +4,10 @@ import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
 import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, getJQuery } from "./classes";
 import * as XML from './documentFunctions';
-//import { JSDOM } from '../node_modules/jsdom'
+
+
+
+//#region ---------------------------------------- глобальные переменные
 
 
 /** объект для управления ботом */
@@ -17,9 +20,6 @@ export { bot };
 /** XML теги, которые сохраняются в CurrentNodes */
 const _NodeStoreNames = ["Page", "Question", "Quota", "List"];
 
-
-
-// глобальные переменные
 
 /** Во избежание рекурсивыных изменений */
 var inProcess = false;
@@ -59,6 +59,13 @@ var Settings = new ExtensionSettings();
 
 /** флаг использования Linq */
 var _useLinq = true;
+
+
+//#endregion
+
+
+
+//#region ---------------------------------------- активация
 
 
 export function activate(context: vscode.ExtensionContext)
@@ -246,6 +253,12 @@ function getData()
 
 
 
+//#endregion
+
+
+
+//#region ---------------------------------------- registerProviders
+
 
 function registerCommands()
 {
@@ -274,7 +287,6 @@ function registerCommands()
         console.log(dom.window.document.querySelector('Root').innerHTML); */
 
         let $ = getJQuery(text);
-        console.log(1)
         let $dom = $.XMLDOM(text);
         //console.log($dom.html());
         /* let block = $.XML('<Block Items="$repeat(sexList){@ID[,]}"/>');
@@ -1095,6 +1107,14 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 }
 
 
+//#endregion
+
+
+
+//region ---------------------------------------- доп функции
+
+
+
 function saveMethods(editor: vscode.TextEditor): void
 {
     try
@@ -1164,10 +1184,6 @@ function updateNodesIds(editor: vscode.TextEditor, names?: string[]): void
 }
 
 
-
-
-
-// -------------------- доп функции
 
 function safeValsEval(query): string[]
 {
@@ -1703,3 +1719,6 @@ function formatText(text: string): Promise<string>
     let range = getFullRange(editor.document);
     return XML.format(text, Language.XML, Settings, "\t", 0);
 }
+
+
+//#endregion

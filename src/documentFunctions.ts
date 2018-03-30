@@ -1,6 +1,6 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, CSEncodeResult } from "./classes";
+import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, EncodeResult, EncodedXML, XMLencodeResult } from "./classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { languages } from "vscode";
@@ -183,14 +183,14 @@ async function formatBody(text: string, tab: string, indent: number = 0, lang: L
         if (cs.Count() > 0)
         {
             del = getReplaceDelimiter(text);
-            newText = encodeCS(newText, cs, del);
+            newText = saveEncodedCS(newText, cs, del);
             rm = true;
         }
     }
     let ind = tab.repeat(indent);
     newText = newText.replace(/(\n|^)[\t ]+$/g, '$1');
     res = await LanguageFunction(lang)(newText, tab, indent);
-    if (rm && !res.Error) res.Result = getCSBack(res.Result, cs, del);
+    if (rm && !res.Error) res.Result = getCSBack(res.Result, { Delimiter: del, EncodedCollection: cs });
     // для случаев <Text>текст\n.*
     if (res.Result.match(/^\n*\S/))
     {
@@ -573,8 +573,7 @@ function getEmbeddedCS(text: string): KeyedCollection<string>
 }
 
 
-// кодируем вставки в тексте
-function encodeCS(text: string, cs: KeyedCollection<string>, del: string): string
+function saveEncodedCS(text: string, cs: KeyedCollection<string>, del: string): string
 {
     if (!del || cs.Count() == 0) return text;
     var newText = text;
@@ -586,24 +585,96 @@ function encodeCS(text: string, cs: KeyedCollection<string>, del: string): strin
 }
 
 
-// возвращаем c# вставки
-function getCSBack(text: string, cs: KeyedCollection<string>, del: string): string
+/** кодируем вставки в тексте */
+function encodeCS(text: string, delimiterLength?: number): EncodeResult
+{
+    let res = new EncodeResult();
+    let cs = getEmbeddedCS(text);
+    let del = getReplaceDelimiter(text, delimiterLength);
+    res.Delimiter = del;
+    res.EncodedCollection = cs;
+    res.Result = saveEncodedCS(text, cs, del);
+    return res;
+}
+
+
+/** возвращаем c# вставки */
+function getCSBack(text: string, cs: XMLencodeResult): string
+{
+    if (!cs.Delimiter || cs.EncodedCollection.Count() == 0) return text;
+    var newText = text;
+    cs.EncodedCollection.forEach(function (i, e)
+    {
+        newText = newText.replace(new RegExp(safeString(cs.Delimiter + i + cs.Delimiter), "g"), e);
+    })
+    return newText;
+}
+
+
+/** кодирует CDATA в тексте */
+function encodeCDATA(text: string): EncodeResult
+{
+    let res = new EncodeResult();
+    let cd = getCDATA(text);
+    // Delimiter тут - название атрибута
+    res.Delimiter = "CDATAEncodedId";
+    res.EncodedCollection = cd;
+    res.Result = saveEncodedCDATA(text, cd, res.Delimiter);
+    return res;
+}
+
+
+/** получает набор из CDATA */
+function getCDATA(text: string): KeyedCollection<string>
+{
+    let cs = new KeyedCollection<string>();
+    let regCS = new RegExp(/(<!\[CDATA\[)([\S\s]*)(\]\]>)/);
+    let resCS = regCS.exec(text);
+    let i = 0;
+    let newText = text;
+    while (!!resCS)
+    {
+        i++;
+        cs.AddPair("" + i, resCS[0]);
+        newText = newText.replace(new RegExp(safeString(resCS[0]), "g"), "");
+        resCS = regCS.exec(newText);
+    }
+    return cs;
+}
+
+
+/** кодирует CDATA */
+function saveEncodedCDATA(text: string, cs: KeyedCollection<string>, del: string): string
 {
     if (!del || cs.Count() == 0) return text;
     var newText = text;
     cs.forEach(function (i, e)
     {
-        newText = newText.replace(new RegExp(safeString(del + i + del), "g"), e);
+        newText = newText.replace(new RegExp(safeString(e), "g"), "<CDATA " + del + "=\"" + i + "\"></CDATA>");
+    });
+    return newText;
+}
+
+
+/** заменяет обратно закодированные CDATA */
+function getCDATAback(text: string, cd: XMLencodeResult): string
+{
+    if (!cd || cd.EncodedCollection.Count() == 0) return text;
+    var newText = text;
+    cd.EncodedCollection.forEach(function (i, e)
+    {
+        newText = newText.replace(new RegExp(safeString("<CDATA " + cd.Delimiter + "=\"" + i + "\"></CDATA>"), "g"), e);
     })
     return newText;
 }
 
 
 // получаем разделитель, для временной замены вставок
-function getReplaceDelimiter(text: string, length: number = 5): string
+function getReplaceDelimiter(text: string, length?: number): string
 {
     let dels = ["_", "\\"];
     let del = null;
+    length = length || 5;
 
     for (let i = 0; i < dels.length; i++) 
     {
@@ -725,22 +796,23 @@ export function clearIndents(text: string): string
 
 
 /** преобразовывает XML к безопасному для парсинга как HTML */
-export function htmlToXml(html: string): CSEncodeResult
+export function htmlToXml(html: string): EncodedXML
 {
-    // TODO: заменить символы внутри CDATA
-    let res = html.replace(/<!\[CDATA\[([\s\S]*)\]\]>/, "<Cdata>$1</Cdata>");
-    let del = getReplaceDelimiter(res);
-    let cs = getEmbeddedCS(res);
-    res = encodeCS(res, cs, del);
-    return { Result: res, Delimiter: del, CSCollection: cs };
+    let csRes = encodeCS(html, 5); // убираем кодовые вставки
+    let cdRes = encodeCDATA(csRes.Result); // убираем CDATA
+    return {
+        Result: cdRes.Result,
+        CSCollection: csRes.toXMLencodeResult(),
+        CDATACollection: cdRes.toXMLencodeResult()
+    };
 }
 
 
 /** преобразовывает безопасный XML в нормальный */
-export function XmlToHtml(xml: CSEncodeResult): string
+export function xmlToHtml(xml: EncodedXML): string
 {
-    let res = getCSBack(xml.Result, xml.CSCollection, xml.Delimiter);
-    res = res.replace(/<Cdata>([\s\S]*)<\/Cdata>/, "<![CDATA[$1]]>");
-    res = res.replace(/"(\[c#[\s\S]*\/c#\])"/, "'$1'");
+    let res = getCSBack(xml.Result, xml.CSCollection); // возвращаем кодовые вставки
+    res = getCDATAback(res, xml.CDATACollection); // возвращаем CDATA
+    res = res.replace(/"(\[c#[\s\S]*\/c#\])"/, "'$1'"); // при parseXML все значения атрибутов переделываются под Attr="Val"
     return res;
 }

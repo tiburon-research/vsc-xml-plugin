@@ -11,7 +11,9 @@ import * as _JQuery from 'jquery'
 
 
 
-// ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------
+
+
+//#region ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces
 
 
 /** Тип сборки */
@@ -38,20 +40,60 @@ export interface TextRange
 }
 
 
-
-/** Результат кодирования C# вставок */
-export interface CSEncodeResult
+/** interface для удобства использования: включает родные и новые свойства */
+interface TibJQuery extends Function
 {
-    Result: string;
-    CSCollection: KeyedCollection<string>;
+    html: Function;
+    fn: {
+        /** получает XML, годный для просмотра */
+        xml: Function
+    },
+    /** данные закодированного XML */
+    SurveyData: DOMSurveyData,
+    /** создаёт создаёт родительский объект (DOM) */
+    XMLDOM: Function,
+    /** стандартная функция получения объекта из XML */
+    parseXML: Function,
+    /** создаёт JQuery-объект из XML, предварительно сделав его безопасным */
+    XML: Function
+}
+
+
+export interface XMLencodeResult
+{
+    EncodedCollection: KeyedCollection<string>;
     Delimiter: string;
 }
 
 
-export interface DOMSurveyData
+/** Результат кодирования */
+export class EncodeResult
 {
-    Delimiter: string;
-    CSCollection: KeyedCollection<string>;
+    Result: string;
+    EncodedCollection = new KeyedCollection<string>();
+    Delimiter: string = null;
+
+    toXMLencodeResult(): XMLencodeResult
+    {
+        return { Delimiter: this.Delimiter, EncodedCollection: this.EncodedCollection };
+    }
+}
+
+
+/** результат преобразования к безопасному XML */
+export interface EncodedXML
+{
+    Result: string;
+    CSCollection: XMLencodeResult;
+    CDATACollection: XMLencodeResult;
+}    
+
+
+export class DOMSurveyData
+{
+    Delimiter: string = null;
+    CSCollection: XMLencodeResult = null;
+    CDATACollection: XMLencodeResult = null;
 }    
 
 
@@ -897,13 +939,13 @@ export class TelegramBot
 }
 
 
+//#endregion
 
 
 
 
-// ------------------------------------------------------------ Functions ------------------------------------------------------------
 
-
+//#region ---------------------------------------- Functions 
 
 
 
@@ -1059,14 +1101,17 @@ export function safeString(text: string): string
 
 
 /** возвращает JQuery, модернизированный под XML */
-export function getJQuery(text: string): any
+export function getJQuery(text: string): TibJQuery
 {
     let $dom;
     const dom = new JSDOM("<Root>" + text + "</Root>"); // нормальный объект DOM
     //console.log(dom.window.document.documentElement.innerHTML);
-    let JQuery = _JQuery(dom.window); // JQuery для работы требуется объект window
+    let JQuery: TibJQuery = _JQuery(dom.window); // JQuery для работы требуется объект window
 
     //console.log(JQuery(JQuery.parseXML('<Root><Text Title=\'my "best" text\'><![CDATA[ Yes & No ]]></Text></Root>')).find('Root').html());
+    
+    // инициализируем пустой
+    JQuery.SurveyData = new DOMSurveyData();
 
     // преобразуем селекторы при вызове методов
     for (let key in JQuery)
@@ -1085,42 +1130,33 @@ export function getJQuery(text: string): any
         }
     }
 
-    // создаём пустые данные
-    JQuery.SurveyData = {} as DOMSurveyData;
-
-    // создаёт JQuery-объект XML
-    /* JQuery.XML = function (el: string)
+    JQuery.XMLDOM = function (el: string)
     {
-        let obj = XML.htmlToXml(el);
-        (JQuery.SurveyData as DOMSurveyData).Delimiter = obj.Delimiter;
-        (JQuery.SurveyData as DOMSurveyData).CSCollection = obj.CSCollection;
-        return JQuery(JQuery.parseXML('<Root>' + obj.Result + '</Root>')).find('Root').children();
-    } */
+        let res = XML.htmlToXml(el);
+        JQuery.SurveyData.CDATACollection = res.CDATACollection;
+        JQuery.SurveyData.CSCollection = res.CSCollection;
+        return JQuery(JQuery.parseXML('<Root>' + res.Result + '</Root>')).find('Root');
+    }
+    
+    JQuery.XML = function (el: string)
+    {
+        return JQuery.XMLDOM(el).children();
+    }
 
-    // получает XML-разметку
     JQuery.fn.xml = function (formatFunction: (text: string) => Promise<string>): Promise<string>
     {
         let el = JQuery(this[0]);
         return new Promise((resolve, reject) =>
         {
             let res = el.html();
-            res = XML.XmlToHtml({
+            res = XML.xmlToHtml({
                 Result: res,
-                CSCollection: (JQuery.SurveyData as DOMSurveyData).CSCollection,
-                Delimiter: (JQuery.SurveyData as DOMSurveyData).Delimiter
+                CSCollection: JQuery.SurveyData.CSCollection,
+                CDATACollection: JQuery.SurveyData.CDATACollection
             });
             if (!!formatFunction) res = formatFunction(res).then(x => resolve(x)).catch(x => reject(x));
             else resolve(res);
         })
-    }
-
-    // создаёт родительский объект (DOM)
-    JQuery.XMLDOM = function (el: string)
-    {
-        let obj = XML.htmlToXml(el);
-        (JQuery.SurveyData as DOMSurveyData).Delimiter = obj.Delimiter;
-        (JQuery.SurveyData as DOMSurveyData).CSCollection = obj.CSCollection;
-        return JQuery(JQuery.parseXML('<Root>' + obj.Result + '</Root>')).find('Root');
     }
 
     return JQuery;
@@ -1141,3 +1177,8 @@ function safeParams(params: any[]): any[]
 {
     return params.map(s => (typeof s == "string") ? safeSelector(s) : s);
 }
+
+
+
+
+//#endregion
