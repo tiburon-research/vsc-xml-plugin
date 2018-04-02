@@ -617,7 +617,7 @@ function encodeCDATA(text: string): EncodeResult
     let res = new EncodeResult();
     let cd = getCDATA(text);
     // Delimiter тут - название атрибута
-    res.Delimiter = "CDATAEncodedId";
+    res.Delimiter = "EncodedId";
     res.EncodedCollection = cd;
     res.Result = saveEncodedCDATA(text, cd, res.Delimiter);
     return res;

@@ -288,9 +288,13 @@ function registerCommands()
 
         let $ = getJQuery(text);
         let $dom = $.XMLDOM(text);
-        //console.log($dom.html());
-        /* let block = $.XML('<Block Items="$repeat(sexList){@ID[,]}"/>');
-        $dom.find("#A1 Header").text('Новый текст').closest('Page').append(block); */
+        // console.log($dom.html());
+        console.log($dom.find('CDATA').text());
+        $dom.find('CDATA').text('новая & cdata');
+
+        let block = $.XML('<Block Items="$repeat(sexList){@ID[,]}"/>');
+        $dom.find("#A1 Header").text('Новый текст').closest('Tag').append(block);
+
         $dom.xml(formatText).then(x =>
         {
             editor.edit(builder => 

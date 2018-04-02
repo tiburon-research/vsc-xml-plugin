@@ -43,15 +43,29 @@ export interface TextRange
 /** interface для удобства использования: включает родные и новые свойства */
 interface TibJQuery extends Function
 {
+    // стандартные свойства и методы JQUery
+
     html: Function;
     fn: {
         /** получает XML, годный для просмотра */
-        xml: Function
-    },
+        xml: Function,
+        /** изменённая */
+        text: Function,
+        /** стандартная функция text() */
+        textOriginal: Function,
+        /** получение текста внутри CDATA */
+        CDATAtext: Function
+    };
+
+    // добавленные свойства и методы
+
     /** данные закодированного XML */
-    SurveyData: DOMSurveyData,
-    /** создаёт создаёт родительский объект (DOM) */
-    XMLDOM: Function,
+    SurveyData: DOMSurveyData;
+    /**
+     * создаёт создаёт родительский объект (DOM)
+     * @param isInitial является ли объект корнем (документом). По умолчанию - `true`
+    */
+    XMLDOM: (el: string, isInitial?: boolean) => any,
     /** стандартная функция получения объекта из XML */
     parseXML: Function,
     /** создаёт JQuery-объект из XML, предварительно сделав его безопасным */
@@ -86,7 +100,7 @@ export interface EncodedXML
     Result: string;
     CSCollection: XMLencodeResult;
     CDATACollection: XMLencodeResult;
-}    
+}
 
 
 export class DOMSurveyData
@@ -94,7 +108,7 @@ export class DOMSurveyData
     Delimiter: string = null;
     CSCollection: XMLencodeResult = null;
     CDATACollection: XMLencodeResult = null;
-}    
+}
 
 
 export namespace TibTransform
@@ -1109,7 +1123,7 @@ export function getJQuery(text: string): TibJQuery
     let JQuery: TibJQuery = _JQuery(dom.window); // JQuery для работы требуется объект window
 
     //console.log(JQuery(JQuery.parseXML('<Root><Text Title=\'my "best" text\'><![CDATA[ Yes & No ]]></Text></Root>')).find('Root').html());
-    
+
     // инициализируем пустой
     JQuery.SurveyData = new DOMSurveyData();
 
@@ -1130,17 +1144,20 @@ export function getJQuery(text: string): TibJQuery
         }
     }
 
-    JQuery.XMLDOM = function (el: string)
+    JQuery.XMLDOM = function (el: string, isInitial = true)
     {
         let res = XML.htmlToXml(el);
-        JQuery.SurveyData.CDATACollection = res.CDATACollection;
-        JQuery.SurveyData.CSCollection = res.CSCollection;
+        if (isInitial)
+        {
+            JQuery.SurveyData.CDATACollection = res.CDATACollection;
+            JQuery.SurveyData.CSCollection = res.CSCollection;
+        }
         return JQuery(JQuery.parseXML('<Root>' + res.Result + '</Root>')).find('Root');
     }
-    
+
     JQuery.XML = function (el: string)
     {
-        return JQuery.XMLDOM(el).children();
+        return JQuery.XMLDOM(el, false).children();
     }
 
     JQuery.fn.xml = function (formatFunction: (text: string) => Promise<string>): Promise<string>
@@ -1158,6 +1175,53 @@ export function getJQuery(text: string): TibJQuery
             else resolve(res);
         })
     }
+
+    // тескт CDATA
+    JQuery.fn.CDATAtext = function (...params)
+    {
+        let el = JQuery(this[0]);
+        let id = el.attr(JQuery.SurveyData.CDATACollection.Delimiter);
+        if (!params || params.length == 0) // получение
+        {
+            let text = JQuery.SurveyData.CDATACollection.EncodedCollection.Item(id);
+            if (!!text) text = text.replace(/<!\[CDATA\[([\s\S]*)\]\]>/, "$1");
+            return text;
+        }
+        else // замена
+        {
+            let space = params[0].indexOf('\n') > 0 ? "\n" : " ";
+            let pure = "<![CDATA[" + space + params[0] + space + "]]>";
+            JQuery.SurveyData.CDATACollection.EncodedCollection.AddPair(id, pure);
+            return this;
+        }
+    }
+
+    // переписываем функцию получения текста
+    JQuery.fn.textOriginal = JQuery.fn.text;
+    let newText = function (...params)
+    {
+        let el = JQuery(this[0]);
+        if (this[0].tagName == "CDATA") // для CDATA своя функция
+        {
+            return el.CDATAtext.apply(this, params);
+        }
+        let res;
+        if (!params || params.length == 0) // если запрос, то возвращаем xmlToHtml
+        {
+            res = XML.xmlToHtml({
+                Result: res,
+                CSCollection: JQuery.SurveyData.CSCollection,
+                CDATACollection: JQuery.SurveyData.CDATACollection
+            });
+        }
+        else // если задаём текст, то как обычно
+        {
+            res = el.textOriginal.apply(this, params);
+        }
+        return res;
+    }
+    Object.assign(newText, JQuery.fn.textOriginal);
+    JQuery.fn.text = newText;
 
     return JQuery;
 }
