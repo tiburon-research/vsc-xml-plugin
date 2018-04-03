@@ -335,6 +335,45 @@
             "InterviewPars.GetInstance().IsMobile"
         ],
         "description": "Мобильное устройство"
+    },
+    "DebugPrint": {
+        "prefix": "#debugPrint",
+        "body":[
+            "public string DebugPrint(string text)",
+            "{",
+            "\tif (InterviewPars.Host.StartsWith(\"debug\"))",
+            "\t{",
+            "\t\treturn \"[div style='color: red']\" + text + \"[/div]\";",
+            "\t}",
+            "\treturn \"\";",
+            "}"
+        ],
+        "description": "Вывод отладочной информации"
+    },
+    "DebugData": {
+        "prefix": "#debugData",
+        "body":[
+            "public void DebugData(string a, string v)",
+            "{",
+            "\tif (!InterviewPars.Host.StartsWith(\"debug\")) return;",
+            "\tAnswerUpdateP(\"Debug\", \"Debug\", a, v);",
+            "}"
+        ],
+        "description": "Сохранение данных для отладки"
+    },
+    "TestPrint": {
+        "prefix": "#testPrint",
+        "body":[
+            "public string TestPrint(string text)",
+            "{",
+            "\tif (AnswerExists(\"pre_data\", \"test\"))",
+            "\t{",
+            "\t\treturn text;",
+            "\t}",
+            "\treturn \"\";",
+            "}"
+        ],
+        "description": "Вывод информации для тестирования"
     }
 
 }
