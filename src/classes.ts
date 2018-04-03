@@ -1122,12 +1122,10 @@ export function safeString(text: string): string
 /** возвращает JQuery, модернизированный под XML */
 export function getJQuery(text: string): TibJQuery
 {
-    let $dom;
+    let $dom; // JQuery для работы требуется объект window
     const dom = new JSDOM("<Root>" + text + "</Root>"); // нормальный объект DOM
     //console.log(dom.window.document.documentElement.innerHTML);
-    let JQuery: TibJQuery = _JQuery(dom.window); // JQuery для работы требуется объект window
-
-    //console.log(JQuery(JQuery.parseXML('<Root><Text Title=\'my "best" text\'><![CDATA[ Yes & No ]]></Text></Root>')).find('Root').html());
+    let JQuery: TibJQuery = _JQuery(dom.window);
 
     // инициализируем пустой
     JQuery.SurveyData = new DOMSurveyData();

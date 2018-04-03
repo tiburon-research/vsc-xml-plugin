@@ -55,7 +55,7 @@ function LanguageFunction(language: Language)//: (text: string, tab?: string, in
 
 
 /*
-    XML форматируем сами, CSS и JS с помощью beautify, C# пока никак
+    XML форматируем сами, CSS и JS с помощью beautify, C# с помощью расширения Leopotam.csharpfixformat или как PlainText
     для beautify: т.к. у нас везде бывает [c#], то добавляем костыли:
         - перед форматированием присваиваем (прям в тексте) всем c# вставкам свой Id
         - сохраняем их в первозданном виде в коллекцию согласно Id
@@ -706,14 +706,14 @@ function minIndent(text: string): number
 }
 
 
-/** располагает CDATA впритык к тегу */
 function formatCDATA(text: string): string
 {
+    // располагает CDATA впритык к тегу
     let res = text.replace(/>\s*<!\[CDATA\[[\t ]*/g, "><![CDATA[");
-    res = res.replace(/(\S)[\t ]*\]\]>[\t ]*</g, "$1 ]]><"); // однострочная + пробел
-    res = res.replace(/\s*\]\]>[\t ]*?(\n[\t ]*)</g, "$1]]><"); // многострочная
-    // пробелы
+    res = res.replace(/\s*\]\]>[\t ]*?(\n[\t ]*)</g, "$1]]><");
+    // пробелы для однострочной
     res = res.replace(/<!\[CDATA\[[\t ]*(\S)/g, "<![CDATA[ $1");
+    res = res.replace(/(\S)[\t ]*\]\]>/g, "$1 ]]>");
     return res;
 }
 
@@ -769,6 +769,25 @@ function formatFoldingBlocks(text: string): string
 function preFormatXML(text: string): string
 {
     let res = text;
+    // убираем пустые CDATA
+    res = res.replace(/<!\[CDATA\[\s*\]\]>/, "");
+    // переносим остатки CDATA на новую строку
+    let regCS = new RegExp("(<!\\[CDATA\\[)(.*\\r?\\n[\\s\\S]*)(\\]\\]>)");
+    let newText = res;
+    let resCS = regCS.exec(newText);
+    logString(newText);
+    while (!!resCS)
+    {
+        if (!resCS[2].match(/\]\]>/))
+        {
+            if (resCS[2].match(/^.*\S.*\r?\n/)) // переносим начало
+                res = res.replace(new RegExp(safeString(resCS[1] + resCS[2]), "g"), resCS[1] + "\n" + resCS[2]);
+            if (resCS[2].match(/\S[ \t]*$/)) // переносим конец
+                res = res.replace(new RegExp(safeString(resCS[2] + resCS[3]), "g"), resCS[2] + "\n" + resCS[3]);
+        }
+        newText = newText.replace(new RegExp(safeString(resCS[0])), "");
+        resCS = regCS.exec(newText);
+    }
     // переносим открытый тег на новую строку
     res = res.replace(/(^|\n)([\t ]*)((((?!<!)\S)(.*?\S)?)[\t ]*)(<\w+(\s+\w+=(("[^"]*")|('[^']')))*\s*\/?>)[\t ]*\r?\n/g, "$1$2$4\n$2$7\n");
     return res;
