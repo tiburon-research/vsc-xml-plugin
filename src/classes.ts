@@ -349,10 +349,15 @@ export class TibAttribute
         return res;
     }
 
-    AutoValue()
+    AutoValue(): string
     {
         if (this.Auto) return this.Auto;
-        if (this.Type == "Boolean") return "true";
+        if (this.Type == "Boolean")
+        {
+            if (!!this.Default) return this.Default == "true" ? "false" : "true";
+            return "true";
+        }
+        return null;
     }
 }
 

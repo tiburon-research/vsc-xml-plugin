@@ -1317,7 +1317,7 @@ export const Attributes = {
         },
         {
             "Name": "ShowProgress",
-            "Default": "false",
+            "Default": "true",
             "Type": "Boolean"
         },
         {
@@ -1445,7 +1445,7 @@ export const Attributes = {
         },
         {
             "Name": "CountProgress",
-            "Default": "false",
+            "Default": "true",
             "Type": "Boolean"
         },
         {
