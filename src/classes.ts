@@ -200,6 +200,7 @@ export class KeyedCollection<T>
         return this.items[key];
     }
 
+    /** массив ключей */
     public Keys(): string[]
     {
         var keySet: string[] = [];
@@ -215,6 +216,7 @@ export class KeyedCollection<T>
         return keySet;
     }
 
+    /** массив значений */
     public Values(): T[]
     {
         var values: T[] = [];
@@ -236,11 +238,45 @@ export class KeyedCollection<T>
         this.count = 0;
     }
 
+    /** обход элементов */
     public forEach(callback: (key: string, val: T) => any)
     {
         for (var key in this.items)
             callback(key, this.Item(key));
     }
+
+    /** 
+     * преобразует набор 
+     * @param clearNull очищать ли поп проверке (!!element)
+    */
+    public Select(filter: (key: string, value: T) => any, clearNull = false): any[]
+    {
+        let res = [];
+        this.forEach((key, value) =>
+        {
+            let item = filter(key, value);
+            if (!clearNull || !!item) res.push(item);
+        });
+        return res;
+    }
+
+    /** Фильтрует набор */
+    public Filter(filter: (key: string, value: T) => boolean): T[]
+    {
+        let res = [];
+        this.forEach((key, value) =>
+        {
+            if (filter(key, value)) res.push(value);
+        });
+        return res;
+    }
+
+    /** Обновляет значение элемента по ключу */
+    public UpdateValue(key: string, transform: (value: T) => T): void
+    {
+        this.AddPair(key, transform(this.Item(key)));
+    }
+
 }
 
 

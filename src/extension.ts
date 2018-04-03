@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
 import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, getJQuery } from "./classes";
 import * as XML from './documentFunctions';
+import { SurveyList } from './surveyObjects'
 
 
 
@@ -272,9 +273,16 @@ function registerCommands()
     registerCommand('tib.debugTestCommand', () => 
     {
         if (_pack != "debug") return;
-        let editor = vscode.window.activeTextEditor;
+
+        let sexList = new SurveyList("sexList");
+        sexList.VarsAsTags = false;
+        sexList.AddItem({ Text: "Man", Vars: ["35", "41"] });
+        sexList.AddItem({ Text: "Woman", Vars: ["35", "41"] });
+        console.log(sexList.toXML());
+
+        /* let editor = vscode.window.activeTextEditor;
         let selection = editor.selection;
-        let text = editor.document.getText(selection);
+        let text = editor.document.getText(selection); */
         //let selection = getFullRange(editor.document);
         //let text = editor.document.getText();
 
@@ -286,7 +294,7 @@ function registerCommands()
         /* const dom = new JSDOM("<Root>" + text + "</Root>", {contentType: "text/html"});
         console.log(dom.window.document.querySelector('Root').innerHTML); */
 
-        let $ = getJQuery(text);
+        /* let $ = getJQuery(text);
         let $dom = $.XMLDOM(text);
         // console.log($dom.html());
         console.log($dom.find('CDATA').text());
@@ -301,7 +309,7 @@ function registerCommands()
             {
                 builder.replace(selection, x);
             })
-        });
+        }); */
     });
 
 
