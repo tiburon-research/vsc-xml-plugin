@@ -1198,20 +1198,16 @@ export function getJQuery(text: string): TibJQuery
         return JQuery.XMLDOM(el, false).children();
     }
 
-    JQuery.fn.xml = function (formatFunction: (text: string) => Promise<string>): Promise<string>
+    JQuery.fn.xml = function (formatFunction?: (text: string) => Promise<string>): string
     {
         let el = JQuery(this[0]);
-        return new Promise((resolve, reject) =>
-        {
-            let res = el.html();
-            res = XML.xmlToHtml({
-                Result: res,
-                CSCollection: JQuery.SurveyData.CSCollection,
-                CDATACollection: JQuery.SurveyData.CDATACollection
-            });
-            if (!!formatFunction) res = formatFunction(res).then(x => resolve(x)).catch(x => reject(x));
-            else resolve(res);
-        })
+        let res = el.html();
+        res = XML.xmlToHtml({
+            Result: res,
+            CSCollection: JQuery.SurveyData.CSCollection,
+            CDATACollection: JQuery.SurveyData.CDATACollection
+        });
+        return res;
     }
 
     // тескт CDATA
@@ -1247,7 +1243,7 @@ export function getJQuery(text: string): TibJQuery
         if (!params || params.length == 0) // если запрос, то возвращаем xmlToHtml
         {
             res = XML.xmlToHtml({
-                Result: res,
+                Result: el.textOriginal(),
                 CSCollection: JQuery.SurveyData.CSCollection,
                 CDATACollection: JQuery.SurveyData.CDATACollection
             });
