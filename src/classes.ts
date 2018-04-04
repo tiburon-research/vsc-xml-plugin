@@ -113,45 +113,36 @@ export class DOMSurveyData
 export namespace TibTransform
 {
 
-    export function AnswersToItems(text: string): Promise<string>
+    export function AnswersToItems(text: string): string
     {
         return TransformElement(text, "Answer", "Item");
     }
 
-    export function ItemsToAnswers(text: string): Promise<string>
+    export function ItemsToAnswers(text: string): string
     {
         return TransformElement(text, "Item", "Answer");
     }
 
-    async function TransformElement(text: string, from: string, to: string): Promise<string>
+    function TransformElement(text: string, from: string, to: string): string
     {
-        let ar = text.split("\n");
-        let res = "";
-        ar.forEach(element => 
+        let $dom = $.XMLDOM(text);
+        let $fromItems = $dom.find(from);
+        if ($fromItems.length == 0) return text;
+        $fromItems.map(function ()
         {
-            let mt = element.match(new RegExp("(\\s*)<" + safeString(from) + "\\s*([^\\/>]+)((\\/>)|(>([\\s\\S]+?)<\\/" + safeString(from) + ".*>))"));
-            if (!mt) res += element + "\n";
-            else
-            {
-                if (mt[1]) res += mt[1];
-                res += "<" + to;
-                if (mt[2])
-                {
-                    let id = mt[2].match(/Id=(('[^']*')|("[^"]*"))/);
-                    if (id) res += " " + id[0];
-                    let txt = mt[2].match(/Text=(('[^']*')|("[^"]*"))/);
-                    if (txt) res += " " + txt[0];
-                }
-                res += ">";
-                if (mt[6])
-                {
-                    let txt = mt[6].match(/<Text[^>]*>.*<\/Text\s*>/);
-                    if (txt) res += txt[0];
-                }
-                res += "</" + to + ">\n"
-            }
+            let $el = $(this);
+            let $newEl = $.XML("<" + to + "></" + to + ">");
+            $newEl.attr('Id', $el.attr('Id'));
+            let txt;
+            let $text = $el.find('Text');
+            if ($text.length > 0)
+                txt = $text.text();
+            else if (typeof $text.attr('Text') !== typeof undefined)
+                txt = $text.attr('Text');
+            $.XML('<Text></Text>').text(txt).appendTo($newEl);
+            $el.replaceWith($newEl);
         });
-        return res.substr(0, res.length - 1);
+        return $dom.xml();
     }
 
 }
@@ -1155,10 +1146,10 @@ export function safeString(text: string): string
 
 
 /** возвращает JQuery, модернизированный под XML */
-export function getJQuery(text: string): TibJQuery
+export function initJQuery(): TibJQuery
 {
     let $dom; // JQuery для работы требуется объект window
-    const dom = new JSDOM("<Root>" + text + "</Root>"); // нормальный объект DOM
+    const dom = new JSDOM("<Root></Root>"); // нормальный объект DOM
     //console.log(dom.window.document.documentElement.innerHTML);
     let JQuery: TibJQuery = _JQuery(dom.window);
 

@@ -397,18 +397,9 @@ function registerCommands()
         let editor = vscode.window.activeTextEditor;
         try
         {
-            inProcess = true;
             let text = editor.document.getText(editor.selection);
-            TibTransform.AnswersToItems(text).then(res =>
-            {
-                editor.edit((editBuilder) =>
-                {
-                    editBuilder.replace(editor.selection, res);
-                }).then(() =>
-                {
-                    inProcess = false;
-                });
-            })
+            let res = TibTransform.AnswersToItems(text);
+            applyChanges(editor.selection, res, editor);
         } catch (error)
         {
             logError("Ошибка преобразования AnswersToItems", editor);
@@ -420,18 +411,9 @@ function registerCommands()
         let editor = vscode.window.activeTextEditor;
         try
         {
-            inProcess = true;
             let text = editor.document.getText(editor.selection);
-            TibTransform.ItemsToAnswers(text).then(res =>
-            {
-                editor.edit((editBuilder) =>
-                {
-                    editBuilder.replace(editor.selection, res);
-                }).then(() =>
-                {
-                    inProcess = false;
-                });
-            })
+            let res = TibTransform.ItemsToAnswers(text);
+            applyChanges(editor.selection, res, editor);
         } catch (error)
         {
             logError("Ошибка преобразования ItemsToAnswers", editor);
@@ -1733,12 +1715,29 @@ function getCSFormatter(ext: vscode.Extension<any>): (source: string) => Promise
 }
 
 
-function formatText(text: string): Promise<string>
+/** Заменяет `range` на `text` */
+async function applyChanges(range: vscode.Range, text: string, editor: vscode.TextEditor, format = false): Promise<string>
 {
-    let editor = vscode.window.activeTextEditor;
-    let range = getFullRange(editor.document);
-    return XML.format(text, Language.XML, Settings, "\t", 0);
+    inProcess = true;
+    let res = text;
+    if (format)
+    {
+        try
+        {
+            let tag = getCurrentTag(editor.document, editor.selection.start);
+            res = await XML.format(res, Language.XML, Settings, "\t", tag.Parents.length);
+        }
+        catch (error)
+        {
+            logError("Ошибка при обновлении текста документа", editor);
+        }
+    }
+    await editor.edit(builder =>
+    {
+        builder.replace(range, res);
+    });
+    inProcess = false;
+    return res;
 }
-
 
 //#endregion
