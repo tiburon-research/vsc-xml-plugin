@@ -5,7 +5,9 @@ import { KeyedCollection, InlineAttribute } from './classes';
 
 
 
-class SurveyItem
+
+/** Универсальный класс для элементов XML */
+export class SurveyItem
 {
     /** Element TagName */
     protected readonly TagName: string;
@@ -15,23 +17,25 @@ class SurveyItem
     protected Children = new KeyedCollection<SurveyItem[]>();
     /** текст элемента */
     public Text: string;
+    /** Оставить однострочные дочерние теги на той же строке */
+    public CollapseTags = false;
 
 
     constructor(name: string, id?: string)
     {
         this.TagName = name;
-        if (!!id) this.setAttr("Id", id);
+        if (!!id) this.SetAttr("Id", id);
     }
 
     /** Получение полного XML */
-    public toXML(): string
+    public ToXML(): string
     {
         let res = "<" + this.TagName;
-        res += this.getAttributes() + ">";
+        res += this.GetAttributes() + ">";
         // получаем всё внутри рекурсивно
         if (this.Children.Count() > 0)
         {
-            res += this.XMLbodyDelegate();
+            res += this.XMLbodyFormatter();
         }
         else if (!!this.Text)
         {
@@ -44,7 +48,7 @@ class SurveyItem
     }
 
     /** возвращает XML строку атрибутов */
-    public getAttributes(): string
+    public GetAttributes(): string
     {
         let res = "";
         this.Attributes.forEach((key, value) =>
@@ -55,39 +59,46 @@ class SurveyItem
     }
 
     /** проверяет существование атрибута */
-    public attrExists(name: string): boolean
+    public AttrExists(name: string): boolean
     {
         return this.Attributes.Contains(name);
     }
 
     /** возвращает значение атрибута */
-    public attrValue(name: string): string
+    public AttrValue(name: string): string
     {
-        if (!this.attrExists(name)) return null;
+        if (!this.AttrExists(name)) return null;
         return this.Attributes.Item(name).Value;
     }
 
     /** задаёт значение атрибута (или создаёт новый) */
-    public setAttr(name: string, value: string): void
+    public SetAttr(name: string, value: string): void
     {
         this.Attributes.AddPair(name, new InlineAttribute(name, value));
     }
 
     /** обновляет значение атрибута */
-    public updateAttr(name: string, transform: (val: string) => string): void
+    public UpdateAttr(name: string, transform: (val: string) => string): void
     {
         this.Attributes.UpdateValue(name, x => new InlineAttribute(name, transform(x.Value)));
     }
 
     /** функция преобразования дочерних элементов в XML */
-    public XMLbodyDelegate(): string
+    protected XMLbodyFormatter(): string
+    {
+        if (this.CollapseTags) return this.XMLbodyFormatterCollapse();
+        else return this.XMLbodyFormatterExpand();
+    }
+
+    /** Каждый тег на новой строке */
+    private XMLbodyFormatterExpand(): string
     {
         let body = "";
         this.Children.forEach((name, element) =>
         {
             element.forEach(cildNode =>
             {
-                body += "\n" + cildNode.toXML();
+                body += "\n" + cildNode.ToXML();
             });
         });
         // отступаем
@@ -96,8 +107,36 @@ class SurveyItem
         return body;
     }
 
+    /** Оставляем однострочные теги на той же строке */
+    private XMLbodyFormatterCollapse(): string
+    {
+        let body = "";
+        let childXml: string[] = []; // массив XML детей
+        let separated = false;
+        this.Children.forEach((name, element) =>
+        {
+            element.forEach(cildNode =>
+            {
+                let child = cildNode.ToXML();
+                if (child.indexOf('\n') > -1) separated = true;
+                childXml.push(child);
+            });
+        });
+        childXml.forEach(element =>
+        {
+            if (separated) body += '\n' + element;
+            else body += element;
+        });
+        if (separated)
+        {
+            body = body.replace(/\n/g, "\n\t");
+            body += "\n";
+        }
+        return body;
+    }
+
     /** добавляет дочерний элемент */
-    public addChild(child: string | SurveyItem): void
+    public AddChild(child: string | SurveyItem): void
     {
         let name = typeof child == "string" ? child : child.TagName;
         let value = typeof child == "string" ? new SurveyItem(child) : child;
@@ -108,7 +147,7 @@ class SurveyItem
     }
 
     /** возвращает полный массив детей */
-    public getChildren(): SurveyItem[]
+    public GetChildren(): SurveyItem[]
     {
         let res = [];
         this.Children.forEach((key, value) =>
@@ -120,6 +159,7 @@ class SurveyItem
 }
 
 
+/** <Item> */
 export class SurveyElementItem extends SurveyItem
 {
     constructor(id?: string, text?: string)
@@ -127,7 +167,7 @@ export class SurveyElementItem extends SurveyItem
         super("Item", id);
         let textItem = new SurveyItem("Text");
         textItem.Text = text;
-        this.addChild(textItem);
+        this.AddChild(textItem);
     }
 }
 
@@ -166,20 +206,26 @@ class SurveyListItemVars
 }
 
 
-/** Элементы <List> */
+/** Элементы <Item> для <List> */
 export class SurveyListItem extends SurveyElementItem
 {
+    /** Коллекция Var */
+    public Vars: SurveyListItemVars;
+
+
     constructor(id?: string, text?: string)
     {
         super(id, text);
+        this.CollapseTags = true;
     }
 
-    public Vars: SurveyListItemVars;
-
     /** преобразует к стандартному классу */
-    public toSurveyItem(separateVars: boolean): SurveyItem
+    public ToSurveyItem(separateVars: boolean): SurveyItem
     {
-        let res = new SurveyItem("Item", this.attrValue("Id"));
+        let res = new SurveyItem("Item");
+        // копируем все свойства
+        res = Object.assign(res, this);
+
         // добавляем Var
         if (this.Vars.Count() > 0)
         {
@@ -189,50 +235,15 @@ export class SurveyListItem extends SurveyElementItem
                 {
                     let Var = new SurveyItem("Var");
                     Var.Text = x;
-                    res.addChild(Var);
+                    res.AddChild(Var);
                 })
             }
             else
             {
-                res.setAttr("Var", this.Vars.Items.join(","));
+                res.SetAttr("Var", this.Vars.Items.join(","));
             }
         }
-        // добавляем Text
-        if (!!this.Text)
-        {
-            let textItem = new SurveyItem("Text");
-            textItem.Text = this.Text;
-            res.addChild(textItem);
-        }    
-        res.XMLbodyDelegate = this.XMLbodyDelegate;
         return res;
-    }
-
-    public XMLbodyDelegate(): string
-    {
-        let body = "";
-        let childXml: string[] = []; // массив XML детей
-        let separated = false;
-        this.Children.forEach((name, element) =>
-        {
-            element.forEach(cildNode =>
-            {
-                let child = cildNode.toXML();
-                if (child.indexOf('\n') > -1) separated = true;
-                childXml.push(child);
-            });
-        });
-        childXml.forEach(element =>
-        {
-            if (separated) body += '\n' + element;
-            else body += element;
-        });
-        if (separated)
-        {
-            body = body.replace(/\n/g, "\n\t");
-            body += "\n";
-        }
-        return body;
     }
 
 }
@@ -252,6 +263,8 @@ export class SurveyList extends SurveyItem
 {
     /** Каждый Var - отдельный тег */
     public VarsAsTags = true;
+    /** Элементы Item */
+    public Items = new KeyedCollection<SurveyListItem>();
 
 
     constructor(id?: string)
@@ -261,7 +274,10 @@ export class SurveyList extends SurveyItem
 
     /** 
      * Добавляет новый элемент листа 
+     * 
      * Если `item.Id` не задан, то генерируется автоматически
+     * 
+     * Если элемент с таким Id существует, то он будет заменён!
      * 
      * Возвращает Id нового элемента
     */
@@ -271,16 +287,30 @@ export class SurveyList extends SurveyItem
         // генерируем Id автоматически
         if (!item.Id)
         {
-            let items = this.Children.Item("Item");
-            let itemIds = !!items ? items.map(x => Number(x.attrValue('Id'))).filter(x => !!x).sort(x => x) : [];
+            let itemIds = this.Items.Keys().map(x => Number(x)).filter(x => !!x).sort(x => x);
             if (itemIds.length == 0) id = "1";
-            else id = itemIds[itemIds.length - 1] + 1;
+            else id = '' + (itemIds[itemIds.length - 1] + 1);
         }
+        else id = item.Id;
+
         let res = new SurveyListItem(id, item.Text);
         if (!!item.Vars && item.Vars.length > 0) res.Vars = new SurveyListItemVars(item.Vars);
         if (!!item.Text) res.Text = item.Text;
-        this.addChild(res.toSurveyItem(this.VarsAsTags));
+        // предупреждаем о перезаписи
+        if (this.Items.Contains(id)) console.warn("Элемент '" + id + "' уже существует в листе '" + this.AttrValue("Id") + "', он будет заменён.");
+        this.Items.AddPair(id, res);
         return id;
+    }
+
+
+    public ToXML(): string
+    {
+        // Items не числятся в Children
+        this.Items.forEach((id, item) =>
+        {
+            this.AddChild(item.ToSurveyItem(this.VarsAsTags));
+        })
+        return super.ToXML();
     }
 
 }

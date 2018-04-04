@@ -277,8 +277,9 @@ function registerCommands()
         let sexList = new SurveyList("sexList");
         sexList.VarsAsTags = false;
         sexList.AddItem({ Text: "Man", Vars: ["35", "41"] });
-        sexList.AddItem({ Text: "Woman", Vars: ["35", "41"] });
-        console.log(sexList.toXML());
+        let wId = sexList.AddItem({ Text: "Woman", Vars: ["36", "42"] });
+        sexList.AddItem({ Id: wId, Text: "Woman", Vars: ["35", "41"] });
+        console.log(sexList.ToXML());
 
         /* let editor = vscode.window.activeTextEditor;
         let selection = editor.selection;
