@@ -775,7 +775,6 @@ function preFormatXML(text: string): string
     let regCS = new RegExp("(<!\\[CDATA\\[)(.*\\r?\\n[\\s\\S]*)(\\]\\]>)");
     let newText = res;
     let resCS = regCS.exec(newText);
-    logString(newText);
     while (!!resCS)
     {
         if (!resCS[2].match(/\]\]>/))

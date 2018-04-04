@@ -2,9 +2,13 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, getJQuery } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, initJQuery } from "./classes";
 import * as XML from './documentFunctions';
 import { SurveyList } from './surveyObjects'
+
+
+
+export { bot, $, CSFormatter, logError };
 
 
 
@@ -14,13 +18,12 @@ import { SurveyList } from './surveyObjects'
 /** объект для управления ботом */
 var bot: TelegramBot;
 
-export { bot };
-
 // константы
 
 /** XML теги, которые сохраняются в CurrentNodes */
 const _NodeStoreNames = ["Page", "Question", "Quota", "List"];
 
+const $ = initJQuery();
 
 /** Во избежание рекурсивыных изменений */
 var inProcess = false;
@@ -29,7 +32,7 @@ var inProcess = false;
 var _LogPath: string;
 
 /** функция для форматирования C# из расширения Leopotam.csharpfixformat */
-export var CSFormatter: (text: string) => Promise<string>;
+var CSFormatter: (text: string) => Promise<string>;
 
 var TibAutoCompleteList = new KeyedCollection<TibAutoCompleteItem[]>();
 
@@ -274,16 +277,20 @@ function registerCommands()
     {
         if (_pack != "debug") return;
 
-        let sexList = new SurveyList("sexList");
+        let editor = vscode.window.activeTextEditor;
+        let selection = editor.selection;
+        let text = editor.document.getText(selection);
+
+        let res = TibTransform.AnswersToItems(text);
+        applyChanges(editor.selection, res, editor, true);
+
+        /* let sexList = new SurveyList("sexList");
         sexList.VarsAsTags = false;
         sexList.AddItem({ Text: "Man", Vars: ["35", "41"] });
         let wId = sexList.AddItem({ Text: "Woman", Vars: ["36", "42"] });
         sexList.AddItem({ Id: wId, Text: "Woman", Vars: ["35", "41"] });
-        console.log(sexList.ToXML());
+        console.log(sexList.ToXML()); */
 
-        /* let editor = vscode.window.activeTextEditor;
-        let selection = editor.selection;
-        let text = editor.document.getText(selection); */
         //let selection = getFullRange(editor.document);
         //let text = editor.document.getText();
 
@@ -1663,7 +1670,7 @@ function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: bo
 
 
 /** сообщение (+ отчёт) об ошибке */
-export function logError(text: string, edt?: vscode.TextEditor)
+function logError(text: string, edt?: vscode.TextEditor)
 {
     showError(text);
     let editor = edt || vscode.window.activeTextEditor;

@@ -5,10 +5,9 @@ import * as XML from './documentFunctions'
 import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as os from 'os'
-import { bot } from './extension'
+import { bot, $ } from './extension'
 import { JSDOM } from '../node_modules/jsdom'
 import * as _JQuery from 'jquery'
-
 
 
 
@@ -41,7 +40,7 @@ export interface TextRange
 
 
 /** interface для удобства использования: включает родные и новые свойства */
-interface TibJQuery extends Function
+export interface TibJQuery extends Function
 {
     // стандартные свойства и методы JQUery
 
@@ -69,7 +68,7 @@ interface TibJQuery extends Function
     /** стандартная функция получения объекта из XML */
     parseXML: Function,
     /** создаёт JQuery-объект из XML, предварительно сделав его безопасным */
-    XML: Function
+    XML: (text: string) => any
 }
 
 
