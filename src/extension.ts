@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
 import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, initJQuery } from "./classes";
 import * as XML from './documentFunctions';
-import { SurveyList } from './surveyObjects'
+import { SurveyList } from './surveyObjects';
 
 
 
@@ -739,6 +739,9 @@ function autoComplete()
             let mt = curLine.match(/(#|\$)?\w+$/);
             if (!mt) return;
 
+            //пропускаем объявления
+            if (isMethodDefinition(curLine)) return;
+
             let str = getCurrentLineText(document, position).substr(position.character);
             if (tag.CSSingle || !!mt[1] && mt[1] == "$") // добавляем snippet для $repeat
             {
@@ -883,6 +886,8 @@ function helper()
             if (!tag.CSMode) return;
             let sign = new vscode.SignatureHelp();
             let lastLine = getPreviousText(document, position, true);
+            //пропускаем объявления
+            if (isMethodDefinition(lastLine)) return;
             let ar = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Method"));
             let mtch = lastLine.match(/(?:(^)|(.*\b))(\w+)\([^\(\)]*$/);
             if (!mtch || mtch.length < 3) return sign;
@@ -1126,7 +1131,7 @@ function saveMethods(editor: vscode.TextEditor): void
         if (Settings.Item("ignoreComments")) text = XML.clearXMLComments(text);
         let mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
         if (!mtd || !mtd[3]) return;
-        let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s*([\w_<>\[\],\s]+)\s+(([\w_]+)\s*(\([^)]*\))?)/, "g");
+        let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/, "g");
         let groups = {
             Full: 0,
             Modificator: 1,
@@ -1738,6 +1743,13 @@ async function applyChanges(range: vscode.Range, text: string, editor: vscode.Te
     });
     inProcess = false;
     return res;
+}
+
+
+/** проверяет является ли строка началом объявления метода */
+function isMethodDefinition(text: string): boolean
+{
+    return !!text.match(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+\w+(\([^\)]*)?$/);
 }
 
 //#endregion
