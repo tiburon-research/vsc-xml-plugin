@@ -171,26 +171,16 @@ async function formatXML(text: string, tab: string = "\t", indent: number = 0): 
 
 async function formatBody(text: string, tab: string, indent: number = 0, lang: Language): Promise<FormatResult>
 {
-    let cs: KeyedCollection<string>;
     let del;
     let res = new FormatResult();
     let newText = text;
-    let rm = false;
+    let cs: EncodeResult;
     // кроме XML и C# заменяем вставки
-    if (lang != Language.CSharp && lang != Language.XML)
-    {
-        cs = getEmbeddedCS(text)
-        if (cs.Count() > 0)
-        {
-            del = getReplaceDelimiter(text);
-            newText = saveEncodedCS(newText, cs, del);
-            rm = true;
-        }
-    }
+    if (lang != Language.CSharp && lang != Language.XML) cs = encodeCS(text);
     let ind = tab.repeat(indent);
     newText = newText.replace(/(\n|^)[\t ]+$/g, '$1');
     res = await LanguageFunction(lang)(newText, tab, indent);
-    if (rm && !res.Error) res.Result = getCSBack(res.Result, { Delimiter: del, EncodedCollection: cs });
+    if (!!cs && !res.Error) res.Result = getElementsBak(res.Result, { Delimiter: cs.Delimiter, EncodedCollection: cs.EncodedCollection });
     // для случаев <Text>текст\n.*
     if (res.Result.match(/^\n*\S/))
     {
@@ -496,7 +486,7 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
     {
         return positiveMin(text.lastIndexOf(substr + " "), text.lastIndexOf(substr + ">"));
     }
-        
+
     try
     {
         let curIndex = prevText.lastIndexOf(opBracket);
@@ -587,118 +577,81 @@ function get1LevelNodes(text: string): TagInfo[]
 }
 
 
-/** сохраняем c# вставки */
-function getEmbeddedCS(text: string): KeyedCollection<string>
+/** возвращает пронумерованный список элементов, найденных в `text` */
+function getElements(text: string, elem: RegExp): KeyedCollection<string>
 {
-    let cs = new KeyedCollection<string>();
-    let regCS = new RegExp(/(\[c#)((?!\d)([^\]]*)\]([\s\S]+?)?\[\/c#[^\]]*\])/);
-    let resCS = regCS.exec(text);
-    let i = 0;
-    let newText = text;
-    while (!!resCS && !!resCS[1])
+    let res = new KeyedCollection<string>();
+    try
     {
-        i++;
-        cs.AddPair("" + i, resCS[0]);
-        newText = newText.replace(new RegExp(safeString(resCS[0]), "g"), "");
-        resCS = regCS.exec(newText);
+        let reg = new RegExp(elem, "g");
+        let mat = elem.exec(text);
+        let i = 0;
+        let newText = text;
+        while (!!mat)
+        {
+            i++;
+            res.AddPair("" + i, mat[0]);
+            newText = newText.replace(new RegExp(safeString(mat[0]), "g"), "");
+            mat = elem.exec(newText);
+        }
+    } catch (error)
+    {
+        logError("Ошибка получения списка элементов");
     }
-    return cs;
+    return res;
 }
 
 
-function saveEncodedCS(text: string, cs: KeyedCollection<string>, del: string): string
+/** возвращает `text` с заменёнными `elements` */
+function replaceElements(text: string, elements: KeyedCollection<string>, delimiter: string): string
 {
-    if (!del || cs.Count() == 0) return text;
+    if (!delimiter || elements.Count() == 0) return text;
     var newText = text;
-    cs.forEach(function (i, e)
+    elements.forEach(function (i, e)
     {
-        newText = newText.replace(new RegExp(safeString(e), "g"), del + i + del);
+        newText = newText.replace(new RegExp(safeString(e), "g"), delimiter + i + delimiter);
     });
     return newText;
 }
 
 
-/** кодируем вставки в тексте */
+/** Возвращает в `text` закодированные элементы */
+function getElementsBak(text: string, encodeResult: XMLencodeResult): string
+{
+    if (!encodeResult.Delimiter || encodeResult.EncodedCollection.Count() == 0) return text;
+    var newText = text;
+    encodeResult.EncodedCollection.forEach(function (i, e)
+    {
+        newText = newText.replace(new RegExp(safeString(encodeResult.Delimiter + i + encodeResult.Delimiter), "g"), e);
+    })
+    return newText;
+}
+
+
+/** Кодирует элементы */
+function encodeElements(text: string, elem: RegExp, delimiterLength?: number): EncodeResult
+{
+    let res = new EncodeResult();
+    let collection = getElements(text, elem);
+    res.EncodedCollection = collection;
+    let delimiter = getReplaceDelimiter(text, delimiterLength);
+    res.Delimiter = delimiter;
+    let result = replaceElements(text, collection, delimiter);
+    res.Result = result;
+    return res;
+}
+
+
+/** кодирует C#-вставки в `text` */
 function encodeCS(text: string, delimiterLength?: number): EncodeResult
 {
-    let res = new EncodeResult();
-    let cs = getEmbeddedCS(text);
-    let del = getReplaceDelimiter(text, delimiterLength);
-    res.Delimiter = del;
-    res.EncodedCollection = cs;
-    res.Result = saveEncodedCS(text, cs, del);
-    return res;
+    return encodeElements(text, /(\[c#)((?!\d)([^\]]*)\]([\s\S]+?)?\[\/c#[^\]]*\])/, delimiterLength);
 }
 
-
-/** возвращаем c# вставки */
-function getCSBack(text: string, cs: XMLencodeResult): string
-{
-    if (!cs.Delimiter || cs.EncodedCollection.Count() == 0) return text;
-    var newText = text;
-    cs.EncodedCollection.forEach(function (i, e)
-    {
-        newText = newText.replace(new RegExp(safeString(cs.Delimiter + i + cs.Delimiter), "g"), e);
-    })
-    return newText;
-}
-
-
-/** кодирует CDATA в тексте */
+/** кодирует CDATA в `text` */
 function encodeCDATA(text: string): EncodeResult
 {
-    let res = new EncodeResult();
-    let cd = getCDATA(text);
-    // Delimiter тут - название атрибута
-    res.Delimiter = "EncodedId";
-    res.EncodedCollection = cd;
-    res.Result = saveEncodedCDATA(text, cd, res.Delimiter);
-    return res;
-}
-
-
-/** получает набор из CDATA */
-function getCDATA(text: string): KeyedCollection<string>
-{
-    let cs = new KeyedCollection<string>();
-    let regCS = new RegExp(/(<!\[CDATA\[)([\S\s]*)(\]\]>)/);
-    let resCS = regCS.exec(text);
-    let i = 0;
-    let newText = text;
-    while (!!resCS)
-    {
-        i++;
-        cs.AddPair("" + i, resCS[0]);
-        newText = newText.replace(new RegExp(safeString(resCS[0]), "g"), "");
-        resCS = regCS.exec(newText);
-    }
-    return cs;
-}
-
-
-/** кодирует CDATA */
-function saveEncodedCDATA(text: string, cs: KeyedCollection<string>, del: string): string
-{
-    if (!del || cs.Count() == 0) return text;
-    var newText = text;
-    cs.forEach(function (i, e)
-    {
-        newText = newText.replace(new RegExp(safeString(e), "g"), "<CDATA " + del + "=\"" + i + "\"></CDATA>");
-    });
-    return newText;
-}
-
-
-/** заменяет обратно закодированные CDATA */
-function getCDATAback(text: string, cd: XMLencodeResult): string
-{
-    if (!cd || cd.EncodedCollection.Count() == 0) return text;
-    var newText = text;
-    cd.EncodedCollection.forEach(function (i, e)
-    {
-        newText = newText.replace(new RegExp(safeString("<CDATA " + cd.Delimiter + "=\"" + i + "\"></CDATA>"), "g"), e);
-    })
-    return newText;
+    return encodeElements(text, /(<!\[CDATA\[)([\S\s]*)(\]\]>)/);
 }
 
 
@@ -846,10 +799,10 @@ export function clearIndents(text: string): string
 }
 
 
-/** преобразовывает XML к безопасному для парсинга как HTML */
-export function htmlToXml(html: string): EncodedXML
+/** безопасный (обычный, нормальный) XML без всяких тибуроновских приколов */
+export function safeXML(text: string): EncodedXML
 {
-    let csRes = encodeCS(html, 5); // убираем кодовые вставки
+    let csRes = encodeCS(text, 5); // убираем кодовые вставки
     let cdRes = encodeCDATA(csRes.Result); // убираем CDATA
     return {
         Result: cdRes.Result,
@@ -860,10 +813,10 @@ export function htmlToXml(html: string): EncodedXML
 
 
 /** преобразовывает безопасный XML в нормальный */
-export function xmlToHtml(xml: EncodedXML): string
+export function originalXML(xml: EncodedXML): string
 {
-    let res = getCSBack(xml.Result, xml.CSCollection); // возвращаем кодовые вставки
-    res = getCDATAback(res, xml.CDATACollection); // возвращаем CDATA
+    let res = getElementsBak(xml.Result, xml.CSCollection); // возвращаем кодовые вставки
+    res = getElementsBak(res, xml.CDATACollection); // возвращаем CDATA
     res = res.replace(/"(\[c#[\s\S]*\/c#\])"/, "'$1'"); // при parseXML все значения атрибутов переделываются под Attr="Val"
     return res;
 }
