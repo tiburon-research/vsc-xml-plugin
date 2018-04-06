@@ -1021,6 +1021,7 @@ export function showWarning(text: string)
 }
 
 
+/** возвращает минимальное неотрицательное или null, если нет таких */
 export function positiveMin(a, b)
 {
     if (a < 0)

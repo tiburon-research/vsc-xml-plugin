@@ -1,6 +1,6 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, EncodeResult, EncodedXML, XMLencodeResult } from "./classes";
+import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, EncodeResult, EncodedXML, XMLencodeResult, positiveMin } from "./classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { languages } from "vscode";
@@ -420,26 +420,46 @@ async function formatBetweenTags(text: string, tab: string = "\t", indent: numbe
 }
 
 
-export function findCloseTag(opBracket: string, tagName: string, clBracket: string, prevText: string, fullText: string): TextRange
+/** 
+ * Поиск закрывающего тега.
+ * 
+ * В `before` можно передавать предыдущий текст или позицию (== его длину)
+*/
+export function findCloseTag(opBracket: string, tagName: string, clBracket: string, before: string | number, fullText: string): TextRange
 {
     try
     {
-        let textAfter = fullText.substr(prevText.length);
+        let pos = typeof before == 'number' ? before : before.length;
+        let textAfter = fullText.substr(pos);
         let rest = textAfter;
+        let regOp = new RegExp("<" + safeString(tagName) + "[^\\w]");
+        let regCl = new RegExp("<\\/" + safeString(tagName) + "[^\\w]");
 
-        let curIndex = prevText.length + rest.indexOf(clBracket);
-        let op = rest.indexOf(opBracket + tagName);
-        let cl = rest.indexOf(opBracket + "/" + tagName);
+        let op = -1;
+        let cl = -1;
+        let res = regCl.exec(rest);
+
+        if (!!res) cl = rest.indexOf(res[0]);
         if (cl < 0) return null;
 
+        res = regOp.exec(rest);
+        if (!!res) op = rest.indexOf(res[0]);
+
+        /** количество открывающихся */
         let cO = 1;
+        /** количество закрывающихся */
         let cC = 0;
         while (cl > -1 && ((op > -1) || (cC != cO)))
         {
-            if (op < cl && op > -1)
+            if (op < cl && op > -1) // если сначала идёт открывающийся
             {
                 rest = rest.substr(op + 1);
-                cO++;
+                let selfClosed = rest.match(/^\w*(\s+\w+=(("[^"]*")|('[^']*')))*\s*\/>/);
+                if (!!selfClosed) // если он сам закрывается, то идём дальше
+                {
+                    rest = rest.substr(selfClosed[0].length);
+                }
+                else cO++;
             }
             else if (cO != cC)
             {
@@ -448,11 +468,14 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
             }
 
             if (cO == cC) break;
-            op = rest.indexOf(opBracket + tagName);
-            cl = rest.indexOf(opBracket + "/" + tagName);
+            cl = -1;
+            op = -1;
+            res = regCl.exec(rest);
+            if (!!res) cl = rest.indexOf(res[0]);
+            res = regOp.exec(rest);
+            if (!!res) op = rest.indexOf(res[0]);
         }
 
-        //rest = rest.substr(cl);
         let clLast = rest.indexOf(clBracket);
 
         if (cl < 0 || clLast < 0) return null;
@@ -469,14 +492,25 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
 
 export function findOpenTag(opBracket: string, tagName: string, clBracket: string, prevText: string): TextRange
 {
+    function tagIndex(text: string, substr: string): number
+    {
+        return positiveMin(text.lastIndexOf(substr + " "), text.lastIndexOf(substr + ">"));
+    }
+        
     try
     {
         let curIndex = prevText.lastIndexOf(opBracket);
         let txt = prevText.substr(0, curIndex);
         let rest = txt;
-        let op = rest.lastIndexOf(opBracket + tagName);
-        let cl = rest.lastIndexOf(opBracket + "/" + tagName);
-        if (op < 0) return null;
+        let regOp = new RegExp("<" + safeString(tagName) + "[^\\w]");
+        let regCl = new RegExp("<\\/" + safeString(tagName) + "[^\\w]");
+        let cl = -1;
+        let op = -1;
+
+        op = tagIndex(rest, opBracket + tagName);
+        if (op === null || op < 0) return null;
+
+        cl = tagIndex(rest, opBracket + "/" + tagName);
 
         let cO = 0;
         let cC = 1;
@@ -493,14 +527,13 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
                 cO++;
             }
             if (cO == cC) break;
-            op = rest.lastIndexOf(opBracket + tagName);
-            cl = rest.lastIndexOf(opBracket + "/" + tagName);
+            op = tagIndex(rest, opBracket + tagName);
+            cl = tagIndex(rest, opBracket + "/" + tagName);
         }
 
-        //rest = rest.substr(0, rest.indexOf(clBracket, op) + 1);
         let clLast = rest.lastIndexOf(clBracket) + 1;
 
-        if (op < 0 || clLast < 0) return null;
+        if (op === null || op < 0 || clLast < 0) return null;
         let to = txt.indexOf(clBracket, rest.length + 1);
         return { From: rest.length, To: to, Length: to - rest.length };
     }
