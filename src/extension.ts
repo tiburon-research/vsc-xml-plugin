@@ -130,6 +130,7 @@ export function activate(context: vscode.ExtensionContext)
         reload();
         insertAutoCloseTag(event, editor, tag, text);
         insertSpecialSnippets(event, editor, text, tag);
+        showCurrentInfo(tag);
     });
 
     statusMessage("Tiburon XML Helper запущен!", 3000);
@@ -283,41 +284,6 @@ function registerCommands()
 
         let res = TibTransform.AnswersToItems(text);
         applyChanges(editor.selection, res, editor, true);
-
-        /* let sexList = new SurveyList("sexList");
-        sexList.VarsAsTags = false;
-        sexList.AddItem({ Text: "Man", Vars: ["35", "41"] });
-        let wId = sexList.AddItem({ Text: "Woman", Vars: ["36", "42"] });
-        sexList.AddItem({ Id: wId, Text: "Woman", Vars: ["35", "41"] });
-        console.log(sexList.ToXML()); */
-
-        //let selection = getFullRange(editor.document);
-        //let text = editor.document.getText();
-
-        /* let DOMParser = require('xmldom').DOMParser;
-        let doc = new DOMParser().parseFromString(text,'application/xml');
-        console.info(doc.getElementsByTagName('Tag'))
-        console.info(doc.documentElement.nodeValue) */
-
-        /* const dom = new JSDOM("<Root>" + text + "</Root>", {contentType: "text/html"});
-        console.log(dom.window.document.querySelector('Root').innerHTML); */
-
-        /* let $ = getJQuery(text);
-        let $dom = $.XMLDOM(text);
-        // console.log($dom.html());
-        console.log($dom.find('CDATA').text());
-        $dom.find('CDATA').text('новая & cdata');
-
-        let block = $.XML('<Block Items="$repeat(sexList){@ID[,]}"/>');
-        $dom.find("#A1 Header").text('Новый текст').closest('Tag').append(block);
-
-        $dom.xml(formatText).then(x =>
-        {
-            editor.edit(builder => 
-            {
-                builder.replace(selection, x);
-            })
-        }); */
     });
 
 
@@ -327,8 +293,7 @@ function registerCommands()
         let editor = vscode.window.activeTextEditor;
         let tag = getCurrentTag(editor.document, editor.selection.active);
         if (!tag) return;
-        let from = tag.Position;
-        //console.log(tag.Name)
+        let from = tag.getStartTagPosition(editor.document);
         let cl = findCloseTag("<", tag.Name, ">", editor.document, from.translate(0, 1));
         if (!cl) return;
         let to = cl.end;
@@ -650,7 +615,7 @@ function autoComplete()
                     if (res)
                     {
                         let ci = new vscode.CompletionItem("Item", vscode.CompletionItemKind.Snippet);
-                        let from_pos = tag.Position;
+                        let from_pos = tag.getStartTagPosition(document);
                         let range = new vscode.Range(from_pos.translate(0, 1), position);
 
                         ci.detail = "Структура Item для " + parent;
@@ -663,7 +628,7 @@ function autoComplete()
                 else if ("Answer".indexOf(tag.Name) > -1)
                 {
                     let ci = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
-                    let from_pos = tag.Position;
+                    let from_pos = tag.getStartTagPosition(document);
                     let range = new vscode.Range(from_pos.translate(0, 1), position);
                     ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
 
@@ -921,17 +886,18 @@ function hoverDocs()
     vscode.languages.registerHoverProvider('tib', {
         provideHover(document, position, token)
         {
-            var res = [];
-            var tag = getCurrentTag(document, position);
+            let res = [];
+            let range = document.getWordRangeAtPosition(position);
+            let tag = getCurrentTag(document, range.end);
+            showCurrentInfo(tag);
             if (!tag.CSMode) return;
-            var range = document.getWordRangeAtPosition(position);
-            var text = document.getText(range);
+            let text = document.getText(range);
             // надо проверить родителя!
             let suit = codeAutoCompleteArray.filter(x =>
             {
                 return x.Name == text;
             });
-            for (var i = 0; i < suit.length; i++)
+            for (let i = 0; i < suit.length; i++)
             {
                 if (suit[i].Documentation && suit[i].Description)
                 {
@@ -944,7 +910,7 @@ function hoverDocs()
                     if (suit[i].Description) res.push(suit[i].Description);
                 }
             }
-            var customMethods = Methods.HoverArray(text);
+            let customMethods = Methods.HoverArray(text);
             if (customMethods) res = res.concat(customMethods);
             if (res.length == 0) return;
             return new vscode.Hover(res, range);
@@ -1401,6 +1367,8 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         let mt = res ? res : prevMatch;
         if (!mt || !mt[gr_name]) return null;
         let tag = new CurrentTag(mt[gr_name]); // inint
+        tag.PreviousText = originalText;
+        tag.LastMatch = mt;
         let str = mt[0];
         let lastc = str.lastIndexOf("[c#");
         let clC = str.indexOf("]", lastc);
@@ -1415,7 +1383,6 @@ function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatc
         if (mt[gr_close]) tag.OpenTagIsClosed = true;
         tag.CSMode = tag.CSMode && (tag.OpenTagIsClosed || tag.CSSingle || tag.CSInline);
         tag.Parents = nn;
-        tag.Position = vscode.window.activeTextEditor.document.positionAt(originalText.lastIndexOf("<" + mt[gr_name]));
         if (mt[gr_attrs]) tag.setAttributes(mt[gr_attrs]);
         if (mt[gr_body]) tag.Body = mt[gr_body];
         tag.LastParent = nn[nn.length - 1];
@@ -1751,6 +1718,21 @@ async function applyChanges(range: vscode.Range, text: string, editor: vscode.Te
 function isMethodDefinition(text: string): boolean
 {
     return !!text.match(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+\w+(\([^\)]*)?$/);
+}
+
+
+/** выводит в строку состояния информацию о текущем теге */
+function showCurrentInfo(tag: CurrentTag): void
+{
+    let info = "";
+    if (!tag) info = "Где я?";
+    else
+    {
+        let lang = Language[tag.getLaguage()];
+        if (lang == "CSharp") lang = "C#";
+        info = lang + ":\t" + tag.Parents.concat([tag.Name]).join(" -> ");
+    }    
+    statusMessage(info);
 }
 
 //#endregion

@@ -498,17 +498,16 @@ export class CurrentTag
     /** закрыт не тег, просто есть вторая скобка <Page...> */
     OpenTagIsClosed: boolean = false;
     Parents: Array<string> = [];
-    LastParent: string = "";
-    CSMode: boolean = false;
+    LastParent = "";
+    CSMode = false;
     /** $Method() */
-    CSSingle: boolean = false;
+    CSSingle = false;
     /** [c#]Method();[/c#] */
-    CSInline: boolean = false;
-    Position: vscode.Position;
+    CSInline = false;
     /** "body$ */
-    InString: boolean = false;
+    InString = false;
     /** "body1 [c#]Method("str$ */
-    InCSString: boolean = false;
+    InCSString = false;
 
     constructor(name: string)
     {
@@ -516,6 +515,7 @@ export class CurrentTag
         this.Id = name;
     }
 
+    /** возвращает массив имён атрибутов */
     attributeNames()
     {
         return this.Attributes.map(function (e)
@@ -524,6 +524,7 @@ export class CurrentTag
         });
     }
 
+    /** добавляет атрибуты из строки */
     setAttributes(str: string)
     {
         var attrs = CurrentTag.getAttributesArray(str);
@@ -534,6 +535,7 @@ export class CurrentTag
         });
     }
 
+    /** возвращает коллекцию атрибутов */
     static getAttributesArray(str: string): KeyedCollection<string>
     {
         var mt = str.match(/\s*(\w+)=(("([^"]+)?")|(('([^']+)?')))\s*/g);
@@ -549,11 +551,27 @@ export class CurrentTag
         return res;
     }
 
+    /** язык содержимого */
     getLaguage(): Language
     {
         if (this.CSMode) return Language.CSharp; // так быстрее
         return TagInfo.getTagLanguage(this.Name);
     }
+
+    /** Position открывающегося тега 
+     * @param document в котором осуществлялся поиск
+    */
+    getStartTagPosition(document: vscode.TextDocument): vscode.Position
+    {
+        if (!this.LastMatch) return null;
+        let search = this.LastMatch[0];
+        return vscode.window.activeTextEditor.document.positionAt(this.PreviousText.indexOf(search));
+    }
+
+
+    // техническое
+    PreviousText = "";
+    LastMatch: RegExpMatchArray = null;
 }
 
 
@@ -1053,20 +1071,22 @@ export function getFromClioboard(): string
 }
 
 
-export function statusMessage(text: string, after: number | Thenable<any>): void
+export function statusMessage(text: string, after?: number | Thenable<any>): void
 {
-    var num: number;
-    var th: Thenable<any>;
     if (typeof after == "number")
     {
-        num = after;
+        let num = after;
         vscode.window.setStatusBarMessage(text, num);
     }
-    else 
+    else if (after !== undefined)
     {
-        th = after;
+        let th = after;
         vscode.window.setStatusBarMessage(text, th);
     }
+    else
+    {
+        vscode.window.setStatusBarMessage(text);
+    }    
 }
 
 
