@@ -328,6 +328,7 @@ function registerCommands()
         let tag = getCurrentTag(editor.document, editor.selection.active);
         if (!tag) return;
         let from = tag.Position;
+        //console.log(tag.Name)
         let cl = findCloseTag("<", tag.Name, ">", editor.document, from.translate(0, 1));
         if (!cl) return;
         let to = cl.end;
@@ -1054,8 +1055,8 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
                 if (!result) return;
                 // проверяем, не закрыт ли уже этот тег
                 var afterFull = fullText.substr(editor.document.offsetAt(originalPosition));
-                var tagOp = afterFull.indexOf("<" + result[1]);
-                var tagCl = afterFull.indexOf("</" + result[1]);
+                var tagOp = positiveMin(afterFull.indexOf("<" + result[1] + " "), afterFull.indexOf("<" + result[1] + ">"), -1);
+                var tagCl = positiveMin(afterFull.indexOf("</" + result[1] + " "), afterFull.indexOf("</" + result[1] + ">"), -1);
 
                 if ((tagCl == -1 || tagOp > -1 && tagOp < tagCl) || result[1].match(/^(Repeat)|(Condition)|(Block)$/))
                 {

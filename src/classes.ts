@@ -1021,11 +1021,17 @@ export function showWarning(text: string)
 }
 
 
-/** возвращает минимальное неотрицательное или null, если нет таких */
-export function positiveMin(a, b)
+/** 
+ * возвращает минимальное неотрицательное или null, если нет таких 
+ * @param negative значение, возвращаемое, если нет положительных
+*/
+export function positiveMin(a, b, negative: any = null)
 {
+    let neg = null;
+    if (typeof negative !== typeof null) neg = negative;
+
     if (a < 0)
-        if (b < 0) return null;
+        if (b < 0) return neg;
         else return b;
     else
         if (b < 0) return a;
