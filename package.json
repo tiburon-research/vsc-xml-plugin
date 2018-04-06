@@ -27,7 +27,7 @@
     "activationEvents": [
         "onLanguage:tib"
     ],
-    "main": "./out/extension",
+    "main": "./out/src/extension",
     "dependencies": {
         "clipboardy": "^1.2.2",
         "cssbeautify": "^0.3.1",
