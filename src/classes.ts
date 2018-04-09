@@ -9,8 +9,8 @@ import { bot, $ } from './extension'
 
 
 
-
-//#region ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces
+/* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
+//#region
 
 
 /** Тип сборки */
@@ -72,7 +72,6 @@ export namespace TibTransform
 
     export function AnswersToItems(text: string): string
     {
-        console.log(1)
         return TransformElement(text, "Answer", "Item");
     }
 
@@ -964,11 +963,8 @@ export class TelegramBot
 
 
 
-
-
-//#region ---------------------------------------- Functions 
-
-
+/*---------------------------------------- Functions ----------------------------------------*/
+//#region
 
 
 export function isScriptLanguage(lang: Language): boolean

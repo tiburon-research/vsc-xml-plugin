@@ -12,8 +12,8 @@ import { initJQuery } from './TibJQuery'
 export { bot, $, CSFormatter, logError };
 
 
-
-//#region ---------------------------------------- глобальные переменные
+/*---------------------------------------- глобальные переменные ----------------------------------------*/
+//#region
 
 
 /** объект для управления ботом */
@@ -69,9 +69,8 @@ var _useLinq = true;
 //#endregion
 
 
-
-//#region ---------------------------------------- активация
-
+/*---------------------------------------- активация ----------------------------------------*/
+//#region
 
 export function activate(context: vscode.ExtensionContext)
 {
@@ -263,7 +262,8 @@ function getData()
 
 
 
-//#region ---------------------------------------- registerProviders
+/*---------------------------------------- registerProvider ----------------------------------------*/
+//#region
 
 
 function registerCommands()
@@ -1085,8 +1085,10 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 
 
 
-//region ---------------------------------------- доп функции
 
+
+/*---------------------------------------- доп. функции ----------------------------------------*/
+//#region
 
 
 function saveMethods(editor: vscode.TextEditor): void
@@ -1532,7 +1534,6 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
     if (fulLines.match(new RegExp("^\\s*" + safeString(cStart) + "[\\S\\s]*" + safeString(cEnd) + "\\s*$")))
     {
         sel = lineSel;
-        logString(fulLines)
         newText = fulLines.replace(new RegExp("^(\\s*)" + safeString(cStart) + "( +?)([\\S\\s]*)( +?)" + safeString(cEnd) + "(\\s*)$"), "$1$3$5");
     }
     // иначе проверяем на наличие комментов внутри

@@ -45,7 +45,6 @@ export function initJQuery(): any
     JQuery.XMLDOM = function (el: string, isInitial = true)
     {
         let res = XML.safeXML(el);
-        logString(res)
         if (isInitial)
         {
             JQuery.SurveyData.CDATACollection = res.CDATACollection;
