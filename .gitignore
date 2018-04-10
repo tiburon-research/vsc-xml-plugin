@@ -11,3 +11,4 @@ node_modules
 npm-debug.log
 stuff/deleted.json
 *ignore/
+src/debug.ts

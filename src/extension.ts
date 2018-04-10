@@ -6,6 +6,7 @@ import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentT
 import * as XML from './documentFunctions';
 import { SurveyList } from './surveyObjects';
 import { initJQuery } from './TibJQuery'
+import * as debug from './debug'
 
 
 
@@ -278,6 +279,8 @@ function registerCommands()
     registerCommand('tib.debugTestCommand', () => 
     {
         if (_pack != "debug") return;
+
+        debug.test();
 
         let editor = vscode.window.activeTextEditor;
         let selection = editor.selection;
