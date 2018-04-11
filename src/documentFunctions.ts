@@ -1,6 +1,6 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, EncodeResult, EncodedXML, XMLencodeResult, positiveMin } from "./classes";
+import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, EncodeResult, XMLencodeResult, positiveMin } from "./classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { languages } from "vscode";
@@ -11,6 +11,9 @@ import { logError, CSFormatter } from "./extension";
 
 
 var _settings: ExtensionSettings;
+
+/* ФОРМАТИРОВАНИЕ */
+//#region
 
 export class FormatResult 
 {
@@ -171,16 +174,16 @@ async function formatXML(text: string, tab: string = "\t", indent: number = 0): 
 
 async function formatBody(text: string, tab: string, indent: number = 0, lang: Language): Promise<FormatResult>
 {
-    let del;
     let res = new FormatResult();
     let newText = text;
     let cs: EncodeResult;
     // кроме XML и C# заменяем вставки
-    if (lang != Language.CSharp && lang != Language.XML) cs = encodeCS(text);
+    let del = getReplaceDelimiter(text);
+    if (lang != Language.CSharp && lang != Language.XML) cs = encodeCS(text, del);
     let ind = tab.repeat(indent);
     newText = newText.replace(/(\n|^)[\t ]+$/g, '$1');
     res = await LanguageFunction(lang)(newText, tab, indent);
-    if (!!cs && !res.Error) res.Result = getElementsBak(res.Result, { Delimiter: cs.Delimiter, EncodedCollection: cs.EncodedCollection });
+    if (!!cs && !res.Error) res.Result = getElementsBack(res.Result, { Delimiter: cs.Delimiter, EncodedCollection: cs.EncodedCollection });
     // для случаев <Text>текст\n.*
     if (res.Result.match(/^\n*\S/))
     {
@@ -410,6 +413,271 @@ async function formatBetweenTags(text: string, tab: string = "\t", indent: numbe
 }
 
 
+
+/** определяет минимальный отступ без учёта CDATA и FoldingBlock */
+function minIndent(text: string): number
+{
+    let min = -1;
+    let pure = text.replace(/((<!\[CDATA\[)|(\]\]>))/g, ""); // убираем CDATA
+    pure = pure.replace(/<!--#(end)?block.*-->/g, ""); // убираем FoldingBlock
+    let mt = pure.match(/(\n|^)[\t ]*\S/g);
+    if (!!mt)
+    {
+        for (let i = 0; i < mt.length; i++)
+        {
+            let reg = mt[i].match(/(\n)([\t ]*)\S/);
+            if (reg && reg[2] !== null && (reg[2].length < min || min == -1)) min = reg[2].length;
+        }
+    }
+    return min;
+}
+
+
+function formatCDATA(text: string): string
+{
+    // располагает CDATA впритык к тегу
+    let res = text.replace(/>\s*<!\[CDATA\[[\t ]*/g, "><![CDATA[");
+    res = res.replace(/\s*\]\]>[\t ]*?(\n[\t ]*)</g, "$1]]><");
+    // пробелы для однострочной
+    res = res.replace(/<!\[CDATA\[[\t ]*(\S)/g, "<![CDATA[ $1");
+    res = res.replace(/(\S)[\t ]*\]\]>/g, "$1 ]]>");
+    return res;
+}
+
+
+/** очищает </?тег/?> от лишнего */
+function formatTag(tag: string): string
+{
+    let res = tag;
+
+    try
+    {
+        let closing = !!res.match(/^\s*<\//);
+        if (closing) // закрывающий
+        {
+            res = res.replace(/^(\s*<\/)(\w+)(\s.*)(>\s*)$/, "$1$2$4"); // всё, кроме имени
+        }
+        else
+        {
+            // форматируем все атрибуты
+            let result = res.match(/^(\s*<\w+)(\s.*?)?(\/?>\s*)$/);
+            if (!!result && !!result[2])
+            {
+                let results = result[2].match(/^\s*\w+\s*=\s*(("[^"]*")|('[^']*'))\s*$/g);
+                let attrs = result[2];
+                if (!!results)
+                {
+                    attrs = "";
+                    results.forEach(r =>
+                    {
+                        attrs += r.replace(/\s*(\w+)\s*=\s*(("[^"]*")|('[^']*'))\s*/, " $1=$2");
+                    });
+                }
+                res = result[1] + attrs + result[3];
+            }
+        }
+    }
+    catch (error)
+    {
+        logError("Ошибка при форматировании атрибутов тега");
+    }
+
+    return res;
+}
+
+
+function formatFoldingBlocks(text: string): string
+{
+    return text.replace(/(^|\n)[\t ]+(<!--#(end)?block)/g, "$1$2");
+}
+
+
+/** предобработка XML */
+function preFormatXML(text: string): string
+{
+    let res = text;
+    // убираем пустые CDATA
+    res = res.replace(/<!\[CDATA\[\s*\]\]>/, "");
+    // переносим остатки CDATA на новую строку
+    let regCS = new RegExp("(<!\\[CDATA\\[)(.*\\r?\\n[\\s\\S]*)(\\]\\]>)");
+    let newText = res;
+    let resCS = regCS.exec(newText);
+    while (!!resCS)
+    {
+        if (!resCS[2].match(/\]\]>/))
+        {
+            if (resCS[2].match(/^.*\S.*\r?\n/)) // переносим начало
+                res = res.replace(new RegExp(safeString(resCS[1] + resCS[2]), "g"), resCS[1] + "\n" + resCS[2]);
+            if (resCS[2].match(/\S[ \t]*$/)) // переносим конец
+                res = res.replace(new RegExp(safeString(resCS[2] + resCS[3]), "g"), resCS[2] + "\n" + resCS[3]);
+        }
+        newText = newText.replace(new RegExp(safeString(resCS[0])), "");
+        resCS = regCS.exec(newText);
+    }
+    // переносим открытый тег на новую строку
+    res = res.replace(/(^|\n)([\t ]*)((((?!<!)\S)(.*?\S)?)[\t ]*)(<\w+(\s+\w+=(("[^"]*")|('[^']')))*\s*\/?>)[\t ]*\r?\n/g, "$1$2$4\n$2$7\n");
+    return res;
+}
+
+
+/** постобработка XML */
+function postFormatXML(res: FormatResult): FormatResult
+{
+    let tmp = res.Result;
+    // форматируем сворачиваемые блоки
+    tmp = formatFoldingBlocks(tmp);
+    // форматируем CDATA
+    tmp = formatCDATA(tmp);
+    res.Result = tmp;
+    return res;
+}
+
+
+/** очищает все отступы */
+export function clearIndents(text: string): string
+{
+    return text.replace(/(^|\n)[\t ]+/g, "$1");
+}
+
+
+//#endregion
+
+
+
+
+/* КОДИРОВАНИЕ */
+//#region
+
+
+/** возвращает пронумерованный список элементов, найденных в `text` */
+function getElements(text: string, elem: RegExp): KeyedCollection<string>
+{
+    let res = new KeyedCollection<string>();
+    try
+    {
+        let reg = new RegExp(elem, "g");
+        let mat = elem.exec(text);
+        //let i = 0;
+        let newText = text;
+        while (!!mat)
+        {
+            let i = new Date().getTime();
+            if (res.Contains("" + i)) i++; // ну вдруг чо =)
+            res.AddPair("" + i, mat[0]);
+            newText = newText.replace(new RegExp(safeString(mat[0]), "g"), "");
+            mat = elem.exec(newText);
+        }
+    } catch (error)
+    {
+        logError("Ошибка получения списка элементов");
+    }
+    return res;
+}
+
+
+/** возвращает `text` с заменёнными `elements` */
+function replaceElements(text: string, elements: KeyedCollection<string>, delimiter: string): string
+{
+    if (!delimiter || elements.Count() == 0) return text;
+    var newText = text;
+    elements.forEach(function (i, e)
+    {
+        newText = newText.replace(new RegExp(safeString(e), "g"), delimiter + i + delimiter);
+    });
+    return newText;
+}
+
+
+/** Возвращает в `text` закодированные элементы */
+function getElementsBack(text: string, encodeResult: XMLencodeResult): string
+{
+    if (!encodeResult.Delimiter || encodeResult.EncodedCollection.Count() == 0) return text;
+    var newText = text;
+    encodeResult.EncodedCollection.forEach(function (i, e)
+    {
+        newText = newText.replace(new RegExp(safeString(encodeResult.Delimiter + i + encodeResult.Delimiter), "g"), e);
+    })
+    return newText;
+}
+
+
+/** Кодирует элементы */
+function encodeElements(text: string, elem: RegExp, delimiter: string): EncodeResult
+{
+    let res = new EncodeResult();
+    let collection = getElements(text, elem);
+    res.EncodedCollection = collection;
+    res.Delimiter = delimiter;
+    let result = replaceElements(text, collection, delimiter);
+    res.Result = result;
+    return res;
+}
+
+
+/** кодирует C#-вставки в `text` */
+function encodeCS(text: string, delimiter: string): EncodeResult
+{
+    return encodeElements(text, /(\[c#)((?!\d)([^\]]*)\]([\s\S]+?)?\[\/c#[^\]]*\])/, delimiter);
+}
+
+/** кодирует CDATA в `text` */
+function encodeCDATA(text: string, delimiter: string): EncodeResult
+{
+    return encodeElements(text, /<!\[CDATA\[[\S\s]*\]\]>/, delimiter);
+}
+
+
+// получаем разделитель, для временной замены вставок
+export function getReplaceDelimiter(text: string, length?: number): string
+{
+    let dels = ["_", "!", "#"];
+    let del = null;
+    length = length || 5;
+
+    for (let i = 0; i < dels.length; i++) 
+    {
+        let curDel = dels[i].repeat(length);
+        let mt = text.match(new RegExp(safeString(curDel) + "\\d+" + safeString(curDel), "g"));
+        if (!mt || mt.length == 0) return curDel;
+    }
+
+    return del;
+}
+
+
+/** безопасный (обычный, нормальный) XML без всяких тибуроновских приколов */
+export function safeXML(text: string, delimiter: string): EncodeResult
+{
+    let res = new EncodeResult();
+    let csRes = encodeCS(text, delimiter); // убираем кодовые вставки
+    let cdRes = encodeCDATA(csRes.Result, delimiter); // убираем CDATA
+    if (
+        !res.join(csRes) ||
+        !res.join(cdRes)
+    ) logError("Ошибка при объединение результатов кодирования");
+    return res;
+}
+
+
+/** преобразовывает безопасный XML в нормальный */
+export function originalXML(text: string, data: XMLencodeResult): string
+{
+    let res = getElementsBack(text, data); // возвращаем закодированные элементы
+    res = res.replace(/"(\[c#[\s\S]*\/c#\])"/, "'$1'"); // при parseXML все значения атрибутов переделываются под Attr="Val"
+    return res;
+}
+
+
+
+//#endregion
+
+
+
+
+/* доп. функции */
+//#region 
+
+
 /** 
  * Поиск закрывающего тега.
  * 
@@ -576,247 +844,4 @@ function get1LevelNodes(text: string): TagInfo[]
     return tags;
 }
 
-
-/** возвращает пронумерованный список элементов, найденных в `text` */
-function getElements(text: string, elem: RegExp): KeyedCollection<string>
-{
-    let res = new KeyedCollection<string>();
-    try
-    {
-        let reg = new RegExp(elem, "g");
-        let mat = elem.exec(text);
-        let i = 0;
-        let newText = text;
-        while (!!mat)
-        {
-            i++;
-            res.AddPair("" + i, mat[0]);
-            newText = newText.replace(new RegExp(safeString(mat[0]), "g"), "");
-            mat = elem.exec(newText);
-        }
-    } catch (error)
-    {
-        logError("Ошибка получения списка элементов");
-    }
-    return res;
-}
-
-
-/** возвращает `text` с заменёнными `elements` */
-function replaceElements(text: string, elements: KeyedCollection<string>, delimiter: string): string
-{
-    if (!delimiter || elements.Count() == 0) return text;
-    var newText = text;
-    elements.forEach(function (i, e)
-    {
-        newText = newText.replace(new RegExp(safeString(e), "g"), delimiter + i + delimiter);
-    });
-    return newText;
-}
-
-
-/** Возвращает в `text` закодированные элементы */
-function getElementsBak(text: string, encodeResult: XMLencodeResult): string
-{
-    if (!encodeResult.Delimiter || encodeResult.EncodedCollection.Count() == 0) return text;
-    var newText = text;
-    encodeResult.EncodedCollection.forEach(function (i, e)
-    {
-        newText = newText.replace(new RegExp(safeString(encodeResult.Delimiter + i + encodeResult.Delimiter), "g"), e);
-    })
-    return newText;
-}
-
-
-/** Кодирует элементы */
-function encodeElements(text: string, elem: RegExp, delimiterLength?: number): EncodeResult
-{
-    let res = new EncodeResult();
-    let collection = getElements(text, elem);
-    res.EncodedCollection = collection;
-    let delimiter = getReplaceDelimiter(text, delimiterLength);
-    res.Delimiter = delimiter;
-    let result = replaceElements(text, collection, delimiter);
-    res.Result = result;
-    return res;
-}
-
-
-/** кодирует C#-вставки в `text` */
-function encodeCS(text: string, delimiterLength?: number): EncodeResult
-{
-    return encodeElements(text, /(\[c#)((?!\d)([^\]]*)\]([\s\S]+?)?\[\/c#[^\]]*\])/, delimiterLength);
-}
-
-/** кодирует CDATA в `text` */
-function encodeCDATA(text: string): EncodeResult
-{
-    return encodeElements(text, /(<!\[CDATA\[)([\S\s]*)(\]\]>)/);
-}
-
-
-// получаем разделитель, для временной замены вставок
-function getReplaceDelimiter(text: string, length?: number): string
-{
-    let dels = ["_", "\\"];
-    let del = null;
-    length = length || 5;
-
-    for (let i = 0; i < dels.length; i++) 
-    {
-        let curDel = dels[i].repeat(length);
-        let mt = text.match(new RegExp(safeString(curDel) + "\\d+" + safeString(curDel), "g"));
-        if (!mt || mt.length == 0) return curDel;
-    }
-
-    return del;
-}
-
-
-/** определяет минимальный отступ без учёта CDATA и FoldingBlock */
-function minIndent(text: string): number
-{
-    let min = -1;
-    let pure = text.replace(/((<!\[CDATA\[)|(\]\]>))/g, ""); // убираем CDATA
-    pure = pure.replace(/<!--#(end)?block.*-->/g, ""); // убираем FoldingBlock
-    let mt = pure.match(/(\n|^)[\t ]*\S/g);
-    if (!!mt)
-    {
-        for (let i = 0; i < mt.length; i++)
-        {
-            let reg = mt[i].match(/(\n)([\t ]*)\S/);
-            if (reg && reg[2] !== null && (reg[2].length < min || min == -1)) min = reg[2].length;
-        }
-    }
-    return min;
-}
-
-
-function formatCDATA(text: string): string
-{
-    // располагает CDATA впритык к тегу
-    let res = text.replace(/>\s*<!\[CDATA\[[\t ]*/g, "><![CDATA[");
-    res = res.replace(/\s*\]\]>[\t ]*?(\n[\t ]*)</g, "$1]]><");
-    // пробелы для однострочной
-    res = res.replace(/<!\[CDATA\[[\t ]*(\S)/g, "<![CDATA[ $1");
-    res = res.replace(/(\S)[\t ]*\]\]>/g, "$1 ]]>");
-    return res;
-}
-
-
-/** очищает </?тег/?> от лишнего */
-function formatTag(tag: string): string
-{
-    let res = tag;
-
-    try
-    {
-        let closing = !!res.match(/^\s*<\//);
-        if (closing) // закрывающий
-        {
-            res = res.replace(/^(\s*<\/)(\w+)(\s.*)(>\s*)$/, "$1$2$4"); // всё, кроме имени
-        }
-        else
-        {
-            // форматируем все атрибуты
-            let result = res.match(/^(\s*<\w+)(\s.*?)?(\/?>\s*)$/);
-            if (!!result && !!result[2])
-            {
-                let results = result[2].match(/^\s*\w+\s*=\s*(("[^"]*")|('[^']*'))\s*$/g);
-                let attrs = result[2];
-                if (!!results)
-                {
-                    attrs = "";
-                    results.forEach(r =>
-                    {
-                        attrs += r.replace(/\s*(\w+)\s*=\s*(("[^"]*")|('[^']*'))\s*/, " $1=$2");
-                    });
-                }
-                res = result[1] + attrs + result[3];
-            }
-        }
-    }
-    catch (error)
-    {
-        logError("Ошибка при форматировании атрибутов тега");
-    }
-
-    return res;
-}
-
-
-function formatFoldingBlocks(text: string): string
-{
-    return text.replace(/(^|\n)[\t ]+(<!--#(end)?block)/g, "$1$2");
-}
-
-
-/** предобработка XML */
-function preFormatXML(text: string): string
-{
-    let res = text;
-    // убираем пустые CDATA
-    res = res.replace(/<!\[CDATA\[\s*\]\]>/, "");
-    // переносим остатки CDATA на новую строку
-    let regCS = new RegExp("(<!\\[CDATA\\[)(.*\\r?\\n[\\s\\S]*)(\\]\\]>)");
-    let newText = res;
-    let resCS = regCS.exec(newText);
-    while (!!resCS)
-    {
-        if (!resCS[2].match(/\]\]>/))
-        {
-            if (resCS[2].match(/^.*\S.*\r?\n/)) // переносим начало
-                res = res.replace(new RegExp(safeString(resCS[1] + resCS[2]), "g"), resCS[1] + "\n" + resCS[2]);
-            if (resCS[2].match(/\S[ \t]*$/)) // переносим конец
-                res = res.replace(new RegExp(safeString(resCS[2] + resCS[3]), "g"), resCS[2] + "\n" + resCS[3]);
-        }
-        newText = newText.replace(new RegExp(safeString(resCS[0])), "");
-        resCS = regCS.exec(newText);
-    }
-    // переносим открытый тег на новую строку
-    res = res.replace(/(^|\n)([\t ]*)((((?!<!)\S)(.*?\S)?)[\t ]*)(<\w+(\s+\w+=(("[^"]*")|('[^']')))*\s*\/?>)[\t ]*\r?\n/g, "$1$2$4\n$2$7\n");
-    return res;
-}
-
-
-/** постобработка XML */
-function postFormatXML(res: FormatResult): FormatResult
-{
-    let tmp = res.Result;
-    // форматируем сворачиваемые блоки
-    tmp = formatFoldingBlocks(tmp);
-    // форматируем CDATA
-    tmp = formatCDATA(tmp);
-    res.Result = tmp;
-    return res;
-}
-
-
-/** очищает все отступы */
-export function clearIndents(text: string): string
-{
-    return text.replace(/(^|\n)[\t ]+/g, "$1");
-}
-
-
-/** безопасный (обычный, нормальный) XML без всяких тибуроновских приколов */
-export function safeXML(text: string): EncodedXML
-{
-    let csRes = encodeCS(text, 5); // убираем кодовые вставки
-    let cdRes = encodeCDATA(csRes.Result); // убираем CDATA
-    return {
-        Result: cdRes.Result,
-        CSCollection: csRes.toXMLencodeResult(),
-        CDATACollection: cdRes.toXMLencodeResult()
-    };
-}
-
-
-/** преобразовывает безопасный XML в нормальный */
-export function originalXML(xml: EncodedXML): string
-{
-    let res = getElementsBak(xml.Result, xml.CSCollection); // возвращаем кодовые вставки
-    res = getElementsBak(res, xml.CDATACollection); // возвращаем CDATA
-    res = res.replace(/"(\[c#[\s\S]*\/c#\])"/, "'$1'"); // при parseXML все значения атрибутов переделываются под Attr="Val"
-    return res;
-}
+//#endregion

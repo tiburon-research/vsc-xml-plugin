@@ -2,16 +2,21 @@
 
 import { JSDOM } from 'jsdom'
 import * as _JQuery from 'jquery'
-import { XMLencodeResult, logString } from './classes'
+import { logString, KeyedCollection, XMLencodeResult, EncodeResult } from './classes'
 import * as XML from './documentFunctions'
 
 
-export class DOMSurveyData
+/** Класс из XMLencodeResult:
+ * 
+ * { `Delimiter`, `EncodedCollection` }
+*/
+export class DOMSurveyData implements XMLencodeResult
 {
     Delimiter: string = null;
-    CSCollection: XMLencodeResult = null;
-    CDATACollection: XMLencodeResult = null;
+    EncodedCollection = new KeyedCollection<string>();
 }
+
+
 
 
 
@@ -22,7 +27,7 @@ export function initJQuery(): any
     const dom = new JSDOM("<Root></Root>"); // нормальный объект DOM
     let JQuery: any = _JQuery(dom.window);
 
-    // инициализируем пустой
+    // данные Survey
     JQuery.SurveyData = new DOMSurveyData();
 
     // преобразуем селекторы при вызове методов
@@ -42,75 +47,63 @@ export function initJQuery(): any
         }
     }
 
+    /** Возвращает разделитель. Если его нет, то задаёт изходя из переданного XML */
+    JQuery._delimiter = function(el): string
+    {
+        if (!JQuery.SurveyData.Delimiter)
+        {
+            JQuery.SurveyData.Delimiter = XML.getReplaceDelimiter(el);
+        }
+        return JQuery.SurveyData.Delimiter;
+    }
+
+    /** Сохраняет данные кодирования */
+    JQuery._saveData = function(data: XMLencodeResult): void
+    {
+        if (!JQuery.SurveyData.Delimiter) JQuery.SurveyData.Delimiter = data.Delimiter;
+        (JQuery.SurveyData as DOMSurveyData).EncodedCollection.AddRange(data.EncodedCollection);
+    }
+
+    /** Создаёт корневой элемент, в который обёрнуто содержимое */
     JQuery.XMLDOM = function (el: string, isInitial = true)
     {
-        let res = XML.safeXML(el);
-        if (isInitial)
-        {
-            JQuery.SurveyData.CDATACollection = res.CDATACollection;
-            JQuery.SurveyData.CSCollection = res.CSCollection;
-        }
+        let res = XML.safeXML(el, JQuery._delimiter(el));
+        JQuery._saveData(res.toXMLencodeResult());
         return JQuery(JQuery.parseXML('<Root>' + res.Result + '</Root>')).find('Root');
     }
 
+    /** Создаёт JQuery-элемент(ы) из строки XML */
     JQuery.XML = function (el: string)
     {
         return JQuery.XMLDOM(el, false).children();
     }
 
-    JQuery.fn.xml = function (formatFunction?: (text: string) => Promise<string>): string
+    JQuery.fn.xml = function (): string
     {
         let el = JQuery(this[0]);
         let res = el.html();
-        res = XML.originalXML({
-            Result: res,
-            CSCollection: JQuery.SurveyData.CSCollection,
-            CDATACollection: JQuery.SurveyData.CDATACollection
-        });
+        let data = (JQuery.SurveyData as DOMSurveyData);
+        res = XML.originalXML(res, data);
         return res;
     }
 
-    // тескт CDATA
-    /* JQuery.fn.CDATAtext = function (...params)
-    {
-        let el = JQuery(this[0]);
-        let id = el.attr(JQuery.SurveyData.CDATACollection.Delimiter);
-        if (!params || params.length == 0) // получение
-        {
-            let text = JQuery.SurveyData.CDATACollection.EncodedCollection.Item(id);
-            if (!!text) text = text.replace(/<!\[CDATA\[([\s\S]*)\]\]>/, "$1");
-            return text;
-        }
-        else // замена
-        {
-            let space = params[0].indexOf('\n') > 0 ? "\n" : " ";
-            let pure = "<![CDATA[" + space + params[0] + space + "]]>";
-            JQuery.SurveyData.CDATACollection.EncodedCollection.AddPair(id, pure);
-            return this;
-        }
-    } */
-
     // переписываем функцию получения текста
     JQuery.fn.textOriginal = JQuery.fn.text;
-    let newText = function (...params)
+    let newText = function (param)
     {
         let el = JQuery(this[0]);
-       /*  if (this[0].tagName == "CDATA") // для CDATA своя функция
-        {
-            return el.CDATAtext.apply(this, params);
-        } */
         let res;
-        if (!params || params.length == 0) // если запрос, то возвращаем originalXML
+        // если запрос, то возвращаем originalXML
+        if (typeof param === typeof undefined)
         {
-            res = XML.originalXML({
-                Result: el.textOriginal(),
-                CSCollection: JQuery.SurveyData.CSCollection,
-                CDATACollection: JQuery.SurveyData.CDATACollection
-            });
+            res = XML.originalXML(el.textOriginal(), JQuery.SurveyData);
         }
-        else // если задаём текст, то как обычно
+        // если задаём текст, то как обычно
+        else
         {
-            res = el.textOriginal.apply(this, params);
+            let pure = XML.safeXML(param, JQuery._delimiter(param));
+            JQuery._saveData(pure.toXMLencodeResult());
+            res = el.textOriginal.apply(this, [pure.Result]);
         }
         return res;
     }
@@ -119,6 +112,9 @@ export function initJQuery(): any
 
     return JQuery;
 }
+
+
+
 
 
 /** преобразует селектор для XML */

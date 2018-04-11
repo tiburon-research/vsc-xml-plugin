@@ -36,7 +36,7 @@ export interface TextRange
     Length?: number;
 }
 
-
+/** { `Delimiter`, `EncodedCollection` } */
 export interface XMLencodeResult
 {
     EncodedCollection: KeyedCollection<string>;
@@ -55,15 +55,26 @@ export class EncodeResult
     {
         return { Delimiter: this.Delimiter, EncodedCollection: this.EncodedCollection };
     }
-}
 
+    /**
+     * Добавляет `result` в текущий объект `EncodeResult`
+     * 
+     * При этом старый `Result` заменяется новым
+    */
+    join(result: EncodeResult): boolean
+    {
+        if (this.Delimiter != result.Delimiter && !this.isEmpty()) return false;
+        if (!this.Delimiter) this.Delimiter = result.Delimiter;
+        this.Result = result.Result;
+        this.EncodedCollection.AddRange(result.EncodedCollection);
+        return true;
+    }
 
-/** результат преобразования к безопасному XML */
-export interface EncodedXML
-{
-    Result: string;
-    CSCollection: XMLencodeResult;
-    CDATACollection: XMLencodeResult;
+    /** Проверяет не был ли уже задан объект */
+    private isEmpty(): boolean
+    {
+        return !this.Delimiter && this.EncodedCollection.Count() == 0 && !this.Result;
+    }
 }
 
 
@@ -222,6 +233,15 @@ export class KeyedCollection<T>
     public UpdateValue(key: string, transform: (value: T) => T): void
     {
         this.AddPair(key, transform(this.Item(key)));
+    }
+
+    /** Добавляет диапазон значений */
+    public AddRange(range: KeyedCollection<T>): void
+    {
+        range.forEach((key, value) =>
+        {
+            this.AddPair(key, value);
+        })
     }
 
 }
@@ -973,9 +993,11 @@ export function isScriptLanguage(lang: Language): boolean
 }
 
 
-export function logString(a)
+export function logString(a?: string | number | boolean)
 {
-    console.log("'" + a + "'");
+    let text = a;
+    if (typeof text === typeof undefined) text = "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+    console.log("'" + text + "'");
 }
 
 

@@ -1688,7 +1688,7 @@ function getCSFormatter(ext: vscode.Extension<any>): (source: string) => Promise
 
 
 /** Заменяет `range` на `text` */
-async function applyChanges(range: vscode.Range, text: string, editor: vscode.TextEditor, format = false): Promise<string>
+export async function applyChanges(range: vscode.Range, text: string, editor: vscode.TextEditor, format = false): Promise<string>
 {
     inProcess = true;
     let res = text;
