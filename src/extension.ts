@@ -280,17 +280,8 @@ function registerCommands()
     {
         if (_pack != "debug") return;
 
-        let editor = vscode.window.activeTextEditor;
-        let selection = editor.selection;
-        let text = editor.document.getText(selection);
-
-        // выполняем дебажный тест, передаём в него Object
-        debug.test(
-            {
-                Editor: editor,
-                Selection: selection,
-                Text: text
-            });
+        // выполняем дебажный тест
+        debug.test();
     });
 
 
