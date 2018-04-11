@@ -280,13 +280,17 @@ function registerCommands()
     {
         if (_pack != "debug") return;
 
-        debug.test();
-
         let editor = vscode.window.activeTextEditor;
         let selection = editor.selection;
         let text = editor.document.getText(selection);
-        let res = TibTransform.AnswersToItems(text);
-        applyChanges(editor.selection, res, editor, true);
+
+        // выполняем дебажный тест, передаём в него Object
+        debug.test(
+            {
+                Editor: editor,
+                Selection: selection,
+                Text: text
+            });
     });
 
 
