@@ -112,12 +112,14 @@ export function activate(context: vscode.ExtensionContext)
 
     vscode.workspace.onDidOpenTextDocument(event =>
     {
+        inProcess = false;
         reload();
     });
 
     vscode.window.onDidChangeActiveTextEditor(neweditor =>
     {
         editor = neweditor;
+        inProcess = false;
         reload();
     });
 
