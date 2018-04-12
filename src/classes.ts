@@ -542,12 +542,13 @@ export class CurrentTag
     {
         if (!this.LastMatch) return null;
         let search = this.LastMatch[0];
-        return vscode.window.activeTextEditor.document.positionAt(this.PreviousText.indexOf(search));
+        return vscode.window.activeTextEditor.document.positionAt(this.PreviousText.lastIndexOf(search));
     }
 
 
     // техническое
     PreviousText = "";
+    /** Последний массив вхождений из рекурсивного поиска */
     LastMatch: RegExpMatchArray = null;
 }
 

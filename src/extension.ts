@@ -587,10 +587,11 @@ function higlight()
 }
 
 
-// autocomplete
+
+/** Автозавершения */
 function autoComplete()
 {
-    //Item Snippets
+    // Item/Answer Snippets
     vscode.languages.registerCompletionItemProvider('tib', {
         provideCompletionItems(document, position, token, context)
         {
@@ -841,6 +842,8 @@ function autoComplete()
 }
 
 
+
+/** Подсказки при вводе параметров функции */
 function helper()
 {
     vscode.languages.registerSignatureHelpProvider('tib', {
@@ -878,7 +881,8 @@ function helper()
 }
 
 
-// hovers
+
+/** подсказки при наведении */
 function hoverDocs()
 {
     vscode.languages.registerHoverProvider('tib', {
@@ -917,7 +921,8 @@ function hoverDocs()
 }
 
 
-//definitions
+
+/** Переход к определениям */
 function definitions()
 {
     vscode.languages.registerDefinitionProvider('tib', {
