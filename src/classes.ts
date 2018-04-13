@@ -36,6 +36,14 @@ export interface TextRange
     Length?: number;
 }
 
+/** Результат поиска тегов */
+export interface FindTagResult
+{
+    Range: TextRange;
+    /** Самозакрывающийся тег */
+    SelfClosed: boolean;
+}
+
 /** { `Delimiter`, `EncodedCollection` } */
 export interface XMLencodeResult
 {
@@ -693,17 +701,17 @@ export class TagInfo
             let newLine = text.indexOf("\n", to - 1);
             this.Multiline = newLine > -1;
             let openTag = text.slice(from, to);
-            this.SelfClosed = !!openTag.match(/\/>$/);
             var clt = XML.findCloseTag("<", this.Name, ">", before, text);
-            if (!this.SelfClosed && clt)
+            this.SelfClosed = !!clt && clt.SelfClosed;
+            if (!!clt && !this.SelfClosed)
             {
-                this.CloseTag = { From: clt.From, To: clt.To + 1 };
+                this.CloseTag = { From: clt.Range.From, To: clt.Range.To + 1 };
                 this.Closed = true;
-                this.Body = { From: to, To: clt.From };
+                this.Body = { From: to, To: clt.Range.From };
                 this.HasCDATA = !!text.slice(this.Body.From, this.Body.To).match(/^\s*<!\[CDATA\[/);
                 let after = text.indexOf("\n", this.CloseTag.To - 1);
                 if (after > -1) lineTo = after;
-                this.Multiline = this.Multiline && newLine < clt.To - 1;
+                this.Multiline = this.Multiline && newLine < clt.Range.To - 1;
             }
             else
             {

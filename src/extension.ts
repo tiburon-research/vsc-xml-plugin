@@ -1190,6 +1190,7 @@ function getAllLists(): string[]
     return CurrentNodes.GetIds('List');
 }
 
+/** Возвращает `null`, если тег не закрыт или SelfClosed */
 function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range
 {
     try
@@ -1198,15 +1199,15 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
         if (tagName != 'c#') fullText = clearFromCSTags(fullText);
         let prevText = getPreviousText(document, position);
         let res = XML.findCloseTag(opBracket, tagName, clBracket, prevText, fullText);
-        if (!res || res.Length < 2) return null;
-        let startPos = document.positionAt(res.From);
-        let endPos = document.positionAt(res.To + 1);
+        if (!res || !res.Range) return null;
+        let startPos = document.positionAt(res.Range.From);
+        let endPos = document.positionAt(res.Range.To + 1);
         return new vscode.Range(startPos, endPos);
     } catch (error)
     {
         logError("Ошибка выделения закрывающегося тега");
-        return null;
     }
+    return null;
 }
 
 
@@ -1217,9 +1218,9 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
         let prevText = getPreviousText(document, position);
         if (tagName != 'c#') prevText = clearFromCSTags(prevText);
         let res = XML.findOpenTag(opBracket, tagName, clBracket, prevText);
-        if (!res || res.Length < 2) return null;
-        let startPos = document.positionAt(res.From);
-        let endPos = document.positionAt(res.To + 1);
+        if (!res) return null;
+        let startPos = document.positionAt(res.Range.From);
+        let endPos = document.positionAt(res.Range.To + 1);
         return new vscode.Range(startPos, endPos);
     } catch (error)
     {
