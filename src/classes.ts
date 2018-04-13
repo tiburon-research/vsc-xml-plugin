@@ -25,6 +25,14 @@ export enum Language { XML, CSharp, CSS, JS, PlainTetx };
 
 
 
+/** Результат поиска в строке */
+interface SearchResult
+{
+    Result: RegExpMatchArray;
+    Index: number;
+}    
+
+
 /**
  * @param From Включаемая граница
  * @param To Не влючамая граница
@@ -500,6 +508,17 @@ export class InlineAttribute
         this.Text = name + "=\"" + value + "\"";
     }
 }
+
+
+export class SimpleTag
+{
+    constructor(raw: string)
+    {
+        let res = raw.match(/<(\w+)(\s+())?\/?>/);
+    }
+
+    public readonly Name: string
+}    
 
 
 export class CurrentTag
@@ -1186,6 +1205,30 @@ export function safeString(text: string): string
 }
 
 
+//#endregion
+
+
+
+
+/*---------------------------------------- Расширения ----------------------------------------*/
+//#region
+
+
+declare global
+{
+    interface String
+    {
+        /** Продвинутый indexOf */
+        find(search: string | RegExp): SearchResult;
+    }
+}    
+
+String.prototype.find = function (search: string | RegExp): SearchResult
+{
+    let res = this.match(search);
+    let ind = !!res ? this.indexOf(res[0]) : -1;
+    return { Index: ind, Result: res };
+}
 
 
 //#endregion

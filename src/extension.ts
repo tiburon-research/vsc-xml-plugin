@@ -1272,132 +1272,75 @@ function execute(link: string)
 
 function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt: string = ""): CurrentTag
 {
+    // TODO: продумать кэширование
+
     try
     {
         let text = txt || getPreviousText(document, position);
-        let pure = text.replace(/(?:<!--)([\s\S]*?)(-->)/g, "");
-        pure = pure.replace(/(?:<!\[CDATA\[)([\s\S]*?)(\]\]>)/g, "");
-        // костыль для [/c#]: убираем / чтобы в regex можно было искать [^/>]
-        pure = pure.replace(/\[\/c#/g, "[*c#");
-        // удаление закрытых _AllowCodeTag из остатка кода (чтобы не искать <int>)
-        let reg = new RegExp("<(" + _AllowCodeTags + ")[^/>]*((/>)|(>((?![\\t ]+\\s*\n)[\\s\\S]*?)(<\\/\\1\\s*>)))", "g");
-        let regEnd = new RegExp("(<(" + _AllowCodeTags + ")([^/>]*)?>)((?![\\t ]+\\s*\n)[\\s\\S]*)*$", "g");
-        pure = pure.replace(reg, "");
-        pure = pure.replace(regEnd, "$1");
-        if (pure.match(/<\s*$/)) pure = pure.substr(0, pure.lastIndexOf("<")); // иначе regExp в parseTags работает неправильно
 
-        let tag = parseTags(pure, text);
+        // кодируем комментарии и CDATA
+        let enc = new Encoder(text);
+        enc.Encode(XML.encodeXMLXomments);
+        enc.Encode(XML.encodeCDATA);
 
-        if (!tag) return new CurrentTag("xml");
-        let tstart = text.lastIndexOf("<" + tag.Name);
-        if (tag.OpenTagIsClosed)
-        {
-            tag.Body = text.substr(text.indexOf(">", tstart) + 1);
-            tag.InString = tag && tag.Body && inString(tag.Body);
-            // если курсор на закрывающемся теге, то это уже не CSMode
-            if (tag.CSMode && !tag.CSInline && !tag.CSSingle)
-            {
-                let start = text.lastIndexOf("<" + tag.Name) + 2;
-                let document = vscode.window.activeTextEditor.document;
-                let pos = document.positionAt(start);
-                let endRange = findCloseTag("<", tag.Name, ">", document, pos);
-                if (endRange)
-                {
-                    endRange = new vscode.Range(endRange.start.translate(0, 1), endRange.end);
-                    if (endRange.contains(document.positionAt(text.length))) tag.CSMode = false;
-                }
-            }
-        }
-        else
-        {
-            tag.InString = inString(text.substr(tstart));
-            // добавляем атрибуты после курсора
-            let after = document.getText().substr(text.length);
-            let cl = after.match(/^((\s*[\w-]+=(("[^"]*")|('[^']*'))?)*)/);
-            if (!!cl) tag.setAttributes(cl[1]);
-        }
-        if (tag.CSMode)
-        {
-            if (tag.CSSingle)
-            {
-                let rest = text.substr(text.lastIndexOf("$"));
-                tag.InCSString = inString(rest);
-            }
-            else if (tag.CSInline)
-            {
-                let rest = text.substr(text.lastIndexOf("[c#"));
-                rest = rest.substr(rest.indexOf("]") + 1);
-                tag.InCSString = inString(rest);
-            }
-            else tag.InCSString = tag.InString;
-        }
+        let pure = enc.Result;
+
+        let ranges = getParentRanges(document, pure);
+        let tag;
         return tag;
     } catch (error)
     {
         logError("Ошибка определение положения в XML");
+    }
+
+    return null;
+}
+
+
+/** массив из Range всех незакрытых тегов */
+function getParentRanges(document: vscode.TextDocument, text: string): vscode.Range[]
+{
+    let res: vscode.Range[] = [];
+    let next = getNextParent(document, text);
+    let i = 0;
+    while (!!next && i < 50)
+    {
+        res.push(next);
+        let rest = text.slice(document.offsetAt(next.end));
+        next = getNextParent(document, rest, text);
+    }
+    if (i >= 50) logError("Найдено слишком много вложенных тегов");
+    return res;
+}
+
+
+/** Поиск позиции следующего незакрытого тега */
+function getNextParent(document: vscode.TextDocument, text: string, fullText?: string): vscode.Range
+{
+    let res = text.find(/<((?!xml)(\w+))\W/); // находим открывающийся
+    if (res.Index < 0) // открытых больше нет
+    {
         return null;
     }
-}
-
-// рекурсивный поиск незакрытых тегов
-function parseTags(text: string, originalText, nodes = [], prevMatch: RegExpMatchArray = null): CurrentTag
-{
-    /*
-        нужно сохранять причину изменений, чтобы 100 раз не переделывать туда-обратно
-        
-        - в значениях атрибутов могут быть /, поэтому [^/>]* не подходит
-        - ещё одна скобка в группе атрибутов всё вешает: ((\s*[\w-]+(=(("[^"]*")|('[^']*'))?)?)*)
-        - при [обязательной кавычке после значения атрибута] не работает во время редактирования значения атрибута
-        - /<(\w+)((\s*[\w-]+=(("[^"]*"?)|('[^']*'?))?)*)\s*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/   тут обязательно = после имени атрибута. Тоже не понимает при вводе атрибутов
-        - /<(\w+)((\s*[\w-]+=?(("[^"]*"?)|('[^']*'?))?)*)\s*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/   при необязательном = всё виснет
-        - /<(\w+)((\s*[\w-]+=(("[^"]*"?)|('[^']*'?))?)*)\s*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/   а так просто работает долго
-    */
-
-    //var res = text.match(/<(\w+)([^>]*)((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
-    let res = text.match(/<(\w+)((\s*[\w-]+=(("[^"]*"?)|('[^']*'?))?)*)\s*((>)\s*(([^<]|(<(?!\/\1)[\s\S]))*))?$/);
-    const
-        // группы regex    
-        gr_name = 1,
-        gr_attrs = 2,
-        gr_after = 7,
-        gr_close = 8,
-        gr_body = 9;
-    let nn = nodes;
-    if (res && res[gr_name]) nn.push(res[gr_name]);
-    if (res && res[gr_name] && res[gr_body])
+    
+    if (!fullText) fullText = text;
+    // ищем закрывающий
+    let closingTag = XML.findCloseTag("<", res.Result[1], ">", text, fullText);
+    if (!closingTag) // если не закрыт, то возвращаем его
     {
-        let rem = res[gr_body];
-        return parseTags(rem, originalText, nn, res);
+        let shift = fullText.length - text.length;
+        let from = document.positionAt(closingTag.Range.From + shift);
+        let to = document.positionAt(closingTag.Range.To + shift);
+        return new vscode.Range(from, to);
     }
-    else
-    {// родители закончились
-        nn.pop();
-        let mt = res ? res : prevMatch;
-        if (!mt || !mt[gr_name]) return null;
-        let tag = new CurrentTag(mt[gr_name]); // inint
-        tag.PreviousText = originalText;
-        tag.LastMatch = mt;
-        let str = mt[0];
-        let lastc = str.lastIndexOf("[c#");
-        let clC = str.indexOf("]", lastc);
-        let lastcEnd = str.indexOf("[*c#", lastc);
-        let isSpaced = !!mt[gr_after] && !!mt[gr_after].substr(0, mt[gr_after].indexOf("\n")).match(/^(>)[\t ]+\s*$/); // если тег отделён [\t ]+ то он не считается c#
-        tag.CSSingle = !!text.match(/\$\w+$/);
-        tag.CSInline = (lastc > 0 && clC > 0 && lastcEnd < 0);
-        tag.CSMode =
-            tag.CSInline ||
-            tag.CSSingle ||
-            mt[gr_name] && !!mt[gr_name].match(new RegExp(_AllowCodeTags)) && !isSpaced;
-        if (mt[gr_close]) tag.OpenTagIsClosed = true;
-        tag.CSMode = tag.CSMode && (tag.OpenTagIsClosed || tag.CSSingle || tag.CSInline);
-        tag.Parents = nn;
-        if (mt[gr_attrs]) tag.setAttributes(mt[gr_attrs]);
-        if (mt[gr_body]) tag.Body = mt[gr_body];
-        tag.LastParent = nn[nn.length - 1];
-        if (mt[gr_name] == "Item") tag.Id = tag.LastParent + "Item"; //специально для Item разных родителей
-        return tag;
-    }
+
+    // продолжаем рекурсию после закрывающего
+    let rest = text.slice(closingTag.Range.To);
+    return getNextParent(document, rest, fullText);
 }
+
+
+    
 
 function getCurrentLineText(document: vscode.TextDocument, position: vscode.Position): string
 {
@@ -1738,7 +1681,7 @@ function showCurrentInfo(tag: CurrentTag): void
         let lang = Language[tag.getLaguage()];
         if (lang == "CSharp") lang = "C#";
         info = lang + ":\t" + tag.Parents.concat([tag.Name]).join(" -> ");
-    }    
+    }
     statusMessage(info);
 }
 
