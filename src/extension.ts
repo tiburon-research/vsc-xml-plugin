@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, Encoder } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, Encoder, SimpleTag } from "./classes";
 import * as XML from './documentFunctions';
 import { SurveyList } from './surveyObjects';
 import { initJQuery } from './TibJQuery'
@@ -1286,7 +1286,13 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
         let pure = enc.Result;
 
         let ranges = getParentRanges(document, pure);
-        let tag;
+
+        let data = ranges.map(range =>
+        {
+            let st = new SimpleTag(document.getText(range));
+        })
+        console.log(data);
+        let tag = new CurrentTag("xml");
         return tag;
     } catch (error)
     {

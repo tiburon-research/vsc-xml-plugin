@@ -514,10 +514,16 @@ export class SimpleTag
 {
     constructor(raw: string)
     {
-        let res = raw.match(/<(\w+)(\s+())?\/?>/);
+        let res = raw.match(/<(\w+)(\s+(\s*\w+=(("[^"]*")|('[^']*')))*)?\/?>/);
+        if (!!res)
+        {
+            this.Name = res[1];
+            if (!!res[2]) this.Attributes = CurrentTag.getAttributesArray(res[1]);
+        }    
     }
 
-    public readonly Name: string
+    public readonly Name: string;
+    public Attributes = new KeyedCollection<string>();
 }    
 
 
