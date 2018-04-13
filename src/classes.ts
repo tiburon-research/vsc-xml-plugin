@@ -63,27 +63,56 @@ export class EncodeResult
     {
         return { Delimiter: this.Delimiter, EncodedCollection: this.EncodedCollection };
     }
-
-    /**
-     * Добавляет `result` в текущий объект `EncodeResult`
-     * 
-     * При этом старый `Result` заменяется новым
-    */
-    join(result: EncodeResult): boolean
-    {
-        if (this.Delimiter != result.Delimiter && !this.isEmpty()) return false;
-        if (!this.Delimiter) this.Delimiter = result.Delimiter;
-        this.Result = result.Result;
-        this.EncodedCollection.AddRange(result.EncodedCollection);
-        return true;
-    }
-
-    /** Проверяет не был ли уже задан объект */
-    private isEmpty(): boolean
-    {
-        return !this.Delimiter && this.EncodedCollection.Count() == 0 && !this.Result;
-    }
 }
+
+
+/** Класс для множественного последовательного кодирования текста */
+export class Encoder
+{
+    /** 
+     * @param text исходный, который будет кодироваться 
+     * @param delimiter разделитель или его длина
+    */
+    constructor(text: string, delimiter?: string | number)
+    {
+        this.OriginalText = text;
+        this.Result = text;
+        let del: string;
+        if (!delimiter) del = XML.getReplaceDelimiter(text);
+        else
+        {
+            if (typeof delimiter == "string") del = delimiter;
+            else del = XML.getReplaceDelimiter(text, delimiter);
+        }    
+        this.Delimiter = del;
+    }
+
+    /** Кодирование текущего результата указанной функцией `encodeFuntion` */
+    public Encode(encodeFuntion: (text: string, delimiter: string) => EncodeResult): void
+    {
+        let tmpRes = encodeFuntion(this.Result, this.Delimiter);
+        this.Result = tmpRes.Result;
+        this.EncodedCollection.AddRange(tmpRes.EncodedCollection);
+    }
+
+    public ToEncodeResult(): EncodeResult
+    {
+        let res = new EncodeResult();
+        res.EncodedCollection = this.EncodedCollection;
+        res.Delimiter = this.Delimiter;
+        res.Result = this.Result;
+        return res;
+    }
+
+    /** Исходный текст */
+    public readonly OriginalText: string;
+    /** Разделитель для кодирования */
+    public readonly Delimiter: string;
+    /** Результат кодирования */
+    public Result: string;
+    /** Коллекция закодированных элементов */
+    public readonly EncodedCollection = new KeyedCollection<string>();
+}    
 
 
 export namespace TibTransform

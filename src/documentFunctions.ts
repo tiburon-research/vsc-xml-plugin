@@ -1,6 +1,6 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, EncodeResult, XMLencodeResult, positiveMin, FindTagResult } from "./classes";
+import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, EncodeResult, XMLencodeResult, positiveMin, FindTagResult, Encoder } from "./classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { languages } from "vscode";
@@ -622,17 +622,21 @@ function encodeElements(text: string, elem: RegExp, delimiter: string): EncodeRe
 
 
 /** кодирует C#-вставки в `text` */
-function encodeCS(text: string, delimiter: string): EncodeResult
+export function encodeCS(text: string, delimiter: string): EncodeResult
 {
     return encodeElements(text, /(\[c#)((?!\d)([^\]]*)\]([\s\S]+?)?\[\/c#[^\]]*\])/, delimiter);
 }
 
 /** кодирует CDATA в `text` */
-function encodeCDATA(text: string, delimiter: string): EncodeResult
+export function encodeCDATA(text: string, delimiter: string): EncodeResult
 {
     return encodeElements(text, /<!\[CDATA\[[\S\s]*\]\]>/, delimiter);
 }
 
+export function encodeXMLXomments(text: string, delimiter: string): EncodeResult
+{
+    return encodeElements(text, /<!--[\S\s]*-->/, delimiter);
+}
 
 // получаем разделитель, для временной замены вставок
 export function getReplaceDelimiter(text: string, length?: number): string
@@ -653,16 +657,12 @@ export function getReplaceDelimiter(text: string, length?: number): string
 
 
 /** безопасный (обычный, нормальный) XML без всяких тибуроновских приколов */
-export function safeXML(text: string, delimiter: string): EncodeResult
+export function safeXML(text: string, delimiter?: string): EncodeResult
 {
-    let res = new EncodeResult();
-    let csRes = encodeCS(text, delimiter); // убираем кодовые вставки
-    let cdRes = encodeCDATA(csRes.Result, delimiter); // убираем CDATA
-    if (
-        !res.join(csRes) ||
-        !res.join(cdRes)
-    ) logError("Ошибка при объединение результатов кодирования");
-    return res;
+    let res = new Encoder(text, delimiter);
+    res.Encode(encodeCS); // убираем кодовые вставки
+    res.Encode(encodeCDATA); // убираем CDATA
+    return res.ToEncodeResult();
 }
 
 
