@@ -89,8 +89,8 @@ export function activate(context: vscode.ExtensionContext)
         if (!editor || editor.document.languageId != "tib") return;
         try
         {
-            saveMethods(editor);
-            updateNodesIds(editor);
+            /* saveMethods(editor);
+            updateNodesIds(editor); */
         } catch (er)
         {
             logError("Ошибка при сборе информации", editor);
@@ -98,14 +98,14 @@ export function activate(context: vscode.ExtensionContext)
     }
 
     // общие дествия при старте расширения
-    getData();
+    /* getData();
     makeIndent();
     autoComplete();
     hoverDocs();
     helper();
     definitions();
     registerCommands();
-    higlight();
+    higlight(); */
 
     // для каждого дукумента свои
     reload();
@@ -130,10 +130,10 @@ export function activate(context: vscode.ExtensionContext)
         let originalPosition = editor.selection.start.translate(0, 1);
         let text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
         let tag = getCurrentTag(editor.document, originalPosition, text);
-        reload();
+        /* reload();
         insertAutoCloseTag(event, editor, tag, text);
         insertSpecialSnippets(event, editor, text, tag);
-        showCurrentInfo(tag);
+        showCurrentInfo(tag); */
     });
 
     statusMessage("Tiburon XML Helper запущен!", 3000);
@@ -1270,28 +1270,34 @@ function execute(link: string)
 }
 
 
+
+/*
+    Работаем с текстом, очищенным от C# и комментариев.
+    В результате получаем index/position/range в документе, по которым потом можно получить оригинал
+*/
 function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt: string = ""): CurrentTag
 {
     // TODO: продумать кэширование
-
     try
     {
         let text = txt || getPreviousText(document, position);
 
-        // кодируем комментарии и CDATA
-        let enc = new Encoder(text);
-        enc.Encode(XML.encodeXMLXomments);
-        enc.Encode(XML.encodeCDATA);
+        // замазываем комментарии
+        let pure = XML.clearXMLComments(text);
 
-        let pure = enc.Result;
+        // удаление закрытых _AllowCodeTag из остатка кода (чтобы не искать <int>)
+        let reg = new RegExp("<(" + _AllowCodeTags + ")[^/>]*((/>)|(>((?![\\t ]+\\s*\n)[\\s\\S]*?)(<\\/\\1\\s*>)))"); // полные
+        let regEnd = new RegExp("(<(" + _AllowCodeTags + ")([^/>]*)?>)((?![\\t ]+\\s*\n)[\\s\\S]*)*$"); // незакрытые (в конце)
+        pure = XML.replaceWithSpaces(pure, reg);
+        pure = XML.replaceWithSpaces(pure, regEnd);
 
         let ranges = getParentRanges(document, pure);
 
         let data = ranges.map(range =>
         {
-            let st = new SimpleTag(document.getText(range));
+            return new SimpleTag(document.getText(range));
         })
-        console.log(data);
+
         let tag = new CurrentTag("xml");
         return tag;
     } catch (error)
@@ -1312,7 +1318,7 @@ function getParentRanges(document: vscode.TextDocument, text: string): vscode.Ra
     while (!!next && i < 50)
     {
         res.push(next);
-        let rest = text.slice(document.offsetAt(next.end));
+        let rest = text.slice(document.offsetAt(next.end) + 1);
         next = getNextParent(document, rest, text);
     }
     if (i >= 50) logError("Найдено слишком много вложенных тегов");
@@ -1320,31 +1326,57 @@ function getParentRanges(document: vscode.TextDocument, text: string): vscode.Ra
 }
 
 
-/** Поиск позиции следующего незакрытого тега */
+/** Поиск позиции следующего незакрытого тега 
+ * 
+ * Возвращает Range открывающего или `null` если больше нет
+*/
 function getNextParent(document: vscode.TextDocument, text: string, fullText?: string): vscode.Range
 {
     let res = text.find(/<((?!xml)(\w+))\W/); // находим открывающийся
-    if (res.Index < 0) // открытых больше нет
-    {
-        return null;
-    }
+    if (res.Index < 0) return null;// открытых больше нет
     
-    if (!fullText) fullText = text;
-    // ищем закрывающий
-    let closingTag = XML.findCloseTag("<", res.Result[1], ">", text, fullText);
-    if (!closingTag) // если не закрыт, то возвращаем его
+    let rest = text.slice(res.Index);
+    let lastIndex = indexOfOpenedEnd(rest); // ищем его конец
+    
+    if (!fullText) fullText = text; // если первый раз
+    let shift = fullText.length - text.length + res.Index; // сдвиг относительно начала документа
+
+    let from = document.positionAt(shift); // стартовая позиция
+
+    if (lastIndex < 0) // если открывающий тег неполный, то считаем, что курсор сейчас в нём
     {
-        let shift = fullText.length - text.length;
-        let from = document.positionAt(closingTag.Range.From + shift);
-        let to = document.positionAt(closingTag.Range.To + shift);
+        let to = document.positionAt(fullText.length - 1);
+        return new vscode.Range(from, to);
+    }
+
+    // двигаем относительно начала тега
+    lastIndex += shift;
+    
+    // ищем закрывающий
+    let closingTag = XML.findCloseTag("<", res.Result[1], ">", rest, fullText);
+
+    if (!closingTag) // если не закрыт, то возвращаем его
+    {        
+        let to = document.positionAt(lastIndex + 1);
         return new vscode.Range(from, to);
     }
 
     // продолжаем рекурсию после закрывающего
-    let rest = text.slice(closingTag.Range.To);
+    rest = rest.slice(closingTag.Range.To + shift);
     return getNextParent(document, rest, fullText);
 }
 
+
+/** Индекс конца закрывающегося тега. 
+ * 
+ * Текст должен начинаться с открывающегося тега. Если не находит возвращает -1.
+*/
+function indexOfOpenedEnd(text: string): number
+{
+    let res = text.match(/^<\w+(\s+(\w+=(("[^"]*")|('[^']*'))\s*)*)?\/?>/);
+    if (!res) return -1;
+    return res[0].length - 1;
+}
 
     
 

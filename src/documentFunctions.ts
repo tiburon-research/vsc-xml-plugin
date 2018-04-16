@@ -835,10 +835,23 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 /** заменяет блок комментариев на пробелы */
 export function clearXMLComments(txt: string): string
 {
-    var mt = txt.match(/<!--([\s\S]+?)-->/g);
-    var res = txt;
-    var rep = "";
-    if (!mt) return txt;
+    return replaceWithSpaces(txt, /<!--([\s\S]+?)-->/);
+}
+
+
+/** заменяет CDATA на пробелы */
+export function clearCDATA(txt: string): string
+{
+    return replaceWithSpaces(txt, /<!\[CDATA\[[\s\S]*\]\]>/);
+}
+
+/** Заменяет на пробелы */
+export function replaceWithSpaces(text: string, sub: RegExp): string
+{
+    let mt = text.match(new RegExp(sub, "g"));
+    let res = text;
+    let rep = "";
+    if (!mt) return text;
     mt.forEach(element =>
     {
         rep = element.replace(/./g, ' ');

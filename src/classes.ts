@@ -510,20 +510,23 @@ export class InlineAttribute
 }
 
 
+/** Класс для получения информации по полному открывающемуся тегу */
 export class SimpleTag
 {
     constructor(raw: string)
     {
-        let res = raw.match(/<(\w+)(\s+(\s*\w+=(("[^"]*")|('[^']*')))*)?\/?>/);
+        let res = raw.match(/<(\w+)(\s+(\s*\w+=(("[^"]*")|('[^']*')))*)?\s*>/);
         if (!!res)
         {
             this.Name = res[1];
-            if (!!res[2]) this.Attributes = CurrentTag.getAttributesArray(res[1]);
-        }    
+            if (!!res[2]) this.Attributes = CurrentTag.getAttributesArray(res[2]);
+            this.Id = this.Attributes.Item("Id");
+        }
     }
 
     public readonly Name: string;
-    public Attributes = new KeyedCollection<string>();
+    public readonly Attributes = new KeyedCollection<string>();
+    public readonly Id: string;
 }    
 
 
@@ -577,14 +580,14 @@ export class CurrentTag
     /** возвращает коллекцию атрибутов */
     static getAttributesArray(str: string): KeyedCollection<string>
     {
-        var mt = str.match(/\s*(\w+)=(("([^"]+)?")|(('([^']+)?')))\s*/g);
+        var mt = str.match(/\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g);
         var res: KeyedCollection<string> = new KeyedCollection<string>();
         if (mt)
         {
             mt.forEach(element =>
             {
-                var parse = element.match(/\s*(\w+)=(("([^"]+)?")|(('([^']+)?')))\s*/);
-                if (parse) res.AddPair(parse[1], parse[2]);
+                var parse = element.match(/\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/);
+                if (parse) res.AddPair(parse[1], parse[2].replace(/^('|")(.*)('|")$/, "$2"));
             });
         }
         return res;
