@@ -681,6 +681,81 @@ export function originalXML(text: string, data: XMLencodeResult): string
 
 
 
+/* ОЧИСТКА */
+//#region 
+
+
+/** заменяет блок комментариев на пробелы */
+export function clearXMLComments(txt: string): string
+{
+    return replaceWithSpaces(txt, /<!--([\s\S]+?)-->/);
+}
+
+
+/** заменяет CDATA на пробелы */
+export function clearCDATA(txt: string): string
+{
+    return replaceWithSpaces(txt, /<!\[CDATA\[[\s\S]*\]\]>/);
+}
+
+/** Заменяет на пробелы */
+export function replaceWithSpaces(text: string, sub: RegExp): string
+{
+    let mt = text.match(new RegExp(sub, "g"));
+    let res = text;
+    let rep = "";
+    if (!mt) return text;
+    mt.forEach(element =>
+    {
+        rep = element.replace(/./g, ' ');
+        res = res.replace(element, rep);
+    });
+    return res;
+}
+
+
+/** Заменяет содержимое CS-тегов пробелами */
+export function clearCSContents(text: string): string
+{
+    let res = text;
+    let newText = text;
+    let rep = "";
+    let tCount = _AllowCodeTags.match(/\(/g).length;
+
+    // Очищаем полные теги
+    let reg = new RegExp("(<(" + _AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*?)(<\\/\\2\\s*>)");
+    
+    let resCS = reg.exec(newText);
+
+    while (!!resCS)
+    {
+        let open = resCS[1];
+        let inner = resCS[7 + tCount].replace(/./g, ' ');
+        let close = resCS[8 + tCount];
+        let repl = new RegExp(safeString(resCS[0]));
+        res = res.replace(repl, open + inner + close);
+        newText = newText.replace(repl, "");
+        resCS = reg.exec(newText);
+    }
+
+    // Очищаем незакрытый CS-тег в конце
+    let regEnd = new RegExp("(<(" + _AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?!([\\t ]+\\r?\\n)|(\\s+<\/\\2))[\\s\\S]*)$");
+    resCS = regEnd.exec(res);
+    if (!!resCS)
+    {
+        let open = resCS[1];
+        let inner = resCS[7 + tCount].replace(/./g, ' ');
+        res = res.replace(resCS[0], open + inner);
+    }    
+        
+    return res;
+}
+
+//#endregion
+
+
+
+
 /* доп. функции */
 //#region 
 
@@ -832,33 +907,6 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
     return null;
 }
 
-/** заменяет блок комментариев на пробелы */
-export function clearXMLComments(txt: string): string
-{
-    return replaceWithSpaces(txt, /<!--([\s\S]+?)-->/);
-}
-
-
-/** заменяет CDATA на пробелы */
-export function clearCDATA(txt: string): string
-{
-    return replaceWithSpaces(txt, /<!\[CDATA\[[\s\S]*\]\]>/);
-}
-
-/** Заменяет на пробелы */
-export function replaceWithSpaces(text: string, sub: RegExp): string
-{
-    let mt = text.match(new RegExp(sub, "g"));
-    let res = text;
-    let rep = "";
-    if (!mt) return text;
-    mt.forEach(element =>
-    {
-        rep = element.replace(/./g, ' ');
-        res = res.replace(element, rep);
-    });
-    return res;
-}
 
 /** получает теги 0 вложенности */
 function get1LevelNodes(text: string): TagInfo[]
