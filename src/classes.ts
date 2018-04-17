@@ -1210,7 +1210,7 @@ export function sendLogMessage(text: string)
 /** Подготовленная для RegExp строка */
 export function safeString(text: string): string
 {
-    return text.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&");
+    return text.replace(/[\|\\\{\}\(\)\[\]\^\$\+\*\?\.\/]/g, "\\$&");
 }
 
 
