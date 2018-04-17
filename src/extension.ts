@@ -1286,18 +1286,16 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
         let pure = XML.clearXMLComments(text);
 
         // удаление закрытых _AllowCodeTag из остатка кода (чтобы не искать <int>)
-        let reg = new RegExp("<(" + _AllowCodeTags + ")[^/>]*((/>)|(>((?![\\t ]+\\s*\n)[\\s\\S]*?)(<\\/\\1\\s*>)))"); // полные
-        let regEnd = new RegExp("(<(" + _AllowCodeTags + ")([^/>]*)?>)((?![\\t ]+\\s*\n)[\\s\\S]*)*$"); // незакрытые (в конце)
-        pure = XML.replaceWithSpaces(pure, reg);
-        pure = XML.replaceWithSpaces(pure, regEnd);
+        pure = XML.clearCSContents(pure);
 
         let ranges = getParentRanges(document, pure);
 
         let data = ranges.map(range =>
         {
-            return new SimpleTag(document.getText(range));
+            return document.getText(document.getWordRangeAtPosition(range.start.translate(0,2)));
+            //return new SimpleTag(document.getText(range));
         })
-
+        console.log(data);
         let tag = new CurrentTag("xml");
         return tag;
     } catch (error)
@@ -1310,16 +1308,16 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
 
 
 /** массив из Range всех незакрытых тегов */
-function getParentRanges(document: vscode.TextDocument, text: string): vscode.Range[]
+function getParentRanges(document: vscode.TextDocument, prevText: string): vscode.Range[]
 {
     let res: vscode.Range[] = [];
-    let next = getNextParent(document, text);
+    let next = getNextParent(document, prevText);
     let i = 0;
     while (!!next && i < 50)
     {
         res.push(next);
-        let rest = text.slice(document.offsetAt(next.end) + 1);
-        next = getNextParent(document, rest, text);
+        let rest = prevText.slice(document.offsetAt(next.end) + 1);
+        next = getNextParent(document, rest, prevText);
     }
     if (i >= 50) logError("Найдено слишком много вложенных тегов");
     return res;
@@ -1334,10 +1332,8 @@ function getNextParent(document: vscode.TextDocument, text: string, fullText?: s
 {
     let res = text.find(/<((?!xml)(\w+))\W/); // находим открывающийся
     if (res.Index < 0) return null;// открытых больше нет
-    
-    let rest = text.slice(res.Index);
+    let rest = text.slice(res.Index); // от начала открывающегося
     let lastIndex = indexOfOpenedEnd(rest); // ищем его конец
-    
     if (!fullText) fullText = text; // если первый раз
     let shift = fullText.length - text.length + res.Index; // сдвиг относительно начала документа
 
@@ -1353,7 +1349,7 @@ function getNextParent(document: vscode.TextDocument, text: string, fullText?: s
     lastIndex += shift;
     
     // ищем закрывающий
-    let closingTag = XML.findCloseTag("<", res.Result[1], ">", rest, fullText);
+    let closingTag = XML.findCloseTag("<", res.Result[1], ">", shift, fullText);
 
     if (!closingTag) // если не закрыт, то возвращаем его
     {        
@@ -1361,8 +1357,9 @@ function getNextParent(document: vscode.TextDocument, text: string, fullText?: s
         return new vscode.Range(from, to);
     }
 
-    // продолжаем рекурсию после закрывающего
+    // продолжаем искать после закрывающего
     rest = rest.slice(closingTag.Range.To + shift);
+
     return getNextParent(document, rest, fullText);
 }
 

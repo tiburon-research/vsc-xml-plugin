@@ -773,6 +773,7 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
     try
     {
         let pos = typeof before == 'number' ? before : before.length;
+        pos++; // сдвигаем после <
         let textAfter = fullText.substr(pos);
         if (textAfter.match(sct))
         {
