@@ -1333,7 +1333,8 @@ function getNextParent(document: vscode.TextDocument, text: string, fullText?: s
     let res = text.find(/<((?!xml)(\w+))\W/); // находим открывающийся
     if (res.Index < 0) return null;// открытых больше нет
     let rest = text.slice(res.Index); // от начала открывающегося
-    let lastIndex = indexOfOpenedEnd(rest); // ищем его конец
+    let lastIndex = indexOfOpenedEnd(rest); // ищем его конец    
+    
     if (!fullText) fullText = text; // если первый раз
     let shift = fullText.length - text.length + res.Index; // сдвиг относительно начала документа
 
@@ -1358,8 +1359,7 @@ function getNextParent(document: vscode.TextDocument, text: string, fullText?: s
     }
 
     // продолжаем искать после закрывающего
-    rest = rest.slice(closingTag.Range.To + shift);
-
+    rest = fullText.slice(closingTag.Range.To + 1);
     return getNextParent(document, rest, fullText);
 }
 
