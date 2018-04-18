@@ -308,7 +308,7 @@ function registerCommands()
         let txt = getPreviousText(editor.document, editor.selection.active);
         let tag = getCurrentTag(editor.document, editor.selection.active, txt);
         if (!tag || tag.Parents.length < 1) return;
-        let par = tag.Parents.length == 1 ? tag.Name : tag.Parents[1];
+        let par = tag.Parents.length == 1 ? tag.Name : tag.Parents[1].Name;
         let start = txt.lastIndexOf("<" + par);
         let from = editor.document.positionAt(start);
         let cl = findCloseTag("<", par, ">", editor.document, from.translate(0, 1));
@@ -606,7 +606,7 @@ function autoComplete()
                 {
                     let parent;
                     for (let key in ItemSnippets)
-                        if (tag.Parents.indexOf(key) > -1)
+                        if (!!tag.Parents.find(x => x.Name == key))
                         {
                             parent = key;
                             break;
@@ -1289,12 +1289,19 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
         pure = XML.clearCSContents(pure);
 
         let ranges = getParentRanges(document, pure);
-
-        let data = ranges.map(range =>
+        if (ranges.length == 0) return new CurrentTag("XML");
+        let parents = ranges.map(range =>
         {
             return new SimpleTag(document.getText(range));
         })
-        let tag = new CurrentTag("xml");
+
+        /** Последний незакрытый тег */
+        let current = parents.pop();
+        let tag = new CurrentTag(current);
+        tag.Parents = parents;
+        showCurrentInfo(tag);
+
+        //statusMessage(data.map(x => x.Name).join(" ->"));
         return tag;
     } catch (error)
     {
@@ -1714,7 +1721,7 @@ function showCurrentInfo(tag: CurrentTag): void
     {
         let lang = Language[tag.getLaguage()];
         if (lang == "CSharp") lang = "C#";
-        info = lang + ":\t" + tag.Parents.concat([tag.Name]).join(" -> ");
+        info = lang + ":\t" + tag.Parents.map(x => x.Name).concat([tag.Name]).join(" -> ");
     }
     statusMessage(info);
 }

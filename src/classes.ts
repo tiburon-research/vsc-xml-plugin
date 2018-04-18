@@ -510,51 +510,76 @@ export class InlineAttribute
 }
 
 
-/** Класс для получения информации по полному открывающемуся тегу */
+/** Класс для получения информации по полному открывающемуся тегу
+ * 
+ * используется для родителей CurrentTag
+ */
 export class SimpleTag
 {
     constructor(raw: string)
     {
-        let res = raw.match(/<(\w+)(\s+(\s*\w+=(("[^"]*")|('[^']*')))*)?\s*>/);
-        if (!!res)
-        {
-            this.Name = res[1];
-            if (!!res[2]) this.Attributes = CurrentTag.getAttributesArray(res[2]);
-            this.Id = this.Attributes.Item("Id");
-        }
+        this.Raw = raw;
+        let res = raw.match(/<(\w+)\W/);
+        if (!!res) this.Name = res[1];        
     }
 
+    public getAttributes(): KeyedCollection<string>
+    {
+        let attrs = new KeyedCollection<string>();
+        let res = this.Raw.match(/<(\w+)(\s+(\s*\w+=(("[^"]*")|('[^']*')))*)?\s*>/);
+        if (!!res && !!res[2]) attrs = CurrentTag.getAttributesArray(res[2]);
+        return attrs;
+    }
+    
     public readonly Name: string;
-    public readonly Attributes = new KeyedCollection<string>();
-    public readonly Id: string;
-}    
+    public readonly Raw: string; // хранение исходных данных
+}
 
 
 export class CurrentTag
 {
-    Name: string = "";
-    /** отличается ПОКА только для Item - в зависимости от родителя */
-    Id: string = "";
-    Attributes: Array<InlineAttribute> = [];
-    Body: string = "";
-    /** закрыт не тег, просто есть вторая скобка <Page...> */
-    OpenTagIsClosed: boolean = false;
-    Parents: Array<string> = [];
-    LastParent = "";
-    CSMode = false;
-    /** $Method() */
-    CSSingle = false;
-    /** [c#]Method();[/c#] */
-    CSInline = false;
-    /** "body$ */
-    InString = false;
-    /** "body1 [c#]Method("str$ */
-    InCSString = false;
+    // переменные
 
-    constructor(name: string)
+    public Name: string = "";
+    /** отличается ПОКА только для Item - в зависимости от родителя */
+    public Id: string = "";
+    public Attributes: Array<InlineAttribute> = [];
+    public Body: string = "";
+    /** закрыт не тег, просто есть вторая скобка <Page...> */
+    public OpenTagIsClosed: boolean = false;
+    public Parents: Array<SimpleTag> = [];
+    public LastParent = "";
+    public CSMode = false;
+    /** $Method() */
+    public CSSingle = false;
+    /** [c#]Method();[/c#] */
+    public CSInline = false;
+    /** "body$ */
+    public InString = false;
+    /** "body1 [c#]Method("str$ */
+    public InCSString = false;
+
+
+    // техническое
+
+    private PreviousText = "";
+    /** Последний массив вхождений из рекурсивного поиска */
+    private LastMatch: RegExpMatchArray = null;
+
+
+    // методы
+
+    constructor(tag: string | SimpleTag)
     {
-        this.Name = name;
-        this.Id = name;
+        if (typeof tag == "string")
+        {
+            this.Name = tag;
+            this.Id = tag;
+        }
+        else
+        {
+            this.Name = tag.Name;
+        }    
     }
 
     /** возвращает массив имён атрибутов */
@@ -610,11 +635,6 @@ export class CurrentTag
         return vscode.window.activeTextEditor.document.positionAt(this.PreviousText.lastIndexOf(search));
     }
 
-
-    // техническое
-    PreviousText = "";
-    /** Последний массив вхождений из рекурсивного поиска */
-    LastMatch: RegExpMatchArray = null;
 }
 
 
