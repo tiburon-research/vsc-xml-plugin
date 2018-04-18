@@ -1203,7 +1203,7 @@ export function saveError(text: string, data: LogData, path: string)
 
 export function sendLogMessage(text: string)
 {
-    bot.sendLog(text);
+    if (!!bot && bot.active) bot.sendLog(text);
 }
 
 
