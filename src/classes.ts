@@ -1123,7 +1123,8 @@ export class TelegramBot
                 }).on('error', (e) =>
                 {
                     reject(result);
-                    showError("Ошибка при отправке отчёта об ошибке =)");
+                    // комментируем пока Telegram не восстановят
+                    //showError("Ошибка при отправке отчёта об ошибке =)");
                 });
             }
             catch (error)
