@@ -938,4 +938,35 @@ function get1LevelNodes(text: string): TagInfo[]
     return tags;
 }
 
+
+export function inString(text: string): boolean
+{
+    /*
+    // выполняется очень долго
+    var regStr = /^((([^'"]*)(("[^"]*")|('[^']*'))*)*)$/;
+    return !text.match(regStr);
+    */
+    try
+    {
+        let rest = text.replace(/\\"/g, "  "); // убираем экранированные кавычки
+        let i = positiveMin(rest.indexOf("'"), rest.indexOf("\""));
+        while (rest.length > 0 && i !== null)
+        {
+            if (i !== null)
+            {
+                let ch = rest[i];
+                rest = rest.substr(i + 1);
+                let next = rest.indexOf(ch);
+                if (next < 0) return true;
+                rest = rest.substr(next + 1);
+                i = positiveMin(rest.indexOf("'"), rest.indexOf("\""));
+            }
+        }
+    } catch (error)
+    {
+        logError("Ошибка выделения строки");
+    }
+    return false;
+}
+
 //#endregion

@@ -30,7 +30,7 @@ interface SearchResult
 {
     Result: RegExpMatchArray;
     Index: number;
-}    
+}
 
 
 /**
@@ -91,7 +91,7 @@ export class Encoder
         {
             if (typeof delimiter == "string") del = delimiter;
             else del = XML.getReplaceDelimiter(text, delimiter);
-        }    
+        }
         this.Delimiter = del;
     }
 
@@ -120,7 +120,7 @@ export class Encoder
     public Result: string;
     /** Коллекция закодированных элементов */
     public readonly EncodedCollection = new KeyedCollection<string>();
-}    
+}
 
 
 export namespace TibTransform
@@ -519,57 +519,87 @@ export class SimpleTag
     constructor(raw: string)
     {
         this.Raw = raw;
-        let res = raw.match(/<(\w+)\W/);
-        if (!!res) this.Name = res[1];        
+        let res = raw.match(/<(\w+)(\W|$)/);
+        if (!!res) this.Name = res[1];
     }
 
     public getAttributes(): KeyedCollection<string>
     {
+        if (!!this.Attrs) return this.Attrs; // кеш :)
         let attrs = new KeyedCollection<string>();
-        let res = this.Raw.match(/<(\w+)(\s+(\s*\w+=(("[^"]*")|('[^']*')))*)?\s*>/);
+        let res = this.Raw.match(/^\s*<(\w+)(\s+(\s*\w+=(("[^"]*")|('[^']*')))*)?\s*>?/);
         if (!!res && !!res[2]) attrs = CurrentTag.getAttributesArray(res[2]);
+        this.Attrs = attrs;
         return attrs;
     }
-    
+
+    /** Возвращает источник повтора для `Repeat` */
+    public getRepeatSource(): string
+    {
+        if (this.Name != "Repeat") return null;
+        let attrs = this.getAttributes();
+        return ["List", "Length", "Range", "Source"].find(x => attrs.Contains(x));
+    }
+
+    /** Закрыт ли открывающий тег */
+    public isClosed(): boolean
+    {
+        return !!this.Raw.match(/>\s*$/);
+    }
+
     public readonly Name: string;
     public readonly Raw: string; // хранение исходных данных
+    protected Attrs: KeyedCollection<string>;
 }
 
 
 export class CurrentTag
 {
-    // переменные
+    // -------------------- ПЕРЕМЕННЫЕ
 
     public Name: string = "";
-    /** отличается ПОКА только для Item - в зависимости от родителя */
+    /** Идентификатор тега
+     * - для `Item` - в зависимости от родителя 
+     * - для `Repeat` - в зависимости от источника
+    */
     public Id: string = "";
     public Attributes: Array<InlineAttribute> = [];
     public Body: string = "";
-    /** закрыт не тег, просто есть вторая скобка <Page...> */
-    public OpenTagIsClosed: boolean = false;
+    /** Закрыт не тег, просто есть вторая скобка <Page...> */
+    public OpenTagIsClosed = false;
     public Parents: Array<SimpleTag> = [];
     public LastParent = "";
-    public CSMode = false;
-    /** $Method() */
-    public CSSingle = false;
-    /** [c#]Method();[/c#] */
-    public CSInline = false;
-    /** "body$ */
-    public InString = false;
-    /** "body1 [c#]Method("str$ */
-    public InCSString = false;
+    protected Language: Language;
+    /** Откуда начинается */
+    public StartTagPosition: vscode.Position;
 
 
-    // техническое
+    // -------------------- ТЕХНИЧЕСКОЕ
 
+    /** Весь предыдущий текст */
     private PreviousText = "";
     /** Последний массив вхождений из рекурсивного поиска */
     private LastMatch: RegExpMatchArray = null;
 
+    /** добавляет атрибуты */
+    private setAttributes(attrs: KeyedCollection<string>)
+    {
+        let parent = this;
+        attrs.forEach(function (key, val)
+        {
+            parent.Attributes.push(new InlineAttribute(key, val));
+        });
+    }
+    /** Задаёт текст от начала документа до Position */
+    public setPrevText(text: string)
+    {
+        this.PreviousText = text;
+    }
 
-    // методы
 
-    constructor(tag: string | SimpleTag)
+    // -------------------- МЕТОДЫ
+
+    constructor(tag: string | SimpleTag, parents?: SimpleTag[])
     {
         if (typeof tag == "string")
         {
@@ -579,11 +609,27 @@ export class CurrentTag
         else
         {
             this.Name = tag.Name;
-        }    
+            this.Id = tag.Name;
+            this.setAttributes(tag.getAttributes());
+            this.OpenTagIsClosed = tag.isClosed();
+
+            if (parents)
+            {
+                this.Parents = parents;
+                // Id для Item
+                if (parents && this.Name == "Item") this.Id = parents.last().Name + "Item";
+            }
+            // Id для Repeat
+            if (this.Name == "Repeat")
+            {
+                let source = tag.getRepeatSource();
+                if (!!source) this.Id == source + "Repeat";
+            }
+        }
     }
 
     /** возвращает массив имён атрибутов */
-    attributeNames()
+    public attributeNames()
     {
         return this.Attributes.map(function (e)
         {
@@ -591,22 +637,11 @@ export class CurrentTag
         });
     }
 
-    /** добавляет атрибуты из строки */
-    setAttributes(str: string)
-    {
-        var attrs = CurrentTag.getAttributesArray(str);
-        var parent = this;
-        attrs.forEach(function (key, val)
-        {
-            parent.Attributes.push(new InlineAttribute(key, val));
-        });
-    }
-
     /** возвращает коллекцию атрибутов */
-    static getAttributesArray(str: string): KeyedCollection<string>
+    public static getAttributesArray(str: string): KeyedCollection<string>
     {
-        var mt = str.match(/\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g);
-        var res: KeyedCollection<string> = new KeyedCollection<string>();
+        let mt = str.match(/\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g);
+        let res: KeyedCollection<string> = new KeyedCollection<string>();
         if (mt)
         {
             mt.forEach(element =>
@@ -618,21 +653,79 @@ export class CurrentTag
         return res;
     }
 
-    /** язык содержимого */
-    getLaguage(): Language
+    /** Язык содержимого */
+    public getLaguage(): Language
     {
-        if (this.CSMode) return Language.CSharp; // так быстрее
-        return TagInfo.getTagLanguage(this.Name);
+        if (this.Language) return this.Language; // так быстрее
+        let tagLanguage: Language;
+        // по-любому C#
+        if (this.CSSingle() || this.CSInline())
+        {
+            tagLanguage = Language.CSharp;
+        }
+        else
+        {
+            tagLanguage = TagInfo.getTagLanguage(this.Name);
+            // проверка на Fake
+            if (tagLanguage == Language.CSharp)
+            {
+                if
+                (
+                    !this.OpenTagIsClosed ||
+                    !!this.Body && this.Body.match(/^[\t ]+\r?\n/)
+                )
+                    tagLanguage = Language.XML;
+            }
+        }
+        this.Language = tagLanguage;
+        return tagLanguage;
     }
 
-    /** Position открывающегося тега 
-     * @param document в котором осуществлялся поиск
-    */
-    getStartTagPosition(document: vscode.TextDocument): vscode.Position
+
+    /** [c#]Method() */
+    public CSInline(): boolean
     {
-        if (!this.LastMatch) return null;
-        let search = this.LastMatch[0];
-        return vscode.window.activeTextEditor.document.positionAt(this.PreviousText.lastIndexOf(search));
+        if (!this.PreviousText) return false;
+        let lastc = this.PreviousText.lastIndexOf("[c#");
+        if (lastc < 0) return false;
+        let clC = this.PreviousText.indexOf("]", lastc);
+        let lastcEnd = this.PreviousText.indexOf("[/c#", lastc);
+        return lastc > 0 && clC > 0 && lastcEnd < 0;
+    }
+
+
+    /** $Method */
+    public CSSingle()
+    {
+        return !!this.PreviousText && !!this.PreviousText.match(/\$\w+$/);
+    }
+
+
+    /** Курсор находится в строке */
+    public InString()
+    {
+        return !!this.Body && XML.inString(this.Body);
+    }
+
+
+    /** В строке внутри C# */
+    public InCSString(): boolean
+    {
+        if (this.getLaguage() == Language.CSharp)
+        {
+            if (this.CSSingle())
+            {
+                let rest = this.PreviousText.substr(this.PreviousText.lastIndexOf("$"));
+                return XML.inString(rest);
+            }
+            else if (this.CSInline())
+            {
+                let rest = this.PreviousText.substr(this.PreviousText.lastIndexOf("[c#"));
+                rest = rest.substr(rest.indexOf("]") + 1);
+                return XML.inString(rest);
+            }
+            else return this.InString();
+        }
     }
 
 }
@@ -1148,7 +1241,7 @@ export function statusMessage(text: string, after?: number | Thenable<any>): voi
     else
     {
         vscode.window.setStatusBarMessage(text);
-    }    
+    }
 }
 
 
@@ -1250,7 +1343,13 @@ declare global
         /** Продвинутый indexOf */
         find(search: string | RegExp): SearchResult;
     }
-}    
+
+    interface Array<T>
+    {
+        /** Возвращает последний элемент */
+        last(): T
+    }
+}
 
 String.prototype.find = function (search: string | RegExp): SearchResult
 {
@@ -1259,5 +1358,12 @@ String.prototype.find = function (search: string | RegExp): SearchResult
     return { Index: ind, Result: res };
 }
 
+
+Array.prototype.last = function <T>(): T
+{
+    let res: T;
+    if (this.length > 0) res = this[this.length - 1];
+    return res;
+}
 
 //#endregion

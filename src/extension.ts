@@ -89,8 +89,8 @@ export function activate(context: vscode.ExtensionContext)
         if (!editor || editor.document.languageId != "tib") return;
         try
         {
-            /* saveMethods(editor);
-            updateNodesIds(editor); */
+            saveMethods(editor);
+            updateNodesIds(editor);
         } catch (er)
         {
             logError("Ошибка при сборе информации", editor);
@@ -98,14 +98,14 @@ export function activate(context: vscode.ExtensionContext)
     }
 
     // общие дествия при старте расширения
-    /* getData();
+    getData();
     makeIndent();
     autoComplete();
     hoverDocs();
     helper();
     definitions();
     registerCommands();
-    higlight(); */
+    higlight();
 
     // для каждого дукумента свои
     reload();
@@ -132,8 +132,8 @@ export function activate(context: vscode.ExtensionContext)
         let tag = getCurrentTag(editor.document, originalPosition, text);
         /* reload();
         insertAutoCloseTag(event, editor, tag, text);
-        insertSpecialSnippets(event, editor, text, tag);
-        showCurrentInfo(tag); */
+        insertSpecialSnippets(event, editor, text, tag); */
+        showCurrentInfo(tag);
     });
 
     statusMessage("Tiburon XML Helper запущен!", 3000);
@@ -293,7 +293,7 @@ function registerCommands()
         let editor = vscode.window.activeTextEditor;
         let tag = getCurrentTag(editor.document, editor.selection.active);
         if (!tag) return;
-        let from = tag.getStartTagPosition(editor.document);
+        let from = tag.StartTagPosition;
         let cl = findCloseTag("<", tag.Name, ">", editor.document, from.translate(0, 1));
         if (!cl) return;
         let to = cl.end;
@@ -519,7 +519,7 @@ function higlight()
             var tag = getCurrentTag(document, position, text);
             var curRange = document.getWordRangeAtPosition(position);
             var word = document.getText(curRange);
-            if (tag.CSMode && word != 'c#') return; // такой костыль потому что при нахождении на [/c#] хз что там дальше и tag.CSMode == true
+            if (tag.getLaguage() == Language.CSharp && word != 'c#') return; // такой костыль потому что при нахождении на [/c#] хз что там дальше и tag.CSMode == true
             var res = [];
             var fullText = document.getText();
             var after = getCurrentLineText(document, position).substr(position.character);
@@ -599,7 +599,7 @@ function autoComplete()
         {
             let completionItems = [];
             let tag = getCurrentTag(document, position);
-            if (tag && !tag.CSMode)
+            if (tag && tag.getLaguage() != Language.CSharp)
             {
                 //Item
                 if ("Item".indexOf(tag.Name) > -1)
@@ -616,7 +616,7 @@ function autoComplete()
                     if (res)
                     {
                         let ci = new vscode.CompletionItem("Item", vscode.CompletionItemKind.Snippet);
-                        let from_pos = tag.getStartTagPosition(document);
+                        let from_pos = tag.StartTagPosition;
                         let range = new vscode.Range(from_pos.translate(0, 1), position);
 
                         ci.detail = "Структура Item для " + parent;
@@ -629,7 +629,7 @@ function autoComplete()
                 else if ("Answer".indexOf(tag.Name) > -1)
                 {
                     let ci = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
-                    let from_pos = tag.getStartTagPosition(document);
+                    let from_pos = tag.StartTagPosition;
                     let range = new vscode.Range(from_pos.translate(0, 1), position);
                     ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
 
@@ -670,7 +670,7 @@ function autoComplete()
         {
             let completionItems = [];
             let tag = getCurrentTag(document, position);
-            if (tag && !tag.CSMode && !tag.OpenTagIsClosed && AutoCompleteArray.Attributes[tag.Id] && !tag.InString)
+            if (tag && tag.getLaguage() != Language.CSharp && !tag.OpenTagIsClosed && AutoCompleteArray.Attributes[tag.Id] && !tag.InString())
             {
                 let existAttrs = tag.attributeNames();
                 AutoCompleteArray.Attributes[tag.Id].forEach(element =>
@@ -700,7 +700,7 @@ function autoComplete()
         {
             let completionItems = [];
             let tag = getCurrentTag(document, position);
-            if (!tag.CSMode) return;
+            if (tag.getLaguage() != Language.CSharp) return;
 
             let curLine = getPreviousText(document, position, true);
             let mt = curLine.match(/(#|\$)?\w+$/);
@@ -710,21 +710,21 @@ function autoComplete()
             if (isMethodDefinition(curLine)) return;
 
             let str = getCurrentLineText(document, position).substr(position.character);
-            if (tag.CSSingle || !!mt[1] && mt[1] == "$") // добавляем snippet для $repeat
+            if (tag.CSSingle() || !!mt[1] && mt[1] == "$") // добавляем snippet для $repeat
             {
                 let ci = new vscode.CompletionItem("repeat", vscode.CompletionItemKind.Snippet);
                 ci.detail = "Строчный repeat";
                 ci.insertText = new vscode.SnippetString("repeat(${1|" + getAllLists().join(',') + "|}){${2:@ID}[${3:,}]}");
                 completionItems.push(ci);
-                if (!tag.CSSingle) return completionItems;
+                if (!tag.CSSingle()) return completionItems;
             }
 
             let customMethods = Methods.CompletionArray();
-            if (customMethods && !tag.InCSString) completionItems = completionItems.concat(customMethods); //Custom Methods
+            if (customMethods && !tag.InCSString()) completionItems = completionItems.concat(customMethods); //Custom Methods
 
-            if (!tag.CSSingle && !curLine.match(/\w+\.\w*$/))
+            if (!tag.CSSingle() && !curLine.match(/\w+\.\w*$/))
             {
-                if (!tag.InCSString)
+                if (!tag.InCSString())
                 {
                     let ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Variable"), TibAutoCompleteList.Item("Enum"), TibAutoCompleteList.Item("Class"), TibAutoCompleteList.Item("Type"), TibAutoCompleteList.Item("Struct"));
                     ar.forEach(element =>
@@ -740,7 +740,7 @@ function autoComplete()
                 else //node Ids
                 {
                     let qt = curLine.lastIndexOf('"');
-                    if (qt > -1) // от недоверия к tag.InCSString
+                    if (qt > -1) // от недоверия к tag.InCSString()
                     {
                         let stuff = curLine.substr(0, qt);
                         // Lists
@@ -766,7 +766,7 @@ function autoComplete()
         {
             let completionItems = [];
             let tag = getCurrentTag(document, position);
-            if (tag.CSMode && !tag.InCSString && !tag.CSSingle)
+            if (tag.getLaguage() == Language.CSharp && !tag.InCSString() && !tag.CSSingle())
             {
                 let lastLine = getPreviousText(document, position, true);
                 let ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Property").concat(TibAutoCompleteList.Item("Method"), TibAutoCompleteList.Item("EnumMember"));
@@ -852,7 +852,7 @@ function helper()
         provideSignatureHelp(document, position, token)
         {
             let tag = getCurrentTag(document, position);
-            if (!tag.CSMode) return;
+            if (tag.getLaguage() != Language.CSharp) return;
             let sign = new vscode.SignatureHelp();
             let lastLine = getPreviousText(document, position, true);
             //пропускаем объявления
@@ -894,7 +894,7 @@ function hoverDocs()
             let range = document.getWordRangeAtPosition(position);
             let tag = getCurrentTag(document, range.end);
             showCurrentInfo(tag);
-            if (!tag.CSMode) return;
+            if (tag.getLaguage() != Language.CSharp) return;
             let text = document.getText(range);
             // надо проверить родителя!
             let suit = codeAutoCompleteArray.filter(x =>
@@ -934,7 +934,7 @@ function definitions()
             var res: vscode.Location;
             try
             {
-                if (tag.CSMode && !tag.InCSString)
+                if (tag.getLaguage() == Language.CSharp && !tag.InCSString())
                 {
                     var word = document.getText(document.getWordRangeAtPosition(position));
                     if (Methods.Contains(word)) res = Methods.Item(word).GetLocation();
@@ -1012,7 +1012,7 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
 
     // проверяем только рандомный tag (который передаётся из activate), чтобы не перегружать процесс
     // хреново но быстро
-    if (!tag.CSMode || tag.Body == "") // tag.Body == "" - т.к. "<Redirect>" уже в CSMode
+    if (tag.getLaguage() != Language.CSharp || tag.Body == "") // tag.Body == "" - т.к. "<Redirect>" уже в CSMode
     {
         changes.forEach(change =>
         {
@@ -1070,7 +1070,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
         !!tagT &&
         !!tagT[1] &&
         !tagT[4] &&
-        (!tag.CSMode || tag.InCSString || !!tagT[2]) &&
+        (tag.getLaguage() != Language.CSharp || tag.InCSString() || !!tagT[2]) &&
         (!!tagT[2] || ((tag.Parents.join("") + tag.Name).indexOf("CustomText") == -1)) &&
         !isSelfClosedTag(tagT[1])
     )
@@ -1234,36 +1234,6 @@ function isSelfClosedTag(tag: string): boolean
     return !!tag.match("^(" + _SelfClosedTags + ")$");
 }
 
-function inString(text: string): boolean
-{
-    /*
-    // выполняется очень долго
-    var regStr = /^((([^'"]*)(("[^"]*")|('[^']*'))*)*)$/;
-    return !text.match(regStr);
-    */
-    try
-    {
-        let rest = text.replace(/\\"/g, "  "); // убираем экранированные кавычки
-        let i = positiveMin(rest.indexOf("'"), rest.indexOf("\""));
-        while (rest.length > 0 && i !== null)
-        {
-            if (i !== null)
-            {
-                let ch = rest[i];
-                rest = rest.substr(i + 1);
-                let next = rest.indexOf(ch);
-                if (next < 0) return true;
-                rest = rest.substr(next + 1);
-                i = positiveMin(rest.indexOf("'"), rest.indexOf("\""));
-            }
-        }
-    } catch (error)
-    {
-        logError("Ошибка выделения строки");
-    }
-    return false;
-}
-
 function execute(link: string)
 {
     vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
@@ -1290,6 +1260,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
 
         let ranges = getParentRanges(document, pure);
         if (ranges.length == 0) return new CurrentTag("XML");
+
         let parents = ranges.map(range =>
         {
             return new SimpleTag(document.getText(range));
@@ -1297,11 +1268,15 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
 
         /** Последний незакрытый тег */
         let current = parents.pop();
-        let tag = new CurrentTag(current);
-        tag.Parents = parents;
-        showCurrentInfo(tag);
+        let tag = new CurrentTag(current, parents);
 
-        //statusMessage(data.map(x => x.Name).join(" ->"));
+        // Заполняем поля
+        let lastRange = ranges.last();
+        tag.StartTagPosition = lastRange.start;
+        if (tag.OpenTagIsClosed) tag.Body = document.getText(new vscode.Range(lastRange.end, position));
+        if (!!parents && parents.length > 0) tag.LastParent = parents.last().Name;
+        tag.setPrevText(text);
+
         return tag;
     } catch (error)
     {
@@ -1339,7 +1314,7 @@ function getNextParent(document: vscode.TextDocument, text: string, fullText?: s
     if (res.Index < 0) return null;// открытых больше нет
     let rest = text.slice(res.Index); // от начала открывающегося
     let lastIndex = indexOfOpenedEnd(rest); // ищем его конец    
-    
+
     if (!fullText) fullText = text; // если первый раз
     let shift = fullText.length - text.length + res.Index; // сдвиг относительно начала документа
 
@@ -1353,7 +1328,7 @@ function getNextParent(document: vscode.TextDocument, text: string, fullText?: s
 
     // двигаем относительно начала тега
     lastIndex += shift;
-    
+
     // ищем закрывающий
     let closingTag = XML.findCloseTag("<", res.Result[1], ">", shift, fullText);
 
@@ -1381,7 +1356,7 @@ function indexOfOpenedEnd(text: string): number
     return res[0].length - 1;
 }
 
-    
+
 
 function getCurrentLineText(document: vscode.TextDocument, position: vscode.Position): string
 {
@@ -1721,7 +1696,7 @@ function showCurrentInfo(tag: CurrentTag): void
     {
         let lang = Language[tag.getLaguage()];
         if (lang == "CSharp") lang = "C#";
-        info = lang + ":\t" + tag.Parents.map(x => x.Name).concat([tag.Name]).join(" -> ");
+        info = lang + ":\t" + tag.Parents.map(x => x.Name).concat([tag.Id]).join(" -> ");
     }
     statusMessage(info);
 }
