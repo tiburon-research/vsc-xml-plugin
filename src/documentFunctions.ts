@@ -765,6 +765,8 @@ export function clearCSContents(text: string): string
  * 
  * @param before предыдущий текст или позиция (== его длина)
  * @returns `FindTagResult` или `null`, если тег не закрыт
+ * 
+ * Если selfClosed, то `Range = null`
 */
 export function findCloseTag(opBracket: string, tagName: string, clBracket: string, before: string | number, fullText: string): FindTagResult
 {

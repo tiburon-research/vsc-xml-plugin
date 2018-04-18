@@ -1292,10 +1292,8 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
 
         let data = ranges.map(range =>
         {
-            return document.getText(document.getWordRangeAtPosition(range.start.translate(0,2)));
-            //return new SimpleTag(document.getText(range));
+            return new SimpleTag(document.getText(range));
         })
-        console.log(data);
         let tag = new CurrentTag("xml");
         return tag;
     } catch (error)
@@ -1353,13 +1351,14 @@ function getNextParent(document: vscode.TextDocument, text: string, fullText?: s
     let closingTag = XML.findCloseTag("<", res.Result[1], ">", shift, fullText);
 
     if (!closingTag) // если не закрыт, то возвращаем его
-    {        
+    {
         let to = document.positionAt(lastIndex + 1);
         return new vscode.Range(from, to);
     }
 
     // продолжаем искать после закрывающего
-    rest = fullText.slice(closingTag.Range.To + 1);
+    if (closingTag.SelfClosed) rest = fullText.slice(lastIndex);
+    else rest = fullText.slice(closingTag.Range.To + 1);
     return getNextParent(document, rest, fullText);
 }
 
