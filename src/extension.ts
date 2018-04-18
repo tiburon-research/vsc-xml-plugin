@@ -130,9 +130,9 @@ export function activate(context: vscode.ExtensionContext)
         let originalPosition = editor.selection.start.translate(0, 1);
         let text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
         let tag = getCurrentTag(editor.document, originalPosition, text);
-        /* reload();
+        reload();
         insertAutoCloseTag(event, editor, tag, text);
-        insertSpecialSnippets(event, editor, text, tag); */
+        insertSpecialSnippets(event, editor, text, tag);
         showCurrentInfo(tag);
     });
 
