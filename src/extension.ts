@@ -633,15 +633,11 @@ function autoComplete()
                     let range = new vscode.Range(from_pos.translate(0, 1), position);
                     ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
 
-                    if (tag.LastParent == "Repeat")
+                    if (tag.LastParent && tag.LastParent.Name == "Repeat")
                     {
                         ci.detail = "Структура Answer в Repeat";
-                        // ищем Length/Range/List
-                        let txt = getPreviousText(document, position);
-                        txt = txt.substr(txt.lastIndexOf("<Repeat"));
-                        txt = txt.substr(0, txt.indexOf(">"));
-                        let attrs = getAttributes(txt);
-                        if (attrs.Contains("List"))
+                        let source = tag.LastParent.getRepeatSource();
+                        if (source == "List")
                             ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:@ID}\"><Text>${2:@Text}</Text></Answer>");
                         else
                             ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:@Itera}\"><Text>${2:@Itera}</Text></Answer>");
@@ -1274,7 +1270,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
         let lastRange = ranges.last();
         tag.StartTagPosition = lastRange.start;
         if (tag.OpenTagIsClosed) tag.Body = document.getText(new vscode.Range(lastRange.end, position));
-        if (!!parents && parents.length > 0) tag.LastParent = parents.last().Name;
+        if (!!parents && parents.length > 0) tag.LastParent = parents.last();
         tag.setPrevText(text);
 
         return tag;

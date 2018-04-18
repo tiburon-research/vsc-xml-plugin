@@ -568,7 +568,7 @@ export class CurrentTag
     /** Закрыт не тег, просто есть вторая скобка <Page...> */
     public OpenTagIsClosed = false;
     public Parents: Array<SimpleTag> = [];
-    public LastParent = "";
+    public LastParent: SimpleTag;
     protected Language: Language;
     /** Откуда начинается */
     public StartTagPosition: vscode.Position;
