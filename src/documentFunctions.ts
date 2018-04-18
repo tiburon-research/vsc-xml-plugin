@@ -681,6 +681,81 @@ export function originalXML(text: string, data: XMLencodeResult): string
 
 
 
+/* ОЧИСТКА */
+//#region 
+
+
+/** заменяет блок комментариев на пробелы */
+export function clearXMLComments(txt: string): string
+{
+    return replaceWithSpaces(txt, /<!--([\s\S]+?)-->/);
+}
+
+
+/** заменяет CDATA на пробелы */
+export function clearCDATA(txt: string): string
+{
+    return replaceWithSpaces(txt, /<!\[CDATA\[[\s\S]*\]\]>/);
+}
+
+/** Заменяет на пробелы */
+export function replaceWithSpaces(text: string, sub: RegExp): string
+{
+    let mt = text.match(new RegExp(sub, "g"));
+    let res = text;
+    let rep = "";
+    if (!mt) return text;
+    mt.forEach(element =>
+    {
+        rep = element.replace(/./g, ' ');
+        res = res.replace(element, rep);
+    });
+    return res;
+}
+
+
+/** Заменяет содержимое CS-тегов пробелами */
+export function clearCSContents(text: string): string
+{
+    let res = text;
+    let newText = text;
+    let rep = "";
+    let tCount = _AllowCodeTags.match(/\(/g).length;
+
+    // Очищаем полные теги
+    let reg = new RegExp("(<(" + _AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*?)(<\\/\\2\\s*>)");
+    
+    let resCS = reg.exec(newText);
+
+    while (!!resCS)
+    {
+        let open = resCS[1];
+        let inner = resCS[7 + tCount].replace(/./g, ' ');
+        let close = resCS[8 + tCount];
+        let repl = new RegExp(safeString(resCS[0]));
+        res = res.replace(repl, open + inner + close);
+        newText = newText.replace(repl, "");
+        resCS = reg.exec(newText);
+    }
+
+    // Очищаем незакрытый CS-тег в конце
+    let regEnd = new RegExp("(<(" + _AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?!([\\t ]+\\r?\\n)|(\\s+<\/\\2))[\\s\\S]*)$");
+    resCS = regEnd.exec(res);
+    if (!!resCS)
+    {
+        let open = resCS[1];
+        let inner = resCS[7 + tCount].replace(/./g, ' ');
+        res = res.replace(resCS[0], open + inner);
+    }    
+        
+    return res;
+}
+
+//#endregion
+
+
+
+
 /* доп. функции */
 //#region 
 
@@ -690,6 +765,8 @@ export function originalXML(text: string, data: XMLencodeResult): string
  * 
  * @param before предыдущий текст или позиция (== его длина)
  * @returns `FindTagResult` или `null`, если тег не закрыт
+ * 
+ * Если selfClosed, то `Range = null`
 */
 export function findCloseTag(opBracket: string, tagName: string, clBracket: string, before: string | number, fullText: string): FindTagResult
 {
@@ -698,6 +775,7 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
     try
     {
         let pos = typeof before == 'number' ? before : before.length;
+        pos++; // сдвигаем после <
         let textAfter = fullText.substr(pos);
         if (textAfter.match(sct))
         {
@@ -832,20 +910,6 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
     return null;
 }
 
-/** заменяет блок комментариев на пробелы */
-export function clearXMLComments(txt: string): string
-{
-    var mt = txt.match(/<!--([\s\S]+?)-->/g);
-    var res = txt;
-    var rep = "";
-    if (!mt) return txt;
-    mt.forEach(element =>
-    {
-        rep = element.replace(/./g, ' ');
-        res = res.replace(element, rep);
-    });
-    return res;
-}
 
 /** получает теги 0 вложенности */
 function get1LevelNodes(text: string): TagInfo[]
@@ -872,6 +936,37 @@ function get1LevelNodes(text: string): TagInfo[]
         logError("Ошибка при поиске вложенных тегов");
     }
     return tags;
+}
+
+
+export function inString(text: string): boolean
+{
+    /*
+    // выполняется очень долго
+    var regStr = /^((([^'"]*)(("[^"]*")|('[^']*'))*)*)$/;
+    return !text.match(regStr);
+    */
+    try
+    {
+        let rest = text.replace(/\\"/g, "  "); // убираем экранированные кавычки
+        let i = positiveMin(rest.indexOf("'"), rest.indexOf("\""));
+        while (rest.length > 0 && i !== null)
+        {
+            if (i !== null)
+            {
+                let ch = rest[i];
+                rest = rest.substr(i + 1);
+                let next = rest.indexOf(ch);
+                if (next < 0) return true;
+                rest = rest.substr(next + 1);
+                i = positiveMin(rest.indexOf("'"), rest.indexOf("\""));
+            }
+        }
+    } catch (error)
+    {
+        logError("Ошибка выделения строки");
+    }
+    return false;
 }
 
 //#endregion
