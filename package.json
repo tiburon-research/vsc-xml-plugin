@@ -110,6 +110,11 @@
         "category": "tib"
       },
       {
+        "command": "tib.template",
+        "title": "Открыть шаблон tibXML",
+        "category": "tib"
+      },
+      {
         "command": "tib.selectTag.closest",
         "title": "Выделить текущий тег",
         "category": "tib"
@@ -152,6 +157,10 @@
         "command": "tib.demo"
       },
       {
+        "key": "ctrl+alt+shift+n",
+        "command": "tib.template"
+      },
+      {
         "key": "ctrl+alt+p",
         "command": "tib.selectTag.closest"
       },
@@ -188,6 +197,11 @@
           "type": "string",
           "default": "T:\\=Tiburon_NEW\\!!!Проекты\\=OWN\\Deman\\Adaptive\\deman_adaptive.xml"
         },
+        "tib.templatePath": {
+          "description": "Путь к шаблону tibXML",
+          "type": "string",
+          "default": "G:\\Разное\\TiburonXMLHelper\\tibXMLTemplates\\"
+        },
         "tib.logPath": {
           "description": "Путь к папке с логами (лучше не менять)",
           "type": "string",
@@ -221,11 +235,10 @@
     "test": "npm run compile && node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
-    "@types/jquery": "^3.3.1",
-    "@types/jsdom": "^11.0.4",
     "@types/mocha": "^2.2.42",
     "@types/node": "^7.0.43",
     "typescript": "^2.5.3",
-    "vscode": "^1.1.5"
+    "vscode": "^1.1.14",
+    "@types/vscode": ""
   }
 }
