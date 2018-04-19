@@ -5,6 +5,7 @@ import * as AutoCompleteArray from './autoComplete';
 import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, Encoder, SimpleTag } from "./classes";
 import * as XML from './documentFunctions';
 import { SurveyList } from './surveyObjects';
+import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
 
@@ -458,6 +459,41 @@ function registerCommands()
                 });
             })
         });
+    });
+
+    //Создание tibXML шаблона
+    registerCommand('tib.template', () => 
+    {
+
+        let templateFolder = Settings.Item("templatePath");
+        if (!templateFolder)
+        {
+            showError("Невозможно получить доступ к папке");
+            return;
+        }
+
+        let tibXMLFiles = fs.readdirSync(templateFolder).filter( x => {
+            let state = fs.statSync(templateFolder + x);
+                return !state.isDirectory();
+        })
+        
+        vscode.window.showQuickPick(tibXMLFiles, { placeHolder: "Выберите шаблон" }).then(x =>
+            {
+                vscode.workspace.openTextDocument(templateFolder+x).then(doc =>
+                    { // открываем демку (в памяти)
+                        let txt = doc.getText();
+                        vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+                        { // создаём пустой tib-файл
+                            vscode.window.showTextDocument(newDoc).then(editor => 
+                            { // отображаем пустой
+                                editor.edit(builder => 
+                                { // заливаем в него демку
+                                    builder.insert(new vscode.Position(0, 0), txt)
+                                });
+                            });
+                        })
+                    });
+            });
     });
 
     // переключение Linq
