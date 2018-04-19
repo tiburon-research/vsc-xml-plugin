@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, Encoder, SimpleTag, HashItem, CurrentTagFields } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields } from "./classes";
 import * as XML from './documentFunctions';
 import { SurveyList } from './surveyObjects';
 import * as fs from 'fs';
@@ -69,42 +69,28 @@ var _useLinq = true;
 
 
 // кэширование
-class HashSet 
+class CacheSet 
 {
-    public Tag = new HashItem<CurrentTag>();
-    public Methods = new HashItem<TibMethods>();
-    public CurrentNodes = new HashItem<SurveyNodes>();
-
-    /** Можно ли пользоваться кэшем */
-    public Enabled = true;
-
-    /** Задаёт Enabled */
-    public Check(document: vscode.TextDocument, position: vscode.Position, text: string): void
+    public PreviousTextSafe = new CacheItem<string>();
+    public Tag = new CacheItem<CurrentTag>();
+    public Methods = new CacheItem<TibMethods>();
+    public CurrentNodes = new CacheItem<SurveyNodes>();
+    
+    
+    /** Можно ли пользоваться кэшем CurrentTag */
+    public TagEnabled(document: vscode.TextDocument, position: vscode.Position, text: string): boolean
     {
-        // проверяем включён ли в настройках
-        if (Settings.Contains("enableCache") && !Settings.Item("enableCache"))
-        {
-            this.Enabled = false;
-            return;
-        }
+        // проверяем задан ли тег
+        if (!this.Active() || !this.Tag.IsSet()) return false;
 
-        // проверяем актуальность
-        if (!this.Tag.IsSet())
-        {
-            this.Enabled = false;
-            return;
-        }
         let oldTag = this.Tag.Get();
-        let old = CurrentTag.PrepareXML(oldTag.PreviousText);
-        let current = CurrentTag.PrepareXML(text);
-        
-        // проверять (пока) будем условно (зато быстро):
+        let current = this.PreviousTextSafe.Get();
         let curInd = current.findLast("<\\w+");
-        if (curInd.Index != oldTag.StartIndex)
-        {
-            this.Enabled = false;
-            return;
-        }
+
+        // Если  изменено, то проверять (пока) будем условно (зато быстро):
+        if (curInd.Index != oldTag.StartIndex) return false;
+
+        // Если ок, тогда надо обновить тег
         let rest = text.slice(curInd.Index);
         let currentTagRange = getNextParent(document, rest, text);
         let currentTag = new SimpleTag(document, currentTagRange);
@@ -113,12 +99,19 @@ class HashSet
         oldTag.Update(currentTag, {
             Body: currentTag.isClosed() ? document.getText(new vscode.Range(currentTagRange.end, position)) : undefined,
         });
-
-        this.Enabled = true;
+        return true;
     }
-};
+
+    /** Можно ли пользоваться кэшем */
+    public Active(): boolean
+    {
+        return !Settings.Contains("enableCache") || !!Settings.Item("enableCache");
+    }
+
+}
+
 /** Объект для кэша объектов */
-var Hash = new HashSet();
+var Cache = new CacheSet();
 
 
 //#endregion
@@ -183,10 +176,10 @@ export function activate(context: vscode.ExtensionContext)
         if (inProcess || !editor || editor.document.languageId != "tib") return;
         let originalPosition = editor.selection.start.translate(0, 1);
         let text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
+        // кешируем PreviosTextSafe        
+        if (Cache.Active()) Cache.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
         let tag = getCurrentTag(editor.document, originalPosition, text);
         reload();
-        Hash.Check(editor.document, editor.selection.active, text);
-        if (!Hash.Enabled) Hash.Tag.Set(tag);
         insertAutoCloseTag(event, editor, tag, text);
         insertSpecialSnippets(event, editor, text, tag);
         showCurrentInfo(tag);
@@ -1332,14 +1325,16 @@ function execute(link: string)
     Работаем с текстом, очищенным от C# и комментариев.
     В результате получаем index/position/range в документе, по которым потом можно получить оригинал
 */
-function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt: string = ""): CurrentTag
+function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string): CurrentTag
 {
-    // TODO: продумать кэширование
     try
     {
         let text = txt || getPreviousText(document, position);
+        
+        // сначала пытаемся вытащить из кэша
+        if (Cache.TagEnabled(document, position, text)) return Cache.Tag.Get();
 
-        let pure = CurrentTag.PrepareXML(text);
+        let pure = Cache.Active() ? Cache.PreviousTextSafe.Get() : CurrentTag.PrepareXML(text);
 
         let ranges = getParentRanges(document, pure);
         if (ranges.length == 0) return new CurrentTag("XML");
@@ -1362,6 +1357,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
             Body: tag.OpenTagIsClosed ? document.getText(new vscode.Range(lastRange.end, position)) : undefined,
             LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
         });
+        Cache.Tag.Set(tag);
         return tag;
     } catch (error)
     {

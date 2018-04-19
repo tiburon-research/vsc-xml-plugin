@@ -1209,7 +1209,7 @@ export class TelegramBot
 
 
 
-export class HashItem<T>
+export class CacheItem<T>
 {
     private Value: T;
 

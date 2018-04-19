@@ -688,7 +688,7 @@ export function originalXML(text: string, data: XMLencodeResult): string
 /** заменяет блок комментариев на пробелы */
 export function clearXMLComments(txt: string): string
 {
-    return replaceWithSpaces(txt, /<!--([\s\S]+?)-->/);
+    return replaceWithSpaces(txt, /<!--[\s\S]*-->/);
 }
 
 
