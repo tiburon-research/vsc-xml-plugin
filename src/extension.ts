@@ -1259,7 +1259,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
 
         let parents = ranges.map(range =>
         {
-            return new SimpleTag(document.getText(range));
+            return new SimpleTag(document, range);
         })
 
         /** Последний незакрытый тег */

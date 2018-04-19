@@ -516,8 +516,10 @@ export class InlineAttribute
  */
 export class SimpleTag
 {
-    constructor(raw: string)
+    constructor(documrnt: vscode.TextDocument, range: vscode.Range)
     {
+        let raw = documrnt.getText(range);
+        this.StartPosition = range.start.translate(0, raw.indexOf("<"));
         this.Raw = raw;
         let res = raw.match(/<(\w+)(\W|$)/);
         if (!!res) this.Name = res[1];
@@ -548,8 +550,11 @@ export class SimpleTag
     }
 
     public readonly Name: string;
-    public readonly Raw: string; // хранение исходных данных
     protected Attrs: KeyedCollection<string>;
+    /** Позиция открывающего тега */
+    public StartPosition: vscode.Position;
+
+    private readonly Raw: string; // хранение исходных данных
 }
 
 
