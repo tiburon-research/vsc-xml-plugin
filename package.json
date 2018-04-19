@@ -204,6 +204,11 @@
           "default": {
             "braceStyle": "expand"
           }
+        },
+        "tib.enableCache": {
+          "description": "Кэширование данных. Полезно для больших документов.",
+          "type": "boolean",
+          "default": true
         }
       }
     }

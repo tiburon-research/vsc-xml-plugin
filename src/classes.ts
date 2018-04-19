@@ -530,7 +530,7 @@ export class SimpleTag
         if (!!this.Attrs) return this.Attrs; // кеш :)
         let attrs = new KeyedCollection<string>();
         let res = this.Raw.match(/^\s*<(\w+)(\s+(\s*\w+=(("[^"]*")|('[^']*')))*)?\s*>?/);
-        if (!!res && !!res[2]) attrs = CurrentTag.getAttributesArray(res[2]);
+        if (!!res && !!res[2]) attrs = CurrentTag.GetAttributesArray(res[2]);
         this.Attrs = attrs;
         return attrs;
     }
@@ -557,6 +557,17 @@ export class SimpleTag
     private readonly Raw: string; // хранение исходных данных
 }
 
+/** Поля для CurrentTag */
+export interface CurrentTagFields
+{
+    StartPosition?: vscode.Position;
+    StartIndex?: number;
+    OpenTagIsClosed?: boolean;
+    LastParent?: SimpleTag;
+    PreviousText?: string;
+    Body?: string;
+}
+
 
 export class CurrentTag
 {
@@ -576,35 +587,30 @@ export class CurrentTag
     public LastParent: SimpleTag;
     protected Language: Language;
     /** Откуда начинается */
-    public StartTagPosition: vscode.Position;
+    public StartPosition: vscode.Position;
+    public StartIndex: number;
+    /** Текст от начала документа до Position */
+    public PreviousText = "";
 
 
     // -------------------- ТЕХНИЧЕСКОЕ
 
-    /** Весь предыдущий текст */
-    private PreviousText = "";
     /** Последний массив вхождений из рекурсивного поиска */
     private LastMatch: RegExpMatchArray = null;
 
-    /** добавляет атрибуты */
-    private setAttributes(attrs: KeyedCollection<string>)
+    /** Задаёт атрибуты */
+    private SetAttributes(attrs: KeyedCollection<string>)
     {
+        this.Attributes = [];
         let parent = this;
         attrs.forEach(function (key, val)
         {
             parent.Attributes.push(new InlineAttribute(key, val));
         });
     }
-    /** Задаёт текст от начала документа до Position */
-    public setPrevText(text: string)
-    {
-        this.PreviousText = text;
-    }
 
-
-    // -------------------- МЕТОДЫ
-
-    constructor(tag: string | SimpleTag, parents?: SimpleTag[])
+    /** Обновление тега */
+    private _update(tag: string | SimpleTag)
     {
         if (typeof tag == "string")
         {
@@ -615,26 +621,46 @@ export class CurrentTag
         {
             this.Name = tag.Name;
             this.Id = tag.Name;
-            this.setAttributes(tag.getAttributes());
+            this.SetAttributes(tag.getAttributes());
             this.OpenTagIsClosed = tag.isClosed();
 
-            if (parents)
-            {
-                this.Parents = parents;
-                // Id для Item
-                if (parents && this.Name == "Item") this.Id = parents.last().Name + "Item";
-            }
             // Id для Repeat
             if (this.Name == "Repeat")
             {
                 let source = tag.getRepeatSource();
                 if (!!source) this.Id == source + "Repeat";
             }
+        } 
+    }
+
+
+
+    // -------------------- МЕТОДЫ
+
+    constructor(tag: string | SimpleTag, parents?: SimpleTag[])
+    {
+        this._update(tag);
+        if (parents)
+        {
+            this.Parents = parents;
+            // Id для Item
+            if (parents && this.Name == "Item") this.Id = parents.last().Name + "Item";
         }
     }
 
+    /** Подготавливает TibXML для поиска теги */
+    public static PrepareXML(text: string): string
+    {
+        // замазываем комментарии
+        let pure = XML.clearXMLComments(text);
+        // удаление закрытых _AllowCodeTag из остатка кода (чтобы не искать <int>)
+        pure = XML.clearCSContents(pure);
+
+        return pure;
+    }
+
     /** возвращает массив имён атрибутов */
-    public attributeNames()
+    public AttributeNames()
     {
         return this.Attributes.map(function (e)
         {
@@ -643,7 +669,7 @@ export class CurrentTag
     }
 
     /** возвращает коллекцию атрибутов */
-    public static getAttributesArray(str: string): KeyedCollection<string>
+    public static GetAttributesArray(str: string): KeyedCollection<string>
     {
         let mt = str.match(/\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g);
         let res: KeyedCollection<string> = new KeyedCollection<string>();
@@ -659,7 +685,7 @@ export class CurrentTag
     }
 
     /** Язык содержимого */
-    public getLaguage(): Language
+    public GetLaguage(): Language
     {
         if (this.Language) return this.Language; // так быстрее
         let tagLanguage: Language;
@@ -716,7 +742,7 @@ export class CurrentTag
     /** В строке внутри C# */
     public InCSString(): boolean
     {
-        if (this.getLaguage() == Language.CSharp)
+        if (this.GetLaguage() == Language.CSharp)
         {
             if (this.CSSingle())
             {
@@ -731,6 +757,24 @@ export class CurrentTag
             }
             else return this.InString();
         }
+    }
+
+
+    /** Обновляет поля, если новые не undefined */
+    public SetFields(fields: CurrentTagFields)
+    {
+        for (let key in fields)
+        {
+            if (typeof fields[key] != 'undefined') this[key] = fields[key];
+        }    
+    }
+
+
+    /** Обновляет только текущий тег */
+    public Update(tag: string | SimpleTag, fields: CurrentTagFields)
+    {
+        this._update(tag);
+        this.SetFields(fields);
     }
 
 }
@@ -1164,6 +1208,33 @@ export class TelegramBot
 }
 
 
+
+export class HashItem<T>
+{
+    private Value: T;
+
+    public Set(item: T)
+    {
+        this.Value = item;
+    }
+
+    public Get(): T
+    {
+        return this.Value;
+    }
+
+    public Remove()
+    {
+        this.Value = undefined;
+    }
+
+    public IsSet()
+    {
+        return typeof this.Value !== 'undefined';
+    }
+}
+
+
 //#endregion
 
 
@@ -1348,6 +1419,8 @@ declare global
     {
         /** Продвинутый indexOf */
         find(search: string | RegExp): SearchResult;
+        /** Продвинутый lastIndexOf string=Regexp */
+        findLast(search: string): SearchResult;
     }
 
     interface Array<T>
@@ -1361,6 +1434,14 @@ String.prototype.find = function (search: string | RegExp): SearchResult
 {
     let res = this.match(search);
     let ind = !!res ? this.indexOf(res[0]) : -1;
+    return { Index: ind, Result: res };
+}
+
+String.prototype.findLast = function (search: string): SearchResult
+{
+    let reg = this.match(new RegExp(search, "g"));
+    let res = !!reg ? reg[reg.length - 1].match(search) : null;
+    let ind = !!reg ? this.lastIndexOf(res) : -1;
     return { Index: ind, Result: res };
 }
 
