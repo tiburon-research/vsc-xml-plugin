@@ -7,6 +7,11 @@ import { languages } from "vscode";
 import { logError, CSFormatter } from "./extension";
 
 
+export const _RegExpPatterns = {
+    CDATA: /<!\[CDATA\[([\S\s]*?)\]\]>/,
+    XMLComment: /<!--([\S\s]*?)-->/
+}
+
 // форматирование, проверка и другие операции с текстом документа
 
 
@@ -630,12 +635,12 @@ export function encodeCS(text: string, delimiter: string): EncodeResult
 /** кодирует CDATA в `text` */
 export function encodeCDATA(text: string, delimiter: string): EncodeResult
 {
-    return encodeElements(text, /<!\[CDATA\[([\S\s]+?)\]\]>/, delimiter);
+    return encodeElements(text, _RegExpPatterns.CDATA, delimiter);
 }
 
 export function encodeXMLXomments(text: string, delimiter: string): EncodeResult
 {
-    return encodeElements(text, /<!--[\S\s]*-->/, delimiter);
+    return encodeElements(text, _RegExpPatterns.XMLComment, delimiter);
 }
 
 // получаем разделитель, для временной замены вставок
@@ -688,14 +693,14 @@ export function originalXML(text: string, data: XMLencodeResult): string
 /** заменяет блок комментариев на пробелы */
 export function clearXMLComments(txt: string): string
 {
-    return replaceWithSpaces(txt, /<!--[\s\S]*-->/);
+    return replaceWithSpaces(txt, _RegExpPatterns.XMLComment);
 }
 
 
 /** заменяет CDATA на пробелы */
 export function clearCDATA(txt: string): string
 {
-    return replaceWithSpaces(txt, /<!\[CDATA\[[\s\S]*\]\]>/);
+    return replaceWithSpaces(txt, _RegExpPatterns.XMLComment);
 }
 
 /** Заменяет на пробелы */
