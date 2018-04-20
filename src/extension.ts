@@ -558,13 +558,11 @@ function registerCommands()
         let editor = vscode.window.activeTextEditor;
         let range;
         let indent;
-        let tag: CurrentTag;
         // либо весь документ
         if (editor.selection.start.isEqual(editor.selection.end))
         {
             range = getFullRange(editor.document);
             indent = 0;
-            tag = getCurrentTag(editor.document, editor.selection.start);
         }
         else
         {
@@ -572,8 +570,9 @@ function registerCommands()
             let sel = selectLines(editor.document, editor.selection);
             editor.selection = sel;
             range = sel;
-            tag = getCurrentTag(editor.document, sel.start);
-            indent = tag.Parents.length + 1;
+            let tag = getCurrentTag(editor.document, sel.start);
+            if (!tag) indent = 0;
+            else indent = tag.Parents.length + 1;
         }
         let text = editor.document.getText(range);
         // нужно ли определять язык (выделение может быть какое угодно)
@@ -602,6 +601,7 @@ function higlight()
         {
             var text = getPreviousText(document, position);
             var tag = getCurrentTag(document, position, text);
+            if (!tag) return;
             var curRange = document.getWordRangeAtPosition(position);
             var word = document.getText(curRange);
             if (tag.GetLaguage() == Language.CSharp && word != 'c#') return; // такой костыль потому что при нахождении на [/c#] хз что там дальше и tag.CSMode == true
@@ -781,7 +781,7 @@ function autoComplete()
         {
             let completionItems = [];
             let tag = getCurrentTag(document, position);
-            if (tag.GetLaguage() != Language.CSharp) return;
+            if (!tag || tag.GetLaguage() != Language.CSharp) return;
 
             let curLine = getPreviousText(document, position, true);
             let mt = curLine.match(/(#|\$)?\w+$/);
@@ -847,7 +847,7 @@ function autoComplete()
         {
             let completionItems = [];
             let tag = getCurrentTag(document, position);
-            if (tag.GetLaguage() == Language.CSharp && !tag.InCSString() && !tag.CSSingle())
+            if (!!tag && tag.GetLaguage() == Language.CSharp && !tag.InCSString() && !tag.CSSingle())
             {
                 let lastLine = getPreviousText(document, position, true);
                 let ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Property").concat(TibAutoCompleteList.Item("Method"), TibAutoCompleteList.Item("EnumMember"));
@@ -933,7 +933,7 @@ function helper()
         provideSignatureHelp(document, position, token)
         {
             let tag = getCurrentTag(document, position);
-            if (tag.GetLaguage() != Language.CSharp) return;
+            if (!tag || tag.GetLaguage() != Language.CSharp) return;
             let sign = new vscode.SignatureHelp();
             let lastLine = getPreviousText(document, position, true);
             //пропускаем объявления
@@ -975,7 +975,6 @@ function hoverDocs()
             let range = document.getWordRangeAtPosition(position);
             if (!range) return;
             let tag = getCurrentTag(document, range.end);
-            if (!tag) console.log(document.getText(range))
             if (!tag) return;
             showCurrentInfo(tag);
             if (tag.GetLaguage() != Language.CSharp) return;
@@ -1018,7 +1017,7 @@ function definitions()
             var res: vscode.Location;
             try
             {
-                if (tag.GetLaguage() == Language.CSharp && !tag.InCSString())
+                if (!!tag && tag.GetLaguage() == Language.CSharp && !tag.InCSString())
                 {
                     var word = document.getText(document.getWordRangeAtPosition(position));
                     if (Methods.Contains(word)) res = Methods.Item(word).GetLocation();
@@ -1562,6 +1561,11 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
     let text = document.getText(selection);
     let tagFrom = getCurrentTag(document, selection.start);
     let tagTo = getCurrentTag(document, selection.end);
+    if (!tagFrom || !tagTo)
+    {
+        logError("Ошибка получения границ выделения");
+        return;
+    }    
     let langFrom = tagFrom.GetLaguage();
     let langTo = tagTo.GetLaguage();
     if (langFrom != langTo)
@@ -1755,7 +1759,8 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
         try
         {
             let tag = getCurrentTag(editor.document, editor.selection.start);
-            res = await XML.format(res, Language.XML, Settings, "\t", tag.Parents.length);
+            let ind = !!tag ? tag.Parents.length : 0;
+            res = await XML.format(res, Language.XML, Settings, "\t", ind);
         }
         catch (error)
         {
