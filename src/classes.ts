@@ -1229,6 +1229,12 @@ export class CacheItem<T>
     {
         return typeof this.Value !== 'undefined';
     }
+
+    /** Проверка на соответствие по `checker` */
+    public SelectIf(checker: (item: T) => boolean): T
+    {
+        return checker(this.Value) ? this.Value : undefined;
+    }
 }
 
 

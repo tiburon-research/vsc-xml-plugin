@@ -75,13 +75,13 @@ class CacheSet
     public Tag = new CacheItem<CurrentTag>();
     public Methods = new CacheItem<TibMethods>();
     public CurrentNodes = new CacheItem<SurveyNodes>();
-    
-    
+
+
     /** Можно ли пользоваться кэшем CurrentTag */
     public TagEnabled(document: vscode.TextDocument, position: vscode.Position, text: string): boolean
     {
         // проверяем задан ли тег
-        if (!this.Active() || !this.Tag.IsSet()) return false;
+        if (!this.Active() || !this.Tag.IsSet() || !this.PreviousTextSafe.IsSet()) return false;
 
         let oldTag = this.Tag.Get();
         let current = this.PreviousTextSafe.Get();
@@ -520,28 +520,29 @@ function registerCommands()
             return;
         }
 
-        let tibXMLFiles = fs.readdirSync(templateFolder).filter( x => {
+        let tibXMLFiles = fs.readdirSync(templateFolder).filter(x =>
+        {
             let state = fs.statSync(templateFolder + x);
-                return !state.isDirectory();
+            return !state.isDirectory();
         })
-        
+
         vscode.window.showQuickPick(tibXMLFiles, { placeHolder: "Выберите шаблон" }).then(x =>
-            {
-                vscode.workspace.openTextDocument(templateFolder+x).then(doc =>
-                    { // открываем демку (в памяти)
-                        let txt = doc.getText();
-                        vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
-                        { // создаём пустой tib-файл
-                            vscode.window.showTextDocument(newDoc).then(editor => 
-                            { // отображаем пустой
-                                editor.edit(builder => 
-                                { // заливаем в него демку
-                                    builder.insert(new vscode.Position(0, 0), txt)
-                                });
-                            });
-                        })
+        {
+            vscode.workspace.openTextDocument(templateFolder + x).then(doc =>
+            { // открываем демку (в памяти)
+                let txt = doc.getText();
+                vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+                { // создаём пустой tib-файл
+                    vscode.window.showTextDocument(newDoc).then(editor => 
+                    { // отображаем пустой
+                        editor.edit(builder => 
+                        { // заливаем в него демку
+                            builder.insert(new vscode.Position(0, 0), txt)
+                        });
                     });
+                })
             });
+        });
     });
 
     // переключение Linq
@@ -972,7 +973,10 @@ function hoverDocs()
         {
             let res = [];
             let range = document.getWordRangeAtPosition(position);
+            if (!range) return;
             let tag = getCurrentTag(document, range.end);
+            if (!tag) console.log(document.getText(range))
+            if (!tag) return;
             showCurrentInfo(tag);
             if (tag.GetLaguage() != Language.CSharp) return;
             let text = document.getText(range);
@@ -1330,11 +1334,15 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
     try
     {
         let text = txt || getPreviousText(document, position);
-        
+        let pure: string;
         // сначала пытаемся вытащить из кэша
-        if (Cache.TagEnabled(document, position, text)) return Cache.Tag.Get();
-
-        let pure = Cache.Active() ? Cache.PreviousTextSafe.Get() : CurrentTag.PrepareXML(text);
+        if (Cache.Active()) 
+        {
+            if (Cache.TagEnabled(document, position, text)) return Cache.Tag.Get();
+            // проверяем длину PreviousTextSafe в кэше (актуально для hover)
+            pure = Cache.PreviousTextSafe.SelectIf(x => !!x && x.length == document.offsetAt(position));
+            if (pure === undefined) pure = CurrentTag.PrepareXML(text);
+        }
 
         let ranges = getParentRanges(document, pure);
         if (ranges.length == 0) return new CurrentTag("XML");
@@ -1374,10 +1382,11 @@ function getParentRanges(document: vscode.TextDocument, prevText: string): vscod
     let res: vscode.Range[] = [];
     let next = getNextParent(document, prevText);
     let i = 0;
+    let rest: string;
     while (!!next && i < 50)
     {
         res.push(next);
-        let rest = prevText.slice(document.offsetAt(next.end) + 1);
+        rest = prevText.slice(document.offsetAt(next.end) + 1);
         next = getNextParent(document, rest, prevText);
     }
     if (i >= 50) logError("Найдено слишком много вложенных тегов");
@@ -1403,7 +1412,7 @@ function getNextParent(document: vscode.TextDocument, text: string, fullText?: s
 
     if (lastIndex < 0) // если открывающий тег неполный, то считаем, что курсор сейчас в нём
     {
-        let to = document.positionAt(fullText.length - 1).translate(0,1);
+        let to = document.positionAt(fullText.length - 1).translate(0, 1);
         return new vscode.Range(from, to);
     }
 
@@ -1455,6 +1464,7 @@ function getCurrentLineText(document: vscode.TextDocument, position: vscode.Posi
 
 }
 
+/** Получает текст от начала документа до `position` */
 function getPreviousText(document: vscode.TextDocument, position: vscode.Position, lineOnly: boolean = false): string
 {
     try
