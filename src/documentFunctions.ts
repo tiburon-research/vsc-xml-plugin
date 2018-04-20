@@ -28,7 +28,7 @@ export class FormatResult
 // выбираем функцию по Language
 function LanguageFunction(language: Language)//: (text: string, tab?: string, indent?: number) => Promise<FormatResult>
 {
-    var func: (text: string, tab?: string, indent?: number) => Promise<FormatResult>;
+    let func: (text: string, tab?: string, indent?: number) => Promise<FormatResult>;
 
     switch (language)
     {
@@ -282,7 +282,7 @@ async function formatCSS(text: string, tab: string = "\t", indent: number = 0): 
     {
         er = "Ошибка форматирования CSS";
     }
-    var ind = tab.repeat(indent);
+    let ind = tab.repeat(indent);
     newText = ind + newText.replace(/\n/g, "\n" + ind);
     return { Result: newText, Error: er };
 }
@@ -586,7 +586,7 @@ function getElements(text: string, elem: RegExp): KeyedCollection<string>
 function replaceElements(text: string, elements: KeyedCollection<string>, delimiter: string): string
 {
     if (!delimiter || elements.Count() == 0) return text;
-    var newText = text;
+    let newText = text;
     elements.forEach(function (i, e)
     {
         newText = newText.replace(new RegExp(safeString(e), "g"), delimiter + i + delimiter);
@@ -599,7 +599,7 @@ function replaceElements(text: string, elements: KeyedCollection<string>, delimi
 function getElementsBack(text: string, encodeResult: XMLencodeResult): string
 {
     if (!encodeResult.Delimiter || encodeResult.EncodedCollection.Count() == 0) return text;
-    var newText = text;
+    let newText = text;
     encodeResult.EncodedCollection.forEach(function (i, e)
     {
         newText = newText.replace(new RegExp(safeString(encodeResult.Delimiter + i + encodeResult.Delimiter), "g"), e);
@@ -943,7 +943,7 @@ export function inString(text: string): boolean
 {
     /*
     // выполняется очень долго
-    var regStr = /^((([^'"]*)(("[^"]*")|('[^']*'))*)*)$/;
+    let regStr = /^((([^'"]*)(("[^"]*")|('[^']*'))*)*)$/;
     return !text.match(regStr);
     */
     try

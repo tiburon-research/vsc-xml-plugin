@@ -192,7 +192,7 @@ export class KeyedCollection<T>
 
     public Remove(key: string): T
     {
-        var val = this.items[key];
+        let val = this.items[key];
         delete this.items[key];
         this.count--;
         return val;
@@ -206,9 +206,9 @@ export class KeyedCollection<T>
     /** массив ключей */
     public Keys(): string[]
     {
-        var keySet: string[] = [];
+        let keySet: string[] = [];
 
-        for (var prop in this.items)
+        for (let prop in this.items)
         {
             if (this.items.hasOwnProperty(prop))
             {
@@ -222,9 +222,9 @@ export class KeyedCollection<T>
     /** массив значений */
     public Values(): T[]
     {
-        var values: T[] = [];
+        let values: T[] = [];
 
-        for (var prop in this.items)
+        for (let prop in this.items)
         {
             if (this.items.hasOwnProperty(prop))
             {
@@ -244,7 +244,7 @@ export class KeyedCollection<T>
     /** обход элементов */
     public forEach(callback: (key: string, val: T) => any)
     {
-        for (var key in this.items)
+        for (let key in this.items)
             callback(key, this.Item(key));
     }
 
@@ -365,10 +365,10 @@ export class TibAttribute
 
     ToCompletionItem(callback: (query: string) => string[]): vscode.CompletionItem
     {
-        var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Property);
-        var snip = this.Name + '="';
-        var valAr: string[];
-        var auto = this.AutoValue();
+        let item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Property);
+        let snip = this.Name + '="';
+        let valAr: string[];
+        let auto = this.AutoValue();
         if (!auto)
         {
             valAr = this.ValueCompletitions(callback);
@@ -377,10 +377,10 @@ export class TibAttribute
         }
         else snip += auto;
         snip += '"';
-        var res = new vscode.SnippetString(snip);
+        let res = new vscode.SnippetString(snip);
         item.insertText = res;
         item.detail = (this.Detail ? this.Detail : this.Name) + (this.Type ? (" (" + this.Type + ")") : "");
-        var doc = "";
+        let doc = "";
         if (this.Default) doc += "Значение по умолчанию: `" + this.Default + "`";
         doc += "\nПоддержка кодовых вставок: `" + (this.AllowCode ? "да" : "нет") + "`";
         item.documentation = new vscode.MarkdownString(doc);
@@ -433,9 +433,9 @@ export class TibMethod
 
     ToCompletionItem()
     {
-        var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Function);
+        let item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Function);
         if (this.IsFunction) item.insertText = new vscode.SnippetString(this.Name + "($1)");
-        var mds = new vscode.MarkdownString();
+        let mds = new vscode.MarkdownString();
         mds.value = this.Signature;
         if (this.Type) item.detail = this.Type;
         item.documentation = mds;
@@ -674,7 +674,7 @@ export class CurrentTag
         {
             mt.forEach(element =>
             {
-                var parse = element.match(/\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/);
+                let parse = element.match(/\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/);
                 if (parse) res.AddPair(parse[1], parse[2].replace(/^('|")(.*)('|")$/, "$2"));
             });
         }
@@ -821,8 +821,8 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 
     GetItem(id: string, type?: string): SurveyNode
     {
-        var nodes = this.Item(type);
-        var res: SurveyNode;
+        let nodes = this.Item(type);
+        let res: SurveyNode;
         for (let i = 0; i < nodes.length; i++)
         {
             if (nodes[i].Id == id)
@@ -846,10 +846,10 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 
     CompletitionItems(name: string, closeQt: string = ""): vscode.CompletionItem[]
     {
-        var res: vscode.CompletionItem[] = [];
+        let res: vscode.CompletionItem[] = [];
         this.Item(name).forEach(element =>
         {
-            var ci = new vscode.CompletionItem(element.Id, vscode.CompletionItemKind.Enum);
+            let ci = new vscode.CompletionItem(element.Id, vscode.CompletionItemKind.Enum);
             ci.detail = name;
             ci.insertText = new vscode.SnippetString(element.Id + closeQt);
             res.push(ci);
@@ -869,7 +869,7 @@ export class ExtensionSettings extends KeyedCollection<any>
 
     update(config: vscode.WorkspaceConfiguration): void
     {
-        for (var key in config) this.AddPair(key.toString(), config[key]);
+        for (let key in config) this.AddPair(key.toString(), config[key]);
     }
 }
 
@@ -900,7 +900,7 @@ export class TagInfo
 {
     constructor(text: string, offset: number = 0)
     {
-        var mt = text.match(/(\n|^)[\t ]*<(\w+)/);
+        let mt = text.match(/(\n|^)[\t ]*<(\w+)/);
         if (!!mt)
         {
             this.Name = mt[2];
@@ -917,7 +917,7 @@ export class TagInfo
             let newLine = text.indexOf("\n", to - 1);
             this.Multiline = newLine > -1;
             let openTag = text.slice(from, to);
-            var clt = XML.findCloseTag("<", this.Name, ">", before, text);
+            let clt = XML.findCloseTag("<", this.Name, ">", before, text);
             this.SelfClosed = !!clt && clt.SelfClosed;
             if (!!clt && !this.SelfClosed)
             {
@@ -952,7 +952,7 @@ export class TagInfo
 
     public static getTagLanguage(tagName: string): Language
     {
-        var res = Language.XML;
+        let res = Language.XML;
 
         if (tagName.match(new RegExp("^(" + _AllowCodeTags + ")$"))) return Language.CSharp;
 
