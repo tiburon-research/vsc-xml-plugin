@@ -17,7 +17,7 @@ import { bot, $ } from './extension'
 export const _pack: ("debug" | "release") = "debug";
 
 
-export enum Language { XML, CSharp, CSS, JS, PlainTetx };
+export enum Language { XML, CSharp, CSS, JS, PlainTetx, Inline };
 
 
 /** Работают правильно, но медленно */
@@ -27,7 +27,8 @@ export const RegExpPatterns = {
     /** RegExp для XML тегов, которые могут содержать C# */
     AllowCodeTags: "(Filter)|(Redirect)|(Validate)|(Methods)",
     /** RegExp для HTML тегов, которые не нужно закрывать */
-    SelfClosedTags: "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)"
+    SelfClosedTags: "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)",
+    InlineSpecial: "(repeat)|(place)"
 }
 
 
@@ -698,6 +699,12 @@ export class CurrentTag
     {
         if (this.Language) return this.Language; // так быстрее
         let tagLanguage: Language;
+        // специальные $-вставки
+        if (this.IsSpecial())
+        {
+            tagLanguage = Language.Inline;
+        }
+        else
         // по-любому C#
         if (this.CSSingle() || this.CSInline())
         {
@@ -737,7 +744,7 @@ export class CurrentTag
     /** $Method */
     public CSSingle()
     {
-        return !!this.PreviousText && !!this.PreviousText.match(/\$\w+$/);
+        return !!this.PreviousText && !!this.PreviousText.match("\\$((?!" + RegExpPatterns.InlineSpecial + ")(\\w+))$");
     }
 
 
@@ -745,6 +752,12 @@ export class CurrentTag
     public InString()
     {
         return !!this.Body && XML.inString(this.Body);
+    }
+
+    /** == Language.Inline. Но это только когда написано полностью */
+    public IsSpecial()
+    {
+        return !!this.PreviousText && !!this.PreviousText.match("\\$(" + RegExpPatterns.InlineSpecial + ")$");
     }
 
 
