@@ -1750,13 +1750,14 @@ function isMethodDefinition(text: string): boolean
 /** выводит в строку состояния информацию о текущем теге */
 function showCurrentInfo(tag: CurrentTag): void
 {
+    if (!Settings.Item("showTagInfo")) return;
     let info = "";
     if (!tag) info = "Где я?";
     else
     {
         let lang = Language[tag.GetLaguage()];
         if (lang == "CSharp") lang = "C#";
-        info = lang + ":\t" + tag.Parents.map(x => x.Name).concat([tag.Id]).join(" -> ");
+        info = lang + ":\t" + tag.Parents.map(x => x.Name).concat([tag.Name]).join(" -> ");
     }
     statusMessage(info);
 }

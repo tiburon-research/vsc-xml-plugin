@@ -223,8 +223,14 @@
           "description": "Кэширование данных. Немного ускоряет работу расширения с большими документами",
           "type": "boolean",
           "default": false
+        },
+        "tib.showTagInfo": {
+          "description": "Показывать информацию о текущем теге",
+          "type": "boolean",
+          "default": true
         }
       }
+      
     }
   },
   "scripts": {
