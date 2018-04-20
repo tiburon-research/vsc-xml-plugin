@@ -1363,7 +1363,7 @@ function getParentRanges(document: vscode.TextDocument, prevText: string): vscod
 */
 function getNextParent(document: vscode.TextDocument, text: string, fullText?: string): vscode.Range
 {
-    let res = text.find(/<((?!xml)(\w+))\W/); // находим открывающийся
+    let res = text.find(/<((?!xml)(\w+))/); // находим открывающийся
     if (res.Index < 0) return null;// открытых больше нет
     let rest = text.slice(res.Index); // от начала открывающегося
     let lastIndex = indexOfOpenedEnd(rest); // ищем его конец    
