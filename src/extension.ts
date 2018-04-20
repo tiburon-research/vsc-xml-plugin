@@ -1246,7 +1246,7 @@ function updateNodesIds(editor: vscode.TextEditor, names?: string[]): void
 
 
 
-function safeValsEval(query): string[]
+function safeValsEval(query: string): string[]
 {
     var res = [];
     try

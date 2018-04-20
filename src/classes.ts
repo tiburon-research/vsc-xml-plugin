@@ -344,7 +344,7 @@ export class TibAttribute
     /** значение по умолчанию (если не задано) */
     Default = null;
     /** Значение, подставляемое автоматически при вставке атрибута */
-    Auto = "";
+    Auto: string;
     AllowCode: boolean = false;
     /** краткое описание (появляется в редакторе в той же строчке) */
     Detail: string = "";
@@ -355,7 +355,7 @@ export class TibAttribute
     /** Значения, которые подставляются в AutoComplete */
     Values: Array<string> = [];
     /** код функции, вызываемый потом в callback, чтобы вернуть string[] для Snippet */
-    Result: "";
+    Result: string;
 
     constructor(obj: Object)
     {
@@ -363,7 +363,7 @@ export class TibAttribute
             this[key] = obj[key];
     }
 
-    ToCompletionItem(callback): vscode.CompletionItem
+    ToCompletionItem(callback: (query: string) => string[]): vscode.CompletionItem
     {
         var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Property);
         var snip = this.Name + '="';
@@ -387,14 +387,11 @@ export class TibAttribute
         return item;
     }
 
-    ValueCompletitions(callback): string[]
+    ValueCompletitions(callback: (query: string) => string[]): string[]
     {
-        var vals = "";
-        if (this.Values && this.Values.length) vals = JSON.stringify(this.Values);
-        else if (!!this.Result) vals = this.Result;
-        var res: string[] = callback(vals);
-        if (!res) res = [];
-        return res;
+        if (this.Values && this.Values.length) return this.Values;
+        else if (!!this.Result) return callback(this.Result);
+        return [];
     }
 
     AutoValue(): string
