@@ -203,9 +203,9 @@
           "default": "G:\\Разное\\TiburonXMLHelper\\tibXMLTemplates\\"
         },
         "tib.logPath": {
-          "description": "Путь к папке с логами (лучше не менять)",
+          "description": "Путь к папке с логами",
           "type": "string",
-          "default": "G:\\Разное\\TiburonXMLScripterLogs"
+          "default": "G:\\Разное\\TiburonXMLHelper\\Logs"
         },
         "tib.useLinq": {
           "description": "Подставлять методы из библиотеки System.Linq",
