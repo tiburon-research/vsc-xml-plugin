@@ -1048,7 +1048,7 @@ function makeIndent(): void
 /** автоматическое закрывание <тегов> */
 function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag, text: string): void
 {
-    if (inProcess || !editor || !event || !event.contentChanges.length) return;
+    if (!tag || inProcess || !editor || !event || !event.contentChanges.length) return;
     let changes = getContextChanges(editor.selections, event.contentChanges);
     let fullText = editor.document.getText();
 
@@ -1103,7 +1103,7 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
 
 function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, text: string, tag: CurrentTag): void
 {
-    if (inProcess || !editor || !event || !event.contentChanges[0]) return;
+    if (!tag || inProcess || !editor || !event || !event.contentChanges[0]) return;
 
     let change = event.contentChanges[0].text;
     let originalPosition = editor.selection.start.translate(0, 1);
