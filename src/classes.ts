@@ -582,7 +582,6 @@ export class CurrentTag
     public OpenTagIsClosed = false;
     public Parents: Array<SimpleTag> = [];
     public LastParent: SimpleTag;
-    protected Language: Language;
     /** Откуда начинается */
     public StartPosition: vscode.Position;
     public StartIndex: number;
@@ -592,8 +591,9 @@ export class CurrentTag
 
     // -------------------- ТЕХНИЧЕСКОЕ
 
-    /** Последний массив вхождений из рекурсивного поиска */
-    private LastMatch: RegExpMatchArray = null;
+    /** Кеширование языка */
+    private Language: Language;
+
 
     /** Задаёт атрибуты */
     private SetAttributes(attrs: KeyedCollection<string>)
@@ -628,6 +628,12 @@ export class CurrentTag
                 if (!!source) this.Id == source + "Repeat";
             }
         } 
+    }
+
+    /** Сброс закешированного */
+    private _reset()
+    {
+        this.Language = null;
     }
 
 
@@ -760,16 +766,18 @@ export class CurrentTag
     /** Обновляет поля, если новые не undefined */
     public SetFields(fields: CurrentTagFields)
     {
+        this._reset();
         for (let key in fields)
         {
             if (typeof fields[key] != 'undefined') this[key] = fields[key];
-        }    
+        }
     }
 
 
     /** Обновляет только текущий тег */
     public Update(tag: string | SimpleTag, fields: CurrentTagFields)
     {
+        this._reset();
         this._update(tag);
         this.SetFields(fields);
     }
