@@ -630,7 +630,7 @@ export function encodeCS(text: string, delimiter: string): EncodeResult
 /** кодирует CDATA в `text` */
 export function encodeCDATA(text: string, delimiter: string): EncodeResult
 {
-    return encodeElements(text, /<!\[CDATA\[[\S\s]*\]\]>/, delimiter);
+    return encodeElements(text, /<!\[CDATA\[([\S\s]+?)\]\]>/, delimiter);
 }
 
 export function encodeXMLXomments(text: string, delimiter: string): EncodeResult
