@@ -1303,8 +1303,9 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
             if (Cache.TagEnabled(document, position, text)) return Cache.Tag.Get();
             // проверяем длину PreviousTextSafe в кэше (актуально для hover)
             pure = Cache.PreviousTextSafe.SelectIf(x => !!x && x.length == text.length);
-            if (pure === undefined) pure = CurrentTag.PrepareXML(text);
         }
+
+        if (!pure) pure = CurrentTag.PrepareXML(text);
 
         let ranges = getParentRanges(document, pure);
         if (ranges.length == 0) return new CurrentTag("XML");
