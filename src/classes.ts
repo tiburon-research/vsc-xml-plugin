@@ -16,13 +16,19 @@ import { bot, $ } from './extension'
 /** Тип сборки */
 export const _pack: ("debug" | "release") = "debug";
 
-/** RegExp для XML тегов, которые могут содержать C# */
-export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)";
-/** RegExp для HTML тегов, которые не нужно закрывать */
-export const _SelfClosedTags = "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)";
 
 export enum Language { XML, CSharp, CSS, JS, PlainTetx };
 
+
+/** Работают правильно, но медленно */
+export const RegExpPatterns = {
+    CDATA: /<!\[CDATA\[([\S\s]*?)\]\]>/,
+    XMLComment: /<!--([\S\s]*?)-->/,
+    /** RegExp для XML тегов, которые могут содержать C# */
+    AllowCodeTags: "(Filter)|(Redirect)|(Validate)|(Methods)",
+    /** RegExp для HTML тегов, которые не нужно закрывать */
+    SelfClosedTags: "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)"
+}
 
 
 /** Результат поиска в строке */
@@ -644,7 +650,7 @@ export class CurrentTag
     constructor(tag: string | SimpleTag, parents?: SimpleTag[])
     {
         this._update(tag);
-        if (parents)
+        if (!!parents && parents.length > 0)
         {
             this.Parents = parents;
             // Id для Item
@@ -659,7 +665,6 @@ export class CurrentTag
         let pure = XML.clearXMLComments(text);
         // удаление закрытых _AllowCodeTag из остатка кода (чтобы не искать <int>)
         pure = XML.clearCSContents(pure);
-
         return pure;
     }
 
@@ -919,7 +924,7 @@ export class TagInfo
             let from = text.indexOf("<" + this.Name);
             let to = text.indexOf(">", from) + 1;
             // выделяем AllowCode fake
-            this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !text.substr(to).match(/^([\s\n]*)*<\w/g);
+            this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + RegExpPatterns.AllowCodeTags + "$")) && !text.substr(to).match(/^([\s\n]*)*<\w/g);
             if (this.Language == Language.CSharp && !this.IsAllowCodeTag) this.Language = Language.XML;
             this.OpenTag = { From: from, To: to };
             let before = text.substr(0, this.OpenTag.From + 1);
@@ -964,7 +969,7 @@ export class TagInfo
     {
         let res = Language.XML;
 
-        if (tagName.match(new RegExp("^(" + _AllowCodeTags + ")$"))) return Language.CSharp;
+        if (tagName.match(new RegExp("^(" + RegExpPatterns.AllowCodeTags + ")$"))) return Language.CSharp;
 
         switch (tagName.toLocaleLowerCase())
         {

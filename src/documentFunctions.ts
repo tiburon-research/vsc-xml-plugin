@@ -1,16 +1,11 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, EncodeResult, XMLencodeResult, positiveMin, FindTagResult, Encoder } from "./classes";
+import { KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, EncodeResult, XMLencodeResult, positiveMin, FindTagResult, Encoder, RegExpPatterns } from "./classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { languages } from "vscode";
 import { logError, CSFormatter } from "./extension";
 
-
-export const _RegExpPatterns = {
-    CDATA: /<!\[CDATA\[([\S\s]*?)\]\]>/,
-    XMLComment: /<!--([\S\s]*?)-->/
-}
 
 // форматирование, проверка и другие операции с текстом документа
 
@@ -159,7 +154,7 @@ async function formatXML(text: string, tab: string = "\t", indent: number = 0): 
                     formattedBody = "\n" + tmpRes.Result + "\n";
                 }
                 // отступ для AllowCode fake
-                if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
+                if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + RegExpPatterns.AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
                     formattedBody = " " + formattedBody;
                 if (tag.Closed && !tag.SelfClosed) closeTag = (tag.Multiline ? ind : "") + closeTag;
             }
@@ -635,12 +630,12 @@ export function encodeCS(text: string, delimiter: string): EncodeResult
 /** кодирует CDATA в `text` */
 export function encodeCDATA(text: string, delimiter: string): EncodeResult
 {
-    return encodeElements(text, _RegExpPatterns.CDATA, delimiter);
+    return encodeElements(text, RegExpPatterns.CDATA, delimiter);
 }
 
 export function encodeXMLXomments(text: string, delimiter: string): EncodeResult
 {
-    return encodeElements(text, _RegExpPatterns.XMLComment, delimiter);
+    return encodeElements(text, RegExpPatterns.XMLComment, delimiter);
 }
 
 // получаем разделитель, для временной замены вставок
@@ -693,14 +688,14 @@ export function originalXML(text: string, data: XMLencodeResult): string
 /** заменяет блок комментариев на пробелы */
 export function clearXMLComments(txt: string): string
 {
-    return replaceWithSpaces(txt, _RegExpPatterns.XMLComment);
+    return replaceWithSpaces(txt, RegExpPatterns.XMLComment);
 }
 
 
 /** заменяет CDATA на пробелы */
 export function clearCDATA(txt: string): string
 {
-    return replaceWithSpaces(txt, _RegExpPatterns.XMLComment);
+    return replaceWithSpaces(txt, RegExpPatterns.XMLComment);
 }
 
 /** Заменяет на пробелы */
@@ -725,10 +720,10 @@ export function clearCSContents(text: string): string
     let res = text;
     let newText = text;
     let rep = "";
-    let tCount = _AllowCodeTags.match(/\(/g).length;
+    let tCount = RegExpPatterns.AllowCodeTags.match(/\(/g).length;
 
     // Очищаем полные теги
-    let reg = new RegExp("(<(" + _AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*?)(<\\/\\2\\s*>)");
+    let reg = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*?)(<\\/\\2\\s*>)");
     
     let resCS = reg.exec(newText);
 
@@ -744,7 +739,7 @@ export function clearCSContents(text: string): string
     }
 
     // Очищаем незакрытый CS-тег в конце
-    let regEnd = new RegExp("(<(" + _AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?!([\\t ]+\\r?\\n)|(\\s+<\/\\2))[\\s\\S]*)$");
+    let regEnd = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?!([\\t ]+\\r?\\n)|(\\s+<\/\\2))[\\s\\S]*)$");
     resCS = regEnd.exec(res);
     if (!!resCS)
     {

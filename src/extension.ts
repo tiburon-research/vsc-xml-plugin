@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, _AllowCodeTags, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _SelfClosedTags, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields, RegExpPatterns } from "./classes";
 import * as XML from './documentFunctions';
 import { SurveyList } from './surveyObjects';
 import * as fs from 'fs';
@@ -72,6 +72,7 @@ var Cache: CacheSet;
 
 
 //#endregion
+
 
 
 /*---------------------------------------- активация ----------------------------------------*/
@@ -1026,7 +1027,7 @@ function makeIndent(): void
                 action: { indentAction: vscode.IndentAction.Indent }
             },
             {
-                beforeText: new RegExp("\\[(" + _SelfClosedTags + ")\\]\\s*", 'i'),
+                beforeText: new RegExp("\\[(" + RegExpPatterns.SelfClosedTags + ")\\]\\s*", 'i'),
                 action: { indentAction: vscode.IndentAction.None }
             },
             {
@@ -1133,8 +1134,6 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 
 
 //#endregion
-
-
 
 
 
@@ -1277,7 +1276,7 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 
 function isSelfClosedTag(tag: string): boolean
 {
-    return !!tag.match("^(" + _SelfClosedTags + ")$");
+    return !!tag.match("^(" + RegExpPatterns.SelfClosedTags + ")$");
 }
 
 function execute(link: string)
