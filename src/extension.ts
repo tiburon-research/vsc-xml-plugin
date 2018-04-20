@@ -67,51 +67,8 @@ var Settings = new ExtensionSettings();
 /** флаг использования Linq */
 var _useLinq = true;
 
-
-// кэширование
-class CacheSet 
-{
-    public PreviousTextSafe = new CacheItem<string>();
-    public Tag = new CacheItem<CurrentTag>();
-    public Methods = new CacheItem<TibMethods>();
-    public CurrentNodes = new CacheItem<SurveyNodes>();
-
-
-    /** Можно ли пользоваться кэшем CurrentTag */
-    public TagEnabled(document: vscode.TextDocument, position: vscode.Position, text: string): boolean
-    {
-        // проверяем задан ли тег
-        if (!this.Active() || !this.Tag.IsSet() || !this.PreviousTextSafe.IsSet()) return false;
-
-        let oldTag = this.Tag.Get();
-        let current = this.PreviousTextSafe.Get();
-        let curInd = current.findLast("<\\w+");
-
-        // Если  изменено, то проверять (пока) будем условно (зато быстро):
-        if (curInd.Index != oldTag.StartIndex) return false;
-
-        // Если ок, тогда надо обновить тег
-        let rest = text.slice(curInd.Index);
-        let currentTagRange = getNextParent(document, rest, text);
-        let currentTag = new SimpleTag(document, currentTagRange);
-        let body
-
-        oldTag.Update(currentTag, {
-            Body: currentTag.isClosed() ? document.getText(new vscode.Range(currentTagRange.end, position)) : undefined,
-        });
-        return true;
-    }
-
-    /** Можно ли пользоваться кэшем */
-    public Active(): boolean
-    {
-        return !Settings.Contains("enableCache") || !!Settings.Item("enableCache");
-    }
-
-}
-
 /** Объект для кэша объектов */
-var Cache = new CacheSet();
+var Cache: CacheSet;
 
 
 //#endregion
@@ -202,6 +159,7 @@ function getData()
         _LogPath = Settings.Item("logPath");
         if (!pathExists(_LogPath)) showWarning("Отчёты об ошибках сохраняться не будут т.к. недоступен путь:\n\"" + _LogPath + "\"");
         _useLinq = Settings.Item("useLinq");
+        Cache = new CacheSet();
 
         // получаем фунцию форматирования C#
         let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
@@ -1344,7 +1302,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
         {
             if (Cache.TagEnabled(document, position, text)) return Cache.Tag.Get();
             // проверяем длину PreviousTextSafe в кэше (актуально для hover)
-            pure = Cache.PreviousTextSafe.SelectIf(x => !!x && x.length == document.offsetAt(position));
+            pure = Cache.PreviousTextSafe.SelectIf(x => !!x && x.length == text.length);
             if (pure === undefined) pure = CurrentTag.PrepareXML(text);
         }
 
@@ -1366,6 +1324,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
             StartPosition: current.StartPosition,
             StartIndex: document.offsetAt(current.StartPosition),
             PreviousText: text,
+            PreviousTextSafe: pure,
             Body: tag.OpenTagIsClosed ? document.getText(new vscode.Range(lastRange.end, position)) : undefined,
             LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
         });
@@ -1800,6 +1759,53 @@ function showCurrentInfo(tag: CurrentTag): void
         info = lang + ":\t" + tag.Parents.map(x => x.Name).concat([tag.Id]).join(" -> ");
     }
     statusMessage(info);
+}
+
+
+class CacheSet 
+{
+    public PreviousTextSafe = new CacheItem<string>();
+    public Tag = new CacheItem<CurrentTag>();
+    public Methods = new CacheItem<TibMethods>();
+    public CurrentNodes = new CacheItem<SurveyNodes>();
+
+
+    /** Можно ли пользоваться кэшем CurrentTag */
+    public TagEnabled(document: vscode.TextDocument, position: vscode.Position, text: string): boolean
+    {
+        // проверяем задан ли тег
+        if (!this.Active() || !this.Tag.IsSet() || !this.PreviousTextSafe.IsSet()) return false;
+
+        let oldTag = this.Tag.Get();
+        let current = this.PreviousTextSafe.Get();
+        let curInd = current.findLast("<\\w+");
+
+        // Если  изменено, то проверять (пока) будем условно (зато быстро):
+        if (curInd.Index != oldTag.StartIndex) return false;
+
+        // Если ок, но PreviousText поменялся, тогда надо обновить тег
+        if (current != oldTag.PreviousText)
+        {
+            let rest = text.slice(curInd.Index);
+            let currentTagRange = getNextParent(document, rest, text);
+            let currentTag = new SimpleTag(document, currentTagRange);
+            let body = currentTag.isClosed() ? document.getText(new vscode.Range(currentTagRange.end, position)) : undefined;
+
+            oldTag.Update(currentTag, {
+                Body: body,
+                PreviousText: text,
+                PreviousTextSafe: current
+            });
+        }
+        return true;
+    }
+
+    /** Можно ли пользоваться кэшем */
+    public Active(): boolean
+    {
+        return !Settings.Contains("enableCache") || !!Settings.Item("enableCache");
+    }
+
 }
 
 //#endregion

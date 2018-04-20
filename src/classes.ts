@@ -557,11 +557,12 @@ export class SimpleTag
 /** Поля для CurrentTag */
 export interface CurrentTagFields
 {
+    PreviousText: string;
+    PreviousTextSafe: string;
     StartPosition?: vscode.Position;
     StartIndex?: number;
     OpenTagIsClosed?: boolean;
     LastParent?: SimpleTag;
-    PreviousText?: string;
     Body?: string;
 }
 
@@ -958,6 +959,7 @@ export class TagInfo
     }
 
 
+    /** Возвращает язык исходя только из имени тега */
     public static getTagLanguage(tagName: string): Language
     {
         let res = Language.XML;
