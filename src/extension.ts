@@ -1390,7 +1390,7 @@ function getParentRanges(document: vscode.TextDocument, prevText: string): vscod
     while (!!next && i < 50)
     {
         res.push(next);
-        rest = prevText.slice(document.offsetAt(next.end) + 1);
+        rest = prevText.slice(document.offsetAt(next.end));
         next = getNextParent(document, rest, prevText);
     }
     if (i >= 50) logError("Найдено слишком много вложенных тегов");
