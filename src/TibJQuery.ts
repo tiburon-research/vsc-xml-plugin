@@ -127,6 +127,29 @@ export function initJQuery(): any
     Object.assign(newText, JQuery.fn.textOriginal);
     JQuery.fn.text = newText;
 
+    // переписываем функцию получения атрибута
+    JQuery.fn.attrOriginal = JQuery.fn.attr;
+    let newAttr = function (name: string, param?)
+    {
+        let el = JQuery(this[0]);
+        let res;
+        // если запрос, то возвращаем originalXML
+        if (typeof param === typeof undefined)
+        {
+            res = JQuery.decode(el.attrOriginal(name));
+        }
+        // если задаём атрибут, то как обычно
+        else
+        {
+            let pure = XML.safeXML(param, JQuery._delimiter(param));
+            JQuery._saveData(pure.toXMLencodeResult());
+            res = el.attrOriginal.apply(this, [name, pure.Result]);
+        }
+        return res;
+    }
+    Object.assign(newAttr, JQuery.fn.attrOriginal);
+    JQuery.fn.attr = newAttr;
+
 
 
     /** xml() вместе с родителем */
