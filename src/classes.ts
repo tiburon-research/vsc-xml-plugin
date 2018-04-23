@@ -166,6 +166,34 @@ export namespace TibTransform
         });
         return $dom.xml();
     }
+}
+
+export namespace TibDelete
+{
+
+    export function questionIDInQuestionHeader(text: string): string{
+
+        let $dom = $.XMLDOM(text);
+        let $question = $dom.find("Question");
+
+        let $questionValueVariants = [". ", ".", ""];
+
+        $question.map(function (){
+            let $questionHeader = $(this).find("Header");
+            let $headerText = $questionHeader.text();
+            let $qIDValue = $(this).attr('Id');
+
+            $questionValueVariants.forEach(element => {
+                element = $qIDValue+element;
+                if($headerText.indexOf(element) != -1){
+                    $headerText = $questionHeader.text().replace(element, "");
+                    $questionHeader.text($headerText);
+                }
+            });
+        });
+
+        return $dom.xml();
+    }
 
 }
 
@@ -1435,6 +1463,25 @@ export function sendLogMessage(text: string)
 export function safeString(text: string): string
 {
     return text.replace(/[\|\\\{\}\(\)\[\]\^\$\+\*\?\.\/]/g, "\\$&");
+}
+
+/** Открытые файла в новом окне */
+export function openFile(path: string): void{
+
+    vscode.workspace.openTextDocument(path).then(doc =>
+        { // открываем демку (в памяти)
+            let txt = doc.getText();
+            vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+            { // создаём пустой tib-файл
+                vscode.window.showTextDocument(newDoc).then(editor => 
+                { // отображаем пустой
+                    editor.edit(builder => 
+                    { // заливаем в него демку
+                        builder.insert(new vscode.Position(0, 0), txt)
+                    });
+                });
+            })
+        });
 }
 
 

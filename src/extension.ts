@@ -2,13 +2,12 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields, RegExpPatterns } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibTransform, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields, RegExpPatterns, TibDelete, openFile} from "./classes";
 import * as XML from './documentFunctions';
 import { SurveyList } from './surveyObjects';
 import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
-
 
 
 export { bot, $, CSFormatter, logError };
@@ -394,6 +393,21 @@ function registerCommands()
         }
     });
 
+    //Удаление айди вопроса в хидере вопроса
+    registerCommand('tib.delete.QuestionIDInQuestionHeader', () => {
+        let editor = vscode.window.activeTextEditor;
+        try
+        {
+            let text = editor.document.getText();
+
+            let res = TibDelete.questionIDInQuestionHeader(text);
+            applyChanges(editor.selection, res, editor);
+        } catch (error)
+        {
+            logError("Произошла ошибка при удалении айди вопроса в хидере вопроса", editor);
+        }
+    });
+
     // комментирование блока
     registerCommand('editor.action.blockComment', () => 
     {
@@ -452,27 +466,15 @@ function registerCommands()
             showError("Невозможно получить доступ к файлу демки");
             return;
         }
-        vscode.workspace.openTextDocument(path).then(doc =>
-        { // открываем демку (в памяти)
-            let txt = doc.getText();
-            vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
-            { // создаём пустой tib-файл
-                vscode.window.showTextDocument(newDoc).then(editor => 
-                { // отображаем пустой
-                    editor.edit(builder => 
-                    { // заливаем в него демку
-                        builder.insert(new vscode.Position(0, 0), txt)
-                    });
-                });
-            })
-        });
+
+        openFile(path);
     });
 
     //Создание tibXML шаблона
     registerCommand('tib.template', () => 
     {
 
-        let templateFolder = Settings.Item("templatePath");
+        let templateFolder = Settings.Item("templatePath") + '\\';
         if (!templateFolder)
         {
             showError("Невозможно получить доступ к папке");
@@ -1761,7 +1763,6 @@ function showCurrentInfo(tag: CurrentTag): void
     }
     statusMessage(info);
 }
-
 
 class CacheSet 
 {

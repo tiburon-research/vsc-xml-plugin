@@ -86,6 +86,11 @@
         "category": "tib"
       },
       {
+        "command": "tib.delete.QuestionIDInQuestionHeader",
+        "title": "Удалить айди вопроса из хидера вопроса",
+        "category": "tib"
+      },
+      {
         "command": "tib.insertTag",
         "title": "Обернуть текст в тег",
         "category": "tib"
@@ -201,7 +206,7 @@
         "tib.templatePath": {
           "description": "Путь к шаблону tibXML",
           "type": "string",
-          "default": "G:\\Разное\\TiburonXMLHelper\\tibXMLTemplates\\"
+          "default": "G:\\Разное\\TiburonXMLHelper\\Templates"
         },
         "tib.logPath": {
           "description": "Путь к папке с логами",
@@ -231,7 +236,6 @@
           "default": true
         }
       }
-      
     }
   },
   "scripts": {
