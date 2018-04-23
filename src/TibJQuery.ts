@@ -58,9 +58,14 @@ export function initJQuery(): any
     }
 
     /** Сохраняет данные кодирования */
-    JQuery._saveData = function(data: XMLencodeResult): void
+    JQuery._saveData = function(data: XMLencodeResult, isInitial = false): void
     {
-        if (!JQuery.SurveyData.Delimiter) JQuery.SurveyData.Delimiter = data.Delimiter;
+        if (isInitial)
+        {
+            // замена данных в объекте $
+            JQuery.SurveyData.Delimiter = data.Delimiter;
+            (JQuery.SurveyData as DOMSurveyData).EncodedCollection.Clear();
+        }
         (JQuery.SurveyData as DOMSurveyData).EncodedCollection.AddRange(data.EncodedCollection);
     }
 
@@ -68,7 +73,7 @@ export function initJQuery(): any
     JQuery.XMLDOM = function (el: string, isInitial = true)
     {
         let res = XML.safeXML(el, JQuery._delimiter(el));
-        JQuery._saveData(res.toXMLencodeResult());
+        JQuery._saveData(res.toXMLencodeResult(), isInitial);
         return JQuery(JQuery.parseXML('<Root>' + res.Result + '</Root>')).find('Root');
     }
 
