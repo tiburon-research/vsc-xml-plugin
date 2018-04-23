@@ -133,8 +133,6 @@ export function activate(context: vscode.ExtensionContext)
         if (inProcess || !editor || editor.document.languageId != "tib") return;
         let originalPosition = editor.selection.start.translate(0, 1);
         let text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
-        // кешируем PreviosTextSafe        
-        if (Cache.Active()) Cache.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
         let tag = getCurrentTag(editor.document, originalPosition, text);
         reload();
         insertAutoCloseTag(event, editor, tag, text);
@@ -1301,9 +1299,9 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
         // сначала пытаемся вытащить из кэша
         if (Cache.Active()) 
         {
-            if (Cache.TagEnabled(document, position, text)) return Cache.Tag.Get();
+            if (Cache.TagIsActual(document, position, text)) return Cache.Tag.Get();
             // проверяем длину PreviousTextSafe в кэше (актуально для hover)
-            pure = Cache.PreviousTextSafe.SelectIf(x => !!x && x.length == text.length);
+            if (Cache.PreviousTextIsActual(text)) pure = Cache.PreviousTextSafe.Get();
         }
 
         if (!pure) pure = CurrentTag.PrepareXML(text);
@@ -1773,12 +1771,16 @@ class CacheSet
 
 
     /** Можно ли пользоваться кэшем CurrentTag */
-    public TagEnabled(document: vscode.TextDocument, position: vscode.Position, text: string): boolean
+    public TagIsActual(document: vscode.TextDocument, position: vscode.Position, text: string): boolean
     {
         // проверяем задан ли тег
-        if (!this.Active() || !this.Tag.IsSet() || !this.PreviousTextSafe.IsSet()) return false;
+        if (!this.Active() || !this.Tag.IsSet()) return false;
 
         let oldTag = this.Tag.Get();
+        // если текст изменился, то обновляем TextSafe
+        //console.log(text.length == this.PreviousTextSafe.Get().length);
+        if (!this.PreviousTextIsActual(text)) this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
+
         let current = this.PreviousTextSafe.Get();
         let curInd = current.findLast("<\\w+");
 
@@ -1801,6 +1803,13 @@ class CacheSet
         }
         return true;
     }
+
+
+    public PreviousTextIsActual(text: string): boolean
+    {
+        return this.PreviousTextSafe.IsSet() && text.length == this.PreviousTextSafe.Get().length;
+    }
+
 
     /** Можно ли пользоваться кэшем */
     public Active(): boolean
