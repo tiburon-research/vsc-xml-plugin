@@ -23,7 +23,7 @@ export enum Language { XML, CSharp, CSS, JS, PlainTetx, Inline };
 /** Работают правильно, но медленно */
 export const RegExpPatterns = {
     CDATA: /<!\[CDATA\[([\S\s]*?)\]\]>/,
-    XMLComment: /<!--([\S\s]*?)-->/,
+    XMLComment: /(<!--([\S\s]*?)-->\s*)+/,
     /** RegExp для XML тегов, которые могут содержать C# */
     AllowCodeTags: "(Filter)|(Redirect)|(Validate)|(Methods)",
     /** RegExp для HTML тегов, которые не нужно закрывать */
