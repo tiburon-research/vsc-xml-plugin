@@ -28,7 +28,9 @@ export const RegExpPatterns = {
     AllowCodeTags: "(Filter)|(Redirect)|(Validate)|(Methods)",
     /** RegExp для HTML тегов, которые не нужно закрывать */
     SelfClosedTags: "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)",
-    InlineSpecial: "(repeat)|(place)"
+    InlineSpecial: "(repeat)|(place)",
+    /** Набор символов разделителя замены */
+    DelimiterContent: "[0-9][a-z][A-Z]"
 }
 
 

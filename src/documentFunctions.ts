@@ -5,6 +5,7 @@ import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { languages } from "vscode";
 import { logError, CSFormatter } from "./extension";
+import * as shortHash from "short-hash"
 
 
 // форматирование, проверка и другие операции с текстом документа
@@ -564,12 +565,10 @@ function getElements(text: string, elem: RegExp): KeyedCollection<string>
     {
         let reg = new RegExp(elem, "g");
         let mat = elem.exec(text);
-        //let i = 0;
         let newText = text;
         while (!!mat)
         {
-            let i = new Date().getTime();
-            if (res.Contains("" + i)) i++; // ну вдруг чо =)
+            let i = shortHash(mat[0]);
             res.AddPair("" + i, mat[0]);
             newText = newText.replace(new RegExp(safeString(mat[0]), "g"), "");
             mat = elem.exec(newText);
@@ -648,7 +647,7 @@ export function getReplaceDelimiter(text: string, length?: number): string
     for (let i = 0; i < dels.length; i++) 
     {
         let curDel = dels[i].repeat(length);
-        let mt = text.match(new RegExp(safeString(curDel) + "\\d+" + safeString(curDel), "g"));
+        let mt = text.match(new RegExp(safeString(curDel) + RegExpPatterns.DelimiterContent + safeString(curDel), "g"));
         if (!mt || mt.length == 0) return curDel;
     }
 
