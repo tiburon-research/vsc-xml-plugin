@@ -2,7 +2,7 @@
 
 import { JSDOM } from 'jsdom'
 import * as _JQuery from 'jquery'
-import { logString, KeyedCollection, XMLencodeResult, EncodeResult } from './classes'
+import { logString, KeyedCollection, XMLencodeResult, EncodeResult, showWarning } from './classes'
 import * as XML from './documentFunctions'
 
 
@@ -47,6 +47,18 @@ export function initJQuery(): any
         }
     }
 
+
+    /** Возвращает originalXML */
+    JQuery.decode = function(text: string)
+    {
+        if (!JQuery.SurveyData || !JQuery.SurveyData.Delimiter)
+        {
+            showWarning("JQuery инициализтрована неправильно");
+            return text;
+        }
+        return XML.originalXML(text, JQuery.SurveyData)
+    }
+
     /** Возвращает разделитель. Если его нет, то задаёт изходя из переданного XML */
     JQuery._delimiter = function(el): string
     {
@@ -88,7 +100,7 @@ export function initJQuery(): any
         let el = JQuery(this[0]);
         let res = el.html();
         let data = (JQuery.SurveyData as DOMSurveyData);
-        res = XML.originalXML(res, data);
+        res = JQuery.decode(res);
         return res;
     }
 
@@ -101,7 +113,7 @@ export function initJQuery(): any
         // если запрос, то возвращаем originalXML
         if (typeof param === typeof undefined)
         {
-            res = XML.originalXML(el.textOriginal(), JQuery.SurveyData);
+            res = JQuery.decode(el.textOriginal());
         }
         // если задаём текст, то как обычно
         else
@@ -128,7 +140,7 @@ export function initJQuery(): any
         let $el = JQuery(this[0]);
         let res = $el.outerHtml();
         let data = (JQuery.SurveyData as DOMSurveyData);
-        res = XML.originalXML(res, data);
+        res = JQuery.decode(res);
         return res;
     }
 
