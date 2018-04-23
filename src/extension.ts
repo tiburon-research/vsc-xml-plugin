@@ -396,14 +396,12 @@ function registerCommands()
     //Удаление айди вопроса в хидере вопроса
     registerCommand('tib.delete.QuestionIDInQuestionHeader', () => {
         let editor = vscode.window.activeTextEditor;
-        try
-        {
-            let text = editor.document.getText();
 
+        try{
+            let text = editor.document.getText();
             let res = TibDelete.questionIDInQuestionHeader(text);
-            applyChanges(editor.selection, res, editor);
-        } catch (error)
-        {
+            applyChanges(getFullRange(editor.document), res, editor);
+        } catch (error){
             logError("Произошла ошибка при удалении айди вопроса в хидере вопроса", editor);
         }
     });

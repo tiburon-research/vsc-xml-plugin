@@ -179,6 +179,7 @@ export namespace TibDelete
         let $questionValueVariants = [". ", ".", ""];
 
         $question.map(function (){
+ 
             let $questionHeader = $(this).find("Header");
             let $headerText = $questionHeader.text();
             let $qIDValue = $(this).attr('Id');
@@ -190,6 +191,7 @@ export namespace TibDelete
                     $questionHeader.text($headerText);
                 }
             });
+             
         });
 
         return $dom.xml();
