@@ -16,13 +16,22 @@ import { bot, $ } from './extension'
 /** Тип сборки */
 export const _pack: ("debug" | "release") = "debug";
 
-/** RegExp для XML тегов, которые могут содержать C# */
-export const _AllowCodeTags = "(Filter)|(Redirect)|(Validate)|(Methods)";
-/** RegExp для HTML тегов, которые не нужно закрывать */
-export const _SelfClosedTags = "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)";
 
-export enum Language { XML, CSharp, CSS, JS, PlainTetx };
+export enum Language { XML, CSharp, CSS, JS, PlainTetx, Inline };
 
+
+/** Работают правильно, но медленно */
+export const RegExpPatterns = {
+    CDATA: /<!\[CDATA\[([\S\s]*?)\]\]>/,
+    XMLComment: /(<!--([\S\s]*?)-->\s*)+/,
+    /** RegExp для XML тегов, которые могут содержать C# */
+    AllowCodeTags: "(Filter)|(Redirect)|(Validate)|(Methods)",
+    /** RegExp для HTML тегов, которые не нужно закрывать */
+    SelfClosedTags: "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)",
+    InlineSpecial: "(repeat)|(place)",
+    /** Набор символов разделителя замены */
+    DelimiterContent: "[0-9][a-z][A-Z]"
+}
 
 
 /** Результат поиска в строке */
@@ -145,13 +154,13 @@ export namespace TibTransform
         {
             let $el = $(this);
             let $newEl = $.XML("<" + to + "></" + to + ">");
-            $newEl.attr('Id', $el.attr('Id'));
+            $newEl.attr('Id', $el.attr('Id'));            
             let txt;
             let $text = $el.find('Text');
             if ($text.length > 0)
                 txt = $text.text();
-            else if (typeof $text.attr('Text') !== typeof undefined)
-                txt = $text.attr('Text');
+            else if (typeof $el.attr('Text') !== typeof undefined)
+                txt = $el.attr('Text');
             $.XML('<Text></Text>').text(txt).appendTo($newEl);
             $el.replaceWith($newEl);
         });
@@ -220,7 +229,7 @@ export class KeyedCollection<T>
 
     public Remove(key: string): T
     {
-        var val = this.items[key];
+        let val = this.items[key];
         delete this.items[key];
         this.count--;
         return val;
@@ -234,9 +243,9 @@ export class KeyedCollection<T>
     /** массив ключей */
     public Keys(): string[]
     {
-        var keySet: string[] = [];
+        let keySet: string[] = [];
 
-        for (var prop in this.items)
+        for (let prop in this.items)
         {
             if (this.items.hasOwnProperty(prop))
             {
@@ -250,9 +259,9 @@ export class KeyedCollection<T>
     /** массив значений */
     public Values(): T[]
     {
-        var values: T[] = [];
+        let values: T[] = [];
 
-        for (var prop in this.items)
+        for (let prop in this.items)
         {
             if (this.items.hasOwnProperty(prop))
             {
@@ -263,6 +272,7 @@ export class KeyedCollection<T>
         return values;
     }
 
+    /** Очищает всю коллекцию */
     public Clear(): void
     {
         this.items = {};
@@ -272,7 +282,7 @@ export class KeyedCollection<T>
     /** обход элементов */
     public forEach(callback: (key: string, val: T) => any)
     {
-        for (var key in this.items)
+        for (let key in this.items)
             callback(key, this.Item(key));
     }
 
@@ -372,7 +382,7 @@ export class TibAttribute
     /** значение по умолчанию (если не задано) */
     Default = null;
     /** Значение, подставляемое автоматически при вставке атрибута */
-    Auto = "";
+    Auto: string;
     AllowCode: boolean = false;
     /** краткое описание (появляется в редакторе в той же строчке) */
     Detail: string = "";
@@ -383,7 +393,7 @@ export class TibAttribute
     /** Значения, которые подставляются в AutoComplete */
     Values: Array<string> = [];
     /** код функции, вызываемый потом в callback, чтобы вернуть string[] для Snippet */
-    Result: "";
+    Result: string;
 
     constructor(obj: Object)
     {
@@ -391,12 +401,12 @@ export class TibAttribute
             this[key] = obj[key];
     }
 
-    ToCompletionItem(callback): vscode.CompletionItem
+    ToCompletionItem(callback: (query: string) => string[]): vscode.CompletionItem
     {
-        var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Property);
-        var snip = this.Name + '="';
-        var valAr: string[];
-        var auto = this.AutoValue();
+        let item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Property);
+        let snip = this.Name + '="';
+        let valAr: string[];
+        let auto = this.AutoValue();
         if (!auto)
         {
             valAr = this.ValueCompletitions(callback);
@@ -405,24 +415,21 @@ export class TibAttribute
         }
         else snip += auto;
         snip += '"';
-        var res = new vscode.SnippetString(snip);
+        let res = new vscode.SnippetString(snip);
         item.insertText = res;
         item.detail = (this.Detail ? this.Detail : this.Name) + (this.Type ? (" (" + this.Type + ")") : "");
-        var doc = "";
+        let doc = "";
         if (this.Default) doc += "Значение по умолчанию: `" + this.Default + "`";
         doc += "\nПоддержка кодовых вставок: `" + (this.AllowCode ? "да" : "нет") + "`";
         item.documentation = new vscode.MarkdownString(doc);
         return item;
     }
 
-    ValueCompletitions(callback): string[]
+    ValueCompletitions(callback: (query: string) => string[]): string[]
     {
-        var vals = "";
-        if (this.Values && this.Values.length) vals = JSON.stringify(this.Values);
-        else if (!!this.Result) vals = this.Result;
-        var res: string[] = callback(vals);
-        if (!res) res = [];
-        return res;
+        if (this.Values && this.Values.length) return this.Values;
+        else if (!!this.Result) return callback(this.Result);
+        return [];
     }
 
     AutoValue(): string
@@ -464,9 +471,9 @@ export class TibMethod
 
     ToCompletionItem()
     {
-        var item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Function);
+        let item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Function);
         if (this.IsFunction) item.insertText = new vscode.SnippetString(this.Name + "($1)");
-        var mds = new vscode.MarkdownString();
+        let mds = new vscode.MarkdownString();
         mds.value = this.Signature;
         if (this.Type) item.detail = this.Type;
         item.documentation = mds;
@@ -558,7 +565,7 @@ export class SimpleTag
         if (!!this.Attrs) return this.Attrs; // кеш :)
         let attrs = new KeyedCollection<string>();
         let res = this.Raw.match(/^\s*<(\w+)(\s+(\s*\w+=(("[^"]*")|('[^']*')))*)?\s*>?/);
-        if (!!res && !!res[2]) attrs = CurrentTag.getAttributesArray(res[2]);
+        if (!!res && !!res[2]) attrs = CurrentTag.GetAttributesArray(res[2]);
         this.Attrs = attrs;
         return attrs;
     }
@@ -585,6 +592,18 @@ export class SimpleTag
     private readonly Raw: string; // хранение исходных данных
 }
 
+/** Поля для CurrentTag */
+export interface CurrentTagFields
+{
+    PreviousText: string;
+    PreviousTextSafe: string;
+    StartPosition?: vscode.Position;
+    StartIndex?: number;
+    OpenTagIsClosed?: boolean;
+    LastParent?: SimpleTag;
+    Body?: string;
+}
+
 
 export class CurrentTag
 {
@@ -602,37 +621,32 @@ export class CurrentTag
     public OpenTagIsClosed = false;
     public Parents: Array<SimpleTag> = [];
     public LastParent: SimpleTag;
-    protected Language: Language;
     /** Откуда начинается */
-    public StartTagPosition: vscode.Position;
+    public StartPosition: vscode.Position;
+    public StartIndex: number;
+    /** Текст от начала документа до Position */
+    public PreviousText = "";
 
 
     // -------------------- ТЕХНИЧЕСКОЕ
 
-    /** Весь предыдущий текст */
-    private PreviousText = "";
-    /** Последний массив вхождений из рекурсивного поиска */
-    private LastMatch: RegExpMatchArray = null;
+    /** Кеширование языка */
+    private Language: Language;
 
-    /** добавляет атрибуты */
-    private setAttributes(attrs: KeyedCollection<string>)
+
+    /** Задаёт атрибуты */
+    private SetAttributes(attrs: KeyedCollection<string>)
     {
+        this.Attributes = [];
         let parent = this;
         attrs.forEach(function (key, val)
         {
             parent.Attributes.push(new InlineAttribute(key, val));
         });
     }
-    /** Задаёт текст от начала документа до Position */
-    public setPrevText(text: string)
-    {
-        this.PreviousText = text;
-    }
 
-
-    // -------------------- МЕТОДЫ
-
-    constructor(tag: string | SimpleTag, parents?: SimpleTag[])
+    /** Обновление тега */
+    private _update(tag: string | SimpleTag)
     {
         if (typeof tag == "string")
         {
@@ -643,26 +657,51 @@ export class CurrentTag
         {
             this.Name = tag.Name;
             this.Id = tag.Name;
-            this.setAttributes(tag.getAttributes());
+            this.SetAttributes(tag.getAttributes());
             this.OpenTagIsClosed = tag.isClosed();
 
-            if (parents)
-            {
-                this.Parents = parents;
-                // Id для Item
-                if (parents && this.Name == "Item") this.Id = parents.last().Name + "Item";
-            }
             // Id для Repeat
             if (this.Name == "Repeat")
             {
                 let source = tag.getRepeatSource();
                 if (!!source) this.Id == source + "Repeat";
             }
+        } 
+    }
+
+    /** Сброс закешированного */
+    private _reset()
+    {
+        this.Language = null;
+    }
+
+
+
+    // -------------------- МЕТОДЫ
+
+    constructor(tag: string | SimpleTag, parents?: SimpleTag[])
+    {
+        this._update(tag);
+        if (!!parents && parents.length > 0)
+        {
+            this.Parents = parents;
+            // Id для Item
+            if (parents && this.Name == "Item") this.Id = parents.last().Name + "Item";
         }
     }
 
+    /** Подготавливает TibXML для поиска теги */
+    public static PrepareXML(text: string): string
+    {
+        // замазываем комментарии
+        let pure = XML.clearXMLComments(text);
+        // удаление закрытых _AllowCodeTag из остатка кода (чтобы не искать <int>)
+        pure = XML.clearCSContents(pure);
+        return pure;
+    }
+
     /** возвращает массив имён атрибутов */
-    public attributeNames()
+    public AttributeNames()
     {
         return this.Attributes.map(function (e)
         {
@@ -671,7 +710,7 @@ export class CurrentTag
     }
 
     /** возвращает коллекцию атрибутов */
-    public static getAttributesArray(str: string): KeyedCollection<string>
+    public static GetAttributesArray(str: string): KeyedCollection<string>
     {
         let mt = str.match(/\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g);
         let res: KeyedCollection<string> = new KeyedCollection<string>();
@@ -679,7 +718,7 @@ export class CurrentTag
         {
             mt.forEach(element =>
             {
-                var parse = element.match(/\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/);
+                let parse = element.match(/\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/);
                 if (parse) res.AddPair(parse[1], parse[2].replace(/^('|")(.*)('|")$/, "$2"));
             });
         }
@@ -687,10 +726,16 @@ export class CurrentTag
     }
 
     /** Язык содержимого */
-    public getLaguage(): Language
+    public GetLaguage(): Language
     {
         if (this.Language) return this.Language; // так быстрее
         let tagLanguage: Language;
+        // специальные $-вставки
+        if (this.IsSpecial())
+        {
+            tagLanguage = Language.Inline;
+        }
+        else
         // по-любому C#
         if (this.CSSingle() || this.CSInline())
         {
@@ -730,7 +775,7 @@ export class CurrentTag
     /** $Method */
     public CSSingle()
     {
-        return !!this.PreviousText && !!this.PreviousText.match(/\$\w+$/);
+        return !!this.PreviousText && !!this.PreviousText.match("\\$((?!" + RegExpPatterns.InlineSpecial + ")(\\w+))$");
     }
 
 
@@ -740,11 +785,17 @@ export class CurrentTag
         return !!this.Body && XML.inString(this.Body);
     }
 
+    /** == Language.Inline. Но это только когда написано полностью */
+    public IsSpecial()
+    {
+        return !!this.PreviousText && !!this.PreviousText.match("\\$(" + RegExpPatterns.InlineSpecial + ")$");
+    }
+
 
     /** В строке внутри C# */
     public InCSString(): boolean
     {
-        if (this.getLaguage() == Language.CSharp)
+        if (this.GetLaguage() == Language.CSharp)
         {
             if (this.CSSingle())
             {
@@ -759,6 +810,26 @@ export class CurrentTag
             }
             else return this.InString();
         }
+    }
+
+
+    /** Обновляет поля, если новые не undefined */
+    public SetFields(fields: CurrentTagFields)
+    {
+        this._reset();
+        for (let key in fields)
+        {
+            if (typeof fields[key] != 'undefined') this[key] = fields[key];
+        }
+    }
+
+
+    /** Обновляет только текущий тег */
+    public Update(tag: string | SimpleTag, fields: CurrentTagFields)
+    {
+        this._reset();
+        this._update(tag);
+        this.SetFields(fields);
     }
 
 }
@@ -808,8 +879,8 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 
     GetItem(id: string, type?: string): SurveyNode
     {
-        var nodes = this.Item(type);
-        var res: SurveyNode;
+        let nodes = this.Item(type);
+        let res: SurveyNode;
         for (let i = 0; i < nodes.length; i++)
         {
             if (nodes[i].Id == id)
@@ -833,10 +904,10 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 
     CompletitionItems(name: string, closeQt: string = ""): vscode.CompletionItem[]
     {
-        var res: vscode.CompletionItem[] = [];
+        let res: vscode.CompletionItem[] = [];
         this.Item(name).forEach(element =>
         {
-            var ci = new vscode.CompletionItem(element.Id, vscode.CompletionItemKind.Enum);
+            let ci = new vscode.CompletionItem(element.Id, vscode.CompletionItemKind.Enum);
             ci.detail = name;
             ci.insertText = new vscode.SnippetString(element.Id + closeQt);
             res.push(ci);
@@ -856,7 +927,7 @@ export class ExtensionSettings extends KeyedCollection<any>
 
     update(config: vscode.WorkspaceConfiguration): void
     {
-        for (var key in config) this.AddPair(key.toString(), config[key]);
+        for (let key in config) this.AddPair(key.toString(), config[key]);
     }
 }
 
@@ -887,7 +958,7 @@ export class TagInfo
 {
     constructor(text: string, offset: number = 0)
     {
-        var mt = text.match(/(\n|^)[\t ]*<(\w+)/);
+        let mt = text.match(/(\n|^)[\t ]*<(\w+)/);
         if (!!mt)
         {
             this.Name = mt[2];
@@ -897,14 +968,14 @@ export class TagInfo
             let from = text.indexOf("<" + this.Name);
             let to = text.indexOf(">", from) + 1;
             // выделяем AllowCode fake
-            this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !text.substr(to).match(/^([\s\n]*)*<\w/g);
+            this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + RegExpPatterns.AllowCodeTags + "$")) && !text.substr(to).match(/^([\s\n]*)*<\w/g);
             if (this.Language == Language.CSharp && !this.IsAllowCodeTag) this.Language = Language.XML;
             this.OpenTag = { From: from, To: to };
             let before = text.substr(0, this.OpenTag.From + 1);
             let newLine = text.indexOf("\n", to - 1);
             this.Multiline = newLine > -1;
             let openTag = text.slice(from, to);
-            var clt = XML.findCloseTag("<", this.Name, ">", before, text);
+            let clt = XML.findCloseTag("<", this.Name, ">", before, text);
             this.SelfClosed = !!clt && clt.SelfClosed;
             if (!!clt && !this.SelfClosed)
             {
@@ -937,11 +1008,12 @@ export class TagInfo
     }
 
 
+    /** Возвращает язык исходя только из имени тега */
     public static getTagLanguage(tagName: string): Language
     {
-        var res = Language.XML;
+        let res = Language.XML;
 
-        if (tagName.match(new RegExp("^(" + _AllowCodeTags + ")$"))) return Language.CSharp;
+        if (tagName.match(new RegExp("^(" + RegExpPatterns.AllowCodeTags + ")$"))) return Language.CSharp;
 
         switch (tagName.toLocaleLowerCase())
         {
@@ -1192,6 +1264,39 @@ export class TelegramBot
 }
 
 
+
+export class CacheItem<T>
+{
+    private Value: T;
+
+    public Set(item: T)
+    {
+        this.Value = item;
+    }
+
+    public Get(): T
+    {
+        return this.Value;
+    }
+
+    public Remove()
+    {
+        this.Value = undefined;
+    }
+
+    public IsSet()
+    {
+        return typeof this.Value !== 'undefined';
+    }
+
+    /** Проверка на соответствие по `checker` */
+    public SelectIf(checker: (item: T) => boolean): T
+    {
+        return checker(this.Value) ? this.Value : undefined;
+    }
+}
+
+
 //#endregion
 
 
@@ -1395,6 +1500,8 @@ declare global
     {
         /** Продвинутый indexOf */
         find(search: string | RegExp): SearchResult;
+        /** Продвинутый lastIndexOf string=Regexp */
+        findLast(search: string): SearchResult;
     }
 
     interface Array<T>
@@ -1408,6 +1515,14 @@ String.prototype.find = function (search: string | RegExp): SearchResult
 {
     let res = this.match(search);
     let ind = !!res ? this.indexOf(res[0]) : -1;
+    return { Index: ind, Result: res };
+}
+
+String.prototype.findLast = function (search: string): SearchResult
+{
+    let reg = this.match(new RegExp(search, "g"));
+    let res = !!reg ? reg[reg.length - 1].match(search) : null;
+    let ind = !!reg ? this.lastIndexOf(res) : -1;
     return { Index: ind, Result: res };
 }
 

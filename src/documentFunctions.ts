@@ -1,10 +1,11 @@
 'use strict';
 
-import { _AllowCodeTags, KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, EncodeResult, XMLencodeResult, positiveMin, FindTagResult, Encoder } from "./classes";
+import { KeyedCollection, TagInfo, TextRange, Language, logString, LogData, safeString, _pack, showWarning, ExtensionSettings, EncodeResult, XMLencodeResult, positiveMin, FindTagResult, Encoder, RegExpPatterns } from "./classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { languages } from "vscode";
 import { logError, CSFormatter } from "./extension";
+import * as shortHash from "short-hash"
 
 
 // форматирование, проверка и другие операции с текстом документа
@@ -28,7 +29,7 @@ export class FormatResult
 // выбираем функцию по Language
 function LanguageFunction(language: Language)//: (text: string, tab?: string, indent?: number) => Promise<FormatResult>
 {
-    var func: (text: string, tab?: string, indent?: number) => Promise<FormatResult>;
+    let func: (text: string, tab?: string, indent?: number) => Promise<FormatResult>;
 
     switch (language)
     {
@@ -154,7 +155,7 @@ async function formatXML(text: string, tab: string = "\t", indent: number = 0): 
                     formattedBody = "\n" + tmpRes.Result + "\n";
                 }
                 // отступ для AllowCode fake
-                if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + _AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
+                if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + RegExpPatterns.AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
                     formattedBody = " " + formattedBody;
                 if (tag.Closed && !tag.SelfClosed) closeTag = (tag.Multiline ? ind : "") + closeTag;
             }
@@ -282,7 +283,7 @@ async function formatCSS(text: string, tab: string = "\t", indent: number = 0): 
     {
         er = "Ошибка форматирования CSS";
     }
-    var ind = tab.repeat(indent);
+    let ind = tab.repeat(indent);
     newText = ind + newText.replace(/\n/g, "\n" + ind);
     return { Result: newText, Error: er };
 }
@@ -564,19 +565,18 @@ function getElements(text: string, elem: RegExp): KeyedCollection<string>
     {
         let reg = new RegExp(elem, "g");
         let mat = elem.exec(text);
-        //let i = 0;
         let newText = text;
         while (!!mat)
         {
-            let i = new Date().getTime();
-            if (res.Contains("" + i)) i++; // ну вдруг чо =)
+            let i = shortHash(mat[0]);
+            if (res.Contains(i)) throw "Коллекция закодированных элементов уже содержит добавляемый хеш";
             res.AddPair("" + i, mat[0]);
             newText = newText.replace(new RegExp(safeString(mat[0]), "g"), "");
             mat = elem.exec(newText);
         }
     } catch (error)
     {
-        logError("Ошибка получения списка элементов");
+        logError("Ошибка получения списка элементов" + (!!error ? "\n" + error : ""));
     }
     return res;
 }
@@ -586,7 +586,7 @@ function getElements(text: string, elem: RegExp): KeyedCollection<string>
 function replaceElements(text: string, elements: KeyedCollection<string>, delimiter: string): string
 {
     if (!delimiter || elements.Count() == 0) return text;
-    var newText = text;
+    let newText = text;
     elements.forEach(function (i, e)
     {
         newText = newText.replace(new RegExp(safeString(e), "g"), delimiter + i + delimiter);
@@ -599,7 +599,7 @@ function replaceElements(text: string, elements: KeyedCollection<string>, delimi
 function getElementsBack(text: string, encodeResult: XMLencodeResult): string
 {
     if (!encodeResult.Delimiter || encodeResult.EncodedCollection.Count() == 0) return text;
-    var newText = text;
+    let newText = text;
     encodeResult.EncodedCollection.forEach(function (i, e)
     {
         newText = newText.replace(new RegExp(safeString(encodeResult.Delimiter + i + encodeResult.Delimiter), "g"), e);
@@ -630,12 +630,12 @@ export function encodeCS(text: string, delimiter: string): EncodeResult
 /** кодирует CDATA в `text` */
 export function encodeCDATA(text: string, delimiter: string): EncodeResult
 {
-    return encodeElements(text, /<!\[CDATA\[[\S\s]*\]\]>/, delimiter);
+    return encodeElements(text, RegExpPatterns.CDATA, delimiter);
 }
 
 export function encodeXMLXomments(text: string, delimiter: string): EncodeResult
 {
-    return encodeElements(text, /<!--[\S\s]*-->/, delimiter);
+    return encodeElements(text, RegExpPatterns.XMLComment, delimiter);
 }
 
 // получаем разделитель, для временной замены вставок
@@ -648,7 +648,7 @@ export function getReplaceDelimiter(text: string, length?: number): string
     for (let i = 0; i < dels.length; i++) 
     {
         let curDel = dels[i].repeat(length);
-        let mt = text.match(new RegExp(safeString(curDel) + "\\d+" + safeString(curDel), "g"));
+        let mt = text.match(new RegExp(safeString(curDel) + RegExpPatterns.DelimiterContent + safeString(curDel), "g"));
         if (!mt || mt.length == 0) return curDel;
     }
 
@@ -688,14 +688,14 @@ export function originalXML(text: string, data: XMLencodeResult): string
 /** заменяет блок комментариев на пробелы */
 export function clearXMLComments(txt: string): string
 {
-    return replaceWithSpaces(txt, /<!--([\s\S]+?)-->/);
+    return replaceWithSpaces(txt, RegExpPatterns.XMLComment);
 }
 
 
 /** заменяет CDATA на пробелы */
 export function clearCDATA(txt: string): string
 {
-    return replaceWithSpaces(txt, /<!\[CDATA\[[\s\S]*\]\]>/);
+    return replaceWithSpaces(txt, RegExpPatterns.XMLComment);
 }
 
 /** Заменяет на пробелы */
@@ -720,10 +720,10 @@ export function clearCSContents(text: string): string
     let res = text;
     let newText = text;
     let rep = "";
-    let tCount = _AllowCodeTags.match(/\(/g).length;
+    let tCount = RegExpPatterns.AllowCodeTags.match(/\(/g).length;
 
     // Очищаем полные теги
-    let reg = new RegExp("(<(" + _AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*?)(<\\/\\2\\s*>)");
+    let reg = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*?)(<\\/\\2\\s*>)");
     
     let resCS = reg.exec(newText);
 
@@ -739,7 +739,7 @@ export function clearCSContents(text: string): string
     }
 
     // Очищаем незакрытый CS-тег в конце
-    let regEnd = new RegExp("(<(" + _AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?!([\\t ]+\\r?\\n)|(\\s+<\/\\2))[\\s\\S]*)$");
+    let regEnd = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?!([\\t ]+\\r?\\n)|(\\s+<\/\\2))[\\s\\S]*)$");
     resCS = regEnd.exec(res);
     if (!!resCS)
     {
@@ -943,7 +943,7 @@ export function inString(text: string): boolean
 {
     /*
     // выполняется очень долго
-    var regStr = /^((([^'"]*)(("[^"]*")|('[^']*'))*)*)$/;
+    let regStr = /^((([^'"]*)(("[^"]*")|('[^']*'))*)*)$/;
     return !text.match(regStr);
     */
     try

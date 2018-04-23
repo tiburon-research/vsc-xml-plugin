@@ -34,7 +34,7 @@
     "jquery": "^3.3.1",
     "js-beautify": "^1.7.5",
     "jsdom": "^11.6.2",
-    "xml2js": "^0.4.19"
+    "short-hash": "^1.0.0"
   },
   "contributes": {
     "languages": [
@@ -209,9 +209,9 @@
           "default": "G:\\Разное\\TiburonXMLHelper\\Templates"
         },
         "tib.logPath": {
-          "description": "Путь к папке с логами (лучше не менять)",
+          "description": "Путь к папке с логами",
           "type": "string",
-          "default": "G:\\Разное\\TiburonXMLScripterLogs"
+          "default": "G:\\Разное\\TiburonXMLHelper\\Logs"
         },
         "tib.useLinq": {
           "description": "Подставлять методы из библиотеки System.Linq",
@@ -224,6 +224,16 @@
           "default": {
             "braceStyle": "expand"
           }
+        },
+        "tib.enableCache": {
+          "description": "Кэширование данных. Немного ускоряет работу расширения с большими документами",
+          "type": "boolean",
+          "default": false
+        },
+        "tib.showTagInfo": {
+          "description": "Показывать информацию о текущем теге",
+          "type": "boolean",
+          "default": true
         }
       }
     }
