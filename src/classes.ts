@@ -154,13 +154,13 @@ export namespace TibTransform
         {
             let $el = $(this);
             let $newEl = $.XML("<" + to + "></" + to + ">");
-            $newEl.attr('Id', $el.attr('Id'));
+            $newEl.attr('Id', $el.attr('Id'));            
             let txt;
             let $text = $el.find('Text');
             if ($text.length > 0)
                 txt = $text.text();
-            else if (typeof $text.attr('Text') !== typeof undefined)
-                txt = $text.attr('Text');
+            else if (typeof $el.attr('Text') !== typeof undefined)
+                txt = $el.attr('Text');
             $.XML('<Text></Text>').text(txt).appendTo($newEl);
             $el.replaceWith($newEl);
         });
@@ -244,6 +244,7 @@ export class KeyedCollection<T>
         return values;
     }
 
+    /** Очищает всю коллекцию */
     public Clear(): void
     {
         this.items = {};
