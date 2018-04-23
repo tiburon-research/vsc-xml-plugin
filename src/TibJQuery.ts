@@ -115,6 +115,23 @@ export function initJQuery(): any
     Object.assign(newText, JQuery.fn.textOriginal);
     JQuery.fn.text = newText;
 
+
+
+    /** xml() вместе с родителем */
+    JQuery.fn.outerHtml = function ()
+    {
+        let $el = JQuery(this[0]);
+        return JQuery('<parent>').append($el.clone()).html();
+    }
+    JQuery.fn.outerXml = function ()
+    {
+        let $el = JQuery(this[0]);
+        let res = $el.outerHtml();
+        let data = (JQuery.SurveyData as DOMSurveyData);
+        res = XML.originalXML(res, data);
+        return res;
+    }
+
     return JQuery;
 }
 
