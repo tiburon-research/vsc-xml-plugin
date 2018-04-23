@@ -569,13 +569,14 @@ function getElements(text: string, elem: RegExp): KeyedCollection<string>
         while (!!mat)
         {
             let i = shortHash(mat[0]);
+            if (res.Contains(i)) throw "Коллекция закодированных элементов уже содержит добавляемый хеш";
             res.AddPair("" + i, mat[0]);
             newText = newText.replace(new RegExp(safeString(mat[0]), "g"), "");
             mat = elem.exec(newText);
         }
     } catch (error)
     {
-        logError("Ошибка получения списка элементов");
+        logError("Ошибка получения списка элементов" + (!!error ? "\n" + error : ""));
     }
     return res;
 }
