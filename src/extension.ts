@@ -374,7 +374,7 @@ function registerCommands()
             let res = TibDocumentEdits.removeQuestionIds(text);
             applyChanges(getFullRange(editor.document), res, editor);
         } catch (error){
-            logError("Произошла ошибка при удалении айди вопроса в хидере вопроса", editor);
+            logError("Произошла ошибка при удалении Id вопроса из заголовка", editor);
         }
     });
 
