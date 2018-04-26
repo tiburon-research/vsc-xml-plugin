@@ -660,8 +660,9 @@ export function getReplaceDelimiter(text: string, length?: number): string
 export function safeXML(text: string, delimiter?: string): EncodeResult
 {
     let res = new Encoder(text, delimiter);
-    res.Encode(encodeCS); // убираем кодовые вставки
+    // важно сначала убирать CDATA, т.к. в ней могут быть кодовые вставки
     res.Encode(encodeCDATA); // убираем CDATA
+    res.Encode(encodeCS); // убираем кодовые вставки
     return res.ToEncodeResult();
 }
 
