@@ -671,7 +671,7 @@ export function safeXML(text: string, delimiter?: string): EncodeResult
 export function originalXML(text: string, data: XMLencodeResult): string
 {
     let res = getElementsBack(text, data); // возвращаем закодированные элементы
-    res = res.replace(/"(\[c#[\s\S]*\/c#\])"/, "'$1'"); // при parseXML все значения атрибутов переделываются под Attr="Val"
+    res = res.replace(/"(\[c#[\s\S]*?\/c#\])"/, "'$1'"); // при parseXML все значения атрибутов переделываются под Attr="Val"
     return res;
 }
 
