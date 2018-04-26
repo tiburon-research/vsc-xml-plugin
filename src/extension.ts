@@ -1497,7 +1497,7 @@ function getAttributes(str: string): KeyedCollection<string>
 
 
 /** Range всего документа */
-function getFullRange(document: vscode.TextDocument): vscode.Range
+export function getFullRange(document: vscode.TextDocument): vscode.Range
 {
     return new vscode.Range(0, 0, document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
 }

@@ -14,6 +14,12 @@ export class DOMSurveyData implements XMLencodeResult
 {
     Delimiter: string = null;
     EncodedCollection = new KeyedCollection<string>();
+    XMLDeclaration: string;
+
+    toXMLencodeResult(): XMLencodeResult
+    {
+        return { Delimiter: this.Delimiter, EncodedCollection: this.EncodedCollection };
+    }
 }
 
 
@@ -53,10 +59,10 @@ export function initJQuery(): any
     {
         if (!JQuery.SurveyData || !JQuery.SurveyData.Delimiter)
         {
-            showWarning("JQuery инициализтрована неправильно");
+            showWarning("JQuery инициализирована неправильно");
             return text;
-        }
-        return XML.originalXML(text, JQuery.SurveyData)
+        }       
+        return XML.originalXML(text, JQuery.SurveyData.toXMLencodeResult())
     }
 
     /** Возвращает разделитель. Если его нет, то задаёт изходя из переданного XML */
@@ -84,9 +90,22 @@ export function initJQuery(): any
     /** Создаёт корневой элемент, в который обёрнуто содержимое */
     JQuery.XMLDOM = function (el: string, isInitial = true)
     {
-        let res = XML.safeXML(el, JQuery._delimiter(el));
+        let text = el;
+        if (isInitial)
+        {
+            // сохраняем XMLDeclaration
+            let mt = text.match(/^\s*<\?xml[^>]*\?>/i);
+            if (!!mt)
+            {
+                text = text.replace(mt[0], "");
+                (JQuery.SurveyData as DOMSurveyData).XMLDeclaration = mt[0];
+            }
+        }
+        let res = XML.safeXML(text, JQuery._delimiter(text));
         JQuery._saveData(res.toXMLencodeResult(), isInitial);
-        return JQuery(JQuery.parseXML('<Root>' + res.Result + '</Root>')).find('Root');
+        let root = JQuery(JQuery.parseXML('<Root>' + res.Result + '</Root>')).find('Root');
+        root.isRootElement = true;
+        return root;
     }
 
     /** Создаёт JQuery-элемент(ы) из строки XML */
@@ -101,6 +120,7 @@ export function initJQuery(): any
         let res = el.html();
         let data = (JQuery.SurveyData as DOMSurveyData);
         res = JQuery.decode(res);
+        if (this.isRootElement) res = JQuery.SurveyData.XMLDeclaration + res;
         return res;
     }
 
