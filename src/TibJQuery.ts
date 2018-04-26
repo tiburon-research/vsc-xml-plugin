@@ -36,55 +36,10 @@ export function initJQuery(): any
     // данные Survey
     JQuery.SurveyData = new DOMSurveyData();
 
-    // преобразуем селекторы при вызове методов
-    for (let key in JQuery)
+    /** преобразуем селекторы в удобные */
+    JQuery.safeSelector = function (selector: string): string
     {
-        if (typeof JQuery[key] == "function")
-        {
-            // изменяем входные параметры
-            let f = JQuery[key];
-            JQuery[key] = function (...params)
-            {
-                let sParams = safeParams(params);
-                return f.apply(this, sParams);
-            }
-            // сохраняем свойства объекта
-            Object.assign(JQuery[key], f);
-        }
-    }
-
-
-    /** Возвращает originalXML */
-    JQuery.decode = function(text: string)
-    {
-        if (!JQuery.SurveyData || !JQuery.SurveyData.Delimiter)
-        {
-            showWarning("JQuery инициализирована неправильно");
-            return text;
-        }       
-        return XML.originalXML(text, JQuery.SurveyData.toXMLencodeResult())
-    }
-
-    /** Возвращает разделитель. Если его нет, то задаёт изходя из переданного XML */
-    JQuery._delimiter = function(el): string
-    {
-        if (!JQuery.SurveyData.Delimiter)
-        {
-            JQuery.SurveyData.Delimiter = XML.getReplaceDelimiter(el);
-        }
-        return JQuery.SurveyData.Delimiter;
-    }
-
-    /** Сохраняет данные кодирования */
-    JQuery._saveData = function(data: XMLencodeResult, isInitial = false): void
-    {
-        if (isInitial)
-        {
-            // замена данных в объекте $
-            JQuery.SurveyData.Delimiter = data.Delimiter;
-            (JQuery.SurveyData as DOMSurveyData).EncodedCollection.Clear();
-        }
-        (JQuery.SurveyData as DOMSurveyData).EncodedCollection.AddRange(data.EncodedCollection);
+        return safeSelector(selector);
     }
 
     /** Создаёт корневой элемент, в который обёрнуто содержимое */
@@ -171,7 +126,6 @@ export function initJQuery(): any
     JQuery.fn.attr = newAttr;
 
 
-
     /** xml() вместе с родителем */
     JQuery.fn.outerHtml = function ()
     {
@@ -186,6 +140,44 @@ export function initJQuery(): any
         res = JQuery.decode(res);
         return res;
     }
+
+    
+    //--------- техническое
+
+
+    /** Возвращает разделитель. Если его нет, то задаёт изходя из переданного XML */
+    JQuery._delimiter = function(el): string
+    {
+        if (!JQuery.SurveyData.Delimiter)
+        {
+            JQuery.SurveyData.Delimiter = XML.getReplaceDelimiter(el);
+        }
+        return JQuery.SurveyData.Delimiter;
+    }
+
+    /** Сохраняет данные кодирования */
+    JQuery._saveData = function(data: XMLencodeResult, isInitial = false): void
+    {
+        if (isInitial)
+        {
+            // замена данных в объекте $
+            JQuery.SurveyData.Delimiter = data.Delimiter;
+            (JQuery.SurveyData as DOMSurveyData).EncodedCollection.Clear();
+        }
+        (JQuery.SurveyData as DOMSurveyData).EncodedCollection.AddRange(data.EncodedCollection);
+    }
+
+    /** Возвращает originalXML */
+    JQuery.decode = function(text: string)
+    {
+        if (!JQuery.SurveyData || !JQuery.SurveyData.Delimiter)
+        {
+            showWarning("JQuery инициализирована неправильно");
+            return text;
+        }       
+        return XML.originalXML(text, JQuery.SurveyData.toXMLencodeResult())
+    }
+
 
     return JQuery;
 }
