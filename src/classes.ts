@@ -132,7 +132,7 @@ export class Encoder
 }
 
 
-export namespace TibTransform
+export namespace TibDocumentEdits
 {
 
     export function AnswersToItems(text: string): string
@@ -164,15 +164,29 @@ export namespace TibTransform
             $.XML('<Text></Text>').text(txt).appendTo($newEl);
             $el.replaceWith($newEl);
         });
+
         return $dom.xml();
     }
-}
 
-export namespace TibDelete
-{
+    export function ToAgeList(text: string): string{
+        let ageLimits = text.match(/\d+/g);
 
-    export function questionIDInQuestionHeader(text: string): string{
+        let $dom = $.XMLDOM("<List></List>");
+        let $list = $dom.find("List");
+        $list.attr('Id', "ageList");
 
+        for(let i = 0, length = ageLimits.length; i < length; i += 2){
+            let $item = $.XML("<Item></Item>");
+            $item.attr("Id", i/2 + 1);
+            $item.attr("Var", ageLimits[i]+","+ageLimits[i+1]);
+            $.XML('<Text></Text>').text(ageLimits[i]+"_"+ageLimits[i+1]).appendTo($item);
+            $item.appendTo($list);
+        }
+
+        return $dom.xml();
+    }
+
+    export function removeQuestionIds(text: string): string{
         let $dom = $.XMLDOM(text);
         let $question = $dom.find("Question");
 
@@ -191,14 +205,11 @@ export namespace TibDelete
                     $questionHeader.text($headerText);
                 }
             });
-             
         });
 
         return $dom.xml();
     }
-
 }
-
 
 export class KeyedCollection<T>
 {
@@ -1479,6 +1490,38 @@ export function openFile(path: string): void{
                 });
             })
         });
+}
+
+/** форматирование xml файл */
+export function formatXml(xml) {
+    var formatted = '';
+    var reg = /(>)(<)(\/*)/g;
+    xml = xml.replace(reg, '$1\r\n$2$3');
+    var pad = 0;
+    $.each(xml.split('\r\n'), function(index, node) {
+        var indent = 0;
+        if (node.match( /.+<\/\w[^>]*>$/ )) {
+            indent = 0;
+        } else if (node.match( /^<\/\w/ )) {
+            if (pad != 0) {
+                pad -= 1;
+            }
+        } else if (node.match( /^<\w([^>]*[^\/])?>.*$/ )) {
+            indent = 1;
+        } else {
+            indent = 0;
+        }
+
+        var padding = '';
+        for (var i = 0; i < pad; i++) {
+            padding += '\t';
+        }
+
+        formatted += padding + node + '\r\n';
+        pad += indent;
+    });
+
+    return formatted;
 }
 
 

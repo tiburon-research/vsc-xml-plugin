@@ -86,7 +86,12 @@
         "category": "tib"
       },
       {
-        "command": "tib.delete.QuestionIDInQuestionHeader",
+        "command": "tib.transform.ToAgeList",
+        "title": "-> AgeList",
+        "category": "tib"
+      },
+      {
+        "command": "tib.remove.QuestionIds",
         "title": "Удалить айди вопроса из хидера вопроса",
         "category": "tib"
       },
@@ -203,7 +208,7 @@
           "type": "string",
           "default": "T:\\=Tiburon_NEW\\!!!Проекты\\=OWN\\Deman\\Adaptive\\deman_adaptive.xml"
         },
-        "tib.templatePath": {
+        "tib.templatePathFolder": {
           "description": "Путь к шаблону tibXML",
           "type": "string",
           "default": "G:\\Разное\\TiburonXMLHelper\\Templates"
@@ -249,7 +254,6 @@
     "@types/mocha": "^2.2.42",
     "@types/node": "^7.0.43",
     "typescript": "^2.5.3",
-    "vscode": "^1.1.14",
-    "@types/vscode": ""
+    "vscode": "^1.1.14"
   }
 }
