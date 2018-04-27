@@ -689,14 +689,20 @@ export function originalXML(text: string, data: XMLencodeResult): string
 /** заменяет блок комментариев на пробелы */
 export function clearXMLComments(txt: string): string
 {
-    return replaceWithSpaces(txt, RegExpPatterns.XMLComment);
+    let res = txt;
+    res = replaceWithSpaces(res, RegExpPatterns.XMLComment);
+    res = replaceWithSpaces(res, RegExpPatterns.XMLLastComment);
+    return res;
 }
 
 
 /** заменяет CDATA на пробелы */
 export function clearCDATA(txt: string): string
 {
-    return replaceWithSpaces(txt, RegExpPatterns.XMLComment);
+    let res = txt;
+    res = replaceWithSpaces(res, RegExpPatterns.CDATA);
+    res = replaceWithSpaces(res, RegExpPatterns.CDATALast);
+    return res;
 }
 
 /** Заменяет на пробелы */
