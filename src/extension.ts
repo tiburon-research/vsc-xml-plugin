@@ -721,7 +721,7 @@ function autoComplete()
         {
             let completionItems = [];
             let tag = getCurrentTag(document, position);
-            if (tag && tag.GetLaguage() != Language.CSharp && !tag.OpenTagIsClosed && AutoCompleteArray.Attributes[tag.Id] && !tag.InString())
+            if (!!tag && tag.GetLaguage() == Language.XML && !tag.OpenTagIsClosed && !tag.InString() && AutoCompleteArray.Attributes[tag.Id])
             {
                 let existAttrs = tag.AttributeNames();
                 AutoCompleteArray.Attributes[tag.Id].forEach(element =>
@@ -1303,12 +1303,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
         let text = txt || getPreviousText(document, position);
         let pure: string;
         // сначала пытаемся вытащить из кэша
-        if (Cache.Active()) 
-        {
-            if (Cache.TagIsActual(document, position, text)) return Cache.Tag.Get();
-            // проверяем длину PreviousTextSafe в кэше (актуально для hover)
-            if (Cache.PreviousTextIsActual(text)) pure = Cache.PreviousTextSafe.Get();
-        }
+        if (Cache.TagIsActual(document, position, text)) return Cache.Tag.Get();
 
         if (!pure) pure = CurrentTag.PrepareXML(text);
 
@@ -1769,6 +1764,7 @@ function showCurrentInfo(tag: CurrentTag): void
 
 class CacheSet 
 {
+    /** От начала документа до position */
     public PreviousTextSafe = new CacheItem<string>();
     public Tag = new CacheItem<CurrentTag>();
     public Methods = new CacheItem<TibMethods>();
@@ -1782,19 +1778,22 @@ class CacheSet
         if (!this.Active() || !this.Tag.IsSet()) return false;
 
         let oldTag = this.Tag.Get();
-        // если текст изменился, то обновляем TextSafe
-        if (!this.PreviousTextIsActual(text)) this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
+
+        // нет ли в новом тексте чего такого
+        if (!this.PreviousTextIsValid(text, oldTag)) return false;
 
         let cachedSafeText = this.PreviousTextSafe.Get();
-        let cachedInd = cachedSafeText.findLast("<\\w+");
+        //logString(cachedSafeText)
 
-        // Если  изменено, то проверять (пока) будем условно (зато быстро):
-        if (cachedInd.Index != oldTag.StartIndex) return false;
-
-        // Если PreviousText поменялся, тогда надо обновить тег
-        if (text != oldTag.PreviousText)
+        // Если PreviousText поменялся, тогда надо обновить (только текущий) тег и PreviousTextSafe
+        if (text.length != cachedSafeText.length || text != oldTag.PreviousText)
         {
-            let rest = text.slice(cachedInd.Index);
+            console.log('updating')
+            this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
+            //console.log('updating')
+            let rest = text.slice(oldTag.StartIndex);
+            rest = CurrentTag.PrepareXML(rest);
+            //logString(rest)
             let currentTagRange = getNextParent(document, rest, text);
             if (!currentTagRange) // например, тег стал selfclosed
             {
@@ -1810,10 +1809,28 @@ class CacheSet
         return true;
     }
 
-
-    public PreviousTextIsActual(text: string): boolean
+    /** Проверяет и, если что, обновляет 
+     * 
+     * Проверка: последний открывающий и закрывающий теги на тех же местах
+    */
+    private PreviousTextIsValid(text: string, oldTag): boolean
     {
-        return this.PreviousTextSafe.IsSet() && text.length == this.PreviousTextSafe.Get().length;
+        let res = false;
+        if (this.PreviousTextSafe.IsSet())
+        {
+            let cachedSafeText = this.PreviousTextSafe.Get();
+            logString(cachedSafeText)
+            logString()
+            let cachedLastOpen = cachedSafeText.findLast("<\\w+");
+            let cachedLastClosed = cachedSafeText.findLast("<\\/\\w*");
+            let newLastClosed = text.findLast("<\\/\\w*");
+            //console.log(cachedLastClosed)
+            //console.log(newLastClosed)
+            res = oldTag.StartIndex != cachedLastOpen.Index || cachedLastClosed.Index != newLastClosed.Index;
+            //if (res) logString(text)
+        }
+        if (!res) this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
+        return res;
     }
 
 
