@@ -1322,7 +1322,6 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
             StartPosition: current.StartPosition,
             StartIndex: document.offsetAt(current.StartPosition),
             PreviousText: text,
-            PreviousTextSafe: pure,
             Body: tag.OpenTagIsClosed ? document.getText(new vscode.Range(lastRange.end, position)) : undefined,
             LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
         });
