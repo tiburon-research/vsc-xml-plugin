@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields, RegExpPatterns, openFile, formatXml} from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields, RegExpPatterns, openFile, formatXml } from "./classes";
 import * as XML from './documentFunctions';
 import { SurveyList } from './surveyObjects';
 import * as fs from 'fs';
@@ -366,14 +366,17 @@ function registerCommands()
     });
 
     //Удаление айди вопроса в хидере вопроса
-    registerCommand('tib.remove.QuestionIds', () => {
+    registerCommand('tib.remove.QuestionIds', () =>
+    {
         let editor = vscode.window.activeTextEditor;
 
-        try{
+        try
+        {
             let text = editor.document.getText();
             let res = TibDocumentEdits.removeQuestionIds(text);
             applyChanges(getFullRange(editor.document), res, editor);
-        } catch (error){
+        } catch (error)
+        {
             logError("Произошла ошибка при удалении Id вопроса из заголовка", editor);
         }
     });
@@ -407,14 +410,15 @@ function registerCommands()
     });
 
     //преобразовать в список c возрастом
-    registerCommand('tib.transform.ToAgeList', () => {
+    registerCommand('tib.transform.ToAgeList', () =>
+    {
         let editor = vscode.window.activeTextEditor;
 
         try
         {
             let text = editor.document.getText(editor.selection);
             let res = TibDocumentEdits.ToAgeList(text);
-            let xmlFormated  = formatXml(res);
+            let xmlFormated = formatXml(res);
             applyChanges(editor.selection, xmlFormated, editor);
         } catch (error)
         {
@@ -485,19 +489,23 @@ function registerCommands()
     });
 
     //Создание tibXML шаблона
-    registerCommand('tib.template', () => {
+    registerCommand('tib.template', () =>
+    {
         let templatePathFolder = Settings.Item("templatePathFolder") + '\\';
-        if (!templatePathFolder){
+        if (!templatePathFolder)
+        {
             showError("Невозможно получить доступ к папке");
             return;
         }
 
-        let tibXMLFiles = fs.readdirSync(templatePathFolder).filter(x =>{
+        let tibXMLFiles = fs.readdirSync(templatePathFolder).filter(x =>
+        {
             let state = fs.statSync(templatePathFolder + x);
             return !state.isDirectory();
         })
 
-        vscode.window.showQuickPick(tibXMLFiles, { placeHolder: "Выберите шаблон" }).then(x =>{
+        vscode.window.showQuickPick(tibXMLFiles, { placeHolder: "Выберите шаблон" }).then(x =>
+        {
             openFile(templatePathFolder + x);
         });
     });
@@ -1814,8 +1822,6 @@ class CacheSet
     {
         return !Settings.Contains("enableCache") || !!Settings.Item("enableCache");
     }
-
-    
 
 }
 

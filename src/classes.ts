@@ -32,7 +32,9 @@ export const RegExpPatterns = {
     SelfClosedTags: "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)",
     InlineSpecial: "(repeat)|(place)",
     /** Набор символов разделителя замены */
-    DelimiterContent: "[0-9][a-z][A-Z]"
+    DelimiterContent: "[0-9][a-z][A-Z]",
+    SingleAttribute: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/,
+    Attributes: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g
 }
 
 
@@ -727,13 +729,14 @@ export class CurrentTag
     /** возвращает коллекцию атрибутов */
     public static GetAttributesArray(str: string): KeyedCollection<string>
     {
-        let mt = str.match(/\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g);
+        let mt = str.match(RegExpPatterns.Attributes);
         let res: KeyedCollection<string> = new KeyedCollection<string>();
         if (mt)
         {
+            let reg = new RegExp(RegExpPatterns.SingleAttribute);
             mt.forEach(element =>
             {
-                let parse = element.match(/\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/);
+                let parse = element.match(reg);
                 if (parse) res.AddPair(parse[1], parse[2].replace(/^('|")(.*)('|")$/, "$2"));
             });
         }
@@ -795,8 +798,14 @@ export class CurrentTag
 
 
     /** Курсор находится в строке */
-    public InString()
+    public InString(): boolean
     {
+        if (!this.OpenTagIsClosed)
+        {
+            let rest = this.PreviousText.slice(this.StartIndex);
+            rest = rest.replace(RegExpPatterns.Attributes, "");
+            return !!rest.match(/(("[^"]*)|('[^']*))$/);
+        }
         return !!this.Body && XML.inString(this.Body);
     }
 
