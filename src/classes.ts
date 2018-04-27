@@ -564,9 +564,9 @@ export class InlineAttribute
  */
 export class SimpleTag
 {
-    constructor(documrnt: vscode.TextDocument, range: vscode.Range)
+    constructor(document: vscode.TextDocument, range: vscode.Range)
     {
-        let raw = documrnt.getText(range);
+        let raw = document.getText(range);
         this.StartPosition = range.start.translate(0, raw.indexOf("<"));
         this.Raw = raw;
         let res = raw.match(/<(\w+)(\W|$)/);
@@ -609,7 +609,7 @@ export class SimpleTag
 export interface CurrentTagFields
 {
     PreviousText: string;
-    PreviousTextSafe: string;
+    //PreviousTextSafe: string;
     StartPosition?: vscode.Position;
     StartIndex?: number;
     OpenTagIsClosed?: boolean;

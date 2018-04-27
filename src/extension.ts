@@ -1776,27 +1776,28 @@ class CacheSet
 
         let oldTag = this.Tag.Get();
         // если текст изменился, то обновляем TextSafe
-        //console.log(text.length == this.PreviousTextSafe.Get().length);
         if (!this.PreviousTextIsActual(text)) this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
 
-        let current = this.PreviousTextSafe.Get();
-        let curInd = current.findLast("<\\w+");
+        let cachedSafeText = this.PreviousTextSafe.Get();
+        let cachedInd = cachedSafeText.findLast("<\\w+");
 
         // Если  изменено, то проверять (пока) будем условно (зато быстро):
-        if (curInd.Index != oldTag.StartIndex) return false;
+        if (cachedInd.Index != oldTag.StartIndex) return false;
 
-        // Если ок, но PreviousText поменялся, тогда надо обновить тег
-        if (current != oldTag.PreviousText)
+        // Если PreviousText поменялся, тогда надо обновить тег
+        if (text != oldTag.PreviousText)
         {
-            let rest = text.slice(curInd.Index);
+            let rest = text.slice(cachedInd.Index);
             let currentTagRange = getNextParent(document, rest, text);
+            if (!currentTagRange) // например, тег стал selfclosed
+            {
+                return false;
+            }
             let currentTag = new SimpleTag(document, currentTagRange);
             let body = currentTag.isClosed() ? document.getText(new vscode.Range(currentTagRange.end, position)) : undefined;
-
             oldTag.Update(currentTag, {
                 Body: body,
-                PreviousText: text,
-                PreviousTextSafe: current
+                PreviousText: text
             });
         }
         return true;
