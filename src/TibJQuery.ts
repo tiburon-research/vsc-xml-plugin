@@ -75,7 +75,7 @@ export function initJQuery(): any
         let res = el.html();
         let data = (JQuery.SurveyData as DOMSurveyData);
         res = JQuery.decode(res);
-        if (this.isRootElement) res = JQuery.SurveyData.XMLDeclaration + res;
+        if (this.isRootElement && !!JQuery.SurveyData.XMLDeclaration) res = JQuery.SurveyData.XMLDeclaration + res;
         return res;
     }
 
