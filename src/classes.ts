@@ -158,14 +158,20 @@ export namespace TibDocumentEdits
         {
             let $el = $(this);
             let $newEl = $.XML("<" + to + "></" + to + ">");
-            $newEl.attr('Id', $el.attr('Id'));            
-            let txt;
+            let id = $el.attr('Id');
+            if (!!id) $newEl.attr('Id', id);
+            let txt = "";
             let $text = $el.find('Text');
             if ($text.length > 0)
                 txt = $text.text();
-            else if (typeof $el.attr('Text') !== typeof undefined)
-                txt = $el.attr('Text');
-            $.XML('<Text></Text>').text(txt).appendTo($newEl);
+            else
+            {
+                let at = $el.attr('Text');
+                if (!!at) txt = at;
+            }
+            let $nxml = $.XML('<Text></Text>');
+            if (!!txt) $nxml.text(txt);
+            $nxml.appendTo($newEl);
             $el.replaceWith($newEl);
         });
 

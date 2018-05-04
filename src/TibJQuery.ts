@@ -170,6 +170,7 @@ export function initJQuery(): any
     /** Возвращает originalXML */
     JQuery.decode = function(text: string)
     {
+        if (!text) return text;
         if (!JQuery.SurveyData || !JQuery.SurveyData.Delimiter)
         {
             showWarning("JQuery инициализирована неправильно");
