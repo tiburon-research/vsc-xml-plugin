@@ -34,7 +34,8 @@ export const RegExpPatterns = {
     /** Набор символов разделителя замены */
     DelimiterContent: "[0-9][a-z][A-Z]",
     SingleAttribute: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/,
-    Attributes: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g
+    Attributes: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g,
+    OpenTagFull: /^\s*<\w+(\s*(\w+)=(("[^"]*")|(('[^']*')))\s*)*\s*\/?>/
 }
 
 
@@ -577,8 +578,14 @@ export class SimpleTag
     constructor(document: vscode.TextDocument, range: vscode.Range)
     {
         let raw = document.getText(range);
-        this.StartPosition = range.start.translate(0, raw.indexOf("<"));
+        let StartPosition = range.start.translate(0, raw.indexOf("<"));
         this.Raw = raw;
+        let cl = this.Raw.find(RegExpPatterns.OpenTagFull);
+        let from = document.offsetAt(range.start);
+        if (cl.Index > -1)
+            this.OpenTagRange = new vscode.Range(StartPosition, document.positionAt(from + cl.Result[0].length));
+        else
+            this.OpenTagRange = new vscode.Range(StartPosition, range.end);
         let res = raw.match(/<(\w+)(\W|$)/);
         if (!!res) this.Name = res[1];
     }
@@ -604,13 +611,14 @@ export class SimpleTag
     /** Закрыт ли открывающий тег */
     public isClosed(): boolean
     {
-        return !!this.Raw.match(/>\s*$/);
+        return !!this.Raw.match(RegExpPatterns.OpenTagFull);
     }
 
     public readonly Name: string;
     protected Attrs: KeyedCollection<string>;
     /** Позиция открывающего тега */
-    public StartPosition: vscode.Position;
+    //public readonly StartPosition: vscode.Position;
+    public readonly OpenTagRange: vscode.Range;
 
     private readonly Raw: string; // хранение исходных данных
 }
@@ -625,6 +633,8 @@ export interface CurrentTagFields
     OpenTagIsClosed?: boolean;
     LastParent?: SimpleTag;
     Body?: string;
+    Parents?: SimpleTag[];
+    OpenTagRange?: vscode.Range;
 }
 
 
@@ -645,8 +655,9 @@ export class CurrentTag
     public Parents: Array<SimpleTag> = [];
     public LastParent: SimpleTag;
     /** Откуда начинается */
-    public StartPosition: vscode.Position;
+    //public StartPosition: vscode.Position;
     public StartIndex: number;
+    public OpenTagRange: vscode.Range;
     /** Текст от начала документа до Position */
     public PreviousText = "";
 
@@ -668,7 +679,7 @@ export class CurrentTag
         });
     }
 
-    /** Обновление тега */
+    /** Обновление только самогО тега */
     private _update(tag: string | SimpleTag)
     {
         if (typeof tag == "string")
@@ -682,6 +693,7 @@ export class CurrentTag
             this.Id = tag.Name;
             this.SetAttributes(tag.getAttributes());
             this.OpenTagIsClosed = tag.isClosed();
+            this.OpenTagRange = tag.OpenTagRange;
 
             // Id для Repeat
             if (this.Name == "Repeat")
@@ -689,13 +701,33 @@ export class CurrentTag
                 let source = tag.getRepeatSource();
                 if (!!source) this.Id == source + "Repeat";
             }
-        } 
+        }
+    }
+
+    /** Задаёт родителей */
+    private _setParents(data: SimpleTag[] | CurrentTagFields)
+    {
+        let parents: SimpleTag[];
+        if (Array.isArray(data)) parents = data;
+        else
+        {
+            if (!data) return;
+            parents = data.Parents;
+        }
+        this.Parents = parents;
+        if (!!parents && parents.length > 0)
+        {
+            this.LastParent = parents.last();
+            // Id для Item
+            if (parents && this.Name == "Item") this.Id = parents.last().Name + "Item";
+        }
     }
 
     /** Сброс закешированного */
     private _reset()
     {
         this.Language = null;
+        this.LastParent = null;
     }
 
 
@@ -705,12 +737,7 @@ export class CurrentTag
     constructor(tag: string | SimpleTag, parents?: SimpleTag[])
     {
         this._update(tag);
-        if (!!parents && parents.length > 0)
-        {
-            this.Parents = parents;
-            // Id для Item
-            if (parents && this.Name == "Item") this.Id = parents.last().Name + "Item";
-        }
+        this._setParents(parents);
     }
 
     /** Подготавливает TibXML для поиска теги */
@@ -847,9 +874,17 @@ export class CurrentTag
     public SetFields(fields: CurrentTagFields)
     {
         this._reset();
+        if (!!fields.Parents && !!fields.LastParent) fields.LastParent = undefined;
         for (let key in fields)
         {
-            if (typeof fields[key] != 'undefined') this[key] = fields[key];
+            switch (key) {
+                case "Parents":
+                    this._setParents(fields[key]);
+                    break;
+                default:
+                    if (typeof fields[key] != 'undefined') this[key] = fields[key];    
+                    break;
+            }
         }
     }
 
@@ -1309,11 +1344,13 @@ export class CacheItem<T>
         return this.Value;
     }
 
+    /** Очистка */
     public Remove()
     {
         this.Value = undefined;
     }
 
+    /** Проверка на undefined */
     public IsSet()
     {
         return typeof this.Value !== 'undefined';

@@ -90,11 +90,13 @@ export function activate(context: vscode.ExtensionContext)
         Settings.update(vscode.workspace.getConfiguration('tib'));
     })
 
-    function reload()
+    /** Обновление документа */
+    function reload(clearCache = true)
     {
         if (!editor || editor.document.languageId != "tib") return;
         try
         {
+            if (clearCache && Cache.Active()) Cache.Clear();
             saveMethods(editor);
             updateNodesIds(editor);
         } catch (er)
@@ -114,7 +116,7 @@ export function activate(context: vscode.ExtensionContext)
     higlight();
 
     // для каждого дукумента свои
-    reload();
+    reload(false);
 
     vscode.workspace.onDidOpenTextDocument(event =>
     {
@@ -135,8 +137,9 @@ export function activate(context: vscode.ExtensionContext)
         if (inProcess || !editor || editor.document.languageId != "tib") return;
         let originalPosition = editor.selection.start.translate(0, 1);
         let text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
+        if (Cache.Active()) Cache.Update(editor.document, originalPosition, text);
         let tag = getCurrentTag(editor.document, originalPosition, text);
-        reload();
+        reload(false);
         insertAutoCloseTag(event, editor, tag, text);
         insertSpecialSnippets(event, editor, text, tag);
         showCurrentInfo(tag);
@@ -300,7 +303,7 @@ function registerCommands()
         let editor = vscode.window.activeTextEditor;
         let tag = getCurrentTag(editor.document, editor.selection.active);
         if (!tag) return;
-        let from = tag.StartPosition;
+        let from = tag.OpenTagRange.start;
         let cl = findCloseTag("<", tag.Name, ">", editor.document, from.translate(0, 1));
         if (!cl) return;
         let to = cl.end;
@@ -671,7 +674,7 @@ function autoComplete()
                     if (res)
                     {
                         let ci = new vscode.CompletionItem("Item", vscode.CompletionItemKind.Snippet);
-                        let from_pos = tag.StartPosition;
+                        let from_pos = tag.OpenTagRange.start;
                         let range = new vscode.Range(from_pos.translate(0, 1), position);
 
                         ci.detail = "Структура Item для " + parent;
@@ -684,7 +687,7 @@ function autoComplete()
                 else if ("Answer".indexOf(tag.Name) > -1)
                 {
                     let ci = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
-                    let from_pos = tag.StartPosition;
+                    let from_pos = tag.OpenTagRange.start;
                     let range = new vscode.Range(from_pos.translate(0, 1), position);
                     ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
 
@@ -1303,7 +1306,9 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
         let text = txt || getPreviousText(document, position);
         let pure: string;
         // сначала пытаемся вытащить из кэша
-        if (Cache.TagIsActual(document, position, text)) return Cache.Tag.Get();
+        //if (Cache.TagIsActual(document, position, text)) return Cache.Tag.Get();
+
+        if (Cache.Active() && Cache.Tag.IsSet()) return Cache.Tag.Get();
 
         if (!pure) pure = CurrentTag.PrepareXML(text);
 
@@ -1322,13 +1327,13 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
         // Заполняем поля
         let lastRange = ranges.last();
         tag.SetFields({
-            StartPosition: current.StartPosition,
-            StartIndex: document.offsetAt(current.StartPosition),
+            StartPosition: current.OpenTagRange.start,
+            StartIndex: document.offsetAt(current.OpenTagRange.start),
             PreviousText: text,
             Body: tag.OpenTagIsClosed ? document.getText(new vscode.Range(lastRange.end, position)) : undefined,
             LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
         });
-        Cache.Tag.Set(tag);
+        //Cache.Tag.Set(tag);
         return tag;
     } catch (error)
     {
@@ -1339,13 +1344,16 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
 }
 
 
-/** массив из Range всех незакрытых тегов */
-function getParentRanges(document: vscode.TextDocument, prevText: string): vscode.Range[]
+/** массив из Range всех незакрытых тегов 
+ * @param prevText предыдущий текст (от начала документа)
+ * @param startFrom откуда начинать
+*/
+function getParentRanges(document: vscode.TextDocument, prevText: string, startFrom: number = 0): vscode.Range[]
 {
     let res: vscode.Range[] = [];
-    let next = getNextParent(document, prevText);
+    let rest = prevText.slice(startFrom);
+    let next = getNextParent(document, rest, prevText);
     let i = 0;
-    let rest: string;
     while (!!next && i < 50)
     {
         res.push(next);
@@ -1361,21 +1369,20 @@ function getParentRanges(document: vscode.TextDocument, prevText: string): vscod
  * 
  * Возвращает Range открывающего или `null` если больше нет
 */
-function getNextParent(document: vscode.TextDocument, text: string, fullText?: string): vscode.Range
+function getNextParent(document: vscode.TextDocument, text: string, fullPrevText?: string): vscode.Range
 {
     let res = text.find(/<((?!xml)(\w+))/); // находим открывающийся
     if (res.Index < 0) return null;// открытых больше нет
     let rest = text.slice(res.Index); // от начала открывающегося
     let lastIndex = indexOfOpenedEnd(rest); // ищем его конец    
 
-    if (!fullText) fullText = text; // если первый раз
-    let shift = fullText.length - text.length + res.Index; // сдвиг относительно начала документа
-
+    if (!fullPrevText) fullPrevText = text; // если первый раз
+    let shift = fullPrevText.length - text.length + res.Index; // сдвиг относительно начала документа
     let from = document.positionAt(shift); // стартовая позиция
 
     if (lastIndex < 0) // если открывающий тег неполный, то считаем, что курсор сейчас в нём
     {
-        let to = document.positionAt(fullText.length - 1).translate(0, 1);
+        let to = document.positionAt(fullPrevText.length - 1).translate(0, 1);
         return new vscode.Range(from, to);
     }
 
@@ -1383,7 +1390,7 @@ function getNextParent(document: vscode.TextDocument, text: string, fullText?: s
     lastIndex += shift;
 
     // ищем закрывающий
-    let closingTag = XML.findCloseTag("<", res.Result[1], ">", shift, fullText);
+    let closingTag = XML.findCloseTag("<", res.Result[1], ">", shift, fullPrevText);
 
     if (!closingTag) // если не закрыт, то возвращаем его
     {
@@ -1392,9 +1399,9 @@ function getNextParent(document: vscode.TextDocument, text: string, fullText?: s
     }
 
     // продолжаем искать после закрывающего
-    if (closingTag.SelfClosed) rest = fullText.slice(lastIndex);
-    else rest = fullText.slice(closingTag.Range.To + 1);
-    return getNextParent(document, rest, fullText);
+    if (closingTag.SelfClosed) rest = fullPrevText.slice(lastIndex);
+    else rest = fullPrevText.slice(closingTag.Range.To + 1);
+    return getNextParent(document, rest, fullPrevText);
 }
 
 
@@ -1752,7 +1759,7 @@ function showCurrentInfo(tag: CurrentTag): void
 {
     if (!Settings.Item("showTagInfo")) return;
     let info = "";
-    if (!tag) info = "Где я?";
+    if (!tag) info = "";
     else
     {
         let lang = Language[tag.GetLaguage()];
@@ -1766,71 +1773,108 @@ class CacheSet
 {
     /** От начала документа до position */
     public PreviousTextSafe = new CacheItem<string>();
+    public PreviousText = new CacheItem<string>();
     public Tag = new CacheItem<CurrentTag>();
     public Methods = new CacheItem<TibMethods>();
     public CurrentNodes = new CacheItem<SurveyNodes>();
 
+    // поля для быстрой обработки
+    private Keys = ["PreviousTextSafe", "PreviousText", "Tag", "Methods", "CurrentNodes"];
 
-    /** Можно ли пользоваться кэшем CurrentTag */
-    public TagIsActual(document: vscode.TextDocument, position: vscode.Position, text: string): boolean
+    /** Полное обновление */
+    private updateAll(document: vscode.TextDocument, position: vscode.Position, text: string): void
     {
-        // проверяем задан ли тег
-        if (!this.Active() || !this.Tag.IsSet()) return false;
-
-        let oldTag = this.Tag.Get();
-
-        // нет ли в новом тексте чего такого
-        if (!this.PreviousTextIsValid(text, oldTag)) return false;
-
-        let cachedSafeText = this.PreviousTextSafe.Get();
-        //logString(cachedSafeText)
-
-        // Если PreviousText поменялся, тогда надо обновить (только текущий) тег и PreviousTextSafe
-        if (text.length != cachedSafeText.length || text != oldTag.PreviousText)
-        {
-            console.log('updating')
-            this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
-            //console.log('updating')
-            let rest = text.slice(oldTag.StartIndex);
-            rest = CurrentTag.PrepareXML(rest);
-            //logString(rest)
-            let currentTagRange = getNextParent(document, rest, text);
-            if (!currentTagRange) // например, тег стал selfclosed
-            {
-                return false;
-            }
-            let currentTag = new SimpleTag(document, currentTagRange);
-            let body = currentTag.isClosed() ? document.getText(new vscode.Range(currentTagRange.end, position)) : undefined;
-            oldTag.Update(currentTag, {
-                Body: body,
-                PreviousText: text
-            });
-        }
-        return true;
+        this.Clear();
+        this.PreviousText.Set(text);
+        this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
+        this.Tag.Set(getCurrentTag(document, position, text));
     }
 
-    /** Проверяет и, если что, обновляет 
-     * 
-     * Проверка: последний открывающий и закрывающий теги на тех же местах
-    */
-    private PreviousTextIsValid(text: string, oldTag): boolean
+    /** Обновление последнего куска */
+    private updatePart(document: vscode.TextDocument, position: vscode.Position, prevText: string, validParents: SimpleTag[], ind: number, restText: string): boolean
     {
-        let res = false;
-        if (this.PreviousTextSafe.IsSet())
+        let cachedSafe = this.PreviousTextSafe.Get();
+        let cachedTag = this.Tag.Get();
+
+        // обновляем последнюю часть SafeText (один из основных смыслов кэширования) и сам Text
+        let pre = cachedSafe.slice(0, ind);
+        let prep = CurrentTag.PrepareXML(restText);
+        cachedSafe = pre + prep;
+        this.PreviousTextSafe.Set(cachedSafe);
+        this.PreviousText.Set(prevText);
+
+        // обновляем Tag
+        let ranges = getParentRanges(document, cachedSafe, ind);
+        if (ranges.length > 0)
+            ranges.forEach(range => validParents.push(new SimpleTag(document, range)));
+        if (validParents.length > 0)
         {
-            let cachedSafeText = this.PreviousTextSafe.Get();
-            logString(cachedSafeText)
-            logString()
-            let cachedLastOpen = cachedSafeText.findLast("<\\w+");
-            let cachedLastClosed = cachedSafeText.findLast("<\\/\\w*");
-            let newLastClosed = text.findLast("<\\/\\w*");
-            //console.log(cachedLastClosed)
-            //console.log(newLastClosed)
-            res = oldTag.StartIndex != cachedLastOpen.Index || cachedLastClosed.Index != newLastClosed.Index;
-            //if (res) logString(text)
+            let lastParent = validParents.pop();
+            let lastParentRange = new vscode.Range(lastParent.OpenTagRange.start, document.positionAt(prevText.length));
+            let current = new SimpleTag(document, lastParentRange);
+            let openTagIsclosed = current.isClosed();
+            let body = openTagIsclosed ? document.getText(new vscode.Range(lastParentRange.end, position)) : undefined;
+            cachedTag.Update(current, {
+                PreviousText: prevText,
+                Parents: validParents,
+                Body: body,
+                OpenTagIsClosed: openTagIsclosed,
+                OpenTagRange: lastParentRange,
+                StartIndex: document.offsetAt(lastParentRange.start)
+            });
+            return true;
         }
-        if (!res) this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
-        return res;
+        return false;
+    }
+
+
+    /** Обновление всего кеша (если требуется) */
+    public Update(document: vscode.TextDocument, position: vscode.Position, txt?: string): void
+    {
+        if (!this.Active()) return;
+
+        let text = txt || getPreviousText(document, position);
+        let cachedText = this.PreviousText.Get();
+        // ничего не поменялось
+        if (!!cachedText && cachedText == text) return;
+
+        let cachedTag = this.Tag.Get();
+        let cachedSafe = this.PreviousTextSafe.Get();
+
+        if (!cachedText || !cachedSafe || !cachedTag || cachedText.length != cachedSafe.length)
+            return this.updateAll(document, position, text); // обновляем всё
+        
+        // частичное обновление
+        // сначала пробуем сравнить весь текст до начала тега
+        let upTo = cachedTag.OpenTagRange.start;
+        let newText = getPreviousText(document, upTo);
+        let ind = document.offsetAt(upTo); // а document типа не изменился
+        let oldText = cachedText.slice(0, ind);
+        let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после начала тега
+        let foundValidRange = this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
+        if (foundValidRange) return;
+
+        // если не получилось, то идём породительно снизу вверх
+        let validParents: Array<SimpleTag> = [];
+        foundValidRange = false;
+        for (let i = cachedTag.Parents.length - 1; i >= 0; i--)
+        {
+            let upTo = cachedTag.Parents[i].OpenTagRange.end;
+            let newText = getPreviousText(document, upTo);
+            let ind = document.offsetAt(upTo); // а document типа не изменился
+            let oldText = cachedText.slice(0, ind);
+            let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после последнего родителя
+            // ищем такого, что текст перед ним сохранился и после него не появилось закрывающего его тега
+            if (oldText == newText && !restText.match("</" + cachedTag.Parents[i].Name))
+            {
+                // обновляем только последний кусок
+                validParents = cachedTag.Parents.slice(0, i + 1);
+                foundValidRange = this.updatePart(document, position, text, validParents, ind, restText);
+                break;
+            }
+        }
+        if (!foundValidRange) this.updateAll(document, position, text);
+
     }
 
 
@@ -1838,6 +1882,15 @@ class CacheSet
     public Active(): boolean
     {
         return !Settings.Contains("enableCache") || !!Settings.Item("enableCache");
+    }
+
+    /** Очистка всех полей */
+    public Clear()
+    {
+        this.Keys.forEach(field =>
+        {
+            (this[field] as CacheItem<any>).Remove();
+        });
     }
 
 }
