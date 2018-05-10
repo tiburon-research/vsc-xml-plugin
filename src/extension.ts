@@ -944,6 +944,7 @@ function hoverDocs()
     vscode.languages.registerHoverProvider('tib', {
         provideHover(document, position, token)
         {
+            Cache.Update(document, position);
             let res = [];
             let range = document.getWordRangeAtPosition(position);
             if (!range) return;
