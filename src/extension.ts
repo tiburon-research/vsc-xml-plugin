@@ -1845,14 +1845,18 @@ class CacheSet
             return this.updateAll(document, position, text); // обновляем всё
         
         // частичное обновление
+        let foundValidRange = false;
         // сначала пробуем сравнить весь текст до начала тега
         let upTo = cachedTag.OpenTagRange.start;
         let newText = getPreviousText(document, upTo);
         let ind = document.offsetAt(upTo); // а document типа не изменился
         let oldText = cachedText.slice(0, ind);
         let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после начала тега
-        let foundValidRange = this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
-        if (foundValidRange) return;
+        if (oldText == newText && !restText.match("</" + cachedTag.Name))
+        {
+            foundValidRange = this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
+            if (foundValidRange) return;
+        }    
 
         // если не получилось, то идём породительно снизу вверх
         let validParents: Array<SimpleTag> = [];
