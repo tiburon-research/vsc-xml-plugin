@@ -35,7 +35,7 @@ export const RegExpPatterns = {
     DelimiterContent: "[0-9][a-z][A-Z]",
     SingleAttribute: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/,
     Attributes: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g,
-    OpenTagFull: /^\s*<\w+(\s*(\w+)=(("[^"]*")|(('[^']*')))\s*)*\s*\/?>/
+    OpenTagFull: /^\s*<\w+(\s*(\w+)=(("[^"]*")|('[^']*'))\s*)*\s*\/?>/
 }
 
 
@@ -179,39 +179,45 @@ export namespace TibDocumentEdits
         return $dom.xml();
     }
 
-    export function ToAgeList(text: string): string{
+    export function ToAgeList(text: string): string
+    {
         let ageLimits = text.match(/\d+/g);
 
         let $dom = $.XMLDOM("<List></List>");
         let $list = $dom.find("List");
         $list.attr('Id', "ageList");
 
-        for(let i = 0, length = ageLimits.length; i < length; i += 2){
+        for (let i = 0, length = ageLimits.length; i < length; i += 2)
+        {
             let $item = $.XML("<Item></Item>");
-            $item.attr("Id", i/2 + 1);
-            $item.attr("Var", ageLimits[i]+","+ageLimits[i+1]);
-            $.XML('<Text></Text>').text(ageLimits[i]+"_"+ageLimits[i+1]).appendTo($item);
+            $item.attr("Id", i / 2 + 1);
+            $item.attr("Var", ageLimits[i] + "," + ageLimits[i + 1]);
+            $.XML('<Text></Text>').text(ageLimits[i] + "_" + ageLimits[i + 1]).appendTo($item);
             $item.appendTo($list);
         }
 
         return $dom.xml();
     }
 
-    export function removeQuestionIds(text: string): string{
+    export function removeQuestionIds(text: string): string
+    {
         let $dom = $.XMLDOM(text);
         let $question = $dom.find("Question");
 
         let $questionValueVariants = [". ", ".", ""];
 
-        $question.map(function (){
- 
+        $question.map(function ()
+        {
+
             let $questionHeader = $(this).find("Header");
             let $headerText = $questionHeader.text();
             let $qIDValue = $(this).attr('Id');
 
-            $questionValueVariants.forEach(element => {
-                element = $qIDValue+element;
-                if($headerText.indexOf(element) != -1){
+            $questionValueVariants.forEach(element =>
+            {
+                element = $qIDValue + element;
+                if ($headerText.indexOf(element) != -1)
+                {
                     $headerText = $questionHeader.text().replace(element, "");
                     $questionHeader.text($headerText);
                 }
@@ -647,9 +653,9 @@ export class CurrentTag
      * - для `Item` - в зависимости от родителя 
      * - для `Repeat` - в зависимости от источника
     */
-    public Id: string = "";
+    public Id: string = null;
     public Attributes: Array<InlineAttribute> = [];
-    public Body: string = "";
+    public Body: string = null;
     /** Закрыт не тег, просто есть вторая скобка <Page...> */
     public OpenTagIsClosed = false;
     public Parents: Array<SimpleTag> = [];
@@ -659,7 +665,7 @@ export class CurrentTag
     public StartIndex: number;
     public OpenTagRange: vscode.Range;
     /** Текст от начала документа до Position */
-    public PreviousText = "";
+    public PreviousText = null;
 
 
     // -------------------- ТЕХНИЧЕСКОЕ
@@ -787,25 +793,25 @@ export class CurrentTag
             tagLanguage = Language.Inline;
         }
         else
-        // по-любому C#
-        if (this.CSSingle() || this.CSInline())
-        {
-            tagLanguage = Language.CSharp;
-        }
-        else
-        {
-            tagLanguage = TagInfo.getTagLanguage(this.Name);
-            // проверка на Fake
-            if (tagLanguage == Language.CSharp)
+            // по-любому C#
+            if (this.CSSingle() || this.CSInline())
             {
-                if
-                (
-                    !this.OpenTagIsClosed ||
-                    !!this.Body && this.Body.match(/^[\t ]+\r?\n/)
-                )
-                    tagLanguage = Language.XML;
+                tagLanguage = Language.CSharp;
             }
-        }
+            else
+            {
+                tagLanguage = TagInfo.getTagLanguage(this.Name);
+                // проверка на Fake
+                if (tagLanguage == Language.CSharp)
+                {
+                    if
+                    (
+                        !this.OpenTagIsClosed ||
+                        !!this.Body && this.Body.match(/^[\t ]+\r?\n/)
+                    )
+                        tagLanguage = Language.XML;
+                }
+            }
         this.Language = tagLanguage;
         return tagLanguage;
     }
@@ -877,12 +883,13 @@ export class CurrentTag
         if (!!fields.Parents && !!fields.LastParent) fields.LastParent = undefined;
         for (let key in fields)
         {
-            switch (key) {
+            switch (key)
+            {
                 case "Parents":
                     this._setParents(fields[key]);
                     break;
                 default:
-                    if (typeof fields[key] != 'undefined') this[key] = fields[key];    
+                    if (typeof fields[key] != 'undefined') this[key] = fields[key];
                     break;
             }
         }
@@ -1355,7 +1362,7 @@ export class CacheItem<T>
     {
         return typeof this.Value !== 'undefined';
     }
-    
+
 }
 
 
@@ -1528,46 +1535,55 @@ export function safeString(text: string): string
 }
 
 /** Открытые файла в новом окне */
-export function openFile(path: string): void{
+export function openFile(path: string): void
+{
 
     vscode.workspace.openTextDocument(path).then(doc =>
-        { // открываем демку (в памяти)
-            let txt = doc.getText();
-            vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
-            { // создаём пустой tib-файл
-                vscode.window.showTextDocument(newDoc).then(editor => 
-                { // отображаем пустой
-                    editor.edit(builder => 
-                    { // заливаем в него демку
-                        builder.insert(new vscode.Position(0, 0), txt)
-                    });
+    { // открываем демку (в памяти)
+        let txt = doc.getText();
+        vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+        { // создаём пустой tib-файл
+            vscode.window.showTextDocument(newDoc).then(editor => 
+            { // отображаем пустой
+                editor.edit(builder => 
+                { // заливаем в него демку
+                    builder.insert(new vscode.Position(0, 0), txt)
                 });
-            })
-        });
+            });
+        })
+    });
 }
 
 /** форматирование xml файл */
-export function formatXml(xml) {
+export function formatXml(xml)
+{
     var formatted = '';
     var reg = /(>)(<)(\/*)/g;
     xml = xml.replace(reg, '$1\r\n$2$3');
     var pad = 0;
-    $.each(xml.split('\r\n'), function(index, node) {
+    $.each(xml.split('\r\n'), function (index, node)
+    {
         var indent = 0;
-        if (node.match( /.+<\/\w[^>]*>$/ )) {
+        if (node.match(/.+<\/\w[^>]*>$/))
+        {
             indent = 0;
-        } else if (node.match( /^<\/\w/ )) {
-            if (pad != 0) {
+        } else if (node.match(/^<\/\w/))
+        {
+            if (pad != 0)
+            {
                 pad -= 1;
             }
-        } else if (node.match( /^<\w([^>]*[^\/])?>.*$/ )) {
+        } else if (node.match(/^<\w([^>]*[^\/])?>.*$/))
+        {
             indent = 1;
-        } else {
+        } else
+        {
             indent = 0;
         }
 
         var padding = '';
-        for (var i = 0; i < pad; i++) {
+        for (var i = 0; i < pad; i++)
+        {
             padding += '\t';
         }
 

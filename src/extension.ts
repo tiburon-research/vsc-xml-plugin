@@ -568,6 +568,7 @@ function higlight()
         provideDocumentHighlights(document, position)
         {
             let text = getPreviousText(document, position);
+            Cache.Update(document, position, text);
             let tag = getCurrentTag(document, position, text);
             if (!tag) return;
             let curRange = document.getWordRangeAtPosition(position);
@@ -1814,7 +1815,7 @@ class CacheSet
             let lastParentRange = new vscode.Range(lastParent.OpenTagRange.start, document.positionAt(prevText.length));
             let current = new SimpleTag(document, lastParentRange);
             let openTagIsclosed = current.isClosed();
-            let body = openTagIsclosed ? document.getText(new vscode.Range(lastParentRange.end, position)) : undefined;
+            let body = openTagIsclosed ? document.getText(new vscode.Range(current.OpenTagRange.end, position)) : undefined;
             cachedTag.Update(current, {
                 PreviousText: prevText,
                 Parents: validParents,
