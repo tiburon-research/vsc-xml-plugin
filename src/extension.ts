@@ -317,8 +317,7 @@ function registerCommands()
         let tag = getCurrentTag(editor.document, editor.selection.active, txt);
         if (!tag || tag.Parents.length < 1) return;
         let par = tag.Parents.length == 1 ? tag.Name : tag.Parents[1].Name;
-        let start = txt.lastIndexOf("<" + par);
-        let from = editor.document.positionAt(start);
+        let from = tag.Parents.last().OpenTagRange.start;
         let cl = findCloseTag("<", par, ">", editor.document, from.translate(0, 1));
         if (!cl) return;
         let to = cl.end;
