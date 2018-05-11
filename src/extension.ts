@@ -1308,8 +1308,6 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
         let text = txt || getPreviousText(document, position);
         let pure: string;
         // сначала пытаемся вытащить из кэша
-        //if (Cache.TagIsActual(document, position, text)) return Cache.Tag.Get();
-
         if (Cache.Active() && Cache.Tag.IsSet()) return Cache.Tag.Get();
 
         if (!pure) pure = CurrentTag.PrepareXML(text);
@@ -1317,10 +1315,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
         let ranges = getParentRanges(document, pure);
         if (ranges.length == 0) return new CurrentTag("XML");
 
-        let parents = ranges.map(range =>
-        {
-            return new SimpleTag(document, range);
-        })
+        let parents = ranges.map(range => new SimpleTag(document, range))
 
         /** Последний незакрытый тег */
         let current = parents.pop();
@@ -1335,7 +1330,6 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
             Body: tag.OpenTagIsClosed ? document.getText(new vscode.Range(lastRange.end, position)) : undefined,
             LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
         });
-        //Cache.Tag.Set(tag);
         return tag;
     } catch (error)
     {

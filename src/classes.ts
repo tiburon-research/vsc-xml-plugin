@@ -801,13 +801,13 @@ export class CurrentTag
             else
             {
                 tagLanguage = TagInfo.getTagLanguage(this.Name);
-                // проверка на Fake
+                // проверка на Fake и закрывающий тег
                 if (tagLanguage == Language.CSharp)
                 {
                     if
                     (
                         !this.OpenTagIsClosed ||
-                        !!this.Body && this.Body.match(/^[\t ]+\r?\n/)
+                        !!this.Body && this.Body.match(/(<\/\w*$)|(^[\t ]+\r?\n)/)
                     )
                         tagLanguage = Language.XML;
                 }
