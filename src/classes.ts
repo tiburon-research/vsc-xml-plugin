@@ -199,33 +199,45 @@ export namespace TibDocumentEdits
         return $dom.xml();
     }
 
-    export function removeQuestionIds(text: string): string
-    {
+    export function removeQuestionIds(text: string): string{
         let $dom = $.XMLDOM(text);
         let $question = $dom.find("Question");
 
-        let $questionValueVariants = [". ", ".", ""];
-
-        $question.map(function ()
-        {
-
+        $question.map(function (){
+ 
             let $questionHeader = $(this).find("Header");
             let $headerText = $questionHeader.text();
             let $qIDValue = $(this).attr('Id');
-
-            $questionValueVariants.forEach(element =>
-            {
-                element = $qIDValue + element;
-                if ($headerText.indexOf(element) != -1)
-                {
-                    $headerText = $questionHeader.text().replace(element, "");
-                    $questionHeader.text($headerText);
-                }
-            });
+           
+            $qIDValue = $headerText.match($qIDValue+"\\.? ?");
+            $headerText = $questionHeader.text().replace($qIDValue, "");
+            $questionHeader.text($headerText);
         });
 
         return $dom.xml();
     }
+
+    export function getVarCountFromList(list:string): number{
+
+        let res = 0;
+        let $dom = $.XMLDOM(list);
+        let $item = $dom.find("Item").eq(0);
+        let $var = $item.find("Var");
+        
+        //<Var></Var>
+        if($var.length > 0){
+            res = $var.length;
+        }
+
+         //Var=""
+        if(typeof $item.attr('Var') !== typeof undefined){
+            res += $item.attr('Var').split(',').length;
+        }
+
+        return res;
+    }
+
+
 }
 
 export class KeyedCollection<T>

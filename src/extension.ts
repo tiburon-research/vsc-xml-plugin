@@ -412,6 +412,50 @@ function registerCommands()
         }
     });
 
+        //Отсортировать List
+        registerCommand('tib.transform.SortList', () => {
+            let editor = vscode.window.activeTextEditor;
+    
+            try
+            {
+                let text = editor.document.getText(editor.selection);
+                let sortBy = ["Id", "Text"];
+                let varCount = TibDocumentEdits.getVarCountFromList(text);
+                
+                for(let i = 0; i < varCount; i++){
+                    sortBy.push("Var("+i+")");
+                }
+    
+                vscode.window.showQuickPick(sortBy, { placeHolder: "Сортировать по" }).then(x =>{
+
+                    let $dom = $.XMLDOM(text);
+                    let $item = $dom.find("Item");
+
+                    let $element = $item.find(x);   //Var(0)
+/*
+                    check digits
+                    
+                    //child ex.<Text><Text/>
+                    if($var.length > 0){
+                        res = $var.length;
+                    }
+            
+                     //attr ex. Text=""
+                    if(typeof $item.attr('Var') !== typeof undefined){
+                        res += $item.attr('Var').split(',').length;
+                    }
+*/
+                    console.log(x); 
+                    
+                });
+    
+                //applyChanges(editor.selection, res, editor);
+            } catch (error)
+            {
+                logError("Ошибка в преобразовании", editor);
+            }
+        });
+
     //преобразовать в список c возрастом
     registerCommand('tib.transform.ToAgeList', () =>
     {
@@ -500,7 +544,7 @@ function registerCommands()
             showError("Невозможно получить доступ к папке");
             return;
         }
-
+        
         let tibXMLFiles = fs.readdirSync(templatePathFolder).filter(x =>
         {
             let state = fs.statSync(templatePathFolder + x);

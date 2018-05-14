@@ -86,6 +86,11 @@
         "category": "tib"
       },
       {
+        "command": "tib.transform.SortList",
+        "title": "Сортировать по",
+        "category": "tib"
+      },
+      {
         "command": "tib.transform.ToAgeList",
         "title": "-> AgeList",
         "category": "tib"
