@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields, RegExpPatterns, openFile, formatXml } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields, RegExpPatterns, openFile } from "./classes";
 import * as XML from './documentFunctions';
 import { SurveyList } from './surveyObjects';
 import * as fs from 'fs';
@@ -418,8 +418,9 @@ function registerCommands()
         {
             let text = editor.document.getText(editor.selection);
             let res = TibDocumentEdits.ToAgeList(text);
-            let xmlFormated = formatXml(res);
-            applyChanges(editor.selection, xmlFormated, editor);
+            // TODO: убрать, когда появится принудительное форматирование многострочности
+            res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");
+            applyChanges(editor.selection, res, editor, true);
         } catch (error)
         {
             logError("Ошибка в преобразовании", editor);
