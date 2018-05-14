@@ -778,7 +778,7 @@ export function clearCSContents(text: string): string
 export function findCloseTag(opBracket: string, tagName: string, clBracket: string, before: string | number, fullText: string): FindTagResult
 {
     let tResult: FindTagResult = { Range: null, SelfClosed: false };
-    let sct = /^<?\w*(\s+\w+=(("[^"]*")|('[^']*')))*\s*\/>/; // для проверки на selfCloseed
+    let sct = new RegExp("^" + safeString(opBracket) + "?\\w*(\\s+\\w+=((\"[^\"]*\")|('[^']*')))*\\s*\\/" + safeString(clBracket) + ""); // для проверки на selfCloseed
     try
     {
         let pos = typeof before == 'number' ? before : before.length;
@@ -789,11 +789,10 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
             // SelfClosed
             tResult.SelfClosed = true;
             return tResult;
-        }    
+        }
         let rest = textAfter;
-        let regOp = new RegExp("<" + safeString(tagName) + "[^\\w]");
-        let regCl = new RegExp("<\\/" + safeString(tagName) + "[^\\w]");
-
+        let regOp = new RegExp(safeString(opBracket) + safeString(tagName) + "[^\\w]");
+        let regCl = new RegExp(safeString(opBracket) + "\\/" + safeString(tagName) + "[^\\w]");
         let op = -1;
         let cl = -1;
         let res = regCl.exec(rest);
@@ -836,7 +835,6 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
         }
 
         let clLast = rest.indexOf(clBracket);
-
         if (cl < 0 || clLast < 0) return null;
         
         tResult.Range = { From: fullText.length - rest.length - 1, To: fullText.length - rest.length + clLast, Length: clLast + 1 };    
@@ -863,7 +861,7 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
     /** Последняя из найденных позиций */
     function tagIndex(text: string, substr: string): number
     {
-        return Math.max(text.lastIndexOf(substr + " "), text.lastIndexOf(substr + ">"));
+        return Math.max(text.lastIndexOf(substr + " "), text.lastIndexOf(substr + clBracket));
     }
 
     try
@@ -871,8 +869,8 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
         let curIndex = prevText.lastIndexOf(opBracket);
         let txt = prevText.substr(0, curIndex);
         let rest = txt;
-        let regOp = new RegExp("<" + safeString(tagName) + "[^\\w]");
-        let regCl = new RegExp("<\\/" + safeString(tagName) + "[^\\w]");
+        let regOp = new RegExp(safeString(opBracket) + safeString(tagName) + "[^\\w]");
+        let regCl = new RegExp(safeString(opBracket) + "\\/" + safeString(tagName) + "[^\\w]");
         let cl = -1;
         let op = -1;
 

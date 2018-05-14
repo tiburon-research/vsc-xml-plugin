@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields, RegExpPatterns, openFile, formatXml } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields, RegExpPatterns, openFile } from "./classes";
 import * as XML from './documentFunctions';
 import { SurveyList } from './surveyObjects';
 import * as fs from 'fs';
@@ -137,12 +137,10 @@ export function activate(context: vscode.ExtensionContext)
         if (inProcess || !editor || editor.document.languageId != "tib") return;
         let originalPosition = editor.selection.start.translate(0, 1);
         let text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
-        if (Cache.Active()) Cache.Update(editor.document, originalPosition, text);
         let tag = getCurrentTag(editor.document, originalPosition, text);
         reload(false);
         insertAutoCloseTag(event, editor, tag, text);
         insertSpecialSnippets(event, editor, text, tag);
-        showCurrentInfo(tag);
     });
 
     statusMessage("Tiburon XML Helper запущен!", 3000);
@@ -319,8 +317,7 @@ function registerCommands()
         let tag = getCurrentTag(editor.document, editor.selection.active, txt);
         if (!tag || tag.Parents.length < 1) return;
         let par = tag.Parents.length == 1 ? tag.Name : tag.Parents[1].Name;
-        let start = txt.lastIndexOf("<" + par);
-        let from = editor.document.positionAt(start);
+        let from = tag.Parents.last().OpenTagRange.start;
         let cl = findCloseTag("<", par, ">", editor.document, from.translate(0, 1));
         if (!cl) return;
         let to = cl.end;
@@ -465,8 +462,9 @@ function registerCommands()
         {
             let text = editor.document.getText(editor.selection);
             let res = TibDocumentEdits.ToAgeList(text);
-            let xmlFormated = formatXml(res);
-            applyChanges(editor.selection, xmlFormated, editor);
+            // TODO: убрать, когда появится принудительное форматирование многострочности
+            res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");
+            applyChanges(editor.selection, res, editor, true);
         } catch (error)
         {
             logError("Ошибка в преобразовании", editor);
@@ -612,7 +610,6 @@ function higlight()
         provideDocumentHighlights(document, position)
         {
             let text = getPreviousText(document, position);
-            Cache.Update(document, position, text);
             let tag = getCurrentTag(document, position, text);
             if (!tag) return;
             let curRange = document.getWordRangeAtPosition(position);
@@ -989,13 +986,11 @@ function hoverDocs()
     vscode.languages.registerHoverProvider('tib', {
         provideHover(document, position, token)
         {
-            Cache.Update(document, position);
             let res = [];
             let range = document.getWordRangeAtPosition(position);
             if (!range) return;
             let tag = getCurrentTag(document, range.end);
             if (!tag) return;
-            showCurrentInfo(tag);
             if (tag.GetLaguage() != Language.CSharp) return;
             let text = document.getText(range);
             // надо проверить родителя!
@@ -1345,35 +1340,51 @@ function execute(link: string)
     Работаем с текстом, очищенным от C# и комментариев.
     В результате получаем index/position/range в документе, по которым потом можно получить оригинал
 */
-function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string): CurrentTag
+function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
 {
+    let tag: CurrentTag;
     try
     {
         let text = txt || getPreviousText(document, position);
-        let pure: string;
-        // сначала пытаемся вытащить из кэша
-        if (Cache.Active() && Cache.Tag.IsSet()) return Cache.Tag.Get();
+        
+        // сначала пытаемся вытащить из кэша (сначала обновить, если позиция изменилась)
+        if (!force)
+        {
+            if (Cache.Active())
+            {
+                Cache.Update(document, position, text);
+                tag = Cache.Tag.Get();
+            }
+        }
+        
+        if (!tag)
+        {
+            // собираем тег заново
+            let pure: string;
+            if (!pure) pure = CurrentTag.PrepareXML(text);
+            let ranges = getParentRanges(document, pure);
+            // где-то вне
+            if (ranges.length == 0) tag = new CurrentTag("XML");
+            else
+            {
+                let parents = ranges.map(range => new SimpleTag(document, range))
 
-        if (!pure) pure = CurrentTag.PrepareXML(text);
+                /** Последний незакрытый тег */
+                let current = parents.pop();
+                tag = new CurrentTag(current, parents);
 
-        let ranges = getParentRanges(document, pure);
-        if (ranges.length == 0) return new CurrentTag("XML");
-
-        let parents = ranges.map(range => new SimpleTag(document, range))
-
-        /** Последний незакрытый тег */
-        let current = parents.pop();
-        let tag = new CurrentTag(current, parents);
-
-        // Заполняем поля
-        let lastRange = ranges.last();
-        tag.SetFields({
-            StartPosition: current.OpenTagRange.start,
-            StartIndex: document.offsetAt(current.OpenTagRange.start),
-            PreviousText: text,
-            Body: tag.OpenTagIsClosed ? document.getText(new vscode.Range(lastRange.end, position)) : undefined,
-            LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
-        });
+                // Заполняем поля
+                let lastRange = ranges.last();
+                tag.SetFields({
+                    StartPosition: current.OpenTagRange.start,
+                    StartIndex: document.offsetAt(current.OpenTagRange.start),
+                    PreviousText: text,
+                    Body: tag.OpenTagIsClosed ? document.getText(new vscode.Range(lastRange.end, position)) : undefined,
+                    LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
+                });
+            }
+        }
+        showCurrentInfo(tag);
         return tag;
     } catch (error)
     {
@@ -1770,7 +1781,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
         try
         {
             let tag = getCurrentTag(editor.document, editor.selection.start);
-            let ind = !!tag ? tag.Parents.length : 0;
+            let ind = !!tag ? tag.Parents.length + 1 : 0;
             res = await XML.format(res, Language.XML, Settings, "\t", ind);
         }
         catch (error)
@@ -1827,7 +1838,7 @@ class CacheSet
         this.Clear();
         this.PreviousText.Set(text);
         this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
-        this.Tag.Set(getCurrentTag(document, position, text));
+        this.Tag.Set(getCurrentTag(document, position, text, true));
     }
 
     /** Обновление последнего куска */
@@ -1850,7 +1861,7 @@ class CacheSet
         if (validParents.length > 0)
         {
             let lastParent = validParents.pop();
-            let lastParentRange = new vscode.Range(lastParent.OpenTagRange.start, document.positionAt(prevText.length));
+            let lastParentRange = new vscode.Range(lastParent.OpenTagRange.start, position);
             let current = new SimpleTag(document, lastParentRange);
             let openTagIsclosed = current.isClosed();
             let body = openTagIsclosed ? document.getText(new vscode.Range(current.OpenTagRange.end, position)) : undefined;
@@ -1887,15 +1898,18 @@ class CacheSet
         // частичное обновление
         let foundValidRange = false;
         // сначала пробуем сравнить весь текст до начала тега
-        let upTo = cachedTag.OpenTagRange.start;
-        let newText = getPreviousText(document, upTo);
-        let ind = document.offsetAt(upTo); // а document типа не изменился
-        let oldText = cachedText.slice(0, ind);
-        let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после начала тега
-        if (oldText == newText && !restText.match("</" + cachedTag.Name))
+        let upTo = cachedTag.OpenTagRange.start; // начало закешированного тега
+        if (upTo.compareTo(position) <= 0)
         {
-            foundValidRange = this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
-            if (foundValidRange) return;
+            let newText = getPreviousText(document, upTo);
+            let ind = document.offsetAt(upTo); // а document типа не изменился
+            let oldText = cachedText.slice(0, ind);
+            let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после начала тега
+            if (oldText == newText && !restText.match("</" + cachedTag.Name))
+            {
+                foundValidRange = this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
+                if (foundValidRange) return;
+            }
         }    
 
         // если не получилось, то идём породительно снизу вверх
@@ -1908,8 +1922,8 @@ class CacheSet
             let ind = document.offsetAt(upTo); // а document типа не изменился
             let oldText = cachedText.slice(0, ind);
             let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после последнего родителя
-            // ищем такого, что текст перед ним сохранился и после него не появилось закрывающего его тега
-            if (oldText == newText && !restText.match("</" + cachedTag.Parents[i].Name))
+            // ищем такого, что он выше, текст перед ним сохранился и после него не появилось закрывающего его тега
+            if (upTo.compareTo(position) <= 0 && oldText == newText && !restText.match("</" + cachedTag.Parents[i].Name))
             {
                 // обновляем только последний кусок
                 validParents = cachedTag.Parents.slice(0, i + 1);
@@ -1920,7 +1934,6 @@ class CacheSet
         if (!foundValidRange) this.updateAll(document, position, text);
 
     }
-
 
     /** Можно ли пользоваться кэшем */
     public Active(): boolean
