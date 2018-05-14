@@ -1736,7 +1736,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
         try
         {
             let tag = getCurrentTag(editor.document, editor.selection.start);
-            let ind = !!tag ? tag.Parents.length : 0;
+            let ind = !!tag ? tag.Parents.length + 1 : 0;
             res = await XML.format(res, Language.XML, Settings, "\t", ind);
         }
         catch (error)
