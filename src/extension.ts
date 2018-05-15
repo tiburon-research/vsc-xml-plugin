@@ -1314,7 +1314,7 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
         if (!pure) pure = CurrentTag.PrepareXML(text);
         let ranges = getParentRanges(document, pure);
         // где-то вне
-        if (ranges.length == 0) tag = new CurrentTag("XML");
+        if (ranges.length == 0) tag = null;//new CurrentTag("XML");
         else
         {
             let parents = ranges.map(range => new SimpleTag(document, range))
