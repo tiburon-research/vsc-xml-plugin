@@ -1867,36 +1867,43 @@ class CacheSet
     /** Обновление последнего куска */
     private updatePart(document: vscode.TextDocument, position: vscode.Position, prevText: string, validParents: SimpleTag[], ind: number, restText: string): boolean
     {
-        let cachedSafe = this.PreviousTextSafe.Get();
-        let cachedTag = this.Tag.Get();
-
-        // обновляем последнюю часть SafeText (один из основных смыслов кэширования) и сам Text
-        let pre = cachedSafe.slice(0, ind);
-        let prep = CurrentTag.PrepareXML(restText);
-        cachedSafe = pre + prep;
-        this.PreviousTextSafe.Set(cachedSafe);
-        this.PreviousText.Set(prevText);
-
-        // обновляем Tag
-        let ranges = getParentRanges(document, cachedSafe, ind);
-        if (ranges.length > 0)
-            ranges.forEach(range => validParents.push(new SimpleTag(document, range)));
-        if (validParents.length > 0)
+        try
         {
-            let lastParent = validParents.pop();
-            let lastParentRange = new vscode.Range(lastParent.OpenTagRange.start, position);
-            let current = new SimpleTag(document, lastParentRange);
-            let openTagIsclosed = current.isClosed();
-            let body = openTagIsclosed ? document.getText(new vscode.Range(current.OpenTagRange.end, position)) : undefined;
-            cachedTag.Update(current, {
-                PreviousText: prevText,
-                Parents: validParents,
-                Body: body,
-                OpenTagIsClosed: openTagIsclosed,
-                OpenTagRange: lastParentRange,
-                StartIndex: document.offsetAt(lastParentRange.start)
-            });
-            return true;
+            let cachedSafe = this.PreviousTextSafe.Get();
+            let cachedTag = this.Tag.Get();
+
+            // обновляем последнюю часть SafeText (один из основных смыслов кэширования) и сам Text
+            let pre = cachedSafe.slice(0, ind);
+            let prep = CurrentTag.PrepareXML(restText);
+            cachedSafe = pre + prep;
+            this.PreviousTextSafe.Set(cachedSafe);
+            this.PreviousText.Set(prevText);
+
+            // обновляем Tag
+            let ranges = getParentRanges(document, cachedSafe, ind);
+            if (ranges.length > 0)
+                ranges.forEach(range => validParents.push(new SimpleTag(document, range)));
+            if (validParents.length > 0)
+            {
+                let lastParent = validParents.pop();
+                let lastParentRange = new vscode.Range(lastParent.OpenTagRange.start, position);
+                let current = new SimpleTag(document, lastParentRange);
+                let openTagIsclosed = current.isClosed();
+                let body = openTagIsclosed ? document.getText(new vscode.Range(current.OpenTagRange.end, position)) : undefined;
+                cachedTag.Update(current, {
+                    PreviousText: prevText,
+                    Parents: validParents,
+                    Body: body,
+                    OpenTagIsClosed: openTagIsclosed,
+                    OpenTagRange: lastParentRange,
+                    StartIndex: document.offsetAt(lastParentRange.start)
+                });
+                return true;
+            }
+        }
+        catch (error)
+        {
+            logError("Ошибка обновления части закешированного документа")
         }
         return false;
     }
@@ -1905,56 +1912,63 @@ class CacheSet
     /** Обновление всего кеша (если требуется) */
     public Update(document: vscode.TextDocument, position: vscode.Position, txt?: string): void
     {
-        if (!this.Active()) return;
-
-        let text = txt || getPreviousText(document, position);
-        let cachedText = this.PreviousText.Get();
-        // ничего не поменялось
-        if (!!cachedText && cachedText == text) return;
-
-        let cachedTag = this.Tag.Get();
-        let cachedSafe = this.PreviousTextSafe.Get();
-
-        if (!cachedText || !cachedSafe || !cachedTag || cachedText.length != cachedSafe.length)
-            return this.updateAll(document, position, text); // обновляем всё
-
-        // частичное обновление
-        let foundValidRange = false;
-        // сначала пробуем сравнить весь текст до начала тега
-        let upTo = cachedTag.OpenTagRange.start; // начало закешированного тега
-        if (upTo.compareTo(position) <= 0)
+        try
         {
-            let newText = getPreviousText(document, upTo);
-            let ind = document.offsetAt(upTo); // а document типа не изменился
-            let oldText = cachedText.slice(0, ind);
-            let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после начала тега
-            if (oldText == newText && !restText.match("</" + cachedTag.Name))
+            if (!this.Active()) return;
+    
+            let text = txt || getPreviousText(document, position);
+            let cachedText = this.PreviousText.Get();
+            // ничего не поменялось
+            if (!!cachedText && cachedText == text) return;
+    
+            let cachedTag = this.Tag.Get();
+            let cachedSafe = this.PreviousTextSafe.Get();
+    
+            if (!cachedText || !cachedSafe || !cachedTag || cachedText.length != cachedSafe.length)
+                return this.updateAll(document, position, text); // обновляем всё
+    
+            // частичное обновление
+            let foundValidRange = false;
+            // сначала пробуем сравнить весь текст до начала тега
+            let upTo = cachedTag.OpenTagRange.start; // начало закешированного тега
+            if (upTo.compareTo(position) <= 0)
             {
-                foundValidRange = this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
-                if (foundValidRange) return;
+                let newText = getPreviousText(document, upTo);
+                let ind = document.offsetAt(upTo); // а document типа не изменился
+                let oldText = cachedText.slice(0, ind);
+                let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после начала тега
+                if (oldText == newText && !restText.match("</" + cachedTag.Name))
+                {
+                    foundValidRange = this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
+                    if (foundValidRange) return;
+                }
             }
+    
+            // если не получилось, то идём породительно снизу вверх
+            let validParents: Array<SimpleTag> = [];
+            foundValidRange = false;
+            for (let i = cachedTag.Parents.length - 1; i >= 0; i--)
+            {
+                let upTo = cachedTag.Parents[i].OpenTagRange.end;
+                let newText = getPreviousText(document, upTo);
+                let ind = document.offsetAt(upTo); // а document типа не изменился
+                let oldText = cachedText.slice(0, ind);
+                let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после последнего родителя
+                // ищем такого, что он выше, текст перед ним сохранился и после него не появилось закрывающего его тега
+                if (upTo.compareTo(position) <= 0 && oldText == newText && !restText.match("</" + cachedTag.Parents[i].Name))
+                {
+                    // обновляем только последний кусок
+                    validParents = cachedTag.Parents.slice(0, i + 1);
+                    foundValidRange = this.updatePart(document, position, text, validParents, ind, restText);
+                    break;
+                }
+            }
+            if (!foundValidRange) this.updateAll(document, position, text);
         }
-
-        // если не получилось, то идём породительно снизу вверх
-        let validParents: Array<SimpleTag> = [];
-        foundValidRange = false;
-        for (let i = cachedTag.Parents.length - 1; i >= 0; i--)
+        catch (error)
         {
-            let upTo = cachedTag.Parents[i].OpenTagRange.end;
-            let newText = getPreviousText(document, upTo);
-            let ind = document.offsetAt(upTo); // а document типа не изменился
-            let oldText = cachedText.slice(0, ind);
-            let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после последнего родителя
-            // ищем такого, что он выше, текст перед ним сохранился и после него не появилось закрывающего его тега
-            if (upTo.compareTo(position) <= 0 && oldText == newText && !restText.match("</" + cachedTag.Parents[i].Name))
-            {
-                // обновляем только последний кусок
-                validParents = cachedTag.Parents.slice(0, i + 1);
-                foundValidRange = this.updatePart(document, position, text, validParents, ind, restText);
-                break;
-            }
+            logError("Ошибка обновления закешированного документа");
         }
-        if (!foundValidRange) this.updateAll(document, position, text);
 
     }
 
@@ -1967,10 +1981,17 @@ class CacheSet
     /** Очистка всех полей */
     public Clear()
     {
-        this.Keys.forEach(field =>
+        try
         {
-            (this[field] as CacheItem<any>).Remove();
-        });
+            this.Keys.forEach(field =>
+            {
+                (this[field] as CacheItem<any>).Remove();
+            });
+        }
+        catch (error)
+        {
+            logError("Ошибка очистки кеша")
+        }
     }
 
 }
