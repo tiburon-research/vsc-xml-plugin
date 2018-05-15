@@ -80,8 +80,8 @@ export function format(text: string, language: Language, settings: ExtensionSett
                 // дополнительная (одноразовая) постобработка XML
                 if (language == Language.XML) res = postFormatXML(res);
                 // пока не будет работать стабильно проверяем целостность текста
-                let hash = text.replace(/\s+/g, '');
-                if (res.Result.replace(/\s+/g, '') != hash)
+                let hash = text.replace(RegExpPatterns.FormattingHash, '');
+                if (res.Result.replace(RegExpPatterns.FormattingHash, '') != hash)
                 {
                     if (_pack != "debug")
                     {
