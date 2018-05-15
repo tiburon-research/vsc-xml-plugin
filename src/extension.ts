@@ -415,20 +415,34 @@ function registerCommands()
     
             try
             {
+                let sortBy = ["Id", "Text","Var"];
+                let vars = [];
+
                 let text = editor.document.getText(editor.selection);
-                let sortBy = ["Id", "Text"];
                 let varCount = TibDocumentEdits.getVarCountFromList(text);
                 
                 for(let i = 0; i < varCount; i++){
-                    sortBy.push("Var("+i+")");
+                    vars.push("Var("+i+")");
                 }
-    
+
                 vscode.window.showQuickPick(sortBy, { placeHolder: "Сортировать по" }).then(x =>{
 
+                    if(x == "Var"){
+                        vscode.window.showQuickPick(vars, { placeHolder: "Сортировать по" }).then(y =>{
+                            let index = y.match(/\d+/);
+
+                            console.log(index);
+                        });
+                    }
+
+                    console.log(x);
+
+/* 
                     let $dom = $.XMLDOM(text);
                     let $item = $dom.find("Item");
 
                     let $element = $item.find(x);   //Var(0)
+  */                   
 /*
                     check digits
                     
@@ -442,8 +456,6 @@ function registerCommands()
                         res += $item.attr('Var').split(',').length;
                     }
 */
-                    console.log(x); 
-                    
                 });
     
                 //applyChanges(editor.selection, res, editor);
