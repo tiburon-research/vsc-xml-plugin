@@ -517,43 +517,46 @@ function registerCommands()
         vscode.window.showInformationMessage("Подстановка Linq " + (_useLinq ? "включена" : "отключена"))
     });
 
-    // форматирование
-    registerCommand('editor.action.formatDocument', () => 
-    {
-        let editor = vscode.window.activeTextEditor;
-        let range;
-        let indent;
-        // либо весь документ
-        if (editor.selection.start.isEqual(editor.selection.end))
-        {
-            range = getFullRange(editor.document);
-            indent = 0;
-        }
-        else
-        {
-            // либо выделяем строки целиком
-            let sel = selectLines(editor.document, editor.selection);
-            editor.selection = sel;
-            range = sel;
-            let tag = getCurrentTag(editor.document, sel.start);
-            if (!tag) indent = 0;
-            else indent = tag.Parents.length + 1;
-        }
-        let text = editor.document.getText(range);
-        // нужно ли определять язык (выделение может быть какое угодно)
-        let res = text;
-        XML.format(text, Language.XML, Settings, "\t", indent).then((res) => 
-        {
-            vscode.window.activeTextEditor.edit(builder =>
-            {
-                builder.replace(range, res);
-            })
-        }, (er) =>
-            {
-                logError(er, editor);
-            });
-    });
 
+    vscode.languages.registerDocumentFormattingEditProvider('tib', {
+        provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[]
+        {
+            let editor = vscode.window.activeTextEditor;
+            let range;
+            let indent;
+            // либо весь документ
+            if (editor.selection.start.isEqual(editor.selection.end))
+            {
+                range = getFullRange(document);
+                indent = 0;
+            }
+            else
+            {
+                // либо выделяем строки целиком
+                let sel = selectLines(document, editor.selection);
+                editor.selection = sel;
+                range = sel;
+                let tag = getCurrentTag(document, sel.start);
+                if (!tag) indent = 0;
+                else indent = tag.Parents.length + 1;
+            }
+            let text = document.getText(range);
+
+            let res = text;
+            XML.format(text, Language.XML, Settings, "\t", indent).then((res) => 
+            {
+                vscode.window.activeTextEditor.edit(builder =>
+                {
+                    builder.replace(range, res);
+                })
+            }, (er) =>
+                {
+                    logError(er, editor);
+                });
+            // provideDocumentFormattingEdits по ходу не умеет быть async, поэтому выкручиваемся так
+            return [];
+        }
+    });
 }
 
 
@@ -1344,7 +1347,7 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
 {
     if (_pack == "debug") return __getCurrentTag(document, position, txt, force);
-    
+
     let tag: CurrentTag;
     try
     {
