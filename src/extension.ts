@@ -8,7 +8,6 @@ import { SurveyList } from './surveyObjects';
 import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
-import { format } from 'util';
 
 
 
@@ -574,43 +573,46 @@ function registerCommands()
         vscode.window.showInformationMessage("Подстановка Linq " + (_useLinq ? "включена" : "отключена"))
     });
 
-    // форматирование
-    registerCommand('editor.action.formatDocument', () => 
-    {
-        let editor = vscode.window.activeTextEditor;
-        let range;
-        let indent;
-        // либо весь документ
-        if (editor.selection.start.isEqual(editor.selection.end))
-        {
-            range = getFullRange(editor.document);
-            indent = 0;
-        }
-        else
-        {
-            // либо выделяем строки целиком
-            let sel = selectLines(editor.document, editor.selection);
-            editor.selection = sel;
-            range = sel;
-            let tag = getCurrentTag(editor.document, sel.start);
-            if (!tag) indent = 0;
-            else indent = tag.Parents.length + 1;
-        }
-        let text = editor.document.getText(range);
-        // нужно ли определять язык (выделение может быть какое угодно)
-        let res = text;
-        XML.format(text, Language.XML, Settings, "\t", indent).then((res) => 
-        {
-            vscode.window.activeTextEditor.edit(builder =>
-            {
-                builder.replace(range, res);
-            })
-        }, (er) =>
-            {
-                logError(er, editor);
-            });
-    });
 
+    vscode.languages.registerDocumentFormattingEditProvider('tib', {
+        provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[]
+        {
+            let editor = vscode.window.activeTextEditor;
+            let range;
+            let indent;
+            // либо весь документ
+            if (editor.selection.start.isEqual(editor.selection.end))
+            {
+                range = getFullRange(document);
+                indent = 0;
+            }
+            else
+            {
+                // либо выделяем строки целиком
+                let sel = selectLines(document, editor.selection);
+                editor.selection = sel;
+                range = sel;
+                let tag = getCurrentTag(document, sel.start);
+                if (!tag) indent = 0;
+                else indent = tag.Parents.length + 1;
+            }
+            let text = document.getText(range);
+
+            let res = text;
+            XML.format(text, Language.XML, Settings, "\t", indent).then((res) => 
+            {
+                vscode.window.activeTextEditor.edit(builder =>
+                {
+                    builder.replace(range, res);
+                })
+            }, (er) =>
+                {
+                    logError(er, editor);
+                });
+            // provideDocumentFormattingEdits по ходу не умеет быть async, поэтому выкручиваемся так
+            return [];
+        }
+    });
 }
 
 
@@ -1347,6 +1349,52 @@ function execute(link: string)
 }
 
 
+/** getCurrentTag для debug (без try-catch) */
+function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
+{
+    let tag: CurrentTag;
+    let text = txt || getPreviousText(document, position);
+
+    // сначала пытаемся вытащить из кэша (сначала обновить, если позиция изменилась)
+    if (!force)
+    {
+        if (Cache.Active())
+        {
+            Cache.Update(document, position, text);
+            tag = Cache.Tag.Get();
+        }
+    }
+
+    if (!tag)
+    {
+        // собираем тег заново
+        let pure: string;
+        if (!pure) pure = CurrentTag.PrepareXML(text);
+        let ranges = getParentRanges(document, pure);
+        // где-то вне
+        if (ranges.length == 0) tag = null;//new CurrentTag("XML");
+        else
+        {
+            let parents = ranges.map(range => new SimpleTag(document, range))
+
+            /** Последний незакрытый тег */
+            let current = parents.pop();
+            tag = new CurrentTag(current, parents);
+
+            // Заполняем поля
+            let lastRange = ranges.last();
+            tag.SetFields({
+                StartPosition: current.OpenTagRange.start,
+                StartIndex: document.offsetAt(current.OpenTagRange.start),
+                PreviousText: text,
+                Body: tag.OpenTagIsClosed ? document.getText(new vscode.Range(lastRange.end, position)) : undefined,
+                LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
+            });
+        }
+    }
+    showCurrentInfo(tag);
+    return tag;
+}
 
 /*
     Работаем с текстом, очищенным от C# и комментариев.
@@ -1354,56 +1402,19 @@ function execute(link: string)
 */
 function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
 {
+    if (_pack == "debug") return __getCurrentTag(document, position, txt, force);
+
     let tag: CurrentTag;
     try
     {
-        let text = txt || getPreviousText(document, position);
-        
-        // сначала пытаемся вытащить из кэша (сначала обновить, если позиция изменилась)
-        if (!force)
-        {
-            if (Cache.Active())
-            {
-                Cache.Update(document, position, text);
-                tag = Cache.Tag.Get();
-            }
-        }
-        
-        if (!tag)
-        {
-            // собираем тег заново
-            let pure: string;
-            if (!pure) pure = CurrentTag.PrepareXML(text);
-            let ranges = getParentRanges(document, pure);
-            // где-то вне
-            if (ranges.length == 0) tag = new CurrentTag("XML");
-            else
-            {
-                let parents = ranges.map(range => new SimpleTag(document, range))
-
-                /** Последний незакрытый тег */
-                let current = parents.pop();
-                tag = new CurrentTag(current, parents);
-
-                // Заполняем поля
-                let lastRange = ranges.last();
-                tag.SetFields({
-                    StartPosition: current.OpenTagRange.start,
-                    StartIndex: document.offsetAt(current.OpenTagRange.start),
-                    PreviousText: text,
-                    Body: tag.OpenTagIsClosed ? document.getText(new vscode.Range(lastRange.end, position)) : undefined,
-                    LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
-                });
-            }
-        }
-        showCurrentInfo(tag);
-        return tag;
-    } catch (error)
+        tag = __getCurrentTag(document, position, txt, force);
+    }
+    catch (error)
     {
         logError("Ошибка определение положения в XML");
+        return null;
     }
-
-    return null;
+    return tag;
 }
 
 
@@ -1906,7 +1917,7 @@ class CacheSet
 
         if (!cachedText || !cachedSafe || !cachedTag || cachedText.length != cachedSafe.length)
             return this.updateAll(document, position, text); // обновляем всё
-        
+
         // частичное обновление
         let foundValidRange = false;
         // сначала пробуем сравнить весь текст до начала тега
@@ -1922,7 +1933,7 @@ class CacheSet
                 foundValidRange = this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
                 if (foundValidRange) return;
             }
-        }    
+        }
 
         // если не получилось, то идём породительно снизу вверх
         let validParents: Array<SimpleTag> = [];

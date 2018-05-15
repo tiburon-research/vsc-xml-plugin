@@ -374,6 +374,23 @@
             "}"
         ],
         "description": "Вывод информации для тестирования"
+    },
+    "SexText": {
+        "prefix": "#sexText",
+        "body":[
+            "public string SexText(string man, string woman)",
+            "{",
+            "\t return AnswerExists(\"pre_sex\", \"1\") ? man : woman;",
+            "}"
+        ],
+        "description": "Вывод информации для тестирования"
+    },
+    "ParseDateTime": {
+        "prefix": "#parseDateTime",
+        "body":[
+            "DateTime.ParseExact(${1:stringDate}, \"${2:dd.MM.yyyy hh:mm:ss}\", null)"
+        ],
+        "description": "Вывод информации для тестирования"
     }
 
 }

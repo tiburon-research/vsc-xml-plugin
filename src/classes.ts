@@ -35,7 +35,8 @@ export const RegExpPatterns = {
     DelimiterContent: "[0-9][a-z][A-Z]",
     SingleAttribute: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/,
     Attributes: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g,
-    OpenTagFull: /^\s*<\w+(\s*(\w+)=(("[^"]*")|('[^']*'))\s*)*\s*\/?>/
+    OpenTagFull: /^\s*<\w+(\s*(\w+)=(("[^"]*")|('[^']*'))\s*)*\s*\/?>/,
+    FormattingHash: /(\s)|(<!\[CDATA\[)|(\]\]>)/g
 }
 
 

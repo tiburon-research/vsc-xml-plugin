@@ -73,9 +73,9 @@
     "Validate":{
         "prefix": "<Validate",
         "body": [
-            "<Validate Message=\"Проверьте правильность введённых данных\" PinAnswer=\"\" PinQuestion=\"\">",
+            "<Validate Message=\"Проверьте правильность введённых данных\" PinAnswer=\"\" PinQuestion=\"\"><![CDATA[",
             "\treturn $0;",
-            "</Validate>"
+            "]]></Validate>"
         ],
         "description": "Структура Validate"
     },
