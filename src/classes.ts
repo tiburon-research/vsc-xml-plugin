@@ -14,7 +14,7 @@ import { bot, $ } from './extension'
 
 
 /** Тип сборки */
-export const _pack: ("debug" | "release") = "release";
+export const _pack: ("debug" | "release") = "debug";
 
 
 export enum Language { XML, CSharp, CSS, JS, PlainTetx, Inline };
