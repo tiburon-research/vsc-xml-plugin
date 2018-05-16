@@ -1,11 +1,13 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import * as XML from './documentFunctions'
+import * as Encoding from './encoding'
+import * as Parse from './parsing'
 import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as os from 'os'
 import { bot, $ } from './extension'
+import * as shortHash from "short-hash"
 
 
 
@@ -57,84 +59,6 @@ export interface TextRange
     From: number;
     To: number;
     Length?: number;
-}
-
-/** Результат поиска тегов */
-export interface FindTagResult
-{
-    Range: TextRange;
-    /** Самозакрывающийся тег */
-    SelfClosed: boolean;
-}
-
-/** { `Delimiter`, `EncodedCollection` } */
-export interface XMLencodeResult
-{
-    EncodedCollection: KeyedCollection<string>;
-    Delimiter: string;
-}
-
-
-/** Результат кодирования */
-export class EncodeResult
-{
-    Result: string;
-    EncodedCollection = new KeyedCollection<string>();
-    Delimiter: string = null;
-
-    toXMLencodeResult(): XMLencodeResult
-    {
-        return { Delimiter: this.Delimiter, EncodedCollection: this.EncodedCollection };
-    }
-}
-
-
-/** Класс для множественного последовательного кодирования текста */
-export class Encoder
-{
-    /** 
-     * @param text исходный, который будет кодироваться 
-     * @param delimiter разделитель или его длина
-    */
-    constructor(text: string, delimiter?: string | number)
-    {
-        this.OriginalText = text;
-        this.Result = text;
-        let del: string;
-        if (!delimiter) del = XML.getReplaceDelimiter(text);
-        else
-        {
-            if (typeof delimiter == "string") del = delimiter;
-            else del = XML.getReplaceDelimiter(text, delimiter);
-        }
-        this.Delimiter = del;
-    }
-
-    /** Кодирование текущего результата указанной функцией `encodeFuntion` */
-    public Encode(encodeFuntion: (text: string, delimiter: string) => EncodeResult): void
-    {
-        let tmpRes = encodeFuntion(this.Result, this.Delimiter);
-        this.Result = tmpRes.Result;
-        this.EncodedCollection.AddRange(tmpRes.EncodedCollection);
-    }
-
-    public ToEncodeResult(): EncodeResult
-    {
-        let res = new EncodeResult();
-        res.EncodedCollection = this.EncodedCollection;
-        res.Delimiter = this.Delimiter;
-        res.Result = this.Result;
-        return res;
-    }
-
-    /** Исходный текст */
-    public readonly OriginalText: string;
-    /** Разделитель для кодирования */
-    public readonly Delimiter: string;
-    /** Результат кодирования */
-    public Result: string;
-    /** Коллекция закодированных элементов */
-    public readonly EncodedCollection = new KeyedCollection<string>();
 }
 
 
@@ -200,7 +124,7 @@ export namespace TibDocumentEdits
         return $dom.xml();
     }
 
-    export function removeQuestionIds(text: string): string
+    export function RemoveQuestionIds(text: string): string
     {
         let $dom = $.XMLDOM(text);
         let $question = $dom.find("Question");
@@ -751,9 +675,9 @@ export class CurrentTag
     public static PrepareXML(text: string): string
     {
         // замазываем комментарии
-        let pure = XML.clearXMLComments(text);
+        let pure = Encoding.clearXMLComments(text);
         // удаление закрытых _AllowCodeTag из остатка кода (чтобы не искать <int>)
-        pure = XML.clearCSContents(pure);
+        pure = Encoding.clearCSContents(pure);
         return pure;
     }
 
@@ -846,7 +770,7 @@ export class CurrentTag
             rest = rest.replace(RegExpPatterns.Attributes, "");
             return !!rest.match(/(("[^"]*)|('[^']*))$/);
         }
-        return !!this.Body && XML.inString(this.Body);
+        return !!this.Body && Parse.inString(this.Body);
     }
 
     /** == Language.Inline. Но это только когда написано полностью */
@@ -864,13 +788,13 @@ export class CurrentTag
             if (this.CSSingle())
             {
                 let rest = this.PreviousText.substr(this.PreviousText.lastIndexOf("$"));
-                return XML.inString(rest);
+                return Parse.inString(rest);
             }
             else if (this.CSInline())
             {
                 let rest = this.PreviousText.substr(this.PreviousText.lastIndexOf("[c#"));
                 rest = rest.substr(rest.indexOf("]") + 1);
-                return XML.inString(rest);
+                return Parse.inString(rest);
             }
             else return this.InString();
         }
@@ -1048,7 +972,7 @@ export class TagInfo
             let newLine = text.indexOf("\n", to - 1);
             this.Multiline = newLine > -1;
             let openTag = text.slice(from, to);
-            let clt = XML.findCloseTag("<", this.Name, ">", before, text);
+            let clt = Parse.findCloseTag("<", this.Name, ">", before, text);
             this.SelfClosed = !!clt && clt.SelfClosed;
             if (!!clt && !this.SelfClosed)
             {
@@ -1371,6 +1295,7 @@ export class CacheItem<T>
 
 
 
+
 /*---------------------------------------- Functions ----------------------------------------*/
 //#region
 
@@ -1487,14 +1412,6 @@ export function createDir(path: string)
 }
 
 
-/** кодирование строки в безопасные символы */
-export function safeEncode(txt: string, replacement = "_"): string
-{
-    let buf = new Buffer(txt, 'binary');
-    return buf.toString('base64').replace(/[^\w\-]/g, replacement);
-}
-
-
 /** 
  * Создаёт лог об ошибке 
  * @param text Текст ошибки
@@ -1509,7 +1426,7 @@ export function saveError(text: string, data: LogData, path: string)
         return;
     }
     // генерируем имя файла из текста ошибки и сохраняем в папке с именем пользователя
-    let hash = "" + safeEncode(text);
+    let hash = "" + shortHash(text);
     let dir = path + (!!path.match(/[\\\/]$/) ? "" : "\\") + getUserName();
     if (!pathExists(dir)) createDir(dir);
     let filename = dir + "\\" + hash + ".log";

@@ -2,21 +2,22 @@
 
 import { JSDOM } from 'jsdom'
 import * as _JQuery from 'jquery'
-import { logString, KeyedCollection, XMLencodeResult, EncodeResult, showWarning } from './classes'
-import * as XML from './documentFunctions'
+import { logString, KeyedCollection, showWarning } from './classes'
+import * as Encoding from './encoding'
+import * as Formatting from './formatting'
 
 
 /** Класс из XMLencodeResult:
  * 
  * { `Delimiter`, `EncodedCollection` }
 */
-export class DOMSurveyData implements XMLencodeResult
+export class DOMSurveyData implements Encoding.XMLencodeResult
 {
     Delimiter: string = null;
     EncodedCollection = new KeyedCollection<string>();
     XMLDeclaration: string;
 
-    toXMLencodeResult(): XMLencodeResult
+    toXMLencodeResult(): Encoding.XMLencodeResult
     {
         return { Delimiter: this.Delimiter, EncodedCollection: this.EncodedCollection };
     }
@@ -56,7 +57,7 @@ export function initJQuery(): any
                 (JQuery.SurveyData as DOMSurveyData).XMLDeclaration = mt[0];
             }
         }
-        let res = XML.safeXML(text, JQuery._delimiter(text));
+        let res = Encoding.safeXML(text, JQuery._delimiter(text));
         JQuery._saveData(res.toXMLencodeResult(), isInitial);
         let root = JQuery(JQuery.parseXML('<Root>' + res.Result + '</Root>')).find('Root');
         root.isRootElement = true;
@@ -93,7 +94,7 @@ export function initJQuery(): any
         // если задаём текст, то как обычно
         else
         {
-            let pure = XML.safeXML(param, JQuery._delimiter(param));
+            let pure = Encoding.safeXML(param, JQuery._delimiter(param));
             JQuery._saveData(pure.toXMLencodeResult());
             res = el.textOriginal.apply(this, [pure.Result]);
         }
@@ -116,7 +117,7 @@ export function initJQuery(): any
         // если задаём атрибут, то как обычно
         else
         {
-            let pure = XML.safeXML(param, JQuery._delimiter(param));
+            let pure = Encoding.safeXML(param, JQuery._delimiter(param));
             JQuery._saveData(pure.toXMLencodeResult());
             res = el.attrOriginal.apply(this, [name, pure.Result]);
         }
@@ -150,13 +151,13 @@ export function initJQuery(): any
     {
         if (!JQuery.SurveyData.Delimiter)
         {
-            JQuery.SurveyData.Delimiter = XML.getReplaceDelimiter(el);
+            JQuery.SurveyData.Delimiter = Encoding.getReplaceDelimiter(el);
         }
         return JQuery.SurveyData.Delimiter;
     }
 
     /** Сохраняет данные кодирования */
-    JQuery._saveData = function(data: XMLencodeResult, isInitial = false): void
+    JQuery._saveData = function(data: Encoding.XMLencodeResult, isInitial = false): void
     {
         if (isInitial)
         {
@@ -176,7 +177,7 @@ export function initJQuery(): any
             showWarning("JQuery инициализирована неправильно");
             return text;
         }       
-        return XML.originalXML(text, JQuery.SurveyData.toXMLencodeResult())
+        return Encoding.originalXML(text, JQuery.SurveyData.toXMLencodeResult())
     }
 
 
@@ -193,11 +194,4 @@ function safeSelector(selector: string): string
     let safeSel = selector;
     safeSel = safeSel.replace(/#([a-zA-Z0-9_\-@\)\(]+)/, '[Id="$1"]');
     return safeSel;
-}
-
-
-/** преобразует строковые параметры $ для XML */
-function safeParams(params: any[]): any[]
-{
-    return params.map(s => (typeof s == "string") ? safeSelector(s) : s);
 }

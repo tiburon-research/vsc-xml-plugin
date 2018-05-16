@@ -2,8 +2,10 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields, RegExpPatterns, openFile } from "./classes";
-import * as XML from './documentFunctions';
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem,  pathExists, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, SimpleTag, CacheItem, RegExpPatterns, openFile } from "./classes";
+import * as Encoding from './encoding'
+import * as Parse from './parsing'
+import * as Formatting from './formatting'
 import { SurveyList } from './surveyObjects';
 import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
@@ -372,7 +374,7 @@ function registerCommands()
         try
         {
             let text = editor.document.getText();
-            let res = TibDocumentEdits.removeQuestionIds(text);
+            let res = TibDocumentEdits.RemoveQuestionIds(text);
             applyChanges(getFullRange(editor.document), res, editor);
         } catch (error)
         {
@@ -543,7 +545,7 @@ function registerCommands()
             let text = document.getText(range);
 
             let res = text;
-            XML.format(text, Language.XML, Settings, "\t", indent).then((res) => 
+            Formatting.format(text, Language.XML, Settings, "\t", indent).then((res) => 
             {
                 vscode.window.activeTextEditor.edit(builder =>
                 {
@@ -1155,7 +1157,7 @@ function saveMethods(editor: vscode.TextEditor): void
     {
         Methods.Clear();
         let text = editor.document.getText();
-        if (Settings.Item("ignoreComments")) text = XML.clearXMLComments(text);
+        if (Settings.Item("ignoreComments")) text = Encoding.clearXMLComments(text);
         let mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
         if (!mtd || !mtd[3]) return;
         let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/, "g");
@@ -1199,7 +1201,7 @@ function updateNodesIds(editor: vscode.TextEditor, names?: string[]): void
         let nNames = names;
         if (!nNames) nNames = _NodeStoreNames;
         let txt = editor.document.getText();
-        if (Settings.Item("ignoreComments")) txt = XML.clearXMLComments(txt);
+        if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
         let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]+Id=(\"|')([^\"']+)(\"|')", "g");
         let res;
         let idIndex = nNames.length + 3;
@@ -1251,7 +1253,7 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
         let fullText = document.getText();
         if (tagName != 'c#') fullText = clearFromCSTags(fullText);
         let prevText = getPreviousText(document, position);
-        let res = XML.findCloseTag(opBracket, tagName, clBracket, prevText, fullText);
+        let res = Parse.findCloseTag(opBracket, tagName, clBracket, prevText, fullText);
         if (!res || !res.Range) return null;
         let startPos = document.positionAt(res.Range.From);
         let endPos = document.positionAt(res.Range.To + 1);
@@ -1270,7 +1272,7 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
     {
         let prevText = getPreviousText(document, position);
         if (tagName != 'c#') prevText = clearFromCSTags(prevText);
-        let res = XML.findOpenTag(opBracket, tagName, clBracket, prevText);
+        let res = Parse.findOpenTag(opBracket, tagName, clBracket, prevText);
         if (!res) return null;
         let startPos = document.positionAt(res.Range.From);
         let endPos = document.positionAt(res.Range.To + 1);
@@ -1408,7 +1410,7 @@ function getNextParent(document: vscode.TextDocument, text: string, fullPrevText
     lastIndex += shift;
 
     // ищем закрывающий
-    let closingTag = XML.findCloseTag("<", res.Result[1], ">", shift, fullPrevText);
+    let closingTag = Parse.findCloseTag("<", res.Result[1], ">", shift, fullPrevText);
 
     if (!closingTag) // если не закрыт, то возвращаем его
     {
@@ -1749,7 +1751,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
         {
             let tag = getCurrentTag(editor.document, editor.selection.start);
             let ind = !!tag ? tag.Parents.length + 1 : 0;
-            res = await XML.format(res, Language.XML, Settings, "\t", ind);
+            res = await Formatting.format(res, Language.XML, Settings, "\t", ind);
         }
         catch (error)
         {
