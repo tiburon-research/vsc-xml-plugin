@@ -594,7 +594,7 @@ function higlight()
                         res.push(new vscode.DocumentHighlight(curRange));
 
                         // закрывающийся
-                        if (!after.match(/^[^>]*\/>/) && !isSelfClosedTag(word))
+                        if (!after.match(/^[^>]*\/>/) && !Parse.isSelfClosedTag(word))
                         {
                             range = findCloseTag("<", word, ">", document, position);
                             if (range) res.push(new vscode.DocumentHighlight(range));
@@ -610,7 +610,7 @@ function higlight()
                         res.push(new vscode.DocumentHighlight(curRange));
 
                         // закрывающийся
-                        if (!after.match(/^[^\]]*\/\]/) && !isSelfClosedTag(word))
+                        if (!after.match(/^[^\]]*\/\]/) && !Parse.isSelfClosedTag(word))
                         {
                             range = findCloseTag("[", word, "]", document, position);
                             if (range) res.push(new vscode.DocumentHighlight(range));
@@ -763,7 +763,7 @@ function autoComplete()
             if (!mt) return;
 
             //пропускаем объявления
-            if (isMethodDefinition(curLine)) return;
+            if (Parse.isMethodDefinition(curLine)) return;
 
             let str = getCurrentLineText(document, position).substr(position.character);
             if (tag.CSSingle() || !!mt[1] && mt[1] == "$") // добавляем snippet для $repeat
@@ -912,7 +912,7 @@ function helper()
             let sign = new vscode.SignatureHelp();
             let lastLine = getPreviousText(document, position, true);
             //пропускаем объявления
-            if (isMethodDefinition(lastLine)) return;
+            if (Parse.isMethodDefinition(lastLine)) return;
             let ar = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Method"));
             let mtch = lastLine.match(/(?:(^)|(.*\b))(\w+)\([^\(\)]*$/);
             if (!mtch || mtch.length < 3) return sign;
@@ -1129,7 +1129,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
         !tagT[4] &&
         (tag.GetLaguage() != Language.CSharp || tag.InCSString() || !!tagT[2]) &&
         (!!tagT[2] || ((tag.Parents.join("") + tag.Name).indexOf("CustomText") == -1)) &&
-        !isSelfClosedTag(tagT[1])
+        !Parse.isSelfClosedTag(tagT[1])
     )
     {
         inProcess = true;
@@ -1171,7 +1171,7 @@ function saveMethods(editor: vscode.TextEditor): void
             Parameters: 12
         };
         let str = mtd[3];
-        if (Settings.Item("ignoreComments")) str = clearCSComments(str);
+        if (Settings.Item("ignoreComments")) str = Encoding.clearCSComments(str);
         let m;
         while (m = reg.exec(str))
         {
@@ -1193,7 +1193,8 @@ function saveMethods(editor: vscode.TextEditor): void
     }
 }
 
-// сохранение Id
+
+/** Cохранение Id XML узлов */
 function updateNodesIds(editor: vscode.TextEditor, names?: string[]): void
 {
     try
@@ -1220,7 +1221,7 @@ function updateNodesIds(editor: vscode.TextEditor, names?: string[]): void
 }
 
 
-
+/** Безопасное выполнение eval() */
 function safeValsEval(query: string): string[]
 {
     let res = [];
@@ -1244,6 +1245,7 @@ function getAllLists(): string[]
 {
     return CurrentNodes.GetIds('List');
 }
+
 
 /** Возвращает `null`, если тег не закрыт или SelfClosed */
 function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range
@@ -1282,16 +1284,6 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
         logError("Ошибка выделения открывающегося тега");
         return null;
     }
-}
-
-function isSelfClosedTag(tag: string): boolean
-{
-    return !!tag.match("^(" + RegExpPatterns.SelfClosedTags + ")$");
-}
-
-function execute(link: string)
-{
-    vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
 }
 
 
@@ -1342,10 +1334,8 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
     return tag;
 }
 
-/*
-    Работаем с текстом, очищенным от C# и комментариев.
-    В результате получаем index/position/range в документе, по которым потом можно получить оригинал
-*/
+
+/** Самое главное в этом расширении */
 function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
 {
     if (_pack == "debug") return __getCurrentTag(document, position, txt, force);
@@ -1394,7 +1384,7 @@ function getNextParent(document: vscode.TextDocument, text: string, fullPrevText
     let res = text.find(/<((?!xml)(\w+))/); // находим открывающийся
     if (res.Index < 0) return null;// открытых больше нет
     let rest = text.slice(res.Index); // от начала открывающегося
-    let lastIndex = indexOfOpenedEnd(rest); // ищем его конец    
+    let lastIndex = Parse.indexOfOpenedEnd(rest); // ищем его конец    
 
     if (!fullPrevText) fullPrevText = text; // если первый раз
     let shift = fullPrevText.length - text.length + res.Index; // сдвиг относительно начала документа
@@ -1425,19 +1415,6 @@ function getNextParent(document: vscode.TextDocument, text: string, fullPrevText
 }
 
 
-/** Индекс конца закрывающегося тега. 
- * 
- * Текст должен начинаться с открывающегося тега. Если не находит возвращает -1.
-*/
-function indexOfOpenedEnd(text: string): number
-{
-    let res = text.match(/^<\w+(\s+(\w+=(("[^"]*")|('[^']*'))\s*)*)?\/?>/);
-    if (!res) return -1;
-    return res[0].length - 1;
-}
-
-
-
 function getCurrentLineText(document: vscode.TextDocument, position: vscode.Position): string
 {
     try
@@ -1453,6 +1430,7 @@ function getCurrentLineText(document: vscode.TextDocument, position: vscode.Posi
     }
 
 }
+
 
 /** Получает текст от начала документа до `position` */
 function getPreviousText(document: vscode.TextDocument, position: vscode.Position, lineOnly: boolean = false): string
@@ -1471,26 +1449,11 @@ function getPreviousText(document: vscode.TextDocument, position: vscode.Positio
 }
 
 
+// TODO: проверить нафига такой костыль?
 /** Костыль для неучитывания c# вставок (заменяет '['и ']' на '*') */
 function clearFromCSTags(text: string): string
 {
     return text.replace(/\[c#([^\]]*)\]([\s\S]+?)\[\/c#([^\]]*)\]/g, "*c#$1*$2*/c#$3*");
-}
-
-
-/** Заменяет C# комментарии пробелами */
-function clearCSComments(txt: string): string
-{
-    let mt = txt.match(/\/\*([\s\S]+?)\*\//g);
-    let res = txt;
-    let rep = "";
-    if (!mt) return txt;
-    mt.forEach(element =>
-    {
-        rep = element.replace(/./g, ' ');
-        res = res.replace(element, rep);
-    });
-    return res;
 }
 
 
@@ -1519,11 +1482,6 @@ function getContextChanges(selections: vscode.Selection[], changes: vscode.TextD
     return res;
 }
 
-function getAttributes(str: string): KeyedCollection<string>
-{
-    return CurrentTag.GetAttributesArray(str);
-}
-
 
 /** Range всего документа */
 export function getFullRange(document: vscode.TextDocument): vscode.Range
@@ -1546,6 +1504,8 @@ function selectLines(document: vscode.TextDocument, selection: vscode.Selection)
     );
 }
 
+
+/** Комментирование выделенного фрагмента */
 function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, callback: (res: boolean) => void): void
 {
     let document = editor.document;
@@ -1609,6 +1569,7 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
 }
 
 
+/** Последовательное комментирование выделенных фрагментов */
 function commentAllBlocks(editor: vscode.TextEditor, selections: vscode.Selection[], callback: Function): void
 {
     // рекурсивный вызов с уменьшением массива выделений
@@ -1647,6 +1608,7 @@ function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text:
         callback();
     });
 }
+
 
 /** Последовательная замена (вставка) элементов из `lines` в соответствующие выделения `selections` */
 function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[], callback: Function): void
@@ -1712,6 +1674,7 @@ function isTib()
 }
 
 
+/** Создаёт команду только для языка tib */
 function registerCommand(name: string, command: Function): void
 {
     vscode.commands.registerCommand(name, () => 
@@ -1767,13 +1730,6 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 }
 
 
-/** проверяет является ли строка началом объявления метода */
-function isMethodDefinition(text: string): boolean
-{
-    return !!text.match(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+\w+(\([^\)]*)?$/);
-}
-
-
 /** выводит в строку состояния информацию о текущем теге */
 function showCurrentInfo(tag: CurrentTag): void
 {
@@ -1788,6 +1744,7 @@ function showCurrentInfo(tag: CurrentTag): void
     }
     statusMessage(info);
 }
+
 
 class CacheSet 
 {

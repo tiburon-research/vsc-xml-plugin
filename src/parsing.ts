@@ -1,9 +1,9 @@
 'use strict'
 
-import { TextRange, safeString, TagInfo } from "./classes";
+import { TextRange, safeString, TagInfo, RegExpPatterns } from "./classes";
 import { logError } from "./extension";
 import { clearXMLComments } from "./encoding"
-import { positiveMin } from "./classes"
+import { positiveMin, KeyedCollection, CurrentTag } from "./classes"
 
 
 
@@ -14,6 +14,7 @@ export interface FindTagResult
     /** Самозакрывающийся тег */
     SelfClosed: boolean;
 }
+
 
 /** 
  * Поиск закрывающего тега.
@@ -164,6 +165,13 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 }
 
 
+/** Тег, не требующий закрывающего */
+export function isSelfClosedTag(tag: string): boolean
+{
+    return !!tag.match("^(" + RegExpPatterns.SelfClosedTags + ")$");
+}
+
+
 /** получает теги 0 вложенности */
 export function get1LevelNodes(text: string): TagInfo[]
 {
@@ -192,13 +200,9 @@ export function get1LevelNodes(text: string): TagInfo[]
 }
 
 
+/** Проверка на нахождение внутри кавычек */
 export function inString(text: string): boolean
 {
-    /*
-    // выполняется очень долго
-    let regStr = /^((([^'"]*)(("[^"]*")|('[^']*'))*)*)$/;
-    return !text.match(regStr);
-    */
     try
     {
         let rest = text.replace(/\\"/g, "  "); // убираем экранированные кавычки
@@ -220,4 +224,30 @@ export function inString(text: string): boolean
         logError("Ошибка выделения строки");
     }
     return false;
+}
+
+
+/** Индекс конца закрывающегося тега. 
+ * 
+ * Текст должен начинаться с открывающегося тега. Если не находит возвращает -1.
+*/
+export function indexOfOpenedEnd(text: string): number
+{
+    let res = text.match(/^<\w+(\s+(\w+=(("[^"]*")|('[^']*'))\s*)*)?\/?>/);
+    if (!res) return -1;
+    return res[0].length - 1;
+}
+
+
+/** проверяет содержит ли строка начало объявления метода */
+export function isMethodDefinition(text: string): boolean
+{
+    return !!text.match(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+\w+(\([^\)]*)?$/);
+}
+
+
+/** Получает коллекцию атрибутов из строки */
+export function getAttributes(str: string): KeyedCollection<string>
+{
+    return CurrentTag.GetAttributesArray(str);
 }

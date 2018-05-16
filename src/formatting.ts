@@ -22,7 +22,7 @@ export class FormatResult
 }
 
 
-// выбираем функцию по Language
+// выбираем функцию форматирования по Language
 function LanguageFunction(language: Language)//: (text: string, tab?: string, indent?: number) => Promise<FormatResult>
 {
     let func: (text: string, tab?: string, indent?: number) => Promise<FormatResult>;
@@ -62,6 +62,7 @@ function LanguageFunction(language: Language)//: (text: string, tab?: string, in
         - форматируем всё
         - возвращаем c# вставки по Id
 */
+/** Форматирование согласно языку */
 export function format(text: string, language: Language, settings: ExtensionSettings, tab: string = "\t", indent: number = 0): Promise<string>
 {
     return new Promise<string>((resolve, reject) =>
@@ -169,6 +170,7 @@ async function formatXML(text: string, tab: string = "\t", indent: number = 0): 
 }
 
 
+/** Форматирование Внутренности тега */
 async function formatBody(text: string, tab: string, indent: number = 0, lang: Language): Promise<FormatResult>
 {
     let res = new FormatResult();
@@ -437,6 +439,7 @@ function minIndent(text: string): number
 }
 
 
+/** Форматирует CDATA внутри всего текста */
 function formatCDATA(text: string): string
 {
     // располагает CDATA впритык к тегу
@@ -490,6 +493,7 @@ function formatTag(tag: string): string
 }
 
 
+/** Убирает отступы от начала */
 function formatFoldingBlocks(text: string): string
 {
     return text.replace(/(^|\n)[\t ]+(<!--#(end)?block)/g, "$1$2");

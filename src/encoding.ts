@@ -106,19 +106,6 @@ function getElements(text: string, elem: RegExp): KeyedCollection<string>
 }
 
 
-/** возвращает `text` с заменёнными `elements` */
-function replaceElements(text: string, elements: KeyedCollection<string>, delimiter: string): string
-{
-    if (!delimiter || elements.Count() == 0) return text;
-    let newText = text;
-    elements.forEach(function (i, e)
-    {
-        newText = newText.replace(new RegExp(safeString(e), "g"), delimiter + i + delimiter);
-    });
-    return newText;
-}
-
-
 /** Возвращает в `text` закодированные элементы */
 export function getElementsBack(text: string, encodeResult: XMLencodeResult): string
 {
@@ -139,7 +126,14 @@ export function encodeElements(text: string, elem: RegExp, delimiter: string): E
     let collection = getElements(text, elem);
     res.EncodedCollection = collection;
     res.Delimiter = delimiter;
-    let result = replaceElements(text, collection, delimiter);
+    let result = text;
+    if (!!delimiter && collection.Count() > 0)
+    {
+        collection.forEach(function (i, e)
+        {
+            result = result.replace(new RegExp(safeString(e), "g"), delimiter + i + delimiter);
+        });
+    }
     res.Result = result;
     return res;
 }
@@ -180,7 +174,7 @@ export function getReplaceDelimiter(text: string, length?: number): string
 }
 
 
-/** безопасный (обычный, нормальный) XML без всяких тибуроновских приколов */
+/** XML с закодированными C#-вставками и CDATA */
 export function safeXML(text: string, delimiter?: string): EncodeResult
 {
     let res = new Encoder(text, delimiter);
@@ -210,6 +204,21 @@ export function originalXML(text: string, data: XMLencodeResult): string
 //#region 
 
 
+/** Заменяет на пробелы */
+function replaceWithSpaces(text: string, sub: RegExp): string
+{
+    let mt = text.match(new RegExp(sub, "g"));
+    let res = text;
+    let rep = "";
+    if (!mt) return text;
+    mt.forEach(element =>
+    {
+        rep = element.replace(/./g, ' ');
+        res = res.replace(element, rep);
+    });
+    return res;
+}
+
 /** заменяет блок комментариев на пробелы */
 export function clearXMLComments(txt: string): string
 {
@@ -229,22 +238,6 @@ export function clearCDATA(txt: string): string
     return res;
 }
 
-/** Заменяет на пробелы */
-export function replaceWithSpaces(text: string, sub: RegExp): string
-{
-    let mt = text.match(new RegExp(sub, "g"));
-    let res = text;
-    let rep = "";
-    if (!mt) return text;
-    mt.forEach(element =>
-    {
-        rep = element.replace(/./g, ' ');
-        res = res.replace(element, rep);
-    });
-    return res;
-}
-
-
 /** Заменяет содержимое CS-тегов пробелами */
 export function clearCSContents(text: string): string
 {
@@ -255,7 +248,7 @@ export function clearCSContents(text: string): string
 
     // Очищаем полные теги
     let reg = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*?)(<\\/\\2\\s*>)");
-    
+
     let resCS = reg.exec(newText);
 
     while (!!resCS)
@@ -277,9 +270,16 @@ export function clearCSContents(text: string): string
         let open = resCS[1];
         let inner = resCS[7 + tCount].replace(/./g, ' ');
         res = res.replace(resCS[0], open + inner);
-    }    
-        
+    }
+
     return res;
+}
+
+
+/** Заменяет C#-комментарии пробелами */
+export function clearCSComments(txt: string): string
+{
+    return replaceWithSpaces(txt, RegExpPatterns.CSComments);
 }
 
 //#endregion

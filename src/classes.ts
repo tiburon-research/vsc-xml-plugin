@@ -38,7 +38,8 @@ export const RegExpPatterns = {
     SingleAttribute: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/,
     Attributes: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g,
     OpenTagFull: /^\s*<\w+(\s*(\w+)=(("[^"]*")|('[^']*'))\s*)*\s*\/?>/,
-    FormattingHash: /(\s)|(<!\[CDATA\[)|(\]\]>)/g
+    FormattingHash: /(\s)|(<!\[CDATA\[)|(\]\]>)/g,
+    CSComments: /\/\*([\s\S]+?)\*\//g
 }
 
 
@@ -485,10 +486,12 @@ export class TibMethods extends KeyedCollection<TibMethod>
 }
 
 
+/** Текстовая структура для хранения Name/Value */
 export class InlineAttribute
 {
     Name: string = "";
     Value: string = "";
+    /** Результирующая строка */
     Text: string = "";
 
     constructor(name: string, value)
@@ -502,7 +505,7 @@ export class InlineAttribute
 
 /** Класс для получения информации по полному открывающемуся тегу
  * 
- * используется для родителей CurrentTag
+ * используется для родителей и инициализации CurrentTag
  */
 export class SimpleTag
 {
@@ -554,6 +557,7 @@ export class SimpleTag
     private readonly Raw: string; // хранение исходных данных
 }
 
+
 /** Поля для CurrentTag */
 export interface CurrentTagFields
 {
@@ -569,6 +573,7 @@ export interface CurrentTagFields
 }
 
 
+/** Самый главный класс */
 export class CurrentTag
 {
     // -------------------- ПЕРЕМЕННЫЕ
@@ -832,6 +837,7 @@ export class CurrentTag
 }
 
 
+/** Информация об XML узле */
 export class SurveyNode
 {
     constructor(type: string, id: string, pos: vscode.Position)
@@ -915,6 +921,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 }
 
 
+/** Настройки расширения */
 export class ExtensionSettings extends KeyedCollection<any>
 {
     constructor()
@@ -929,6 +936,7 @@ export class ExtensionSettings extends KeyedCollection<any>
 }
 
 
+/** Совмещённая структура ContentChangeEvent + Selection */
 export class ContextChange
 {
     constructor(contextChange: vscode.TextDocumentContentChangeEvent, selection: vscode.Selection)
@@ -948,9 +956,7 @@ export class ContextChange
 }
 
 
-/** 
- * Собирает данные для первого встреченного <тега> на новой строке
- */
+/** Собирает данные для первого встреченного <тега> на новой строке */
 export class TagInfo
 {
     constructor(text: string, offset: number = 0)
@@ -1057,6 +1063,7 @@ export class TagInfo
 }
 
 
+/** Для преобразований Snippet -> CompletitionItem */
 export class SnippetObject
 {
     prefix: string;
@@ -1075,11 +1082,10 @@ export class SnippetObject
     }
 }
 
-
+/** Данные для хранения логов */
 export class LogData 
 {
     /**
-     * Данные для сохранения лога
      * @param data.FileName имя файла в котором произошла ошибка
      * @param data.Position позиция на которой произошла ошибка
      * @param data.FullText полный текст файла на момент ошибки
@@ -1300,6 +1306,7 @@ export class CacheItem<T>
 //#region
 
 
+/** C# / JS / CSS */
 export function isScriptLanguage(lang: Language): boolean
 {
     return lang == Language.CSharp || lang == Language.JS || lang == Language.CSS;
@@ -1315,23 +1322,21 @@ export function logString(a?: string | number | boolean)
 
 
 
-/** Выводит сообщение об ошибке */
+/** Показывает сообщение об ошибке */
 export function showError(text: string)
 {
     vscode.window.showErrorMessage(text);
 }
 
 
+/** Показывает предупреждение */
 export function showWarning(text: string)
 {
     vscode.window.showWarningMessage(text);
 }
 
 
-/** 
- * возвращает минимальное неотрицательное или null, если нет таких 
- * @param negative значение, возвращаемое, если нет положительных
-*/
+/** возвращает минимальное неотрицательное или `negative` (= null), если нет таких */
 export function positiveMin(a, b, negative: any = null)
 {
     let neg = null;
@@ -1413,7 +1418,7 @@ export function createDir(path: string)
 
 
 /** 
- * Создаёт лог об ошибке 
+ * Создаёт лог (файл) об ошибке 
  * @param text Текст ошибки
  * @param data Данные для лога
  * @param path Путь для сохранения файла
@@ -1440,7 +1445,7 @@ export function saveError(text: string, data: LogData, path: string)
 }
 
 
-export function sendLogMessage(text: string)
+function sendLogMessage(text: string)
 {
     if (!!bot && bot.active) bot.sendLog(text);
 }
@@ -1451,6 +1456,7 @@ export function safeString(text: string): string
 {
     return text.replace(/[\|\\\{\}\(\)\[\]\^\$\+\*\?\.\/]/g, "\\$&");
 }
+
 
 /** Открытые файла в новом окне */
 export function openFile(path: string): void
@@ -1470,6 +1476,13 @@ export function openFile(path: string): void
             });
         })
     });
+}
+
+
+/** Открыть ссылку */
+function execute(link: string)
+{
+    vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
 }
 
 
