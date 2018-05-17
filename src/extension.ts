@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, SimpleTag, CacheItem, RegExpPatterns, openFileText } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, SimpleTag, CacheItem, RegExpPatterns, openFileText, getDocumentMethods, getDocumentNodeIds } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -1005,13 +1005,12 @@ function definitions()
                 {
                     let word = document.getText(document.getWordRangeAtPosition(position, /[^'"\s]+/));;
                     let enabledNodes = ["Page", "List", "Quota"];
-                    let ur = vscode.Uri.file(vscode.window.activeTextEditor.document.fileName);
                     enabledNodes.forEach(element =>
                     {
                         let item = CurrentNodes.GetItem(word, element);
                         if (item)
                         {
-                            res = item.GetLocation(ur);
+                            res = item.GetLocation();
                             return res;
                         }
                     });
@@ -1168,8 +1167,8 @@ async function getSurveyData(document: vscode.TextDocument): Promise<void>
         for (let i = 0; i < docs.length; i++) 
         {
             let doc = await vscode.workspace.openTextDocument(docs[i])
-            let mets = await getDocumentMethods(doc);
-            let nods = await getDocumentNodeIds(doc);
+            let mets = await getDocumentMethods(doc, Settings);
+            let nods = await getDocumentNodeIds(doc, Settings, _NodeStoreNames);
             methods.AddRange(mets);
             nodes.AddRange(nods);
         }
@@ -1179,69 +1178,6 @@ async function getSurveyData(document: vscode.TextDocument): Promise<void>
     {
         logError("Ошибка при сборе сведений о документе");
     }
-}
-
-
-function getDocumentMethods(document: vscode.TextDocument): Promise<TibMethods>
-{
-    return new Promise<TibMethods>((resolve, reject) =>
-    {
-        let res = new TibMethods();
-        let text = document.getText();
-        if (Settings.Item("ignoreComments")) text = Encoding.clearXMLComments(text);
-        let mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
-        if (!mtd || !mtd[3]) return;
-        let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/, "g");
-        let groups = {
-            Full: 0,
-            Modificator: 1,
-            Properties: 5,
-            Type: 9,
-            FullName: 10,
-            Name: 11,
-            Parameters: 12
-        };
-        let str = mtd[3];
-        if (Settings.Item("ignoreComments")) str = Encoding.clearCSComments(str);
-        let m;
-        while (m = reg.exec(str))
-        {
-            if (m && m[groups.FullName])
-            {
-                let start = text.indexOf(m[groups.Full]);
-                let isFunc = !!m[groups.Parameters];
-                let end = text.indexOf(isFunc ? ")" : ";", start) + 1;
-                let positionFrom = document.positionAt(start);
-                let positionTo = document.positionAt(end);
-                let rng = new vscode.Range(positionFrom, positionTo);
-                let ur = vscode.Uri.file(document.fileName);
-                res.Add(new TibMethod(m[groups.Name], m[groups.Full].trim().replace(/\s{2,}/g, " "), rng, ur, isFunc, m[groups.Type]));
-            }
-        }
-        resolve(res);
-    });
-}
-
-
-async function getDocumentNodeIds(document: vscode.TextDocument): Promise<SurveyNodes>
-{
-    return new Promise<SurveyNodes>((resolve, reject) => {
-        let nNames = _NodeStoreNames;
-        let txt = document.getText();
-        if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
-        let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]+Id=(\"|')([^\"']+)(\"|')", "g");
-        let res;
-        let idIndex = nNames.length + 3;
-        let nodes = new SurveyNodes();
-        while (res = reg.exec(txt))
-        {
-            let pos = document.positionAt(txt.indexOf(res[0]));
-            let item = new SurveyNode(res[1], res[idIndex], pos);
-            nodes.Add(item);
-        }
-        nodes.Add(new SurveyNode("Page", "pre_data", null));
-        resolve(nodes);
-    });
 }
 
 

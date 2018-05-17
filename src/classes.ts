@@ -840,20 +840,22 @@ export class CurrentTag
 /** Информация об XML узле */
 export class SurveyNode
 {
-    constructor(type: string, id: string, pos: vscode.Position)
+    constructor(type: string, id: string, pos: vscode.Position, uri: vscode.Uri)
     {
         this.Id = id;
         this.Type = type;
         this.Position = pos;
+        this.Uri = uri;
     }
 
     Id: string = "";
     Type: string = "";
     Position: vscode.Position;
+    Uri: vscode.Uri;
 
-    GetLocation(uri: vscode.Uri): vscode.Location
+    GetLocation(): vscode.Location
     {
-        return new vscode.Location(uri, this.Position);
+        return new vscode.Location(this.Uri, this.Position);
     }
 }
 
@@ -1496,6 +1498,71 @@ function execute(link: string)
 {
     vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
 }
+
+
+export function getDocumentMethods(document: vscode.TextDocument, Settings: ExtensionSettings): Promise<TibMethods>
+{
+    return new Promise<TibMethods>((resolve, reject) =>
+    {
+        let res = new TibMethods();
+        let text = document.getText();
+        if (Settings.Item("ignoreComments")) text = Encoding.clearXMLComments(text);
+        let mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
+        if (!mtd || !mtd[3]) return;
+        let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/, "g");
+        let groups = {
+            Full: 0,
+            Modificator: 1,
+            Properties: 5,
+            Type: 9,
+            FullName: 10,
+            Name: 11,
+            Parameters: 12
+        };
+        let str = mtd[3];
+        if (Settings.Item("ignoreComments")) str = Encoding.clearCSComments(str);
+        let m;
+        while (m = reg.exec(str))
+        {
+            if (m && m[groups.FullName])
+            {
+                let start = text.indexOf(m[groups.Full]);
+                let isFunc = !!m[groups.Parameters];
+                let end = text.indexOf(isFunc ? ")" : ";", start) + 1;
+                let positionFrom = document.positionAt(start);
+                let positionTo = document.positionAt(end);
+                let rng = new vscode.Range(positionFrom, positionTo);
+                let ur = vscode.Uri.file(document.fileName);
+                res.Add(new TibMethod(m[groups.Name], m[groups.Full].trim().replace(/\s{2,}/g, " "), rng, ur, isFunc, m[groups.Type]));
+            }
+        }
+        resolve(res);
+    });
+}
+
+
+export function getDocumentNodeIds(document: vscode.TextDocument, Settings: ExtensionSettings, NodeStoreNames: string[]): Promise<SurveyNodes>
+{
+    return new Promise<SurveyNodes>((resolve, reject) => {
+        let nNames = NodeStoreNames;
+        let txt = document.getText();
+        if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
+        let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]+Id=(\"|')([^\"']+)(\"|')", "g");
+        let res;
+        let idIndex = nNames.length + 3;
+        let nodes = new SurveyNodes();
+        let ur = vscode.Uri.file(document.fileName);
+        while (res = reg.exec(txt))
+        {
+            let pos = document.positionAt(txt.indexOf(res[0]));
+            let item = new SurveyNode(res[1], res[idIndex], pos, ur);
+            nodes.Add(item);
+        }
+        nodes.Add(new SurveyNode("Page", "pre_data", null, ur));
+        resolve(nodes);
+    });
+}
+
 
 
 //#endregion
