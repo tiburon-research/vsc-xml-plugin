@@ -1526,6 +1526,8 @@ declare global
         find(search: string | RegExp): SearchResult;
         /** Продвинутый lastIndexOf string=Regexp */
         findLast(search: string): SearchResult;
+        /** Поиск с группами по всему документу */
+        matchAll(search: RegExp): RegExpMatchArray[]
     }
 
     interface Array<T>
@@ -1548,6 +1550,20 @@ String.prototype.findLast = function (search: string): SearchResult
     let res = !!reg ? reg[reg.length - 1].match(search) : null;
     let ind = !!reg ? this.lastIndexOf(res) : -1;
     return { Index: ind, Result: res };
+}
+
+String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
+{
+    let newText = this;
+    let res: RegExpMatchArray[] = [];
+    let mat = search.exec(this);
+    while (!!mat)
+    {
+        newText = newText.replace(mat[0]);
+        res.push(mat);
+        mat = search.exec(newText);
+    }
+    return res;
 }
 
 
