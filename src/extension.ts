@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem,  pathExists, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, SimpleTag, CacheItem, RegExpPatterns, openFile } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem,  pathExists, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, SimpleTag, CacheItem, RegExpPatterns, openFileText, getFileText } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -487,7 +487,7 @@ function registerCommands()
             return;
         }
 
-        openFile(path);
+        openFileText(path);
     });
 
     //Создание tibXML шаблона
@@ -508,7 +508,7 @@ function registerCommands()
 
         vscode.window.showQuickPick(tibXMLFiles, { placeHolder: "Выберите шаблон" }).then(x =>
         {
-            openFile(templatePathFolder + x);
+            openFileText(templatePathFolder + x);
         });
     });
 
@@ -1236,6 +1236,7 @@ function safeValsEval(query: string): string[]
     return res;
 }
 
+
 function getAllPages(): string[]
 {
     return CurrentNodes.GetIds('Page');
@@ -1898,5 +1899,6 @@ class CacheSet
     }
 
 }
+
 
 //#endregion
