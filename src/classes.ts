@@ -8,8 +8,6 @@ import * as fs from 'fs'
 import * as os from 'os'
 import { bot, $ } from './extension'
 import * as shortHash from "short-hash"
-import * as w12 from 'windows-1251'
-import * as detectCharset from 'chardet';
 
 
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
@@ -1463,31 +1461,20 @@ export function safeString(text: string): string
 /** Открытие текста файла в новом окне */
 export function openFileText(path: string): void
 {
-    /*  vscode.workspace.openTextDocument(path).then(doc =>
-     { // открываем файл (в памяти)
-         let txt = doc.getText();
-         vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
-         { // создаём пустой tib-файл
-             vscode.window.showTextDocument(newDoc).then(editor => 
-             { // отображаем пустой
-                 editor.edit(builder => 
-                 { // заливаем в него файл
-                     builder.insert(new vscode.Position(0, 0), txt)
-                 });
-             });
-         })
-     }); */
-    let txt = getFileText(path);
-    vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
-    { // создаём пустой tib-файл
-        vscode.window.showTextDocument(newDoc).then(editor => 
-        { // отображаем пустой
-            editor.edit(builder => 
-            { // заливаем в него текст
-                builder.insert(new vscode.Position(0, 0), txt)
+    vscode.workspace.openTextDocument(path).then(doc =>
+    { // открываем файл (в памяти)
+        let txt = doc.getText();
+        vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+        { // создаём пустой tib-файл
+            vscode.window.showTextDocument(newDoc).then(editor => 
+            { // отображаем пустой
+                editor.edit(builder => 
+                { // заливаем в него текст
+                    builder.insert(new vscode.Position(0, 0), txt)
+                });
             });
-        });
-    })
+        })
+    });
 }
 
 
@@ -1495,18 +1482,6 @@ export function openFileText(path: string): void
 function execute(link: string)
 {
     vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
-}
-
-
-/** Получает текст из файла */
-export function getFileText(fileName: string): string
-{
-    let buf = fs.readFileSync(fileName);
-    let encoding = detectCharset.detect(buf);
-    let res;
-    if (encoding.startsWith("windows")) res = w12.decode(buf.toString('binary'));
-    else res = buf.toString();
-    return res;
 }
 
 
@@ -1578,7 +1553,7 @@ Array.prototype.last = function <T>(): T
 }
 
 
-Array.prototype.equalsTo = function<T>(ar: Array<T>): boolean
+Array.prototype.equalsTo = function <T>(ar: Array<T>): boolean
 {
     if (this.length != ar.length) return false;
     let tmp = ar;

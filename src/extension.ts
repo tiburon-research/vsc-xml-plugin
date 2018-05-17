@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem,  pathExists, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, SimpleTag, CacheItem, RegExpPatterns, openFileText, getFileText } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, SimpleTag, CacheItem, RegExpPatterns, openFileText } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -72,8 +72,8 @@ var _useLinq = true;
 /** Объект для кэша объектов */
 var Cache: CacheSet;
 
-/** Тексты документов из Include */
-var Includes = new KeyedCollection<string>();
+/** Имена документов из Include */
+var Includes: string[] = [];
 
 //#endregion
 
@@ -101,21 +101,13 @@ export function activate(context: vscode.ExtensionContext)
         try
         {
             if (clearCache && Cache.Active()) Cache.Clear();
+            getIncludePaths(editor.document.getText());
             saveMethods(editor);
             updateNodesIds(editor);
         } catch (er)
         {
             logError("Ошибка при сборе информации", editor);
         }
-    }
-
-    /** смена докумена */
-    function documentChanged(document: vscode.TextDocument)
-    {
-        reload();
-        let text = document.getText();
-        updateIncludedDocuments(text);
-        inProcess = false;
     }
 
     // общие дествия при старте расширения
@@ -129,19 +121,21 @@ export function activate(context: vscode.ExtensionContext)
     higlight();
 
     // для каждого дукумента свои
-    documentChanged(editor.document);
+    reload(false);
 
     // открытие нового документа
     vscode.workspace.onDidOpenTextDocument(doc =>
     {
-        documentChanged(doc);
+        reload();
+        inProcess = false;
     });
 
     // смена документа
     vscode.window.onDidChangeActiveTextEditor(neweditor =>
     {
         editor = neweditor;
-        documentChanged(editor.document);
+        reload();
+        inProcess = false;
     });
 
     // редактирование документа
@@ -1163,12 +1157,33 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 //#region
 
 
-function saveMethods(editor: vscode.TextEditor): void
+async function saveMethods(editor: vscode.TextEditor): Promise<void>
 {
+    let document = editor.document;
     try
     {
-        Methods.Clear();
-        let text = editor.document.getText();
+        let res = new TibMethods();
+        let docs = Includes.concat([document.fileName]);
+        for (let i = 0; i < docs.length; i++) 
+        {
+            let doc = await vscode.workspace.openTextDocument(docs[i])
+            let mets = await getDocumentMethods(doc);
+            res.AddRange(mets);
+        }
+        Methods = res;
+    } catch (error)
+    {
+        logError("Ошибка при сборе сведений из Methods", editor);
+    }
+}
+
+
+function getDocumentMethods(document: vscode.TextDocument): Promise<TibMethods>
+{
+    return new Promise<TibMethods>((resolve, reject) =>
+    {
+        let res = new TibMethods();
+        let text = document.getText();
         if (Settings.Item("ignoreComments")) text = Encoding.clearXMLComments(text);
         let mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
         if (!mtd || !mtd[3]) return;
@@ -1192,17 +1207,15 @@ function saveMethods(editor: vscode.TextEditor): void
                 let start = text.indexOf(m[groups.Full]);
                 let isFunc = !!m[groups.Parameters];
                 let end = text.indexOf(isFunc ? ")" : ";", start) + 1;
-                let positionFrom = editor.document.positionAt(start);
-                let positionTo = editor.document.positionAt(end);
+                let positionFrom = document.positionAt(start);
+                let positionTo = document.positionAt(end);
                 let rng = new vscode.Range(positionFrom, positionTo);
-                let ur = vscode.Uri.file(editor.document.fileName);
-                Methods.Add(new TibMethod(m[groups.Name], m[groups.Full].trim().replace(/\s{2,}/g, " "), rng, ur, isFunc, m[groups.Type]));
+                let ur = vscode.Uri.file(document.fileName);
+                res.Add(new TibMethod(m[groups.Name], m[groups.Full].trim().replace(/\s{2,}/g, " "), rng, ur, isFunc, m[groups.Type]));
             }
         }
-    } catch (error)
-    {
-        logError("Ошибка при сборе сведений из Methods", editor);
-    }
+        resolve(res);
+    });
 }
 
 
@@ -1759,29 +1772,13 @@ function showCurrentInfo(tag: CurrentTag): void
 }
 
 
-/** Возвращает имена файлов из <Include> */
-function getIncludeFileNames(text: string): string[]
+/** Обновляет все <Include> */
+function getIncludePaths(text: string): void
 {
-    let res = new KeyedCollection<string>();
     let reg = /<Include[\s\S]*?FileName=(("[^"]+")|('[^']+'))/;
-    let txt = Encoding.clearXMLComments(text);
-    let includes = txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, ''));
-    // оставляем только локальные
-    includes = includes.filter(x => x.match(/^\w:/));
-    return includes;
-}
-
-
-/** Обновляет все <Include> если надо */
-function updateIncludedDocuments(text: string): void
-{
-    let includes = getIncludeFileNames(text);
-    if (includes.equalsTo(Includes.Keys())) return;
-    Includes.Clear();
-    includes.forEach(include =>
-    {
-        if (pathExists(include)) Includes.AddPair(include, getFileText(include));
-    });
+    let txt = text;
+    if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
+    Includes = txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x));
 }
 
 
@@ -1857,18 +1854,18 @@ class CacheSet
         try
         {
             if (!this.Active()) return;
-    
+
             let text = txt || getPreviousText(document, position);
             let cachedText = this.PreviousText.Get();
             // ничего не поменялось
             if (!!cachedText && cachedText == text) return;
-    
+
             let cachedTag = this.Tag.Get();
             let cachedSafe = this.PreviousTextSafe.Get();
-    
+
             if (!cachedText || !cachedSafe || !cachedTag || cachedText.length != cachedSafe.length)
                 return this.updateAll(document, position, text); // обновляем всё
-    
+
             // частичное обновление
             let foundValidRange = false;
             // сначала пробуем сравнить весь текст до начала тега
@@ -1885,7 +1882,7 @@ class CacheSet
                     if (foundValidRange) return;
                 }
             }
-    
+
             // если не получилось, то идём породительно снизу вверх
             let validParents: Array<SimpleTag> = [];
             foundValidRange = false;
