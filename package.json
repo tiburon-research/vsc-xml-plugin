@@ -29,6 +29,8 @@
   ],
   "main": "./out/extension",
   "dependencies": {
+    "windows-1251": "^1.0.0",
+    "chardet": "^0.5.0",
     "clipboardy": "^1.2.2",
     "cssbeautify": "^0.3.1",
     "jquery": "^3.3.1",

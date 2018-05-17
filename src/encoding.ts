@@ -87,7 +87,6 @@ function getElements(text: string, elem: RegExp): KeyedCollection<string>
     let res = new KeyedCollection<string>();
     try
     {
-        let reg = new RegExp(elem, "g");
         let mat = elem.exec(text);
         let newText = text;
         while (!!mat)
