@@ -102,8 +102,7 @@ export function activate(context: vscode.ExtensionContext)
         {
             if (clearCache && Cache.Active()) Cache.Clear();
             getIncludePaths(editor.document.getText());
-            saveMethods(editor);
-            updateNodesIds(editor);
+            getSurveyData(editor.document);
         } catch (er)
         {
             logError("Ошибка при сборе информации", editor);
@@ -111,7 +110,7 @@ export function activate(context: vscode.ExtensionContext)
     }
 
     // общие дествия при старте расширения
-    getData();
+    getStaticData();
     makeIndent();
     autoComplete();
     hoverDocs();
@@ -159,7 +158,7 @@ export function deactivate()
 
 
 /** Сбор необходимых данных */
-function getData()
+function getStaticData()
 {
     try 
     {
@@ -1157,23 +1156,28 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 //#region
 
 
-async function saveMethods(editor: vscode.TextEditor): Promise<void>
+/** Собирает данные из текущего документа и Includ'ов */
+async function getSurveyData(document: vscode.TextDocument): Promise<void>
 {
-    let document = editor.document;
+    let docs = Includes.concat([document.fileName]);
+    let methods = new TibMethods();
+    let nodes = new SurveyNodes();
     try
     {
-        let res = new TibMethods();
         let docs = Includes.concat([document.fileName]);
         for (let i = 0; i < docs.length; i++) 
         {
             let doc = await vscode.workspace.openTextDocument(docs[i])
             let mets = await getDocumentMethods(doc);
-            res.AddRange(mets);
+            let nods = await getDocumentNodeIds(doc);
+            methods.AddRange(mets);
+            nodes.AddRange(nods);
         }
-        Methods = res;
+        Methods = methods;
+        CurrentNodes = nodes;
     } catch (error)
     {
-        logError("Ошибка при сборе сведений из Methods", editor);
+        logError("Ошибка при сборе сведений о документе");
     }
 }
 
@@ -1219,30 +1223,25 @@ function getDocumentMethods(document: vscode.TextDocument): Promise<TibMethods>
 }
 
 
-/** Cохранение Id XML узлов */
-function updateNodesIds(editor: vscode.TextEditor, names?: string[]): void
+async function getDocumentNodeIds(document: vscode.TextDocument): Promise<SurveyNodes>
 {
-    try
-    {
-        let nNames = names;
-        if (!nNames) nNames = _NodeStoreNames;
-        let txt = editor.document.getText();
+    return new Promise<SurveyNodes>((resolve, reject) => {
+        let nNames = _NodeStoreNames;
+        let txt = document.getText();
         if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
         let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]+Id=(\"|')([^\"']+)(\"|')", "g");
         let res;
         let idIndex = nNames.length + 3;
-        CurrentNodes.Clear(nNames);
+        let nodes = new SurveyNodes();
         while (res = reg.exec(txt))
         {
-            let pos = editor.document.positionAt(txt.indexOf(res[0]));
+            let pos = document.positionAt(txt.indexOf(res[0]));
             let item = new SurveyNode(res[1], res[idIndex], pos);
-            CurrentNodes.Add(item);
+            nodes.Add(item);
         }
-        CurrentNodes.Add(new SurveyNode("Page", "pre_data", null));
-    } catch (error)
-    {
-        logError("Ошибка при сборе Id элементов", editor);
-    }
+        nodes.Add(new SurveyNode("Page", "pre_data", null));
+        resolve(nodes);
+    });
 }
 
 

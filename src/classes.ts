@@ -865,11 +865,24 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
         super();
     }
 
+    /** Добавляет в нужный элемент */
     Add(item: SurveyNode)
     {
         if (!this.Contains(item.Type))
             this.AddPair(item.Type, [item]);
         else if (this.Item(item.Type).findIndex(x => x.Id == item.Id)) this.Item(item.Type).push(item);
+    }
+
+
+    /** Добавляет к нужным элементам, не заменяя */
+    AddRange(range: KeyedCollection<SurveyNode[]>): void
+    {
+        range.forEach((key, value) =>
+        {
+            if (!this.Contains(key))
+                this.AddPair(key, value);
+            else this.UpdateValue(key, x => x.concat(value));
+        })
     }
 
     GetIds(type: string): string[]
