@@ -284,6 +284,7 @@ export class KeyedCollection<T>
         })
     }
 
+
 }
 
 
@@ -1462,20 +1463,20 @@ export function safeString(text: string): string
 /** Открытие текста файла в новом окне */
 export function openFileText(path: string): void
 {
-   /*  vscode.workspace.openTextDocument(path).then(doc =>
-    { // открываем файл (в памяти)
-        let txt = doc.getText();
-        vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
-        { // создаём пустой tib-файл
-            vscode.window.showTextDocument(newDoc).then(editor => 
-            { // отображаем пустой
-                editor.edit(builder => 
-                { // заливаем в него файл
-                    builder.insert(new vscode.Position(0, 0), txt)
-                });
-            });
-        })
-    }); */
+    /*  vscode.workspace.openTextDocument(path).then(doc =>
+     { // открываем файл (в памяти)
+         let txt = doc.getText();
+         vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+         { // создаём пустой tib-файл
+             vscode.window.showTextDocument(newDoc).then(editor => 
+             { // отображаем пустой
+                 editor.edit(builder => 
+                 { // заливаем в него файл
+                     builder.insert(new vscode.Position(0, 0), txt)
+                 });
+             });
+         })
+     }); */
     let txt = getFileText(path);
     vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
     { // создаём пустой tib-файл
@@ -1533,7 +1534,9 @@ declare global
     interface Array<T>
     {
         /** Возвращает последний элемент */
-        last(): T
+        last(): T;
+        /** Проверяет, что все элементы совпадают, независимо от порядка */
+        equalsTo(ar: Array<T>): boolean;
     }
 }
 
@@ -1573,5 +1576,20 @@ Array.prototype.last = function <T>(): T
     if (this.length > 0) res = this[this.length - 1];
     return res;
 }
+
+
+Array.prototype.equalsTo = function<T>(ar: Array<T>): boolean
+{
+    if (this.length != ar.length) return false;
+    let tmp = ar;
+    for (let index = 0; index < this.length; index++)
+    {
+        let ind = tmp.indexOf(this[index]);
+        if (ind < 0) return false;
+        tmp = tmp.filter((x, i) => i != ind);
+    }
+    return true;
+}
+
 
 //#endregion

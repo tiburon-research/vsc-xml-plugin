@@ -72,6 +72,8 @@ var _useLinq = true;
 /** Объект для кэша объектов */
 var Cache: CacheSet;
 
+/** Тексты документов из Include */
+var Includes = new KeyedCollection<string>();
 
 //#endregion
 
@@ -86,6 +88,7 @@ export function activate(context: vscode.ExtensionContext)
 
     Settings.update(vscode.workspace.getConfiguration('tib'));
 
+    // обновляем настройки при сохранении
     vscode.workspace.onDidChangeConfiguration(event =>
     {
         Settings.update(vscode.workspace.getConfiguration('tib'));
@@ -106,6 +109,15 @@ export function activate(context: vscode.ExtensionContext)
         }
     }
 
+    /** смена докумена */
+    function documentChanged(document: vscode.TextDocument)
+    {
+        reload();
+        let text = document.getText();
+        updateIncludedDocuments(text);
+        inProcess = false;
+    }
+
     // общие дествия при старте расширения
     getData();
     makeIndent();
@@ -117,22 +129,22 @@ export function activate(context: vscode.ExtensionContext)
     higlight();
 
     // для каждого дукумента свои
-    reload(false);
+    documentChanged(editor.document);
 
-    vscode.workspace.onDidOpenTextDocument(event =>
+    // открытие нового документа
+    vscode.workspace.onDidOpenTextDocument(doc =>
     {
-        inProcess = false;
-        reload();
+        documentChanged(doc);
     });
 
+    // смена документа
     vscode.window.onDidChangeActiveTextEditor(neweditor =>
     {
         editor = neweditor;
-        inProcess = false;
-        reload();
+        documentChanged(editor.document);
     });
 
-
+    // редактирование документа
     vscode.workspace.onDidChangeTextDocument(event =>
     {
         if (inProcess || !editor || editor.document.languageId != "tib") return;
@@ -1744,6 +1756,32 @@ function showCurrentInfo(tag: CurrentTag): void
         info = lang + ":\t" + tag.Parents.map(x => x.Name).concat([tag.Name]).join(" -> ");
     }
     statusMessage(info);
+}
+
+
+/** Возвращает имена файлов из <Include> */
+function getIncludeFileNames(text: string): string[]
+{
+    let res = new KeyedCollection<string>();
+    let reg = /<Include[\s\S]*?FileName=(("[^"]+")|('[^']+'))/;
+    let txt = Encoding.clearXMLComments(text);
+    let includes = txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, ''));
+    // оставляем только локальные
+    includes = includes.filter(x => x.match(/^\w:/));
+    return includes;
+}
+
+
+/** Обновляет все <Include> если надо */
+function updateIncludedDocuments(text: string): void
+{
+    let includes = getIncludeFileNames(text);
+    if (includes.equalsTo(Includes.Keys())) return;
+    Includes.Clear();
+    includes.forEach(include =>
+    {
+        if (pathExists(include)) Includes.AddPair(include, getFileText(include));
+    });
 }
 
 
