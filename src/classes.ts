@@ -10,38 +10,14 @@ import { bot, $ } from './extension'
 import * as shortHash from "short-hash"
 import * as w12 from 'windows-1251'
 import * as detectCharset from 'chardet';
+import { RegExpPatterns } from './constants'
 
 
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
 //#region
 
 
-/** Тип сборки */
-export const _pack: ("debug" | "release") = "debug";
-
-
 export enum Language { XML, CSharp, CSS, JS, PlainTetx, Inline };
-
-
-/** Работают правильно, но медленно */
-export const RegExpPatterns = {
-    CDATA: /<!\[CDATA\[([\S\s]*?)\]\]>/,
-    CDATALast: /<!\[CDATA\[[\S\s]*$/,
-    XMLComment: /(<!--([\S\s]*?)-->\s*)+/,
-    XMLLastComment: /<!--[\S\s]*$/,
-    /** RegExp для XML тегов, которые могут содержать C# */
-    AllowCodeTags: "(Filter)|(Redirect)|(Validate)|(Methods)",
-    /** RegExp для HTML тегов, которые не нужно закрывать */
-    SelfClosedTags: "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)",
-    InlineSpecial: "(repeat)|(place)",
-    /** Набор символов разделителя замены */
-    DelimiterContent: "[0-9][a-z][A-Z]",
-    SingleAttribute: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/,
-    Attributes: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g,
-    OpenTagFull: /^\s*<\w+(\s*(\w+)=(("[^"]*")|('[^']*'))\s*)*\s*\/?>/,
-    FormattingHash: /(\s)|(<!\[CDATA\[)|(\]\]>)/g,
-    CSComments: /\/\*([\s\S]+?)\*\//g
-}
 
 
 /** Результат поиска в строке */
@@ -160,9 +136,12 @@ export class KeyedCollection<T>
     protected items: { [index: string]: T } = {};
     private count: number = 0;
 
-    constructor()
+    constructor(arr?: {key: string, value: T}[])
     {
-
+        if (!!arr)
+            arr.forEach(element => {
+                this.AddPair(element.key, element.value);
+            });    
     }
 
     public Contains(key: string): boolean

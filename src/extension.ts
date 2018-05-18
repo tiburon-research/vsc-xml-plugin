@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem,  pathExists, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, SimpleTag, CacheItem, RegExpPatterns, openFileText, getFileText } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem,  pathExists, showError, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getFileText } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -10,6 +10,7 @@ import { SurveyList } from './surveyObjects';
 import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
+import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames } from './constants'
 
 
 
@@ -24,9 +25,6 @@ export { bot, $, CSFormatter, logError };
 var bot: TelegramBot;
 
 // константы
-
-/** XML теги, которые сохраняются в CurrentNodes */
-const _NodeStoreNames = ["Page", "Question", "Quota", "List"];
 
 const $ = initJQuery();
 
@@ -46,17 +44,6 @@ var codeAutoCompleteArray: TibAutoCompleteItem[] = [];
 
 /** Список классов, типов, структу и т.д. */
 var classTypes: string[] = [];
-
-var ItemSnippets = {
-    List: "<Item Id=\"$1\"><Text>$2</Text></Item>",
-    Quota: "<Item Page=\"$1\" Question=\"$2\" Answer=\"$3\"/>",
-    Validate: "<Item Page=\"$1\" Question=\"$2\" Answer=\"$3\"/>",
-    Redirect: "<Item Page=\"$1\" Question=\"$2\" Answer=\"$3\"/>",
-    Filter: "<Item Page=\"$1\" Question=\"$2\" Answer=\"$3\"/>",
-    Constants: "<Item Id=\"$1\"><Value>$2</Value></Item>",
-    Split: "<Item Id=\"$1\" Text=\"http://storage.internetopros.ru/Content/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2.jpg,${3:Описание}\"/>",
-    Stat: "<Item Id=\"$1\" Name=\"${2:Total}\" Source=\"1_X,2_X,3_X\"/>"
-}
 
 var Methods = new TibMethods();
 
@@ -1118,6 +1105,14 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
     let change = event.contentChanges[0].text;
     let originalPosition = editor.selection.start.translate(0, 1);
     let curLine = getPreviousText(editor.document, editor.selection.start, true)
+
+    let lang = tag.GetLaguage();
+
+    // закрывание скобок
+    if (isScriptLanguage(lang) && !tag.InString())
+    {
+
+    }    
 
     // закрывание [тегов]
     let tagT = text.match(/\[([a-zA-Z]\w*(#)?)(\s[^\]\[]*)?(\/)?\]$/);

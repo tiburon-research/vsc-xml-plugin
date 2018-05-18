@@ -1,8 +1,9 @@
 'use strict'
 
 import * as shortHash from "short-hash"
-import { KeyedCollection, safeString, RegExpPatterns } from "./classes"
+import { KeyedCollection, safeString, } from "./classes"
 import { logError } from "./extension";
+import { RegExpPatterns } from './constants'
 
 
 /* ---------------------------------------- КОДИРОВАНИЕ ---------------------------------------- */
