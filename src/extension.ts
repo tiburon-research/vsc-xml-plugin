@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem,  pathExists, showError, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getFileText } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, showError, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getFileText } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -1109,10 +1109,24 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
     let lang = tag.GetLaguage();
 
     // закрывание скобок
+    // автозакрывание этих скобок отключено для языка tib, чтобы нормально закрывать теги
     if (isScriptLanguage(lang) && !tag.InString())
     {
+        let clb: string;
+        if (change[change.length - 1] == "<")
+            clb = "$0>";
+        else if (change[change.length - 1] == "[") 
+            clb = "$0]";
 
-    }    
+        if (!!clb)
+        {
+            inProcess = true;
+            editor.insertSnippet(new vscode.SnippetString(clb), originalPosition).then(() =>
+            {
+                inProcess = false;
+            });
+        }
+    }
 
     // закрывание [тегов]
     let tagT = text.match(/\[([a-zA-Z]\w*(#)?)(\s[^\]\[]*)?(\/)?\]$/);
@@ -1814,18 +1828,18 @@ class CacheSet
         try
         {
             if (!this.Active()) return;
-    
+
             let text = txt || getPreviousText(document, position);
             let cachedText = this.PreviousText.Get();
             // ничего не поменялось
             if (!!cachedText && cachedText == text) return;
-    
+
             let cachedTag = this.Tag.Get();
             let cachedSafe = this.PreviousTextSafe.Get();
-    
+
             if (!cachedText || !cachedSafe || !cachedTag || cachedText.length != cachedSafe.length)
                 return this.updateAll(document, position, text); // обновляем всё
-    
+
             // частичное обновление
             let foundValidRange = false;
             // сначала пробуем сравнить весь текст до начала тега
@@ -1842,7 +1856,7 @@ class CacheSet
                     if (foundValidRange) return;
                 }
             }
-    
+
             // если не получилось, то идём породительно снизу вверх
             let validParents: Array<SimpleTag> = [];
             foundValidRange = false;

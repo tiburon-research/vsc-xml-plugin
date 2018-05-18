@@ -136,12 +136,8 @@ export class KeyedCollection<T>
     protected items: { [index: string]: T } = {};
     private count: number = 0;
 
-    constructor(arr?: {key: string, value: T}[])
+    constructor()
     {
-        if (!!arr)
-            arr.forEach(element => {
-                this.AddPair(element.key, element.value);
-            });    
     }
 
     public Contains(key: string): boolean
