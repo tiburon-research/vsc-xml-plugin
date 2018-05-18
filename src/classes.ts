@@ -222,22 +222,75 @@ export namespace TibDocumentEdits
 
         let res = 0;
         let $dom = $.XMLDOM(list);
-        let $item = $dom.find("Item").eq(0);
-        let $var = $item.find("Var");
+        let $item = $dom.find("Item").eq(0);        //берём только первый элемент, так как количество Var'ов должно быть одинаково у всех Item
+        let $var = $item.find("Var");               //Ищем дочерний Var
         
-        //<Var></Var>
-        if($var.length > 0){
+        if($var.length > 0){        //<Var></Var>
             res = $var.length;
         }
-
-         //Var=""
-        if(typeof $item.attr('Var') !== typeof undefined){
+        if(typeof $item.attr('Var') !== typeof undefined){      //Var=""
             res += $item.attr('Var').split(',').length;
         }
 
         return res;
     }
 
+    export function sortListBy(list:string, attrName:string, attrIndex?:number): string{
+
+        let $dom = $.XMLDOM(list);      //берём xml текст
+        let $item = $dom.find("Item");  //ищём Item'ы
+
+        $item.sort(function(item1,item2){       //сортируем массив DOM
+            
+            let el1,     //элементы для сравнения
+                el2;
+
+            if(attrIndex > 0){         //если есть индекс
+                let attrValues =  $(item1).attr(attrName).split(',');       //берём у первого Item'а массив значений
+                let attrLength = attrValues.length;
+                
+                if(attrIndex < attrLength){                          //проверка индекса на диапозон
+                    el1 =  attrValues[attrIndex];                         //берём значение по индексу
+                    el2 = $(item2).attr(attrName).split(',')[attrIndex];
+                }else{
+                    let child = $(item1).find(attrName);
+                    let childLength = child.length;
+                    el1 = child[attrIndex - attrLength];
+                    el2 = $(item2).find(attrName).eq(attrIndex - attrLength);
+                }               
+            }else{
+                if(typeof $item.attr(attrName) !== typeof undefined){       //проверка на атрибут
+                    el1 = $(item1).attr(attrName);
+                    el2 = $(item2).attr(attrName);
+                }else if($item.find(attrName).length > 0){                  //проверка на дочерний тег
+                    el1 = $(item1).find(attrName).eq(0).text();
+                    el2 = $(item2).find(attrName).eq(0).text();
+                }               
+            }
+
+            if(el1.match(/^\d+$/) && el2.match(/^\d+$/)){
+                el1 = parseInt(el1);
+                el2 = parseInt(el2);
+            }
+
+            if(el1 > el2){
+                return 1;
+            }
+            if(el1 < el2){
+                return -1;
+            }
+
+            return 0;
+        });
+
+        if($dom.find("List").length > 0){               //елси взят текст с List
+            $item.appendTo($dom.find("List"));
+        }else{
+            $item.appendTo($dom);                       //если взят тескт только с Item'ами
+        }
+
+        return $dom.xml();
+    }
 
 }
 
@@ -1565,6 +1618,11 @@ export function openFile(path: string): void
             });
         })
     });
+}
+
+function getAttr(path: string): void{
+
+
 }
 
 

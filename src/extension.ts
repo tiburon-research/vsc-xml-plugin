@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields, RegExpPatterns, openFile } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, InlineAttribute, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, getUserName, pathExists, createDir, safeEncode, sendLogMessage, showError, LogData, saveError, safeString, _pack, showWarning, TelegramBot, Encoder, SimpleTag, CacheItem, CurrentTagFields, RegExpPatterns, openFile} from "./classes";
 import * as XML from './documentFunctions';
 import { SurveyList } from './surveyObjects';
 import * as fs from 'fs';
@@ -414,50 +414,31 @@ function registerCommands()
     
             try
             {
-                let sortBy = ["Id", "Text","Var"];
-                let vars = [];
-
-                let text = editor.document.getText(editor.selection);
-                let varCount = TibDocumentEdits.getVarCountFromList(text);
                 
-                for(let i = 0; i < varCount; i++){
-                    vars.push("Var("+i+")");
+                let sortBy = ["Id", "Text"];        //элементы сортировки
+                
+                let text = editor.document.getText(editor.selection);       //Берём выделенный текст
+                let varCount = TibDocumentEdits.getVarCountFromList(text);          //Получаем количество Var'ов
+                
+                for(let i = 0; i < varCount; i++){      //заполняем Var'ы
+                    sortBy.push("Var("+i+")");
                 }
 
                 vscode.window.showQuickPick(sortBy, { placeHolder: "Сортировать по" }).then(x =>{
 
-                    if(x == "Var"){
-                        vscode.window.showQuickPick(vars, { placeHolder: "Сортировать по" }).then(y =>{
-                            let index = y.match(/\d+/);
+                    let res;
+                    let attr = x;
 
-                            console.log(index);
-                        });
+                    if(attr.includes("Var")){
+                        let index =  parseInt(attr.match(/\d+/)[0]);
+                        res = TibDocumentEdits.sortListBy(text, "Var", index);
+                    }else{
+                        res = TibDocumentEdits.sortListBy(text, x);         //сортируем
                     }
 
-                    console.log(x);
-
-/* 
-                    let $dom = $.XMLDOM(text);
-                    let $item = $dom.find("Item");
-
-                    let $element = $item.find(x);   //Var(0)
-  */                   
-/*
-                    check digits
-                    
-                    //child ex.<Text><Text/>
-                    if($var.length > 0){
-                        res = $var.length;
-                    }
-            
-                     //attr ex. Text=""
-                    if(typeof $item.attr('Var') !== typeof undefined){
-                        res += $item.attr('Var').split(',').length;
-                    }
-*/
+                    res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");     //форматируем xml
+                    applyChanges(editor.selection, res, editor);            //заменяем текст
                 });
-    
-                //applyChanges(editor.selection, res, editor);
             } catch (error)
             {
                 logError("Ошибка в преобразовании", editor);
