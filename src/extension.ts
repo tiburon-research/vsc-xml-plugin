@@ -1069,7 +1069,7 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
 
     // проверяем только рандомный tag (который передаётся из activate), чтобы не перегружать процесс
     // хреново но быстро
-    if (tag.GetLaguage() != Language.CSharp || tag.Body == "") // tag.Body == "" - т.к. "<Redirect>" уже в CSMode
+    if (tag.GetLaguage() != Language.CSharp || tag.InCSString())
     {
         changes.forEach(change =>
         {
