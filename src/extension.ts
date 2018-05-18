@@ -109,6 +109,17 @@ export function activate(context: vscode.ExtensionContext)
         }
     }
 
+    /** Документ сменился */
+    function anotherDocument()
+    {
+        Includes = [];
+        Methods.Clear();
+        CurrentNodes.Clear();
+        reload();
+        inProcess = false;
+    }
+
+
     // общие дествия при старте расширения
     getStaticData();
     makeIndent();
@@ -125,16 +136,14 @@ export function activate(context: vscode.ExtensionContext)
     // открытие нового документа
     vscode.workspace.onDidOpenTextDocument(doc =>
     {
-        reload();
-        inProcess = false;
+        anotherDocument();
     });
 
     // смена документа
     vscode.window.onDidChangeActiveTextEditor(neweditor =>
     {
         editor = neweditor;
-        reload();
-        inProcess = false;
+        anotherDocument();
     });
 
     // редактирование документа
@@ -1163,7 +1172,6 @@ async function getSurveyData(document: vscode.TextDocument): Promise<void>
     let nodes = new SurveyNodes();
     try
     {
-        let docs = Includes.concat([document.fileName]);
         for (let i = 0; i < docs.length; i++) 
         {
             let doc = await vscode.workspace.openTextDocument(docs[i])
