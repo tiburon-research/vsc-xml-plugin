@@ -1,12 +1,15 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import * as XML from './documentFunctions'
+import * as Encoding from './encoding'
+import * as Parse from './parsing'
 import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as os from 'os'
 import { bot, $ } from './extension'
-
+import * as shortHash from "short-hash"
+import * as w12 from 'windows-1251'
+import * as detectCharset from 'chardet';
 
 
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
@@ -36,7 +39,8 @@ export const RegExpPatterns = {
     SingleAttribute: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/,
     Attributes: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g,
     OpenTagFull: /^\s*<\w+(\s*(\w+)=(("[^"]*")|('[^']*'))\s*)*\s*\/?>/,
-    FormattingHash: /(\s)|(<!\[CDATA\[)|(\]\]>)/g
+    FormattingHash: /(\s)|(<!\[CDATA\[)|(\]\]>)/g,
+    CSComments: /\/\*([\s\S]+?)\*\//g
 }
 
 
@@ -57,84 +61,6 @@ export interface TextRange
     From: number;
     To: number;
     Length?: number;
-}
-
-/** Результат поиска тегов */
-export interface FindTagResult
-{
-    Range: TextRange;
-    /** Самозакрывающийся тег */
-    SelfClosed: boolean;
-}
-
-/** { `Delimiter`, `EncodedCollection` } */
-export interface XMLencodeResult
-{
-    EncodedCollection: KeyedCollection<string>;
-    Delimiter: string;
-}
-
-
-/** Результат кодирования */
-export class EncodeResult
-{
-    Result: string;
-    EncodedCollection = new KeyedCollection<string>();
-    Delimiter: string = null;
-
-    toXMLencodeResult(): XMLencodeResult
-    {
-        return { Delimiter: this.Delimiter, EncodedCollection: this.EncodedCollection };
-    }
-}
-
-
-/** Класс для множественного последовательного кодирования текста */
-export class Encoder
-{
-    /** 
-     * @param text исходный, который будет кодироваться 
-     * @param delimiter разделитель или его длина
-    */
-    constructor(text: string, delimiter?: string | number)
-    {
-        this.OriginalText = text;
-        this.Result = text;
-        let del: string;
-        if (!delimiter) del = XML.getReplaceDelimiter(text);
-        else
-        {
-            if (typeof delimiter == "string") del = delimiter;
-            else del = XML.getReplaceDelimiter(text, delimiter);
-        }
-        this.Delimiter = del;
-    }
-
-    /** Кодирование текущего результата указанной функцией `encodeFuntion` */
-    public Encode(encodeFuntion: (text: string, delimiter: string) => EncodeResult): void
-    {
-        let tmpRes = encodeFuntion(this.Result, this.Delimiter);
-        this.Result = tmpRes.Result;
-        this.EncodedCollection.AddRange(tmpRes.EncodedCollection);
-    }
-
-    public ToEncodeResult(): EncodeResult
-    {
-        let res = new EncodeResult();
-        res.EncodedCollection = this.EncodedCollection;
-        res.Delimiter = this.Delimiter;
-        res.Result = this.Result;
-        return res;
-    }
-
-    /** Исходный текст */
-    public readonly OriginalText: string;
-    /** Разделитель для кодирования */
-    public readonly Delimiter: string;
-    /** Результат кодирования */
-    public Result: string;
-    /** Коллекция закодированных элементов */
-    public readonly EncodedCollection = new KeyedCollection<string>();
 }
 
 
@@ -200,7 +126,8 @@ export namespace TibDocumentEdits
         return $dom.xml();
     }
 
-    export function removeQuestionIds(text: string): string{
+    export function RemoveQuestionIds(text: string): string
+    {
         let $dom = $.XMLDOM(text);
         let $question = $dom.find("Question");
 
@@ -626,10 +553,12 @@ export class TibMethods extends KeyedCollection<TibMethod>
 }
 
 
+/** Текстовая структура для хранения Name/Value */
 export class InlineAttribute
 {
     Name: string = "";
     Value: string = "";
+    /** Результирующая строка */
     Text: string = "";
 
     constructor(name: string, value)
@@ -643,7 +572,7 @@ export class InlineAttribute
 
 /** Класс для получения информации по полному открывающемуся тегу
  * 
- * используется для родителей CurrentTag
+ * используется для родителей и инициализации CurrentTag
  */
 export class SimpleTag
 {
@@ -695,6 +624,7 @@ export class SimpleTag
     private readonly Raw: string; // хранение исходных данных
 }
 
+
 /** Поля для CurrentTag */
 export interface CurrentTagFields
 {
@@ -710,6 +640,7 @@ export interface CurrentTagFields
 }
 
 
+/** Самый главный класс */
 export class CurrentTag
 {
     // -------------------- ПЕРЕМЕННЫЕ
@@ -816,9 +747,9 @@ export class CurrentTag
     public static PrepareXML(text: string): string
     {
         // замазываем комментарии
-        let pure = XML.clearXMLComments(text);
+        let pure = Encoding.clearXMLComments(text);
         // удаление закрытых _AllowCodeTag из остатка кода (чтобы не искать <int>)
-        pure = XML.clearCSContents(pure);
+        pure = Encoding.clearCSContents(pure);
         return pure;
     }
 
@@ -911,7 +842,7 @@ export class CurrentTag
             rest = rest.replace(RegExpPatterns.Attributes, "");
             return !!rest.match(/(("[^"]*)|('[^']*))$/);
         }
-        return !!this.Body && XML.inString(this.Body);
+        return !!this.Body && Parse.inString(this.Body);
     }
 
     /** == Language.Inline. Но это только когда написано полностью */
@@ -929,13 +860,13 @@ export class CurrentTag
             if (this.CSSingle())
             {
                 let rest = this.PreviousText.substr(this.PreviousText.lastIndexOf("$"));
-                return XML.inString(rest);
+                return Parse.inString(rest);
             }
             else if (this.CSInline())
             {
                 let rest = this.PreviousText.substr(this.PreviousText.lastIndexOf("[c#"));
                 rest = rest.substr(rest.indexOf("]") + 1);
-                return XML.inString(rest);
+                return Parse.inString(rest);
             }
             else return this.InString();
         }
@@ -973,6 +904,7 @@ export class CurrentTag
 }
 
 
+/** Информация об XML узле */
 export class SurveyNode
 {
     constructor(type: string, id: string, pos: vscode.Position)
@@ -1056,6 +988,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 }
 
 
+/** Настройки расширения */
 export class ExtensionSettings extends KeyedCollection<any>
 {
     constructor()
@@ -1070,6 +1003,7 @@ export class ExtensionSettings extends KeyedCollection<any>
 }
 
 
+/** Совмещённая структура ContentChangeEvent + Selection */
 export class ContextChange
 {
     constructor(contextChange: vscode.TextDocumentContentChangeEvent, selection: vscode.Selection)
@@ -1089,9 +1023,7 @@ export class ContextChange
 }
 
 
-/** 
- * Собирает данные для первого встреченного <тега> на новой строке
- */
+/** Собирает данные для первого встреченного <тега> на новой строке */
 export class TagInfo
 {
     constructor(text: string, offset: number = 0)
@@ -1113,7 +1045,7 @@ export class TagInfo
             let newLine = text.indexOf("\n", to - 1);
             this.Multiline = newLine > -1;
             let openTag = text.slice(from, to);
-            let clt = XML.findCloseTag("<", this.Name, ">", before, text);
+            let clt = Parse.findCloseTag("<", this.Name, ">", before, text);
             this.SelfClosed = !!clt && clt.SelfClosed;
             if (!!clt && !this.SelfClosed)
             {
@@ -1198,6 +1130,7 @@ export class TagInfo
 }
 
 
+/** Для преобразований Snippet -> CompletitionItem */
 export class SnippetObject
 {
     prefix: string;
@@ -1216,11 +1149,10 @@ export class SnippetObject
     }
 }
 
-
+/** Данные для хранения логов */
 export class LogData 
 {
     /**
-     * Данные для сохранения лога
      * @param data.FileName имя файла в котором произошла ошибка
      * @param data.Position позиция на которой произошла ошибка
      * @param data.FullText полный текст файла на момент ошибки
@@ -1436,10 +1368,12 @@ export class CacheItem<T>
 
 
 
+
 /*---------------------------------------- Functions ----------------------------------------*/
 //#region
 
 
+/** C# / JS / CSS */
 export function isScriptLanguage(lang: Language): boolean
 {
     return lang == Language.CSharp || lang == Language.JS || lang == Language.CSS;
@@ -1455,23 +1389,21 @@ export function logString(a?: string | number | boolean)
 
 
 
-/** Выводит сообщение об ошибке */
+/** Показывает сообщение об ошибке */
 export function showError(text: string)
 {
     vscode.window.showErrorMessage(text);
 }
 
 
+/** Показывает предупреждение */
 export function showWarning(text: string)
 {
     vscode.window.showWarningMessage(text);
 }
 
 
-/** 
- * возвращает минимальное неотрицательное или null, если нет таких 
- * @param negative значение, возвращаемое, если нет положительных
-*/
+/** возвращает минимальное неотрицательное или `negative` (= null), если нет таких */
 export function positiveMin(a, b, negative: any = null)
 {
     let neg = null;
@@ -1552,16 +1484,8 @@ export function createDir(path: string)
 }
 
 
-/** кодирование строки в безопасные символы */
-export function safeEncode(txt: string, replacement = "_"): string
-{
-    let buf = new Buffer(txt, 'binary');
-    return buf.toString('base64').replace(/[^\w\-]/g, replacement);
-}
-
-
 /** 
- * Создаёт лог об ошибке 
+ * Создаёт лог (файл) об ошибке 
  * @param text Текст ошибки
  * @param data Данные для лога
  * @param path Путь для сохранения файла
@@ -1574,7 +1498,7 @@ export function saveError(text: string, data: LogData, path: string)
         return;
     }
     // генерируем имя файла из текста ошибки и сохраняем в папке с именем пользователя
-    let hash = "" + safeEncode(text);
+    let hash = "" + shortHash(text);
     let dir = path + (!!path.match(/[\\\/]$/) ? "" : "\\") + getUserName();
     if (!pathExists(dir)) createDir(dir);
     let filename = dir + "\\" + hash + ".log";
@@ -1588,7 +1512,7 @@ export function saveError(text: string, data: LogData, path: string)
 }
 
 
-export function sendLogMessage(text: string)
+function sendLogMessage(text: string)
 {
     if (!!bot && bot.active) bot.sendLog(text);
 }
@@ -1600,24 +1524,54 @@ export function safeString(text: string): string
     return text.replace(/[\|\\\{\}\(\)\[\]\^\$\+\*\?\.\/]/g, "\\$&");
 }
 
-/** Открытые файла в новом окне */
-export function openFile(path: string): void
-{
 
-    vscode.workspace.openTextDocument(path).then(doc =>
-    { // открываем демку (в памяти)
+/** Открытие текста файла в новом окне */
+export function openFileText(path: string): void
+{
+   /*  vscode.workspace.openTextDocument(path).then(doc =>
+    { // открываем файл (в памяти)
         let txt = doc.getText();
         vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
         { // создаём пустой tib-файл
             vscode.window.showTextDocument(newDoc).then(editor => 
             { // отображаем пустой
                 editor.edit(builder => 
-                { // заливаем в него демку
+                { // заливаем в него файл
                     builder.insert(new vscode.Position(0, 0), txt)
                 });
             });
         })
-    });
+    }); */
+    let txt = getFileText(path);
+    vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+    { // создаём пустой tib-файл
+        vscode.window.showTextDocument(newDoc).then(editor => 
+        { // отображаем пустой
+            editor.edit(builder => 
+            { // заливаем в него текст
+                builder.insert(new vscode.Position(0, 0), txt)
+            });
+        });
+    })
+}
+
+
+/** Открыть ссылку */
+function execute(link: string)
+{
+    vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
+}
+
+
+/** Получает текст из файла */
+export function getFileText(fileName: string): string
+{
+    let buf = fs.readFileSync(fileName);
+    let encoding = detectCharset.detect(buf);
+    let res;
+    if (encoding.startsWith("windows")) res = w12.decode(buf.toString('binary'));
+    else res = buf.toString();
+    return res;
 }
 
 function getAttr(path: string): void{
@@ -1643,6 +1597,8 @@ declare global
         find(search: string | RegExp): SearchResult;
         /** Продвинутый lastIndexOf string=Regexp */
         findLast(search: string): SearchResult;
+        /** Поиск с группами по всему документу */
+        matchAll(search: RegExp): RegExpMatchArray[]
     }
 
     interface Array<T>
@@ -1665,6 +1621,20 @@ String.prototype.findLast = function (search: string): SearchResult
     let res = !!reg ? reg[reg.length - 1].match(search) : null;
     let ind = !!reg ? this.lastIndexOf(res) : -1;
     return { Index: ind, Result: res };
+}
+
+String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
+{
+    let newText = this;
+    let res: RegExpMatchArray[] = [];
+    let mat = search.exec(this);
+    while (!!mat)
+    {
+        newText = newText.replace(mat[0]);
+        res.push(mat);
+        mat = search.exec(newText);
+    }
+    return res;
 }
 
 
