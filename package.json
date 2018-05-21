@@ -29,14 +29,14 @@
   ],
   "main": "./out/extension",
   "dependencies": {
-    "windows-1251": "^1.0.0",
     "chardet": "^0.5.0",
     "clipboardy": "^1.2.2",
     "cssbeautify": "^0.3.1",
     "jquery": "^3.3.1",
     "js-beautify": "^1.7.5",
     "jsdom": "^11.6.2",
-    "short-hash": "^1.0.0"
+    "short-hash": "^1.0.0",
+    "windows-1251": "^1.0.0"
   },
   "contributes": {
     "languages": [
@@ -85,6 +85,11 @@
       {
         "command": "tib.transform.ItemsToAnswers",
         "title": "Items -> Answers",
+        "category": "tib"
+      },
+      {
+        "command": "tib.transform.SortList",
+        "title": "Сортировать по",
         "category": "tib"
       },
       {
