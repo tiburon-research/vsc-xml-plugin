@@ -1,10 +1,10 @@
 'use strict'
 
-import { TextRange, safeString, TagInfo, RegExpPatterns } from "./classes";
+import { TextRange, safeString, TagInfo } from "./classes";
 import { logError } from "./extension";
 import { clearXMLComments } from "./encoding"
 import { positiveMin, KeyedCollection, CurrentTag } from "./classes"
-
+import { RegExpPatterns } from './constants'
 
 
 /** Результат поиска тегов */

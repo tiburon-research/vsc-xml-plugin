@@ -1,11 +1,12 @@
 'use strict';
 
-import { Language, logString, safeString, _pack, showWarning, ExtensionSettings, RegExpPatterns } from "./classes";
+import { Language, logString, safeString, showWarning, ExtensionSettings } from "./classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { logError, CSFormatter } from "./extension";
 import { get1LevelNodes } from "./parsing"
 import { getReplaceDelimiter, encodeCS, getElementsBack, encodeElements, EncodeResult } from "./encoding"
+import { _pack, RegExpPatterns } from './constants'
 
 
 

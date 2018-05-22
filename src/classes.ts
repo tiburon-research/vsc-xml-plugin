@@ -8,40 +8,14 @@ import * as fs from 'fs'
 import * as os from 'os'
 import { bot, $ } from './extension'
 import * as shortHash from "short-hash"
-import * as w12 from 'windows-1251'
-import * as detectCharset from 'chardet';
+import { RegExpPatterns } from './constants'
 
 
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
 //#region
 
 
-/** Тип сборки */
-export const _pack: ("debug" | "release") = "debug";
-
-
 export enum Language { XML, CSharp, CSS, JS, PlainTetx, Inline };
-
-
-/** Работают правильно, но медленно */
-export const RegExpPatterns = {
-    CDATA: /<!\[CDATA\[([\S\s]*?)\]\]>/,
-    CDATALast: /<!\[CDATA\[[\S\s]*$/,
-    XMLComment: /(<!--([\S\s]*?)-->\s*)+/,
-    XMLLastComment: /<!--[\S\s]*$/,
-    /** RegExp для XML тегов, которые могут содержать C# */
-    AllowCodeTags: "(Filter)|(Redirect)|(Validate)|(Methods)",
-    /** RegExp для HTML тегов, которые не нужно закрывать */
-    SelfClosedTags: "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)",
-    InlineSpecial: "(repeat)|(place)",
-    /** Набор символов разделителя замены */
-    DelimiterContent: "[0-9][a-z][A-Z]",
-    SingleAttribute: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/,
-    Attributes: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g,
-    OpenTagFull: /^\s*<\w+(\s*(\w+)=(("[^"]*")|('[^']*'))\s*)*\s*\/?>/,
-    FormattingHash: /(\s)|(<!\[CDATA\[)|(\]\]>)/g,
-    CSComments: /\/\*([\s\S]+?)\*\//g
-}
 
 
 /** Результат поиска в строке */
@@ -228,7 +202,6 @@ export class KeyedCollection<T>
 
     constructor()
     {
-
     }
 
     public Contains(key: string): boolean
@@ -1528,7 +1501,7 @@ export function safeString(text: string): string
 /** Открытие текста файла в новом окне */
 export function openFileText(path: string): void
 {
-   /*  vscode.workspace.openTextDocument(path).then(doc =>
+    vscode.workspace.openTextDocument(path).then(doc =>
     { // открываем файл (в памяти)
         let txt = doc.getText();
         vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
@@ -1541,18 +1514,19 @@ export function openFileText(path: string): void
                 });
             });
         })
-    }); */
-    let txt = getFileText(path);
+    });
+    /* let txt = getFileText(path);
     vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
     { // создаём пустой tib-файл
         vscode.window.showTextDocument(newDoc).then(editor => 
         { // отображаем пустой
+
             editor.edit(builder => 
             { // заливаем в него текст
                 builder.insert(new vscode.Position(0, 0), txt)
             });
         });
-    })
+    }) */
 }
 
 
@@ -1560,23 +1534,6 @@ export function openFileText(path: string): void
 function execute(link: string)
 {
     vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
-}
-
-
-/** Получает текст из файла */
-export function getFileText(fileName: string): string
-{
-    let buf = fs.readFileSync(fileName);
-    let encoding = detectCharset.detect(buf);
-    let res;
-    if (encoding.startsWith("windows")) res = w12.decode(buf.toString('binary'));
-    else res = buf.toString();
-    return res;
-}
-
-function getAttr(path: string): void{
-
-
 }
 
 
@@ -1606,6 +1563,7 @@ declare global
         /** Возвращает последний элемент */
         last(): T
     }
+  
 }
 
 String.prototype.find = function (search: string | RegExp): SearchResult
@@ -1644,5 +1602,7 @@ Array.prototype.last = function <T>(): T
     if (this.length > 0) res = this[this.length - 1];
     return res;
 }
+
+
 
 //#endregion
