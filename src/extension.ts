@@ -1735,23 +1735,28 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 {
     inProcess = true;
     let res = text;
+    // вставляем
+    await editor.edit(builder =>
+    {
+        builder.replace(range, res);
+    });
+    // форматируем
     if (format)
     {
         try
         {
-            let tag = getCurrentTag(editor.document, editor.selection.start);
+            let sel = selectLines(editor.document, new vscode.Selection(range.start, range.end));
+            editor.selection = sel;
+            let tag = getCurrentTag(editor.document, sel.start);
             let ind = !!tag ? tag.Parents.length + 1 : 0;
             res = await Formatting.format(res, Language.XML, Settings, "\t", ind);
+            return applyChanges(sel, res, editor, false);
         }
         catch (error)
         {
             logError("Ошибка при обновлении текста документа", editor);
         }
     }
-    await editor.edit(builder =>
-    {
-        builder.replace(range, res);
-    });
     inProcess = false;
     return res;
 }
