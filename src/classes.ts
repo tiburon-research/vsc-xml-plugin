@@ -243,7 +243,7 @@ export class KeyedCollection<T>
 
     /** 
      * преобразует набор 
-     * @param clearNull очищать ли поп проверке (!!element)
+     * @param clearNull очищать ли по проверке (!!element)
     */
     public Select(filter: (key: string, value: T) => any, clearNull = false): any[]
     {
@@ -257,12 +257,12 @@ export class KeyedCollection<T>
     }
 
     /** Фильтрует набор */
-    public Filter(filter: (key: string, value: T) => boolean): T[]
+    protected Filter(filter: (key: string, value: T) => boolean): KeyedCollection<T>
     {
-        let res = [];
+        let res = new KeyedCollection<T>();
         this.forEach((key, value) =>
         {
-            if (filter(key, value)) res.push(value);
+            if (filter(key, value)) res.AddPair(key, value);
         });
         return res;
     }
@@ -281,7 +281,6 @@ export class KeyedCollection<T>
             this.AddPair(key, value);
         })
     }
-
 
 }
 
@@ -403,20 +402,23 @@ export class TibAttribute
 
 export class TibMethod
 {
-    Name: string = "";
-    Signature: string = "";
-    Location: vscode.Range;
-    Uri: vscode.Uri;
-    IsFunction: boolean;
-    Type: string;
+    public Name: string = "";
+    public Signature: string = "";
+    public IsFunction: boolean;
+    public Type: string;
+    public FileName: String;
 
-    constructor(name: string, sign: string, location: vscode.Range, uri: vscode.Uri, isFunction: boolean = false, type: string = "")
+    private Uri: vscode.Uri;
+    private Location: vscode.Range;
+
+    constructor(name: string, sign: string, location: vscode.Range, fileName: string, isFunction: boolean = false, type: string = "")
     {
         this.Name = name;
         this.Signature = sign;
         this.Location = location;
         this.Type = type;
-        this.Uri = uri;
+        this.FileName = fileName;
+        this.Uri = vscode.Uri.file(fileName);
         this.IsFunction = isFunction;
     }
 
@@ -450,9 +452,14 @@ export class TibMethod
 
 export class TibMethods extends KeyedCollection<TibMethod>
 {
-    constructor()
+    constructor(collection?: KeyedCollection<TibMethod>)
     {
         super();
+        if (!!collection)
+            collection.forEach((key, value) =>
+            {
+                this.Add(value);
+            })    
     }
 
     public Add(item: TibMethod)
@@ -482,6 +489,11 @@ export class TibMethods extends KeyedCollection<TibMethod>
         {
             if (e.Name == word) return e.ToSignatureInformation();
         }).filter(x => !!x);
+    }
+
+    Filter(filter: (key: string, value: TibMethod) => boolean): TibMethods
+    {
+        return new TibMethods(super.Filter(filter));
     }
 }
 
@@ -840,18 +852,21 @@ export class CurrentTag
 /** Информация об XML узле */
 export class SurveyNode
 {
-    constructor(type: string, id: string, pos: vscode.Position, uri: vscode.Uri)
+    constructor(type: string, id: string, pos: vscode.Position, fileName: string)
     {
         this.Id = id;
         this.Type = type;
         this.Position = pos;
-        this.Uri = uri;
+        this.FileName = fileName;
+        this.Uri = vscode.Uri.file(fileName);
     }
 
-    Id: string = "";
-    Type: string = "";
-    Position: vscode.Position;
-    Uri: vscode.Uri;
+    public Id: string = "";
+    public Type: string = "";
+    public Position: vscode.Position;
+    public FileName: string;
+
+    private Uri: vscode.Uri;
 
     GetLocation(): vscode.Location
     {
@@ -930,6 +945,18 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
             ci.insertText = new vscode.SnippetString(element.Id + closeQt);
             res.push(ci);
         });
+        return res;
+    }
+
+    /** Фильтрует элементы */
+    FilterNodes(filter: (node: SurveyNode) => boolean): SurveyNodes
+    {
+        let res = new SurveyNodes();
+        this.forEach((key, value) =>
+        {
+            let nodes = value.filter(x => filter(x));
+            if (nodes.length) res.AddPair(key, nodes);
+        })
         return res;
     }
 
@@ -1507,12 +1534,12 @@ export function getDocumentMethods(document: vscode.TextDocument, Settings: Exte
         let res = new TibMethods();
         let text = document.getText();
         if (Settings.Item("ignoreComments")) text = Encoding.clearXMLComments(text);
-        let mtd = text.match(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
-        if (!mtd || !mtd[3])
+        let mtd = text.matchAll(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
+        if (mtd.length == 0)
         {
             resolve(res);
             return;
-        }    
+        }
         let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/, "g");
         let groups = {
             Full: 0,
@@ -1523,23 +1550,25 @@ export function getDocumentMethods(document: vscode.TextDocument, Settings: Exte
             Name: 11,
             Parameters: 12
         };
-        let str = mtd[3];
-        if (Settings.Item("ignoreComments")) str = Encoding.clearCSComments(str);
-        let m;
-        while (m = reg.exec(str))
+        mtd.forEach(element =>
         {
-            if (m && m[groups.FullName])
+            let str = element[3];
+            if (Settings.Item("ignoreComments")) str = Encoding.clearCSComments(str);
+            let m = str.matchAll(reg);
+            m.forEach(met => 
             {
-                let start = text.indexOf(m[groups.Full]);
-                let isFunc = !!m[groups.Parameters];
-                let end = text.indexOf(isFunc ? ")" : ";", start) + 1;
-                let positionFrom = document.positionAt(start);
-                let positionTo = document.positionAt(end);
-                let rng = new vscode.Range(positionFrom, positionTo);
-                let ur = vscode.Uri.file(document.fileName);
-                res.Add(new TibMethod(m[groups.Name], m[groups.Full].trim().replace(/\s{2,}/g, " "), rng, ur, isFunc, m[groups.Type]));
-            }
-        }
+                if (met[groups.FullName])
+                {
+                    let start = text.indexOf(met[groups.Full]);
+                    let isFunc = !!met[groups.Parameters];
+                    let end = text.indexOf(isFunc ? ")" : ";", start) + 1;
+                    let positionFrom = document.positionAt(start);
+                    let positionTo = document.positionAt(end);
+                    let rng = new vscode.Range(positionFrom, positionTo);
+                    res.Add(new TibMethod(met[groups.Name], met[groups.Full].trim().replace(/\s{2,}/g, " "), rng, document.fileName, isFunc, met[groups.Type]));
+                }
+            });
+        });
         resolve(res);
     });
 }
@@ -1547,22 +1576,22 @@ export function getDocumentMethods(document: vscode.TextDocument, Settings: Exte
 
 export function getDocumentNodeIds(document: vscode.TextDocument, Settings: ExtensionSettings, NodeStoreNames: string[]): Promise<SurveyNodes>
 {
-    return new Promise<SurveyNodes>((resolve, reject) => {
+    return new Promise<SurveyNodes>((resolve, reject) =>
+    {
         let nNames = NodeStoreNames;
         let txt = document.getText();
         if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
         let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]+Id=(\"|')([^\"']+)(\"|')", "g");
-        let res;
         let idIndex = nNames.length + 3;
         let nodes = new SurveyNodes();
-        let ur = vscode.Uri.file(document.fileName);
-        while (res = reg.exec(txt))
+        let res = txt.matchAll(reg);
+        res.forEach(element => 
         {
-            let pos = document.positionAt(txt.indexOf(res[0]));
-            let item = new SurveyNode(res[1], res[idIndex], pos, ur);
+            let pos = document.positionAt(txt.indexOf(element[0]));
+            let item = new SurveyNode(element[1], element[idIndex], pos, document.fileName);
             nodes.Add(item);
-        }
-        nodes.Add(new SurveyNode("Page", "pre_data", null, ur));
+        });
+        nodes.Add(new SurveyNode("Page", "pre_data", null, document.fileName));
         resolve(nodes);
     });
 }

@@ -101,7 +101,6 @@ export function activate(context: vscode.ExtensionContext)
         try
         {
             if (clearCache && Cache.Active()) Cache.Clear();
-            getIncludePaths(editor.document.getText());
             getSurveyData(editor.document);
         } catch (er)
         {
@@ -1167,9 +1166,22 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 /** Собирает данные из текущего документа и Includ'ов */
 async function getSurveyData(document: vscode.TextDocument): Promise<void>
 {
-    let docs = Includes.concat([document.fileName]);
+    let docs = [document.fileName];
+    let includes = getIncludePaths(document.getText());
     let methods = new TibMethods();
     let nodes = new SurveyNodes();
+    // если Include поменялись, то обновляем все
+    if (!Includes || !Includes.equalsTo(includes))
+    {
+        docs = docs.concat(includes);
+        Includes = includes;
+    }
+    else // иначе обновляем только текущий документ
+    {
+        methods = Methods.Filter((name, element) => element.FileName != document.fileName);
+        nodes = CurrentNodes.FilterNodes((node) => node.FileName != document.fileName);
+    }
+
     try
     {
         for (let i = 0; i < docs.length; i++) 
@@ -1716,12 +1728,12 @@ function showCurrentInfo(tag: CurrentTag): void
 
 
 /** Обновляет все <Include> */
-function getIncludePaths(text: string): void
+function getIncludePaths(text: string): string[]
 {
     let reg = /<Include[\s\S]*?FileName=(("[^"]+")|('[^']+'))/;
     let txt = text;
     if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
-    Includes = txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x));
+    return txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x));
 }
 
 
