@@ -185,7 +185,7 @@ export namespace TibDocumentEdits
         });
 
         if($dom.find("List").length > 0){               //елси взят текст с List
-            $item.appendTo($dom.find("List"));
+            $item.appendTo($dom.find("List").html(''));
         }else{
             $item.appendTo($dom);                       //если взят тескт только с Item'ами
         }

@@ -439,7 +439,7 @@ function registerCommands()
                     }
 
                     res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");     //форматируем xml
-                    applyChanges(editor.selection, res, editor);            //заменяем текст
+                    applyChanges(editor.selection, res, editor, true);            //заменяем текст
                 });
             } catch (error)
             {
