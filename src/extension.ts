@@ -96,15 +96,14 @@ export function activate(context: vscode.ExtensionContext)
     }
 
     /** Документ сменился */
-    function anotherDocument()
+    function anotherDocument(needReload = true)
     {
         Includes = [];
         Methods.Clear();
         CurrentNodes.Clear();
-        reload();
+        if (needReload) reload();
         inProcess = false;
     }
-
 
     // общие дествия при старте расширения
     getStaticData();
@@ -118,12 +117,7 @@ export function activate(context: vscode.ExtensionContext)
 
     // для каждого дукумента свои
     reload(false);
-
-    // открытие нового документа
-    vscode.workspace.onDidOpenTextDocument(doc =>
-    {
-        anotherDocument();
-    });
+    anotherDocument(false);
 
     // смена документа
     vscode.window.onDidChangeActiveTextEditor(neweditor =>
