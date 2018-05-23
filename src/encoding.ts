@@ -88,16 +88,12 @@ function getElements(text: string, elem: RegExp): KeyedCollection<string>
     let res = new KeyedCollection<string>();
     try
     {
-        let mat = elem.exec(text);
-        let newText = text;
-        while (!!mat)
-        {
-            let i = shortHash(mat[0]);
+        let mat = text.matchAll(elem).map(x => x[0]).distinct();
+        mat.forEach(element => {
+            let i = shortHash(element);
             if (res.Contains(i)) throw "Коллекция закодированных элементов уже содержит добавляемый хеш";
-            res.AddPair("" + i, mat[0]);
-            newText = newText.replace(new RegExp(safeString(mat[0]), "g"), "");
-            mat = elem.exec(newText);
-        }
+            res.AddPair("" + i, element);
+        });
     } catch (error)
     {
         logError("Ошибка получения списка элементов" + (!!error ? "\n" + error : ""));
@@ -242,34 +238,29 @@ export function clearCDATA(txt: string): string
 export function clearCSContents(text: string): string
 {
     let res = text;
-    let newText = text;
     let rep = "";
     let tCount = RegExpPatterns.AllowCodeTags.match(/\(/g).length;
 
     // Очищаем полные теги
     let reg = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*?)(<\\/\\2\\s*>)");
 
-    let resCS = reg.exec(newText);
-
-    while (!!resCS)
-    {
-        let open = resCS[1];
-        let inner = resCS[7 + tCount].replace(/./g, ' ');
-        let close = resCS[8 + tCount];
-        let repl = new RegExp(safeString(resCS[0]));
+    let resCS = text.matchAll(reg);
+    resCS.forEach(element => {
+        let open = element[1];
+        let inner = element[7 + tCount].replace(/./g, ' ');
+        let close = element[8 + tCount];
+        let repl = new RegExp(safeString(element[0]));
         res = res.replace(repl, open + inner + close);
-        newText = newText.replace(repl, "");
-        resCS = reg.exec(newText);
-    }
+    });
 
     // Очищаем незакрытый CS-тег в конце
     let regEnd = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?!([\\t ]+\\r?\\n)|(\\s+<\/\\2))[\\s\\S]*)$");
-    resCS = regEnd.exec(res);
-    if (!!resCS)
+    let resCSend = res.match(regEnd);
+    if (!!resCSend)
     {
-        let open = resCS[1];
-        let inner = resCS[7 + tCount].replace(/./g, ' ');
-        res = res.replace(resCS[0], open + inner);
+        let open = resCSend[1];
+        let inner = resCSend[7 + tCount].replace(/./g, ' ');
+        res = res.replace(resCSend[0], open + inner);
     }
 
     return res;

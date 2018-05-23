@@ -1666,6 +1666,8 @@ declare global
         last(): T;
         /** Проверяет, что все элементы совпадают, независимо от порядка */
         equalsTo(ar: Array<T>): boolean;
+        /** Возвращает массив уникальных значений */
+        distinct(): T[]
     }
   
 }
@@ -1721,5 +1723,11 @@ Array.prototype.equalsTo = function <T>(ar: Array<T>): boolean
     return true;
 }
 
+
+Array.prototype.distinct = function<T>(): T[]
+{
+    let orig: Array<T> = this;
+    return [... new Set(orig)];
+}    
 
 //#endregion

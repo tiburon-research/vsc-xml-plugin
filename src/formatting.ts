@@ -509,20 +509,18 @@ function preFormatXML(text: string): string
     res = res.replace(/<!\[CDATA\[\s*\]\]>/, "");
     // переносим остатки CDATA на новую строку
     let regCS = new RegExp("(<!\\[CDATA\\[)(.*\\r?\\n[\\s\\S]*)(\\]\\]>)");
-    let newText = res;
-    let resCS = regCS.exec(newText);
-    while (!!resCS)
+    let resCS = res.matchAll(regCS);
+    resCS.forEach(element =>
     {
-        if (!resCS[2].match(/\]\]>/))
+        if (!element[2].match(/\]\]>/))
         {
-            if (resCS[2].match(/^.*\S.*\r?\n/)) // переносим начало
-                res = res.replace(new RegExp(safeString(resCS[1] + resCS[2]), "g"), resCS[1] + "\n" + resCS[2]);
-            if (resCS[2].match(/\S[ \t]*$/)) // переносим конец
-                res = res.replace(new RegExp(safeString(resCS[2] + resCS[3]), "g"), resCS[2] + "\n" + resCS[3]);
+            if (element[2].match(/^.*\S.*\r?\n/)) // переносим начало
+                res = res.replace(new RegExp(safeString(element[1] + element[2]), "g"), element[1] + "\n" + element[2]);
+            if (element[2].match(/\S[ \t]*$/)) // переносим конец
+                res = res.replace(new RegExp(safeString(element[2] + element[3]), "g"), element[2] + "\n" + element[3]);
         }
-        newText = newText.replace(new RegExp(safeString(resCS[0])), "");
-        resCS = regCS.exec(newText);
-    }
+    });
+
     // переносим открытый тег на новую строку
     res = res.replace(/(^|\n)([\t ]*)((((?!<!)\S)(.*?\S)?)[\t ]*)(<\w+(\s+\w+=(("[^"]*")|('[^']')))*\s*\/?>)[\t ]*\r?\n/g, "$1$2$4\n$2$7\n");
     return res;
