@@ -708,7 +708,20 @@ export class CurrentTag
         {
             this.LastParent = parents.last();
             // Id для Item
-            if (parents && this.Name == "Item") this.Id = parents.last().Name + "Item";
+            if (parents && this.Name == "Item")
+            {
+                let parName = "";
+                // ищем нормального родителя
+                for (let i = parents.length - 1; i >= 0 ; i--) 
+                {
+                    if (["Condition", "Repeat"].indexOf(parents[i].Name) < 0)
+                    {
+                        parName = parents[i].Name;
+                        break;
+                    }
+                }
+                this.Id = parName + "Item";
+            }
         }
     }
 
