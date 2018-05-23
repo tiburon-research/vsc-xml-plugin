@@ -179,7 +179,11 @@ async function formatBody(text: string, tab: string, indent: number = 0, lang: L
     let cs: EncodeResult;
     // кроме XML и C# заменяем вставки
     let del = getReplaceDelimiter(text);
-    if (lang != Language.CSharp && lang != Language.XML) cs = encodeCS(text, del);
+    if (lang != Language.CSharp && lang != Language.XML)
+    {
+        cs = encodeCS(newText, del);
+        newText = cs.Result;
+    }
     let ind = tab.repeat(indent);
     newText = newText.replace(/(\n|^)[\t ]+$/g, '$1');
     res = await LanguageFunction(lang)(newText, tab, indent);
