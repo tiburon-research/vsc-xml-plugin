@@ -621,11 +621,12 @@ function higlight()
             if (!tag) return;
             let curRange = document.getWordRangeAtPosition(position);
             let word = document.getText(curRange);
+            if (word == "CDATA") return;
             if (tag.GetLaguage() == Language.CSharp && word != 'c#') return; // такой костыль потому что при нахождении на [/c#] хз что там дальше и tag.CSMode == true
             let res = [];
             let fullText = document.getText();
             let after = getCurrentLineText(document, position).substr(position.character);
-            let mt = text.match(/(((\[)|(<))\/?)((?!CDATA)\w*)$/);
+            let mt = text.match(/(((\[)|(<))\/?)\w*$/);
 
             if (!mt) return;
             let ind = -1;
