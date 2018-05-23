@@ -5,7 +5,7 @@ import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { logError, CSFormatter } from "./extension";
 import { get1LevelNodes } from "./parsing"
-import { getReplaceDelimiter, encodeCS, getElementsBack, encodeElements, EncodeResult } from "./encoding"
+import { getReplaceDelimiter, encodeCS, getElementsBack, encodeElements, EncodeResult, Encoder } from "./encoding"
 import { _pack, RegExpPatterns } from './constants'
 
 
@@ -325,10 +325,11 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
             // CDATA форматировать не надо
             let hasCDATA = !!res.match(/^\s*<!\[CDATA\[[\s\S]*\]\]>\s*$/);
             if (hasCDATA) res = res.replace(/^\s*<!\[CDATA\[*([\s\S]*)\]\]>\s*$/, "$1");
-            // убираем собак
-            let del = getReplaceDelimiter(res)
-            let encLit = encodeElements(res, /@(?!\s*")/, del);
-            res = encLit.Result;
+            // убираем собак и $repeat
+            let encoder = new Encoder(res);
+            encoder.Encode((txt, delimiter) => encodeElements(txt, /\$repeat\([\w@]+\)({.*\[.*\]\s*})?/, delimiter));
+            encoder.Encode((txt, delimiter) => encodeElements(txt, /@(?!")/, delimiter));
+            res = encoder.Result;
             // форматируем
             res = clearIndents(res);
             res = await CSFormatter(res);
@@ -337,8 +338,8 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
             if (hasCDATA) res = res.replace(/^([\s\S]*)$/, "<![CDATA[" + space + "$1" + space + "]]>");
             let ind = tab.repeat(indent);
             res = res.replace(/\n([\t ]*\S)/g, "\n" + ind + "$1");
-            // возвращаем собак
-            res = getElementsBack(res, encLit);
+            // возвращаем собак и $repeat
+            res = getElementsBack(res, encoder.ToEncodeResult());
         }
         else
         {
