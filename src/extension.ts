@@ -1110,7 +1110,7 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
 
     // проверяем только рандомный tag (который передаётся из activate), чтобы не перегружать процесс
     // хреново но быстро
-    if (tag.GetLaguage() != Language.CSharp || tag.InCSString())
+    if (!tag.Body || tag.Body.trim().length == 0 || tag.GetLaguage() != Language.CSharp || tag.InCSString())
     {
         changes.forEach(change =>
         {
