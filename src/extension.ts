@@ -320,10 +320,10 @@ function registerCommands()
             from = tag.OpenTagRange.start;
         }
         else
-        {            
+        {
             par = tag.Parents[1].Name;
             from = tag.Parents.last().OpenTagRange.start;
-        }    
+        }
         let cl = findCloseTag("<", par, ">", editor.document, from.translate(0, 1));
         if (!cl) return;
         let to = cl.end;
@@ -1555,10 +1555,9 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
         callback(false);
         return;
     }
-    //let multiLine = text.indexOf("\n") > -1;
+
     let cStart = "<!--";
     let cEnd = "-->";
-    let sel = selection;
 
     if (isScriptLanguage(langFrom))
     {
@@ -1567,31 +1566,37 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
     }
     let newText = text;
 
-    // закомментировать или раскомментировать
-    let lineSel = selectLines(document, selection);
-    if (!lineSel) return callback(false);
-    let fulLines = document.getText(lineSel);
-    // если закомментировано всё
-    if (fulLines.match(new RegExp("^\\s*" + safeString(cStart) + "[\\S\\s]*" + safeString(cEnd) + "\\s*$")))
+    //проверяем на наличие комментов внутри
+    let inComReg = new RegExp("(" + safeString(cStart) + ")|(" + safeString(cEnd) + ")");
+    let checkInnerComments = function(text: string): boolean
     {
-        sel = lineSel;
-        newText = fulLines.replace(new RegExp("^(\\s*)" + safeString(cStart) + "( +?)([\\S\\s]*)( +?)" + safeString(cEnd) + "(\\s*)$"), "$1$3$5");
+        return !text.match(inComReg);
     }
-    // иначе проверяем на наличие комментов внутри
+
+    let valid = checkInnerComments(newText);
+
+    // если это закомментированный, до снимаем комментирование
+    if (!valid && newText.match(new RegExp("^\\s*" + safeString(cStart) + "[\\S\\s]*" + safeString(cEnd) + "\\s*$")))
+    {
+        newText = newText.replace(new RegExp("^(\\s*)" + safeString(cStart) + "( ?)([\\S\\s]*)( ?)" + safeString(cEnd) + "(\\s*)$"), "$1$3$5");
+        valid = checkInnerComments(newText);
+    }
     else
     {
-        if (fulLines.match(new RegExp("(" + safeString(cStart) + ")|(" + safeString(cEnd) + ")")))
-        {
-            showWarning("Внутри выделенной области уже есть комментарии");
-            return callback(false);
-        }
         cStart += " ";
         cEnd = " " + cEnd;
         newText = cStart + newText + cEnd;
+    }    
+    
+    if (!valid)
+    {
+        showWarning("Внутри выделенной области уже есть комментарии");
+        return callback(false);
     }
+
     editor.edit((editBuilder) =>
     {
-        editBuilder.replace(sel, newText);
+        editBuilder.replace(selection, newText);
     }, { undoStopAfter: false, undoStopBefore: false }).then(() =>
     {
         callback(true);
