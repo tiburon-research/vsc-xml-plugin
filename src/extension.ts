@@ -410,42 +410,47 @@ function registerCommands()
         }
     });
 
-        //Отсортировать List
-        registerCommand('tib.transform.SortList', () => {
-            let editor = vscode.window.activeTextEditor;
-    
-            try
+    //Отсортировать List
+    registerCommand('tib.transform.SortList', () =>
+    {
+        let editor = vscode.window.activeTextEditor;
+
+        try
+        {
+
+            let sortBy = ["Id", "Text"];        //элементы сортировки
+
+            let text = editor.document.getText(editor.selection);       //Берём выделенный текст
+            let varCount = TibDocumentEdits.getVarCountFromList(text);          //Получаем количество Var'ов
+
+            for (let i = 0; i < varCount; i++)
+            {      //заполняем Var'ы
+                sortBy.push("Var(" + i + ")");
+            }
+
+            vscode.window.showQuickPick(sortBy, { placeHolder: "Сортировать по" }).then(x =>
             {
-                
-                let sortBy = ["Id", "Text"];        //элементы сортировки
-                
-                let text = editor.document.getText(editor.selection);       //Берём выделенный текст
-                let varCount = TibDocumentEdits.getVarCountFromList(text);          //Получаем количество Var'ов
-                
-                for(let i = 0; i < varCount; i++){      //заполняем Var'ы
-                    sortBy.push("Var("+i+")");
+
+                let res;
+                let attr = x;
+
+                if (attr.includes("Var"))
+                {
+                    let index = parseInt(attr.match(/\d+/)[0]);
+                    res = TibDocumentEdits.sortListBy(text, "Var", index);
+                } else
+                {
+                    res = TibDocumentEdits.sortListBy(text, x);         //сортируем
                 }
 
-                vscode.window.showQuickPick(sortBy, { placeHolder: "Сортировать по" }).then(x =>{
-
-                    let res;
-                    let attr = x;
-
-                    if(attr.includes("Var")){
-                        let index =  parseInt(attr.match(/\d+/)[0]);
-                        res = TibDocumentEdits.sortListBy(text, "Var", index);
-                    }else{
-                        res = TibDocumentEdits.sortListBy(text, x);         //сортируем
-                    }
-
-                    res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");     //форматируем xml
-                    applyChanges(editor.selection, res, editor, true);            //заменяем текст
-                });
-            } catch (error)
-            {
-                logError("Ошибка в преобразовании", editor);
-            }
-        });
+                res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");     //форматируем xml
+                applyChanges(editor.selection, res, editor, true);            //заменяем текст
+            });
+        } catch (error)
+        {
+            logError("Ошибка в преобразовании", editor);
+        }
+    });
 
     //преобразовать в список c возрастом
     registerCommand('tib.transform.ToAgeList', () =>
@@ -536,7 +541,7 @@ function registerCommands()
             showError("Невозможно получить доступ к папке");
             return;
         }
-        
+
         let tibXMLFiles = fs.readdirSync(templatePathFolder).filter(x =>
         {
             let state = fs.statSync(templatePathFolder + x);
@@ -1159,22 +1164,14 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 
     // закрывание скобок
     // автозакрывание этих скобок отключено для языка tib, чтобы нормально закрывать теги
-    if (isScriptLanguage(lang) && !tag.InString())
+    if (isScriptLanguage(lang) && !tag.InString() && change[change.length - 1] == "[")
     {
-        let clb: string;
-        if (change[change.length - 1] == "<")
-            clb = "$0>";
-        else if (change[change.length - 1] == "[") 
-            clb = "$0]";
 
-        if (!!clb)
+        inProcess = true;
+        editor.insertSnippet(new vscode.SnippetString("$0]"), originalPosition).then(() =>
         {
-            inProcess = true;
-            editor.insertSnippet(new vscode.SnippetString(clb), originalPosition).then(() =>
-            {
-                inProcess = false;
-            });
-        }
+            inProcess = false;
+        });
     }
 
     // закрывание [тегов]
