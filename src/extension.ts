@@ -317,8 +317,19 @@ function registerCommands()
         let txt = getPreviousText(editor.document, editor.selection.active);
         let tag = getCurrentTag(editor.document, editor.selection.active, txt);
         if (!tag || tag.Parents.length < 1) return;
-        let par = tag.Parents.length == 1 ? tag.Name : tag.Parents[1].Name;
-        let from = tag.Parents.last().OpenTagRange.start;
+        // если это первый вложенный тег
+        let par: string;
+        let from: vscode.Position;
+        if (tag.Parents.length == 1)
+        {
+            par = tag.Name;
+            from = tag.OpenTagRange.start;
+        }
+        else
+        {            
+            par = tag.Parents[1].Name;
+            from = tag.Parents.last().OpenTagRange.start;
+        }    
         let cl = findCloseTag("<", par, ">", editor.document, from.translate(0, 1));
         if (!cl) return;
         let to = cl.end;
