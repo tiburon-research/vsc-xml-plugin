@@ -1,7 +1,7 @@
 'use strict'
 
 import * as shortHash from "short-hash"
-import { KeyedCollection, safeString, } from "./classes"
+import { KeyedCollection, safeString, logString, } from "./classes"
 import { logError } from "./extension";
 import { RegExpPatterns } from './constants'
 
@@ -82,26 +82,6 @@ export class Encoder
 
 
 
-/** возвращает пронумерованный список элементов, найденных в `text` */
-function getElements(text: string, elem: RegExp): KeyedCollection<string>
-{
-    let res = new KeyedCollection<string>();
-    try
-    {
-        let mat = text.matchAll(elem).map(x => x[0]).distinct();
-        mat.forEach(element => {
-            let i = shortHash(element);
-            if (res.Contains(i)) throw "Коллекция закодированных элементов уже содержит добавляемый хеш";
-            res.AddPair("" + i, element);
-        });
-    } catch (error)
-    {
-        logError("Ошибка получения списка элементов" + (!!error ? "\n" + error : ""));
-    }
-    return res;
-}
-
-
 /** Возвращает в `text` закодированные элементы */
 export function getElementsBack(text: string, encodeResult: XMLencodeResult): string
 {
@@ -119,18 +99,26 @@ export function getElementsBack(text: string, encodeResult: XMLencodeResult): st
 export function encodeElements(text: string, elem: RegExp, delimiter: string): EncodeResult
 {
     let res = new EncodeResult();
-    let collection = getElements(text, elem);
-    res.EncodedCollection = collection;
-    res.Delimiter = delimiter;
     let result = text;
-    if (!!delimiter && collection.Count() > 0)
+    try
     {
-        collection.forEach(function (i, e)
+        let reg = result.find(elem);
+        let collection = new KeyedCollection<string>();
+        while (reg.Index > -1)
         {
-            result = result.replace(new RegExp(safeString(e), "g"), delimiter + i + delimiter);
-        });
+            let i = shortHash(reg.Result[0]);
+            result = result.replaceRange(reg.Index, reg.Result[0], delimiter + i + delimiter);
+            collection.AddPair(i, reg.Result[0]);
+            reg = result.find(elem);
+        }
+
+        res.EncodedCollection = collection;
+        res.Delimiter = delimiter;
+        res.Result = result;
+    } catch (error)
+    {
+        logError("Ошибка кодирования элементов");
     }
-    res.Result = result;
     return res;
 }
 
@@ -245,7 +233,8 @@ export function clearCSContents(text: string): string
     let reg = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*?)(<\\/\\2\\s*>)");
 
     let resCS = text.matchAll(reg);
-    resCS.forEach(element => {
+    resCS.forEach(element =>
+    {
         let open = element[1];
         let inner = element[7 + tCount].replace(/./g, ' ');
         let close = element[8 + tCount];
