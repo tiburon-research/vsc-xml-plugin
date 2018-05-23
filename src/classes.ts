@@ -154,10 +154,8 @@ export namespace TibDocumentEdits
                     el1 =  attrValues[attrIndex];                         //берём значение по индексу
                     el2 = $(item2).attr(attrName).split(',')[attrIndex];
                 }else{
-                    let child = $(item1).find(attrName);
-                    let childLength = child.length;
-                    el1 = child[attrIndex - attrLength];
-                    el2 = $(item2).find(attrName).eq(attrIndex - attrLength);
+                    el1 = $(item1).find(attrName).eq(attrIndex - attrLength).text();
+                    el2 = $(item2).find(attrName).eq(attrIndex - attrLength).text();
                 }               
             }else{
                 if(typeof $item.attr(attrName) !== typeof undefined){       //проверка на атрибут
@@ -185,7 +183,7 @@ export namespace TibDocumentEdits
         });
 
         if($dom.find("List").length > 0){               //елси взят текст с List
-            $item.appendTo($dom.find("List"));
+            $item.appendTo($dom.find("List").html(''));
         }else{
             $item.appendTo($dom);                       //если взят тескт только с Item'ами
         }
