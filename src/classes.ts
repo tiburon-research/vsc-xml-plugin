@@ -126,7 +126,7 @@ export namespace TibDocumentEdits
         let $item = $dom.find("Item").eq(0);        //берём только первый элемент, так как количество Var'ов должно быть одинаково у всех Item
         let $var = $item.find("Var");               //Ищем дочерний Var
         
-        if($var.length > 0){        //<Var></Var>
+        if($var.length > 0){                        //<Var></Var>
             res = $var.length;
         }
         if(typeof $item.attr('Var') !== typeof undefined){      //Var=""
@@ -138,54 +138,58 @@ export namespace TibDocumentEdits
 
     export function sortListBy(list:string, attrName:string, attrIndex?:number): string{
 
-        let $dom = $.XMLDOM(list);      //берём xml текст
-        let $item = $dom.find("Item");  //ищём Item'ы
+        let $dom = $.XMLDOM(list);              //берём xml текст
+        let $items = $dom.find("Item");         //ищём Item'ы
 
-        $item.sort(function(item1,item2){       //сортируем массив DOM
-            
-            let el1,     //элементы для сравнения
-                el2;
+        $items.sort(function(item1,item2){      //сортируем массив DOM
 
-            if(attrIndex > 0){         //если есть индекс
-                let attrValues =  $(item1).attr(attrName).split(',');       //берём у первого Item'а массив значений
-                let attrLength = attrValues.length;
-                
-                if(attrIndex < attrLength){                          //проверка индекса на диапозон
-                    el1 =  attrValues[attrIndex];                         //берём значение по индексу
-                    el2 = $(item2).attr(attrName).split(',')[attrIndex];
-                }else{
-                    el1 = $(item1).find(attrName).eq(attrIndex - attrLength).text();
-                    el2 = $(item2).find(attrName).eq(attrIndex - attrLength).text();
-                }               
-            }else{
-                if(typeof $item.attr(attrName) !== typeof undefined){       //проверка на атрибут
-                    el1 = $(item1).attr(attrName);
-                    el2 = $(item2).attr(attrName);
-                }else if($item.find(attrName).length > 0){                  //проверка на дочерний тег
-                    el1 = $(item1).find(attrName).eq(0).text();
-                    el2 = $(item2).find(attrName).eq(0).text();
-                }               
+            let sortItems = [item1,item2];
+            let el = [];                        //должно хранится 2 элемента для сравнения
+
+            if(attrIndex > 0){                                                                          //если есть индекс
+                let attributeValues = $(sortItems[0]).attr(attrName).split(',');
+                let attrLength = attributeValues.length;                                                //берём у первого Item'а количество Var'ов (Var="")
+
+                for(let i = 0, length = sortItems.length; i < length; i++){
+                    if(attrIndex < attrLength){  
+                        el[i] = $(sortItems[i]).attr(attrName).split(',')[attrIndex];                   //берём значение по индексу
+                    }else{
+                        el[i] = $(sortItems[i]).find(attrName).eq(attrIndex - attrLength).text();
+                    }
+                }          
+            }else{  
+                for(let i = 0, length = sortItems.length; i < length; i++){
+                    if(typeof $(sortItems[i]).attr(attrName) !== typeof undefined){                     //если атрибут
+                        el[i] = $(sortItems[i]).attr(attrName);
+                    }else if($(sortItems[i]).find(attrName).length > 0){                                //если дочерний тег
+                        el[i] = $(sortItems[i]).find(attrName).eq(0).text();
+                    }
+
+                    if(typeof el[i] == typeof undefined){                                               //если атрибут пуст
+                        el[i] = "";                                                                     //взять как пустое значение
+                    }
+                }
             }
 
-            if(el1.match(/^\d+$/) && el2.match(/^\d+$/)){
-                el1 = parseInt(el1);
-                el2 = parseInt(el2);
+            if(el[0].match(/^\d+$/) && el[1].match(/^\d+$/)){                                           //проверка на числа
+                el[0] = parseInt(el[0]);
+                el[1] = parseInt(el[1]);
             }
 
-            if(el1 > el2){
+            if(el[0] > el[1]){
                 return 1;
             }
-            if(el1 < el2){
+            if(el[0] < el[1]){
                 return -1;
             }
 
             return 0;
         });
 
-        if($dom.find("List").length > 0){               //елси взят текст с List
-            $item.appendTo($dom.find("List").html(''));
+        if($dom.find("List").length > 0){                                                               //елси взят текст с List
+            $items.appendTo($dom.find("List").html(''));
         }else{
-            $item.appendTo($dom);                       //если взят тескт только с Item'ами
+            $items.appendTo($dom);                                                                      //если взят тескт только с Item'ами
         }
 
         return $dom.xml();
