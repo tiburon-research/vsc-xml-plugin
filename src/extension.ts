@@ -453,7 +453,7 @@ function registerCommands()
             });
         } catch (error)
         {
-            logError("Ошибка в преобразовании", editor);
+            logError("Ошибка при сортировке листа", editor);
         }
     });
 
@@ -471,7 +471,7 @@ function registerCommands()
             applyChanges(editor.selection, res, editor, true);
         } catch (error)
         {
-            logError("Ошибка в преобразовании", editor);
+            logError("Ошибка в преобразовании возрастного списка", editor);
         }
     });
 
