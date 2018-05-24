@@ -1557,7 +1557,7 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
     let langTo = tagTo.GetLaguage();
     if (langFrom != langTo)
     {
-        showError("Начало и конец выделенного фрагмента лежат в разных языковых областях");
+        showWarning("Начало и конец выделенного фрагмента лежат в разных языковых областях. Команда отменена.");
         callback(false);
         return;
     }
@@ -1596,7 +1596,7 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
     
     if (!valid)
     {
-        showWarning("Внутри выделенной области уже есть комментарии");
+        showWarning("Внутри выделенной области уже есть комментарии. Команда отменена.");
         return callback(false);
     }
 
