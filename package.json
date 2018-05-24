@@ -87,7 +87,7 @@
       },
       {
         "command": "tib.transform.SortList",
-        "title": "Сортировать по",
+        "title": "Сортировка списка",
         "category": "tib"
       },
       {

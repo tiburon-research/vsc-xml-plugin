@@ -425,7 +425,7 @@ function registerCommands()
 
             let sortBy = ["Id", "Text"];        //элементы сортировки
 
-            let text = editor.document.getText(editor.selection);       //Берём выделенный текст
+            let text = editor.document.getText(editor.selection);               //Берём выделенный текст
             let varCount = TibDocumentEdits.getVarCountFromList(text);          //Получаем количество Var'ов
 
             for (let i = 0; i < varCount; i++)
@@ -453,7 +453,7 @@ function registerCommands()
                     res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");     //форматируем xml
                     
                     
-                    applyChanges(editor.selection, res, editor, true);            //заменяем текст
+                    applyChanges(editor.selection, res, editor, true);      //заменяем текст
                 }
             });
         } catch (error)
