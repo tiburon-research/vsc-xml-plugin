@@ -1235,7 +1235,8 @@ async function getSurveyData(document: vscode.TextDocument): Promise<void>
     {
         for (let i = 0; i < docs.length; i++) 
         {
-            let doc = await vscode.workspace.openTextDocument(docs[i])
+            // либо этот, либо надо открыть
+            let doc = docs[i] == document.fileName ? document : await vscode.workspace.openTextDocument(docs[i])
             let mets = await getDocumentMethods(doc, Settings);
             let nods = await getDocumentNodeIds(doc, Settings, _NodeStoreNames);
             methods.AddRange(mets);
