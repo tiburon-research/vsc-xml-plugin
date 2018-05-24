@@ -1180,6 +1180,13 @@ export class SnippetObject
     }
 }
 
+interface ILogData
+{
+    FileName: string;
+    FullText: string;
+    Postion: vscode.Position;
+}    
+
 /** Данные для хранения логов */
 export class LogData 
 {
@@ -1188,11 +1195,12 @@ export class LogData
      * @param data.Position позиция на которой произошла ошибка
      * @param data.FullText полный текст файла на момент ошибки
      */
-    constructor(data: Object)
+    constructor(data: ILogData)
     {
         for (let key in data)
             this[key] = data[key];
         this.UserName = getUserName();
+        this.Version = getTibVersion();
     }
 
     /** добавляет элемент в отчёт */
@@ -1223,7 +1231,7 @@ export class LogData
     private FileName: string;
     private FullText: string;
     private Postion: vscode.Position;
-
+    private Version: string;
 }
 
 
@@ -1652,7 +1660,10 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
     });
 }
 
-
+export function getTibVersion()
+{
+    return vscode.extensions.getExtension("TiburonResearch.tiburonscripter").packageJSON.version;
+}
 
 //#endregion
 
