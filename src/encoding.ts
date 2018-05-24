@@ -1,7 +1,7 @@
 'use strict'
 
 import * as shortHash from "short-hash"
-import { KeyedCollection, safeString, } from "./classes"
+import { KeyedCollection, safeString, logString, } from "./classes"
 import { logError } from "./extension";
 import { RegExpPatterns } from './constants'
 
@@ -82,30 +82,6 @@ export class Encoder
 
 
 
-/** возвращает пронумерованный список элементов, найденных в `text` */
-function getElements(text: string, elem: RegExp): KeyedCollection<string>
-{
-    let res = new KeyedCollection<string>();
-    try
-    {
-        let mat = elem.exec(text);
-        let newText = text;
-        while (!!mat)
-        {
-            let i = shortHash(mat[0]);
-            if (res.Contains(i)) throw "Коллекция закодированных элементов уже содержит добавляемый хеш";
-            res.AddPair("" + i, mat[0]);
-            newText = newText.replace(new RegExp(safeString(mat[0]), "g"), "");
-            mat = elem.exec(newText);
-        }
-    } catch (error)
-    {
-        logError("Ошибка получения списка элементов" + (!!error ? "\n" + error : ""));
-    }
-    return res;
-}
-
-
 /** Возвращает в `text` закодированные элементы */
 export function getElementsBack(text: string, encodeResult: XMLencodeResult): string
 {
@@ -123,18 +99,26 @@ export function getElementsBack(text: string, encodeResult: XMLencodeResult): st
 export function encodeElements(text: string, elem: RegExp, delimiter: string): EncodeResult
 {
     let res = new EncodeResult();
-    let collection = getElements(text, elem);
-    res.EncodedCollection = collection;
-    res.Delimiter = delimiter;
     let result = text;
-    if (!!delimiter && collection.Count() > 0)
+    try
     {
-        collection.forEach(function (i, e)
+        let reg = result.find(elem);
+        let collection = new KeyedCollection<string>();
+        while (reg.Index > -1)
         {
-            result = result.replace(new RegExp(safeString(e), "g"), delimiter + i + delimiter);
-        });
+            let i = shortHash(reg.Result[0]);
+            result = result.replaceRange(reg.Index, reg.Result[0], delimiter + i + delimiter);
+            collection.AddPair(i, reg.Result[0]);
+            reg = result.find(elem);
+        }
+
+        res.EncodedCollection = collection;
+        res.Delimiter = delimiter;
+        res.Result = result;
+    } catch (error)
+    {
+        logError("Ошибка кодирования элементов");
     }
-    res.Result = result;
     return res;
 }
 
@@ -242,34 +226,30 @@ export function clearCDATA(txt: string): string
 export function clearCSContents(text: string): string
 {
     let res = text;
-    let newText = text;
     let rep = "";
     let tCount = RegExpPatterns.AllowCodeTags.match(/\(/g).length;
 
     // Очищаем полные теги
     let reg = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*?)(<\\/\\2\\s*>)");
 
-    let resCS = reg.exec(newText);
-
-    while (!!resCS)
+    let resCS = text.matchAll(reg);
+    resCS.forEach(element =>
     {
-        let open = resCS[1];
-        let inner = resCS[7 + tCount].replace(/./g, ' ');
-        let close = resCS[8 + tCount];
-        let repl = new RegExp(safeString(resCS[0]));
+        let open = element[1];
+        let inner = element[7 + tCount].replace(/./g, ' ');
+        let close = element[8 + tCount];
+        let repl = new RegExp(safeString(element[0]));
         res = res.replace(repl, open + inner + close);
-        newText = newText.replace(repl, "");
-        resCS = reg.exec(newText);
-    }
+    });
 
     // Очищаем незакрытый CS-тег в конце
     let regEnd = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?!([\\t ]+\\r?\\n)|(\\s+<\/\\2))[\\s\\S]*)$");
-    resCS = regEnd.exec(res);
-    if (!!resCS)
+    let resCSend = res.match(regEnd);
+    if (!!resCSend)
     {
-        let open = resCS[1];
-        let inner = resCS[7 + tCount].replace(/./g, ' ');
-        res = res.replace(resCS[0], open + inner);
+        let open = resCSend[1];
+        let inner = resCSend[7 + tCount].replace(/./g, ' ');
+        res = res.replace(resCSend[0], open + inner);
     }
 
     return res;

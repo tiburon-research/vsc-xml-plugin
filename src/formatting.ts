@@ -5,7 +5,7 @@ import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { logError, CSFormatter } from "./extension";
 import { get1LevelNodes } from "./parsing"
-import { getReplaceDelimiter, encodeCS, getElementsBack, encodeElements, EncodeResult } from "./encoding"
+import { getReplaceDelimiter, encodeCS, getElementsBack, encodeElements, EncodeResult, Encoder } from "./encoding"
 import { _pack, RegExpPatterns } from './constants'
 
 
@@ -179,7 +179,11 @@ async function formatBody(text: string, tab: string, indent: number = 0, lang: L
     let cs: EncodeResult;
     // кроме XML и C# заменяем вставки
     let del = getReplaceDelimiter(text);
-    if (lang != Language.CSharp && lang != Language.XML) cs = encodeCS(text, del);
+    if (lang != Language.CSharp && lang != Language.XML)
+    {
+        cs = encodeCS(newText, del);
+        newText = cs.Result;
+    }
     let ind = tab.repeat(indent);
     newText = newText.replace(/(\n|^)[\t ]+$/g, '$1');
     res = await LanguageFunction(lang)(newText, tab, indent);
@@ -325,10 +329,11 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
             // CDATA форматировать не надо
             let hasCDATA = !!res.match(/^\s*<!\[CDATA\[[\s\S]*\]\]>\s*$/);
             if (hasCDATA) res = res.replace(/^\s*<!\[CDATA\[*([\s\S]*)\]\]>\s*$/, "$1");
-            // убираем собак
-            let del = getReplaceDelimiter(res)
-            let encLit = encodeElements(res, /@(?!\s*")/, del);
-            res = encLit.Result;
+            // убираем собак и $repeat
+            let encoder = new Encoder(res);
+            encoder.Encode((txt, delimiter) => encodeElements(txt, /\$repeat\([\w@]+\)({.*\[.*\]\s*})?/, delimiter));
+            encoder.Encode((txt, delimiter) => encodeElements(txt, /@(?!")/, delimiter));
+            res = encoder.Result;
             // форматируем
             res = clearIndents(res);
             res = await CSFormatter(res);
@@ -337,8 +342,8 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
             if (hasCDATA) res = res.replace(/^([\s\S]*)$/, "<![CDATA[" + space + "$1" + space + "]]>");
             let ind = tab.repeat(indent);
             res = res.replace(/\n([\t ]*\S)/g, "\n" + ind + "$1");
-            // возвращаем собак
-            res = getElementsBack(res, encLit);
+            // возвращаем собак и $repeat
+            res = getElementsBack(res, encoder.ToEncodeResult());
         }
         else
         {
@@ -509,20 +514,18 @@ function preFormatXML(text: string): string
     res = res.replace(/<!\[CDATA\[\s*\]\]>/, "");
     // переносим остатки CDATA на новую строку
     let regCS = new RegExp("(<!\\[CDATA\\[)(.*\\r?\\n[\\s\\S]*)(\\]\\]>)");
-    let newText = res;
-    let resCS = regCS.exec(newText);
-    while (!!resCS)
+    let resCS = res.matchAll(regCS);
+    resCS.forEach(element =>
     {
-        if (!resCS[2].match(/\]\]>/))
+        if (!element[2].match(/\]\]>/))
         {
-            if (resCS[2].match(/^.*\S.*\r?\n/)) // переносим начало
-                res = res.replace(new RegExp(safeString(resCS[1] + resCS[2]), "g"), resCS[1] + "\n" + resCS[2]);
-            if (resCS[2].match(/\S[ \t]*$/)) // переносим конец
-                res = res.replace(new RegExp(safeString(resCS[2] + resCS[3]), "g"), resCS[2] + "\n" + resCS[3]);
+            if (element[2].match(/^.*\S.*\r?\n/)) // переносим начало
+                res = res.replace(new RegExp(safeString(element[1] + element[2]), "g"), element[1] + "\n" + element[2]);
+            if (element[2].match(/\S[ \t]*$/)) // переносим конец
+                res = res.replace(new RegExp(safeString(element[2] + element[3]), "g"), element[2] + "\n" + element[3]);
         }
-        newText = newText.replace(new RegExp(safeString(resCS[0])), "");
-        resCS = regCS.exec(newText);
-    }
+    });
+
     // переносим открытый тег на новую строку
     res = res.replace(/(^|\n)([\t ]*)((((?!<!)\S)(.*?\S)?)[\t ]*)(<\w+(\s+\w+=(("[^"]*")|('[^']')))*\s*\/?>)[\t ]*\r?\n/g, "$1$2$4\n$2$7\n");
     return res;

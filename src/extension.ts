@@ -96,15 +96,14 @@ export function activate(context: vscode.ExtensionContext)
     }
 
     /** Документ сменился */
-    function anotherDocument()
+    function anotherDocument(needReload = true)
     {
         Includes = [];
         Methods.Clear();
         CurrentNodes.Clear();
-        reload();
+        if (needReload) reload();
         inProcess = false;
     }
-
 
     // общие дествия при старте расширения
     getStaticData();
@@ -118,12 +117,7 @@ export function activate(context: vscode.ExtensionContext)
 
     // для каждого дукумента свои
     reload(false);
-
-    // открытие нового документа
-    vscode.workspace.onDidOpenTextDocument(doc =>
-    {
-        anotherDocument();
-    });
+    anotherDocument(false);
 
     // смена документа
     vscode.window.onDidChangeActiveTextEditor(neweditor =>
@@ -317,8 +311,19 @@ function registerCommands()
         let txt = getPreviousText(editor.document, editor.selection.active);
         let tag = getCurrentTag(editor.document, editor.selection.active, txt);
         if (!tag || tag.Parents.length < 1) return;
-        let par = tag.Parents.length == 1 ? tag.Name : tag.Parents[1].Name;
-        let from = tag.Parents.last().OpenTagRange.start;
+        // если это первый вложенный тег
+        let par: string;
+        let from: vscode.Position;
+        if (tag.Parents.length == 1)
+        {
+            par = tag.Name;
+            from = tag.OpenTagRange.start;
+        }
+        else
+        {
+            par = tag.Parents[1].Name;
+            from = tag.Parents.last().OpenTagRange.start;
+        }
         let cl = findCloseTag("<", par, ">", editor.document, from.translate(0, 1));
         if (!cl) return;
         let to = cl.end;
@@ -1235,7 +1240,8 @@ async function getSurveyData(document: vscode.TextDocument): Promise<void>
     {
         for (let i = 0; i < docs.length; i++) 
         {
-            let doc = await vscode.workspace.openTextDocument(docs[i])
+            // либо этот, либо надо открыть
+            let doc = docs[i] == document.fileName ? document : await vscode.workspace.openTextDocument(docs[i])
             let mets = await getDocumentMethods(doc, Settings);
             let nods = await getDocumentNodeIds(doc, Settings, _NodeStoreNames);
             methods.AddRange(mets);
@@ -1555,10 +1561,9 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
         callback(false);
         return;
     }
-    //let multiLine = text.indexOf("\n") > -1;
+
     let cStart = "<!--";
     let cEnd = "-->";
-    let sel = selection;
 
     if (isScriptLanguage(langFrom))
     {
@@ -1567,31 +1572,37 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
     }
     let newText = text;
 
-    // закомментировать или раскомментировать
-    let lineSel = selectLines(document, selection);
-    if (!lineSel) return callback(false);
-    let fulLines = document.getText(lineSel);
-    // если закомментировано всё
-    if (fulLines.match(new RegExp("^\\s*" + safeString(cStart) + "[\\S\\s]*" + safeString(cEnd) + "\\s*$")))
+    //проверяем на наличие комментов внутри
+    let inComReg = new RegExp("(" + safeString(cStart) + ")|(" + safeString(cEnd) + ")");
+    let checkInnerComments = function(text: string): boolean
     {
-        sel = lineSel;
-        newText = fulLines.replace(new RegExp("^(\\s*)" + safeString(cStart) + "( +?)([\\S\\s]*)( +?)" + safeString(cEnd) + "(\\s*)$"), "$1$3$5");
+        return !text.match(inComReg);
     }
-    // иначе проверяем на наличие комментов внутри
+
+    let valid = checkInnerComments(newText);
+
+    // если это закомментированный, до снимаем комментирование
+    if (!valid && newText.match(new RegExp("^\\s*" + safeString(cStart) + "[\\S\\s]*" + safeString(cEnd) + "\\s*$")))
+    {
+        newText = newText.replace(new RegExp("^(\\s*)" + safeString(cStart) + "( ?)([\\S\\s]*)( ?)" + safeString(cEnd) + "(\\s*)$"), "$1$3$5");
+        valid = checkInnerComments(newText);
+    }
     else
     {
-        if (fulLines.match(new RegExp("(" + safeString(cStart) + ")|(" + safeString(cEnd) + ")")))
-        {
-            showWarning("Внутри выделенной области уже есть комментарии");
-            return callback(false);
-        }
         cStart += " ";
         cEnd = " " + cEnd;
         newText = cStart + newText + cEnd;
+    }    
+    
+    if (!valid)
+    {
+        showWarning("Внутри выделенной области уже есть комментарии");
+        return callback(false);
     }
+
     editor.edit((editBuilder) =>
     {
-        editBuilder.replace(sel, newText);
+        editBuilder.replace(selection, newText);
     }, { undoStopAfter: false, undoStopBefore: false }).then(() =>
     {
         callback(true);

@@ -710,7 +710,20 @@ export class CurrentTag
         {
             this.LastParent = parents.last();
             // Id для Item
-            if (parents && this.Name == "Item") this.Id = parents.last().Name + "Item";
+            if (parents && this.Name == "Item")
+            {
+                let parName = "";
+                // ищем нормального родителя
+                for (let i = parents.length - 1; i >= 0 ; i--) 
+                {
+                    if (["Condition", "Repeat"].indexOf(parents[i].Name) < 0)
+                    {
+                        parName = parents[i].Name;
+                        break;
+                    }
+                }
+                this.Id = parName + "Item";
+            }
         }
     }
 
@@ -1657,9 +1670,11 @@ declare global
         /** Продвинутый indexOf */
         find(search: string | RegExp): SearchResult;
         /** Продвинутый lastIndexOf string=Regexp */
-        findLast(search: string): SearchResult;
+        //findLast(search: string): SearchResult;
         /** Поиск с группами по всему документу */
-        matchAll(search: RegExp): RegExpMatchArray[]
+        matchAll(search: RegExp): RegExpMatchArray[];
+        /** Замена, начиная с `from` длиной `subsr` символов (если string, то берётся длина строки) */
+        replaceRange(from: number, substr: string | number, newValue: string): string;
     }
 
     interface Array<T>
@@ -1668,24 +1683,26 @@ declare global
         last(): T;
         /** Проверяет, что все элементы совпадают, независимо от порядка */
         equalsTo(ar: Array<T>): boolean;
+        /** Возвращает массив уникальных значений */
+        //distinct(): T[]
     }
   
 }
 
 String.prototype.find = function (search: string | RegExp): SearchResult
 {
-    let res = this.match(search);
-    let ind = !!res ? this.indexOf(res[0]) : -1;
+    let res = new RegExp(search).exec(this);
+    let ind = !!res ? res.index : -1;
     return { Index: ind, Result: res };
 }
-
+/* 
 String.prototype.findLast = function (search: string): SearchResult
 {
     let reg = this.match(new RegExp(search, "g"));
     let res = !!reg ? reg[reg.length - 1].match(search) : null;
     let ind = !!reg ? this.lastIndexOf(res) : -1;
     return { Index: ind, Result: res };
-}
+} */
 
 String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
 {
@@ -1700,6 +1717,15 @@ String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
     }
     return res;
 }
+
+String.prototype.replaceRange = function(from: number, substr: string | number, newValue: string): string
+{
+    let pre = (this as string).slice(0, from);
+    let middle = newValue;
+    let to = from + (typeof substr == "string" ? substr.length : substr);
+    let after = (this as string).slice(to);
+    return pre + middle + after;
+}    
 
 
 Array.prototype.last = function <T>(): T
@@ -1723,5 +1749,11 @@ Array.prototype.equalsTo = function <T>(ar: Array<T>): boolean
     return true;
 }
 
+
+/* Array.prototype.distinct = function<T>(): T[]
+{
+    let orig: Array<T> = this;
+    return [... new Set(orig)];
+}  */   
 
 //#endregion
