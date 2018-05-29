@@ -16,7 +16,7 @@
     "url": "https://github.com/tiburon-research/vsc-xml-plugin"
   },
   "icon": "stuff/icon.png",
-  "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/README.md",
+  "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/blob/master/README.md",
   "license": "MIT",
   "engines": {
     "vscode": "^1.17.0"

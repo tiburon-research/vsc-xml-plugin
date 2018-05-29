@@ -277,8 +277,7 @@ ___
 
 * GitHub: 
   - [репозиторий](https://github.com/tiburon-research/vsc-xml-plugin),
-  - [проблемы](https://github.com/tiburon-research/vsc-xml-plugin/issues),
-  - [список пожеланий](https://github.com/tiburon-research/vsc-xml-plugin/issues/1).
+  - [проблемы](https://github.com/tiburon-research/vsc-xml-plugin/issues).
 
 * можно писать [напрямую в Telegram](https://t.me/Gulyaev_Ruslan)
 * или в [беседу Telegram](https://t.me/joinchat/B-Eb_kGQNrjF6IPE2Zqfbw)
