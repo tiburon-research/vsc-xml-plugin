@@ -1709,7 +1709,7 @@ function getLogData(edt?: vscode.TextEditor): LogData
         res.add("SurveyData", survObj);
     } catch (error)
     {
-        //saveError("Ошибка при сборе сведений", new LogData(null), _LogPath);
+        saveError("Ошибка при сборе сведений", new LogData(null), _LogPath);
     }
     return res;
 }
