@@ -1699,11 +1699,17 @@ function getLogData(edt?: vscode.TextEditor): LogData
         res = new LogData({
             FileName: editor.document.fileName,
             Postion: editor.selection.active,
-            FullText: editor.document.getText()
+            FullText: editor.document.getText(),
+            CacheEnabled: !!Settings.Item("enableCache")
         });
+        let survObj = {
+            Methods: Methods.Keys(),
+            NodesLength: CurrentNodes.Keys().map(x => x + ": " + (CurrentNodes.Item(x).length || 0))
+        };
+        res.add("SurveyData", survObj);
     } catch (error)
     {
-        logError("Ошибка доступа к редактору");
+        //saveError("Ошибка при сборе сведений", new LogData(null), _LogPath);
     }
     return res;
 }

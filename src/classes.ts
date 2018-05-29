@@ -105,13 +105,14 @@ export namespace TibDocumentEdits
         let $dom = $.XMLDOM(text);
         let $question = $dom.find("Question");
 
-        $question.map(function (){
- 
+        $question.map(function ()
+        {
+
             let $questionHeader = $(this).find("Header");
             let $headerText = $questionHeader.text();
             let $qIDValue = $(this).attr('Id');
-           
-            $qIDValue = $headerText.match($qIDValue+"\\.? ?");
+
+            $qIDValue = $headerText.match($qIDValue + "\\.? ?");
             $headerText = $questionHeader.text().replace($qIDValue, "");
             $questionHeader.text($headerText);
         });
@@ -119,76 +120,95 @@ export namespace TibDocumentEdits
         return $dom.xml();
     }
 
-    export function getVarCountFromList(list:string): number{
+    export function getVarCountFromList(list: string): number
+    {
 
         let res = 0;
         let $dom = $.XMLDOM(list);
         let $item = $dom.find("Item").eq(0);        //берём только первый элемент, так как количество Var'ов должно быть одинаково у всех Item
         let $var = $item.find("Var");               //Ищем дочерний Var
-        
-        if($var.length > 0){                        //<Var></Var>
+
+        if ($var.length > 0)
+        {                        //<Var></Var>
             res = $var.length;
         }
-        if(typeof $item.attr('Var') !== typeof undefined){      //Var=""
+        if (typeof $item.attr('Var') !== typeof undefined)
+        {      //Var=""
             res += $item.attr('Var').split(',').length;
         }
 
         return res;
     }
 
-    export function sortListBy(list:string, attrName:string, attrIndex?:number): string{
+    export function sortListBy(list: string, attrName: string, attrIndex?: number): string
+    {
 
         let $dom = $.XMLDOM(list);              //берём xml текст
         let $items = $dom.find("Item");         //ищём Item'ы
 
-        $items.sort(function(item1,item2){      //сортируем массив DOM
+        $items.sort(function (item1, item2)
+        {      //сортируем массив DOM
 
-            let sortItems = [item1,item2];
+            let sortItems = [item1, item2];
             let el = [];                        //должно хранится 2 элемента для сравнения
 
-            if(attrIndex > 0){                                                                          //если есть индекс
+            if (attrIndex > 0)
+            {                                                                          //если есть индекс
                 let attributeValues = $(sortItems[0]).attr(attrName).split(',');
                 let attrLength = attributeValues.length;                                                //берём у первого Item'а количество Var'ов (Var="")
 
-                for(let i = 0, length = sortItems.length; i < length; i++){
-                    if(attrIndex < attrLength){  
+                for (let i = 0, length = sortItems.length; i < length; i++)
+                {
+                    if (attrIndex < attrLength)
+                    {
                         el[i] = $(sortItems[i]).attr(attrName).split(',')[attrIndex];                   //берём значение по индексу
-                    }else{
+                    } else
+                    {
                         el[i] = $(sortItems[i]).find(attrName).eq(attrIndex - attrLength).text();
                     }
-                }          
-            }else{  
-                for(let i = 0, length = sortItems.length; i < length; i++){
-                    if(typeof $(sortItems[i]).attr(attrName) !== typeof undefined){                     //если атрибут
+                }
+            } else
+            {
+                for (let i = 0, length = sortItems.length; i < length; i++)
+                {
+                    if (typeof $(sortItems[i]).attr(attrName) !== typeof undefined)
+                    {                     //если атрибут
                         el[i] = $(sortItems[i]).attr(attrName);
-                    }else if($(sortItems[i]).find(attrName).length > 0){                                //если дочерний тег
+                    } else if ($(sortItems[i]).find(attrName).length > 0)
+                    {                                //если дочерний тег
                         el[i] = $(sortItems[i]).find(attrName).eq(0).text();
                     }
 
-                    if(typeof el[i] == typeof undefined){                                               //если атрибут пуст
+                    if (typeof el[i] == typeof undefined)
+                    {                                               //если атрибут пуст
                         el[i] = "";                                                                     //взять как пустое значение
                     }
                 }
             }
 
-            if(el[0].match(/^\d+$/) && el[1].match(/^\d+$/)){                                           //проверка на числа
+            if (el[0].match(/^\d+$/) && el[1].match(/^\d+$/))
+            {                                           //проверка на числа
                 el[0] = parseInt(el[0]);
                 el[1] = parseInt(el[1]);
             }
 
-            if(el[0] > el[1]){
+            if (el[0] > el[1])
+            {
                 return 1;
             }
-            if(el[0] < el[1]){
+            if (el[0] < el[1])
+            {
                 return -1;
             }
 
             return 0;
         });
 
-        if($dom.find("List").length > 0){                                                               //елси взят текст с List
+        if ($dom.find("List").length > 0)
+        {                                                               //елси взят текст с List
             $items.appendTo($dom.find("List").html(''));
-        }else{
+        } else
+        {
             $items.appendTo($dom);                                                                      //если взят тескт только с Item'ами
         }
 
@@ -502,7 +522,7 @@ export class TibMethods extends KeyedCollection<TibMethod>
             collection.forEach((key, value) =>
             {
                 this.Add(value);
-            })    
+            })
     }
 
     public Add(item: TibMethod)
@@ -714,7 +734,7 @@ export class CurrentTag
             {
                 let parName = "";
                 // ищем нормального родителя
-                for (let i = parents.length - 1; i >= 0 ; i--) 
+                for (let i = parents.length - 1; i >= 0; i--) 
                 {
                     if (["Condition", "Repeat"].indexOf(parents[i].Name) < 0)
                     {
@@ -969,6 +989,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
     GetItem(id: string, type?: string): SurveyNode
     {
         let nodes = this.Item(type);
+        if (!nodes) return null;
         let res: SurveyNode;
         for (let i = 0; i < nodes.length; i++)
         {
@@ -1180,58 +1201,76 @@ export class SnippetObject
     }
 }
 
-interface ILogData
+class ILogData
 {
     FileName: string;
     FullText: string;
     Postion: vscode.Position;
-}    
+    CacheEnabled: boolean;
+    Version?: string;
+    UserName?: string;
+    ErrorMessage?: string;
+    SurveyData?: Object;
+}
 
 /** Данные для хранения логов */
 export class LogData 
 {
-    /**
-     * @param data.FileName имя файла в котором произошла ошибка
-     * @param data.Position позиция на которой произошла ошибка
-     * @param data.FullText полный текст файла на момент ошибки
-     */
+
     constructor(data: ILogData)
     {
         for (let key in data)
-            this[key] = data[key];
-        this.UserName = getUserName();
-        this.Version = getTibVersion();
+            this.Data[key] = data[key];
+        // дополнительно
+        if (!this.Data.UserName) this.Data.UserName = getUserName();
+        if (!this.Data.Version) this.Data.Version = getTibVersion();
     }
 
     /** добавляет элемент в отчёт */
     public add(name: string, value: any): void
     {
-        this[name] = value;
+        this.Data[name] = value;
     }
 
     /** преобразует все данные в строку */
     public toString(): string
     {
         let res = "";
-        for (let key in this)
-            if (key != "FullText" && {}.toString.call(this[key]) !== '[object Function]')
+        for (let key in this.Data)
+        {
+            switch (key)
             {
-                res += key + ": " + JSON.stringify(this[key]) + "\r\n";
+                case "FullText":
+                    // текст уберём в конец    
+                    break;
+                case "SurveyData":
+                    // разносим на отдельные строки
+                    res += "-------- SurveyData --------\r\n";
+                    for (let dataKey in this.Data[key])
+                    {
+                        res += this.stringifyData(dataKey, this.Data[key]);
+                    }
+                    res += "----------------------------\r\n";
+                    break;
+                default:
+                    res += this.stringifyData(key, this.Data);
             }
-        if (!!this.FullText)
+        }
+        if (!!this.Data.FullText)
         {
             res += "______________ TEXT START _______________\r\n"
-            res += this.FullText;
+            res += this.Data.FullText;
             res += "\r\n______________ TEXT END _______________\r\n"
         }
         return res;
     }
 
-    private UserName: string;
-    private FileName: string;
-    private FullText: string;
-    private Postion: vscode.Position;
-    private Version: string;
+    private stringifyData(key: string, data): string
+    {
+        return key + ": " + (typeof data[key] != "string" ? JSON.stringify(data[key]) : ("\"" + data[key] + "\"")) + "\r\n";
+    }
+
+    Data = new ILogData();
 }
 
 
@@ -1697,7 +1736,7 @@ declare global
         /** Возвращает массив уникальных значений */
         //distinct(): T[]
     }
-  
+
 }
 
 String.prototype.find = function (search: string | RegExp): SearchResult
@@ -1729,14 +1768,14 @@ String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
     return res;
 }
 
-String.prototype.replaceRange = function(from: number, substr: string | number, newValue: string): string
+String.prototype.replaceRange = function (from: number, substr: string | number, newValue: string): string
 {
     let pre = (this as string).slice(0, from);
     let middle = newValue;
     let to = from + (typeof substr == "string" ? substr.length : substr);
     let after = (this as string).slice(to);
     return pre + middle + after;
-}    
+}
 
 
 Array.prototype.last = function <T>(): T
@@ -1765,6 +1804,6 @@ Array.prototype.equalsTo = function <T>(ar: Array<T>): boolean
 {
     let orig: Array<T> = this;
     return [... new Set(orig)];
-}  */   
+}  */
 
 //#endregion
