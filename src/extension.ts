@@ -1051,7 +1051,7 @@ function definitions()
                 }
                 else
                 {
-                    let word = document.getText(document.getWordRangeAtPosition(position, /[^'"\s]+/));;
+                    let word = document.getText(document.getWordRangeAtPosition(position, /[^'"\s]+/));
                     let enabledNodes = ["Page", "List", "Quota"];
                     enabledNodes.forEach(element =>
                     {
@@ -1765,7 +1765,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
     {
         try
         {
-            let sel = selectLines(editor.document, new vscode.Selection(range.start, range.end));
+            let sel = selectLines(editor.document, editor.selection);
             editor.selection = sel;
             let tag = getCurrentTag(editor.document, sel.start);
             let ind = !!tag ? tag.Parents.length + 1 : 0;
