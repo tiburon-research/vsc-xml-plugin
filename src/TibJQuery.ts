@@ -117,7 +117,7 @@ export function initJQuery(): any
         // если задаём атрибут, то как обычно
         else
         {
-            let pure = Encoding.safeXML(param, JQuery._delimiter(param));
+            let pure = Encoding.safeXML("" + param, JQuery._delimiter(param));
             JQuery._saveData(pure.toXMLencodeResult());
             res = el.attrOriginal.apply(this, [name, pure.Result]);
         }
