@@ -91,7 +91,7 @@ export function activate(context: vscode.ExtensionContext)
             getSurveyData(editor.document);
         } catch (er)
         {
-            logError("Ошибка при сборе информации", editor);
+            logError("Ошибка при сборе информации", er);
         }
     }
 
@@ -258,7 +258,7 @@ function getStaticData()
         });
     } catch (er)
     {
-        logError("Ошибка при инициализации расширения", vscode.window.activeTextEditor);
+        logError("Ошибка при инициализации расширения", er);
     }
 }
 
@@ -383,7 +383,7 @@ function registerCommands()
             applyChanges(getFullRange(editor.document), res, editor);
         } catch (error)
         {
-            logError("Произошла ошибка при удалении Id вопроса из заголовка", editor);
+            logError("Произошла ошибка при удалении Id вопроса из заголовка", error);
         }
     });
 
@@ -397,7 +397,7 @@ function registerCommands()
             applyChanges(editor.selection, res, editor);
         } catch (error)
         {
-            logError("Ошибка преобразования AnswersToItems", editor);
+            logError("Ошибка преобразования AnswersToItems", error);
         }
     });
 
@@ -411,7 +411,7 @@ function registerCommands()
             applyChanges(editor.selection, res, editor);
         } catch (error)
         {
-            logError("Ошибка преобразования ItemsToAnswers", editor);
+            logError("Ошибка преобразования ItemsToAnswers", error);
         }
     });
 
@@ -458,7 +458,7 @@ function registerCommands()
             });
         } catch (error)
         {
-            logError("Ошибка при сортировке листа", editor);
+            logError("Ошибка при сортировке листа", error);
         }
     });
 
@@ -476,7 +476,7 @@ function registerCommands()
             applyChanges(editor.selection, res, editor, true);
         } catch (error)
         {
-            logError("Ошибка в преобразовании возрастного списка", editor);
+            logError("Ошибка в преобразовании возрастного списка", error);
         }
     });
 
@@ -605,7 +605,7 @@ function registerCommands()
                 })
             }, (er) =>
                 {
-                    logError(er, editor);
+                    logError(er);
                 });
             // provideDocumentFormattingEdits по ходу не умеет быть async, поэтому выкручиваемся так
             return [];
@@ -1065,7 +1065,7 @@ function definitions()
                 }
             } catch (error)
             {
-                logError("Ошибка при получении определения метода");
+                logError("Ошибка при получении определения метода", error);
             }
             return res;
         }
@@ -1251,7 +1251,7 @@ async function getSurveyData(document: vscode.TextDocument): Promise<void>
         CurrentNodes = nodes;
     } catch (error)
     {
-        logError("Ошибка при сборе сведений о документе");
+        logError("Ошибка при сборе сведений о документе", error);
     }
 }
 
@@ -1298,7 +1298,7 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
         return new vscode.Range(startPos, endPos);
     } catch (error)
     {
-        logError("Ошибка выделения закрывающегося тега");
+        logError("Ошибка выделения закрывающегося тега", error);
     }
     return null;
 }
@@ -1317,7 +1317,7 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
         return new vscode.Range(startPos, endPos);
     } catch (error)
     {
-        logError("Ошибка выделения открывающегося тега");
+        logError("Ошибка выделения открывающегося тега", error);
         return null;
     }
 }
@@ -1383,7 +1383,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
     }
     catch (error)
     {
-        logError("Ошибка определение положения в XML");
+        logError("Ошибка определение положения в XML", error);
         return null;
     }
     return tag;
@@ -1461,7 +1461,7 @@ function getCurrentLineText(document: vscode.TextDocument, position: vscode.Posi
         return document.getText(new vscode.Range(start, end));
     } catch (error)
     {
-        logError("Ошибка получения текста текущей строки");
+        logError("Ошибка получения текста текущей строки", error);
         return null;
     }
 
@@ -1479,7 +1479,7 @@ function getPreviousText(document: vscode.TextDocument, position: vscode.Positio
         return document.getText(new vscode.Range(start, end));
     } catch (error)
     {
-        logError("Ошибка получения текста документа");
+        logError("Ошибка получения текста документа", error);
         return null;
     }
 }
@@ -1513,7 +1513,7 @@ function getContextChanges(selections: vscode.Selection[], changes: vscode.TextD
         });
     } catch (error)
     {
-        logError("Ошибка связи выделений с изменениями");
+        logError("Ошибка связи выделений с изменениями", error);
     }
     return res;
 }
@@ -1642,7 +1642,7 @@ function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text:
         }
         catch (error)
         {
-            logError("Ошибка замены текста в выделении");
+            logError("Ошибка замены текста в выделении", error);
         }
     }, { undoStopAfter: false, undoStopBefore: false }).then(() =>
     {
@@ -1680,11 +1680,12 @@ function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: bo
 
 
 /** сообщение (+ отчёт) об ошибке */
-function logError(text: string, edt?: vscode.TextEditor)
+function logError(text: string, error?)
 {
     showError(text);
-    let editor = edt || vscode.window.activeTextEditor;
+    let editor = vscode.window.activeTextEditor;
     let data = getLogData(editor);
+    if (!!error) data.add("StackTrace", error);
     saveError(text, data, _LogPath);
 }
 
@@ -1774,7 +1775,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
         }
         catch (error)
         {
-            logError("Ошибка при обновлении текста документа", editor);
+            logError("Ошибка при обновлении текста документа", error);
         }
     }
     inProcess = false;
@@ -1868,7 +1869,7 @@ class CacheSet
         }
         catch (error)
         {
-            logError("Ошибка обновления части закешированного документа")
+            logError("Ошибка обновления части закешированного документа", error)
         }
         return false;
     }
@@ -1932,7 +1933,7 @@ class CacheSet
         }
         catch (error)
         {
-            logError("Ошибка обновления закешированного документа");
+            logError("Ошибка обновления закешированного документа", error);
         }
 
     }
@@ -1955,7 +1956,7 @@ class CacheSet
         }
         catch (error)
         {
-            logError("Ошибка очистки кеша")
+            logError("Ошибка очистки кеша", error)
         }
     }
 

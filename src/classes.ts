@@ -1211,6 +1211,7 @@ class ILogData
     UserName?: string;
     ErrorMessage?: string;
     SurveyData?: Object;
+    StackTrace?: string;
 }
 
 /** Данные для хранения логов */
@@ -1270,7 +1271,7 @@ export class LogData
         return key + ": " + (typeof data[key] != "string" ? JSON.stringify(data[key]) : ("\"" + data[key] + "\"")) + "\r\n";
     }
 
-    Data = new ILogData();
+    private Data = new ILogData();
 }
 
 

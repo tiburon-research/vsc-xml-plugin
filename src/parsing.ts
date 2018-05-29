@@ -91,7 +91,7 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
     }
     catch (err)
     {
-        logError("Ошибка при поиске закрывающегося тега");
+        logError("Ошибка при поиске закрывающегося тега", err);
     }
     return null;
 }
@@ -159,7 +159,7 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
     }
     catch (err)
     {
-        logError("Ошибка при поиске открывающегося тега");
+        logError("Ошибка при поиске открывающегося тега", err);
     }
     return null;
 }
@@ -194,7 +194,7 @@ export function get1LevelNodes(text: string): TagInfo[]
     }
     catch (err)
     {
-        logError("Ошибка при поиске вложенных тегов");
+        logError("Ошибка при поиске вложенных тегов", err);
     }
     return tags;
 }
@@ -221,7 +221,7 @@ export function inString(text: string): boolean
         }
     } catch (error)
     {
-        logError("Ошибка выделения строки");
+        logError("Ошибка выделения строки", error);
     }
     return false;
 }
