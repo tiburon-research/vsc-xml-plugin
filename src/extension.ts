@@ -51,7 +51,7 @@ var Methods = new TibMethods();
 var CurrentNodes: SurveyNodes = new SurveyNodes();
 
 /** Настройки расширения */
-var Settings = new ExtensionSettings();
+var Settings: ExtensionSettings;
 
 /** флаг использования Linq */
 var _useLinq = true;
@@ -73,12 +73,10 @@ export function activate(context: vscode.ExtensionContext)
 {
     let editor = vscode.window.activeTextEditor;
 
-    Settings.update(vscode.workspace.getConfiguration('tib'));
-
     // обновляем настройки при сохранении
     vscode.workspace.onDidChangeConfiguration(event =>
     {
-        Settings.update(vscode.workspace.getConfiguration('tib'));
+        Settings.Update();
     })
 
     /** Обновление документа */
@@ -152,6 +150,7 @@ function getStaticData()
     try 
     {
         // сохраняем нужные значения
+        Settings = new ExtensionSettings();
         _LogPath = Settings.Item("logPath");
         if (!pathExists(_LogPath)) showWarning("Отчёты об ошибках сохраняться не будут т.к. недоступен путь:\n\"" + _LogPath + "\"");
         _useLinq = Settings.Item("useLinq");

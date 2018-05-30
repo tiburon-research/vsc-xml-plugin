@@ -1046,13 +1046,37 @@ export class ExtensionSettings extends KeyedCollection<any>
     constructor()
     {
         super();
+        this.Update();
     }
 
-    update(config: vscode.WorkspaceConfiguration): void
+    /** Обновляет объект настроек из файла конфигурации */
+    public Update(): void
     {
-        for (let key in config) this.AddPair(key.toString(), config[key]);
+        this.Config = vscode.workspace.getConfiguration('tib');
+        for (let key in this.Config) this.AddPair(key.toString(), this.Config.get(key));
     }
+
+    /** Изменяет настройки */
+    public Set(key: string, value: any): Promise<string>
+    {
+        return new Promise<string>((resolve, reject) =>
+        {
+            try {
+                this.Config.update(key, value, true).then(
+                    () => resolve("Значение параметра 'tib." + key + "' установлено на: " + JSON.stringify(value)),
+                    () => reject("Ошибка при изменении параметра конфигурации")
+                );   
+            }
+            catch (error)
+            {
+                reject("Ошибка при изменении настроек");
+            }
+        });
+    }
+
+    private Config: vscode.WorkspaceConfiguration;
 }
+
 
 
 /** Совмещённая структура ContentChangeEvent + Selection */
@@ -1718,6 +1742,7 @@ export function getTibVersion()
 {
     return vscode.extensions.getExtension("TiburonResearch.tiburonscripter").packageJSON.version;
 }
+
 
 //#endregion
 
