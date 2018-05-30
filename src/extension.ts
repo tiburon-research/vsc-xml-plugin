@@ -1826,10 +1826,7 @@ function checkDocument(editor: vscode.TextEditor)
     {
         vscode.window.showInformationMessage("Включить кэширование? \nКеширование позволяет ускорить работу с большими документами таких функций расширения, как автозавершение, подсказки при вводе и т.д.", "Да", "нет").then((res) =>
         {
-            if (res == "Да")
-            {
-                Settings.Set("enableCache", true).then((message) => logToOutput(message));
-            }    
+            if (res == "Да") Settings.Set("enableCache", true).then(null, (er) => { logError("Ошибка при изменении конфигурации", er); });
         })
     }    
 }

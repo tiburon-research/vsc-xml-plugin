@@ -1059,19 +1059,23 @@ export class ExtensionSettings extends KeyedCollection<any>
     }
 
     /** Изменяет настройки */
-    public Set(key: string, value: any): Promise<string>
+    public Set(key: string, value: any): Promise<void>
     {
-        return new Promise<string>((resolve, reject) =>
+        return new Promise<void>((resolve, reject) =>
         {
             try {
                 this.Config.update(key, value, true).then(
-                    () => resolve("Значение параметра 'tib." + key + "' установлено на: " + JSON.stringify(value)),
+                    () =>
+                    {
+                        logToOutput("Значение параметра 'tib." + key + "' установлено на: " + JSON.stringify(value));
+                        resolve();
+                    },
                     () => reject("Ошибка при изменении параметра конфигурации")
                 );   
             }
             catch (error)
             {
-                reject("Ошибка при изменении настроек");
+                reject(error);
             }
         });
     }
