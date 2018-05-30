@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, showError, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, showError, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -11,11 +11,10 @@ import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
 import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames } from './constants'
-import * as dateFormat from 'dateformat'
 
 
 
-export { bot, $, CSFormatter, logError };
+export { bot, $, CSFormatter, logError, outChannel };
 
 
 /*---------------------------------------- глобальные переменные ----------------------------------------*/
@@ -1836,12 +1835,6 @@ function checkDocument(editor: vscode.TextEditor)
 }
 
 
-/** Лог в outputChannel */
-function logToOutput(message: string)
-{
-    let timeLog = "[" + dateFormat(new Date(), "hh:MM:ss.l") + "]";
-    outChannel.appendLine(timeLog + " > " + message);
-}
 
 
 class CacheSet 

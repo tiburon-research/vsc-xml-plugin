@@ -6,10 +6,12 @@ import * as Parse from './parsing'
 import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as os from 'os'
-import { bot, $ } from './extension'
+import { bot, $, outChannel } from './extension'
 import * as shortHash from "short-hash"
 import { RegExpPatterns } from './constants'
 import * as iconv from 'iconv-lite'
+import * as dateFormat from 'dateformat'
+
 
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
 //#region
@@ -1595,6 +1597,7 @@ export function createDir(path: string)
  */
 export function saveError(text: string, data: LogData, path: string)
 {
+    logToOutput(text, "ERROR: ");
     if (!pathExists(path))
     {
         sendLogMessage("Path was not found!");
@@ -1741,6 +1744,14 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
 export function getTibVersion()
 {
     return vscode.extensions.getExtension("TiburonResearch.tiburonscripter").packageJSON.version;
+}
+
+
+/** Лог в outputChannel */
+export function logToOutput(message: string, prefix = " > "): void
+{
+    let timeLog = "[" + dateFormat(new Date(), "hh:MM:ss.l") + "]";
+    outChannel.appendLine(timeLog + prefix + message);
 }
 
 
