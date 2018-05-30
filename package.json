@@ -29,8 +29,10 @@
   ],
   "main": "./out/extension",
   "dependencies": {
+    "charset-detector": "0.0.2",
     "clipboardy": "^1.2.2",
     "cssbeautify": "^0.3.1",
+    "iconv-lite": "^0.4.23",
     "jquery": "^3.3.1",
     "js-beautify": "^1.7.5",
     "jsdom": "^11.6.2",

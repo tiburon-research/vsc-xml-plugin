@@ -5,6 +5,7 @@ import { logError } from "./extension";
 import { clearXMLComments } from "./encoding"
 import { positiveMin, KeyedCollection, CurrentTag } from "./classes"
 import { RegExpPatterns } from './constants'
+import * as charDetect from 'charset-detector'
 
 
 /** Результат поиска тегов */
@@ -250,4 +251,11 @@ export function isMethodDefinition(text: string): boolean
 export function getAttributes(str: string): KeyedCollection<string>
 {
     return CurrentTag.GetAttributesArray(str);
+}
+
+/** Возвращает `true`, если файл может быть прочитан в `windows-1251` */
+export function win1251Avaliabe(buf: Buffer)
+{
+    let charsetMatch: Array<any> = charDetect(buf) || [];
+    return charsetMatch.filter(x => (x.charsetName as string).toLowerCase() == 'windows-1251').length > 0;
 }

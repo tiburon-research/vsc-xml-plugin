@@ -9,7 +9,7 @@ import * as os from 'os'
 import { bot, $ } from './extension'
 import * as shortHash from "short-hash"
 import { RegExpPatterns } from './constants'
-
+import * as iconv from 'iconv-lite'
 
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
 //#region
@@ -1607,7 +1607,7 @@ export function safeString(text: string): string
 /** Открытие текста файла в новом окне */
 export function openFileText(path: string): void
 {
-    vscode.workspace.openTextDocument(path).then(doc =>
+    /* vscode.workspace.openTextDocument(path).then(doc =>
     { // открываем файл (в памяти)
         let txt = doc.getText();
         vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
@@ -1620,7 +1620,21 @@ export function openFileText(path: string): void
                 });
             });
         })
-    });
+    }); */
+    
+    let fileBuffer = fs.readFileSync(path);
+    // по возможности читаем в 1251
+    let text = Parse.win1251Avaliabe(fileBuffer) ? iconv.decode(fileBuffer, 'win1251') : fileBuffer.toString('utf8');
+    vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+    { // создаём пустой tib-файл
+        vscode.window.showTextDocument(newDoc).then(editor => 
+        { // отображаем пустой
+            editor.edit(builder => 
+            { // заливаем в него текст
+                builder.insert(new vscode.Position(0, 0), text)
+            });
+        });
+    })
 }
 
 
