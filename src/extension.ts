@@ -98,10 +98,11 @@ export function activate(context: vscode.ExtensionContext)
     /** Документ сменился */
     function anotherDocument(needReload: boolean, editor: vscode.TextEditor)
     {
-        checkDocument(editor);
         Includes = [];
         Methods.Clear();
         CurrentNodes.Clear();
+        if (!editor || editor.document.languageId != 'tib') return;
+        checkDocument(editor);
         if (needReload) reload();
         inProcess = false;
     }
