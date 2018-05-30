@@ -11,6 +11,7 @@ import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
 import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames } from './constants'
+import * as dateFormat from 'dateformat'
 
 
 
@@ -140,6 +141,8 @@ export function activate(context: vscode.ExtensionContext)
     });
 
     statusMessage("Tiburon XML Helper запущен!", 3000);
+    logToOutput("Активация завершена");
+
 }
 
 export function deactivate()
@@ -155,6 +158,7 @@ function getStaticData()
         // сохраняем нужные значения
         outChannel = vscode.window.createOutputChannel("tib");
         outChannel.show();
+        logToOutput("Загрузка настроек расширения");
         Settings = new ExtensionSettings();
         _LogPath = Settings.Item("logPath");
         if (!pathExists(_LogPath)) showWarning("Отчёты об ошибках сохраняться не будут т.к. недоступен путь:\n\"" + _LogPath + "\"");
@@ -162,6 +166,7 @@ function getStaticData()
         Cache = new CacheSet();
 
         // получаем фунцию форматирования C#
+        logToOutput("Связка с расширением 'Leopotam.csharpfixformat'");
         let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
         if (!!csharpfixformat)
         {
@@ -173,6 +178,7 @@ function getStaticData()
         }
 
         // запускаем бота
+        logToOutput("Настройка бота для оповещений");
         let dataPath = _LogPath + "\\data.json";
         if (pathExists(dataPath))
         {
@@ -195,6 +201,7 @@ function getStaticData()
         }
 
         // получаем AutoComplete
+        logToOutput("Загрузка списка известных элементов");
         let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });
         let statCS: TibAutoCompleteItem[] = [];
         for (let key in AutoCompleteArray.StaticMethods)
@@ -1822,12 +1829,19 @@ function checkDocument(editor: vscode.TextEditor)
         {
             if (res == "Да")
             {
-                Settings.Set("enableCache", true).then((message) => outChannel.appendLine(message));
+                Settings.Set("enableCache", true).then((message) => logToOutput(message));
             }    
         })
     }    
 }
 
+
+/** Лог в outputChannel */
+function logToOutput(message: string)
+{
+    let timeLog = "[" + dateFormat(new Date(), "hh:MM:ss.l") + "]";
+    outChannel.appendLine(timeLog + " > " + message);
+}
 
 
 class CacheSet 

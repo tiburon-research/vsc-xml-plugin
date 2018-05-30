@@ -29,9 +29,11 @@
   ],
   "main": "./out/extension",
   "dependencies": {
+    "@types/dateformat": "^1.0.1",
     "charset-detector": "0.0.2",
     "clipboardy": "^1.2.2",
     "cssbeautify": "^0.3.1",
+    "dateformat": "^3.0.3",
     "iconv-lite": "^0.4.23",
     "jquery": "^3.3.1",
     "js-beautify": "^1.7.5",
