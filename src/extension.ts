@@ -62,7 +62,14 @@ var Cache: CacheSet;
 /** Имена документов из Include */
 var Includes: string[] = [];
 
+/** Канал вывода */
 var outChannel: vscode.OutputChannel;
+
+/** Объект для хранения пользовательских выборов */
+var Refused = {
+    /** Отказ от включения кэша */
+    enableCache: false
+}
 
 //#endregion
 
@@ -1823,11 +1830,12 @@ function getIncludePaths(text: string): string[]
 /** Проверки документа */
 function checkDocument(editor: vscode.TextEditor)
 {
-    if (!Settings.Item("enableCache") && editor.document.lineCount > 5000)
+    if (!Refused.enableCache && !Settings.Item("enableCache") && editor.document.lineCount > 5000)
     {
         vscode.window.showInformationMessage("Включить кэширование? \nКеширование позволяет ускорить работу с большими документами таких функций расширения, как автозавершение, подсказки при вводе и т.д.", "Да", "нет").then((res) =>
         {
             if (res == "Да") Settings.Set("enableCache", true).then(null, (er) => { logError("Ошибка при изменении конфигурации", er); });
+            else Refused.enableCache = true;
         })
     }    
 }
