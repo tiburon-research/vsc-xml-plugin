@@ -62,6 +62,8 @@ var Cache: CacheSet;
 /** Имена документов из Include */
 var Includes: string[] = [];
 
+var outChannel: vscode.OutputChannel;
+
 //#endregion
 
 
@@ -94,8 +96,9 @@ export function activate(context: vscode.ExtensionContext)
     }
 
     /** Документ сменился */
-    function anotherDocument(needReload = true)
+    function anotherDocument(needReload: boolean, editor: vscode.TextEditor)
     {
+        checkDocument(editor);
         Includes = [];
         Methods.Clear();
         CurrentNodes.Clear();
@@ -115,13 +118,13 @@ export function activate(context: vscode.ExtensionContext)
 
     // для каждого дукумента свои
     reload(false);
-    anotherDocument(false);
+    anotherDocument(false, editor);
 
     // смена документа
     vscode.window.onDidChangeActiveTextEditor(neweditor =>
     {
         editor = neweditor;
-        anotherDocument();
+        anotherDocument(true, neweditor);
     });
 
     // редактирование документа
@@ -150,6 +153,8 @@ function getStaticData()
     try 
     {
         // сохраняем нужные значения
+        outChannel = vscode.window.createOutputChannel("tib");
+        outChannel.show();
         Settings = new ExtensionSettings();
         _LogPath = Settings.Item("logPath");
         if (!pathExists(_LogPath)) showWarning("Отчёты об ошибках сохраняться не будут т.к. недоступен путь:\n\"" + _LogPath + "\"");
@@ -1806,6 +1811,23 @@ function getIncludePaths(text: string): string[]
     if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
     return txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x));
 }
+
+
+/** Проверки документа */
+function checkDocument(editor: vscode.TextEditor)
+{
+    if (!Settings.Item("enableCache") && editor.document.lineCount > 5000)
+    {
+        vscode.window.showInformationMessage("Включить кэширование? \nКеширование позволяет ускорить работу с большими документами таких функций расширения, как автозавершение, подсказки при вводе и т.д.", "Да", "нет").then((res) =>
+        {
+            if (res == "Да")
+            {
+                Settings.Set("enableCache", true).then((message) => outChannel.appendLine(message));
+            }    
+        })
+    }    
+}
+
 
 
 class CacheSet 
