@@ -1832,14 +1832,24 @@ function checkDocument(editor: vscode.TextEditor)
 {
     if (!Refused.enableCache && !Settings.Item("enableCache") && editor.document.lineCount > 5000)
     {
-        vscode.window.showInformationMessage("Включить кэширование? \nКеширование позволяет ускорить работу с большими документами таких функций расширения, как автозавершение, подсказки при вводе и т.д.", "Да", "нет").then((res) =>
-        {
-            if (res == "Да") Settings.Set("enableCache", true).then(null, (er) => { logError("Ошибка при изменении конфигурации", er); });
+        yesNoHelper("Включить кэширование? Кеширование позволяет ускорить работу с большими документами таких функций расширения, как автозавершение, подсказки при вводе и т.д.").then((res) => 
+        {    
+            if (res) Settings.Set("enableCache", true).then(null, (er) => { logError("Ошибка при изменении конфигурации", er); });
             else Refused.enableCache = true;
         })
-    }    
+    }
 }
 
+
+function yesNoHelper(text: string): Promise<boolean>
+{
+    return new Promise<boolean>((resolve) => {
+        vscode.window.showInformationMessage(text, "Да", "нет").then((res) =>
+        {
+            resolve(res == "Да");
+        })
+    });
+}
 
 
 

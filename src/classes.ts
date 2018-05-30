@@ -1669,11 +1669,11 @@ export function openFileText(path: string): void
 }
 
 
-/** Открыть ссылку */
-function execute(link: string)
+/** Открыть файл в VSCode */
+/* function execute(link: string)
 {
     vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
-}
+} */
 
 
 export function getDocumentMethods(document: vscode.TextDocument, Settings: ExtensionSettings): Promise<TibMethods>
