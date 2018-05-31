@@ -755,7 +755,7 @@
 					},
 					"patterns":[
 						{
-							"include": "#csharp"
+							"include": "#statement"
 						}
 					]
 				},
