@@ -1841,11 +1841,13 @@ function checkDocument(editor: vscode.TextEditor)
 
 function yesNoHelper(text: string): Promise<boolean>
 {
-    return new Promise<boolean>((resolve) => {
-        vscode.window.showInformationMessage(text, "Да", "нет").then((res) =>
+    return new Promise<boolean>((resolve) =>
+    {
+        if (Settings.Item("showHelpMessages")) vscode.window.showInformationMessage(text, "Да", "нет").then((res) =>
         {
             resolve(res == "Да");
-        })
+        });
+        else resolve(false);
     });
 }
 

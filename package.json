@@ -248,6 +248,11 @@
           "description": "Показывать информацию о текущем теге",
           "type": "boolean",
           "default": true
+        },
+        "tib.showHelpMessages": {
+          "description": "Предлагать подсказки по оптимизации",
+          "type": "boolean",
+          "default": true
         }
       }
     }
