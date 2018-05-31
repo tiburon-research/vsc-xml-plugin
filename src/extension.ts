@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, showError, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, showError, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -14,7 +14,7 @@ import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames } from './constant
 
 
 
-export { bot, $, CSFormatter, logError, outChannel };
+export { bot, $, CSFormatter, logError, outChannel, _LogPath };
 
 
 /*---------------------------------------- глобальные переменные ----------------------------------------*/
@@ -1284,7 +1284,7 @@ function safeValsEval(query: string): string[]
     }
     catch (error)
     {
-        saveError("Не получилось выполнить eval()", getLogData(), _LogPath);
+        saveError("Не получилось выполнить eval()", getLogData());
     }
     return res;
 }
@@ -1700,11 +1700,9 @@ function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: bo
 /** сообщение (+ отчёт) об ошибке */
 function logError(text: string, error?)
 {
-    showError(text);
     let editor = vscode.window.activeTextEditor;
     let data = getLogData(editor);
-    if (!!error) data.add("StackTrace", error);
-    saveError(text, data, _LogPath);
+    tibError(text, data, error);
 }
 
 
@@ -1728,7 +1726,7 @@ function getLogData(edt?: vscode.TextEditor): LogData
         res.add("SurveyData", survObj);
     } catch (error)
     {
-        saveError("Ошибка при сборе сведений", new LogData(null), _LogPath);
+        saveError("Ошибка при сборе сведений", new LogData(null));
     }
     return res;
 }

@@ -6,7 +6,7 @@ import * as Parse from './parsing'
 import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as os from 'os'
-import { bot, $, outChannel } from './extension'
+import { bot, $, outChannel, _LogPath } from './extension'
 import * as shortHash from "short-hash"
 import { RegExpPatterns } from './constants'
 import * as iconv from 'iconv-lite'
@@ -1063,7 +1063,8 @@ export class ExtensionSettings extends KeyedCollection<any>
     {
         return new Promise<void>((resolve, reject) =>
         {
-            try {
+            try
+            {
                 this.Config.update(key, value, true).then(
                     () =>
                     {
@@ -1071,7 +1072,7 @@ export class ExtensionSettings extends KeyedCollection<any>
                         resolve();
                     },
                     () => reject("Ошибка при изменении параметра конфигурации")
-                );   
+                );
             }
             catch (error)
             {
@@ -1233,15 +1234,15 @@ export class SnippetObject
 
 class ILogData
 {
-    FileName: string;
-    FullText: string;
-    Postion: vscode.Position;
-    CacheEnabled: boolean;
+    FileName?: string;
+    FullText?: string;
+    Postion?: vscode.Position;
+    CacheEnabled?: boolean;
     Version?: string;
-    UserName?: string;
     ErrorMessage?: string;
     SurveyData?: Object;
     StackTrace?: string;
+    Data?: Object;
 }
 
 /** Данные для хранения логов */
@@ -1253,7 +1254,7 @@ export class LogData
         for (let key in data)
             this.Data[key] = data[key];
         // дополнительно
-        if (!this.Data.UserName) this.Data.UserName = getUserName();
+        if (!this.UserName) this.UserName = getUserName();
         if (!this.Data.Version) this.Data.Version = getTibVersion();
     }
 
@@ -1266,7 +1267,7 @@ export class LogData
     /** преобразует все данные в строку */
     public toString(): string
     {
-        let res = "";
+        let res = "User: " + this.UserName + "\r\n";
         for (let key in this.Data)
         {
             switch (key)
@@ -1275,13 +1276,14 @@ export class LogData
                     // текст уберём в конец    
                     break;
                 case "SurveyData":
+                case "Data":    
                     // разносим на отдельные строки
-                    res += "-------- SurveyData --------\r\n";
+                    res += "-------- " + key + " --------\r\n";
                     for (let dataKey in this.Data[key])
                     {
                         res += this.stringifyData(dataKey, this.Data[key]);
                     }
-                    res += "----------------------------\r\n";
+                    res += "------------------------\r\n";
                     break;
                 default:
                     res += this.stringifyData(key, this.Data);
@@ -1301,6 +1303,7 @@ export class LogData
         return key + ": " + (typeof data[key] != "string" ? JSON.stringify(data[key]) : ("\"" + data[key] + "\"")) + "\r\n";
     }
 
+    public UserName: string;
     private Data = new ILogData();
 }
 
@@ -1597,19 +1600,20 @@ export function createDir(path: string)
  * Создаёт лог (файл) об ошибке 
  * @param text Текст ошибки
  * @param data Данные для лога
- * @param path Путь для сохранения файла
  */
-export function saveError(text: string, data: LogData, path: string)
+export function saveError(text: string, data: LogData)
 {
     logToOutput(text, "ERROR: ");
-    if (!pathExists(path))
+    if (!pathExists(_LogPath))
     {
+        showError("Не найден путь для сохранения логов! Проверьте правильность настроек.");
         sendLogMessage("Path was not found!");
         return;
     }
     // генерируем имя файла из текста ошибки и сохраняем в папке с именем пользователя
     let hash = "" + shortHash(text);
-    let dir = path + (!!path.match(/[\\\/]$/) ? "" : "\\") + getUserName();
+    if (!data) data = new LogData({ Data: { Error: "Ошибка без данных" } });
+    let dir = _LogPath + (!!_LogPath.match(/[\\\/]$/) ? "" : "\\") + data.UserName;
     if (!pathExists(dir)) createDir(dir);
     let filename = dir + "\\" + hash + ".log";
     if (pathExists(filename)) return;
@@ -1619,6 +1623,16 @@ export function saveError(text: string, data: LogData, path: string)
         if (!!err) sendLogMessage(JSON.stringify(err));
         sendLogMessage("Добавлена ошибка:\n`" + text + "`\n\nПуть:\n`" + filename + "`");
     });
+}
+
+
+/** Показ и сохранение ошибки */
+export function tibError(text: string, data: LogData, error?)
+{
+    showError(text);
+    let editor = vscode.window.activeTextEditor;
+    if (!!error) data.add("StackTrace", error);
+    saveError(text, data);
 }
 
 
@@ -1652,7 +1666,7 @@ export function openFileText(path: string): void
             });
         })
     }); */
-    
+
     let fileBuffer = fs.readFileSync(path);
     // по возможности читаем в 1251
     let text = Parse.win1251Avaliabe(fileBuffer) ? iconv.decode(fileBuffer, 'win1251') : fileBuffer.toString('utf8');
