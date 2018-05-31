@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, showError, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -374,7 +374,7 @@ function registerCommands()
             });
         } catch (error)
         {
-            showError("Ошибка при оборачивании в CDATA");
+            logError("Ошибка при оборачивании в CDATA");
         }
     });
 
@@ -553,7 +553,7 @@ function registerCommands()
         let path = Settings.Item("demoPath");
         if (!path)
         {
-            showError("Невозможно получить доступ к файлу демки");
+            logError("Невозможно получить доступ к файлу демки");
             return;
         }
 
@@ -566,7 +566,7 @@ function registerCommands()
         let templatePathFolder = Settings.Item("templatePathFolder") + '\\';
         if (!templatePathFolder)
         {
-            showError("Невозможно получить доступ к папке");
+            logError("Невозможно получить доступ к папке");
             return;
         }
 
