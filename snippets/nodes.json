@@ -98,7 +98,7 @@
     "CustomText1":{
         "prefix": "<CustomText1",
         "body": [
-            "<CustomText1><![CDATA[",
+            "<CustomText1 Action=\"Append\"><![CDATA[",
             "\t$0",
             "]]></CustomText1>"
         ],
@@ -107,7 +107,7 @@
     "CustomText2":{
         "prefix": "<CustomText2",
         "body": [
-            "<CustomText2><![CDATA[",
+            "<CustomText2 Action=\"Append\"><![CDATA[",
             "\t<style>",
             "\t\t$0",
             "\t</style>",
