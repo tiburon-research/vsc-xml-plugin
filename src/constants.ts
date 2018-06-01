@@ -6,7 +6,7 @@ import { KeyedCollection } from './classes'
 
 
 /** Тип сборки */
-export const _pack: ("debug" | "release") = "release";
+export const _pack: ("debug" | "release") = "debug";
 
 /** XML теги, которые сохраняются в CurrentNodes */
 export const _NodeStoreNames = ["Page", "Question", "Quota", "List"];
