@@ -1690,6 +1690,36 @@ export function openFileText(path: string): void
 } */
 
 
+export function openUrl(url: string): Promise<string>
+{
+    return new Promise<string>((resolve, reject) =>
+    {
+        let http = require('https');
+        http.get(url, (res) =>
+        {
+            res.setEncoding("utf8");
+            let body = "";
+            res.on("data", data =>
+            {
+                body += data;
+            });
+            res.on("end", () =>
+            {
+                resolve(body);
+            });
+        }).on('error', (e) =>
+        {
+            let data = new LogData({
+                Data: { Url: url },
+                StackTrace: e
+            });
+            tibError("Не удалось открыть ссылку", data);
+            reject();
+        });
+    });
+}
+
+
 export function getDocumentMethods(document: vscode.TextDocument, Settings: ExtensionSettings): Promise<TibMethods>
 {
     return new Promise<TibMethods>((resolve, reject) =>
