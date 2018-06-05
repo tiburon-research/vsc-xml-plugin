@@ -65,6 +65,22 @@
 		},
 		{
 			"scope": [
+				"entity.other.html-chars"
+			],
+			"settings": {
+				"foreground": "#8e8e8e"
+			}
+		},
+		{
+			"scope": [
+				"entity.other.html-chars.name"
+			],
+			"settings": {
+				"fontStyle": "underline"
+			}
+		},
+		{
+			"scope": [
 				"entity.name.repeat-iterator"
 			],
 			"settings": {
