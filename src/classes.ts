@@ -6,9 +6,11 @@ import * as Parse from './parsing'
 import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as os from 'os'
-import { bot, $ } from './extension'
+import { bot, $, outChannel, _LogPath } from './extension'
 import * as shortHash from "short-hash"
 import { RegExpPatterns } from './constants'
+import * as iconv from 'iconv-lite'
+import * as dateFormat from 'dateformat'
 
 
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
@@ -123,13 +125,14 @@ export namespace TibDocumentEdits
         let $dom = $.XMLDOM(text);
         let $question = $dom.find("Question");
 
-        $question.map(function (){
- 
+        $question.map(function ()
+        {
+
             let $questionHeader = $(this).find("Header");
             let $headerText = $questionHeader.text();
             let $qIDValue = $(this).attr('Id');
-           
-            $qIDValue = $headerText.match($qIDValue+"\\.? ?");
+
+            $qIDValue = $headerText.match($qIDValue + "\\.? ?");
             $headerText = $questionHeader.text().replace($qIDValue, "");
             $questionHeader.text($headerText);
         });
@@ -137,76 +140,95 @@ export namespace TibDocumentEdits
         return $dom.xml();
     }
 
-    export function getVarCountFromList(list:string): number{
+    export function getVarCountFromList(list: string): number
+    {
 
         let res = 0;
         let $dom = $.XMLDOM(list);
         let $item = $dom.find("Item").eq(0);        //берём только первый элемент, так как количество Var'ов должно быть одинаково у всех Item
         let $var = $item.find("Var");               //Ищем дочерний Var
-        
-        if($var.length > 0){                        //<Var></Var>
+
+        if ($var.length > 0)
+        {                        //<Var></Var>
             res = $var.length;
         }
-        if(typeof $item.attr('Var') !== typeof undefined){      //Var=""
+        if (typeof $item.attr('Var') !== typeof undefined)
+        {      //Var=""
             res += $item.attr('Var').split(',').length;
         }
 
         return res;
     }
 
-    export function sortListBy(list:string, attrName:string, attrIndex?:number): string{
+    export function sortListBy(list: string, attrName: string, attrIndex?: number): string
+    {
 
         let $dom = $.XMLDOM(list);              //берём xml текст
         let $items = $dom.find("Item");         //ищём Item'ы
 
-        $items.sort(function(item1,item2){      //сортируем массив DOM
+        $items.sort(function (item1, item2)
+        {      //сортируем массив DOM
 
-            let sortItems = [item1,item2];
+            let sortItems = [item1, item2];
             let el = [];                        //должно хранится 2 элемента для сравнения
 
-            if(attrIndex > 0){                                                                          //если есть индекс
+            if (attrIndex > 0)
+            {                                                                          //если есть индекс
                 let attributeValues = $(sortItems[0]).attr(attrName).split(',');
                 let attrLength = attributeValues.length;                                                //берём у первого Item'а количество Var'ов (Var="")
 
-                for(let i = 0, length = sortItems.length; i < length; i++){
-                    if(attrIndex < attrLength){  
+                for (let i = 0, length = sortItems.length; i < length; i++)
+                {
+                    if (attrIndex < attrLength)
+                    {
                         el[i] = $(sortItems[i]).attr(attrName).split(',')[attrIndex];                   //берём значение по индексу
-                    }else{
+                    } else
+                    {
                         el[i] = $(sortItems[i]).find(attrName).eq(attrIndex - attrLength).text();
                     }
-                }          
-            }else{  
-                for(let i = 0, length = sortItems.length; i < length; i++){
-                    if(typeof $(sortItems[i]).attr(attrName) !== typeof undefined){                     //если атрибут
+                }
+            } else
+            {
+                for (let i = 0, length = sortItems.length; i < length; i++)
+                {
+                    if (typeof $(sortItems[i]).attr(attrName) !== typeof undefined)
+                    {                     //если атрибут
                         el[i] = $(sortItems[i]).attr(attrName);
-                    }else if($(sortItems[i]).find(attrName).length > 0){                                //если дочерний тег
+                    } else if ($(sortItems[i]).find(attrName).length > 0)
+                    {                                //если дочерний тег
                         el[i] = $(sortItems[i]).find(attrName).eq(0).text();
                     }
 
-                    if(typeof el[i] == typeof undefined){                                               //если атрибут пуст
+                    if (typeof el[i] == typeof undefined)
+                    {                                               //если атрибут пуст
                         el[i] = "";                                                                     //взять как пустое значение
                     }
                 }
             }
 
-            if(el[0].match(/^\d+$/) && el[1].match(/^\d+$/)){                                           //проверка на числа
+            if (el[0].match(/^\d+$/) && el[1].match(/^\d+$/))
+            {                                           //проверка на числа
                 el[0] = parseInt(el[0]);
                 el[1] = parseInt(el[1]);
             }
 
-            if(el[0] > el[1]){
+            if (el[0] > el[1])
+            {
                 return 1;
             }
-            if(el[0] < el[1]){
+            if (el[0] < el[1])
+            {
                 return -1;
             }
 
             return 0;
         });
 
-        if($dom.find("List").length > 0){                                                               //елси взят текст с List
+        if ($dom.find("List").length > 0)
+        {                                                               //елси взят текст с List
             $items.appendTo($dom.find("List").html(''));
-        }else{
+        } else
+        {
             $items.appendTo($dom);                                                                      //если взят тескт только с Item'ами
         }
 
@@ -520,7 +542,7 @@ export class TibMethods extends KeyedCollection<TibMethod>
             collection.forEach((key, value) =>
             {
                 this.Add(value);
-            })    
+            })
     }
 
     public Add(item: TibMethod)
@@ -664,7 +686,6 @@ export class CurrentTag
     public Parents: Array<SimpleTag> = [];
     public LastParent: SimpleTag;
     /** Откуда начинается */
-    //public StartPosition: vscode.Position;
     public StartIndex: number;
     public OpenTagRange: vscode.Range;
     /** Текст от начала документа до Position */
@@ -732,7 +753,7 @@ export class CurrentTag
             {
                 let parName = "";
                 // ищем нормального родителя
-                for (let i = parents.length - 1; i >= 0 ; i--) 
+                for (let i = parents.length - 1; i >= 0; i--) 
                 {
                     if (["Condition", "Repeat"].indexOf(parents[i].Name) < 0)
                     {
@@ -920,6 +941,34 @@ export class CurrentTag
         this.SetFields(fields);
     }
 
+
+    /** Получает индекс текущего Var в Item 
+     * 
+     * Если найти не получилось, то -1
+    */
+    public GetVarIndex(): number
+    {
+        if (this.Name != "Var" || !this.Parents || this.LastParent.Name != "Item") return -1;
+        try
+        {
+            let res = -1;
+            let prevText = this.PreviousText.slice(0, this.StartIndex);
+            let itemIndex = prevText.lastIndexOf("Item");
+            if (itemIndex > 0)
+            {
+                prevText = prevText.slice(itemIndex);
+                let match = prevText.match(/<Var>/g);
+                if (!!match) return match.length;
+                else return 0;
+            }
+            return res;
+        }
+        catch (error)
+        {
+            return -1;
+        }
+    }
+
 }
 
 
@@ -987,6 +1036,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
     GetItem(id: string, type?: string): SurveyNode
     {
         let nodes = this.Item(type);
+        if (!nodes) return null;
         let res: SurveyNode;
         if(!!nodes){
             for (let i = 0; i < nodes.length; i++)
@@ -1046,13 +1096,42 @@ export class ExtensionSettings extends KeyedCollection<any>
     constructor()
     {
         super();
+        this.Update();
     }
 
-    update(config: vscode.WorkspaceConfiguration): void
+    /** Обновляет объект настроек из файла конфигурации */
+    public Update(): void
     {
-        for (let key in config) this.AddPair(key.toString(), config[key]);
+        this.Config = vscode.workspace.getConfiguration('tib');
+        for (let key in this.Config) this.AddPair(key.toString(), this.Config.get(key));
     }
+
+    /** Изменяет настройки */
+    public Set(key: string, value: any): Promise<void>
+    {
+        return new Promise<void>((resolve, reject) =>
+        {
+            try
+            {
+                this.Config.update(key, value, true).then(
+                    () =>
+                    {
+                        logToOutput("Значение параметра 'tib." + key + "' установлено на: " + JSON.stringify(value));
+                        resolve();
+                    },
+                    () => reject("Ошибка при изменении параметра конфигурации")
+                );
+            }
+            catch (error)
+            {
+                reject(error);
+            }
+        });
+    }
+
+    private Config: vscode.WorkspaceConfiguration;
 }
+
 
 
 /** Совмещённая структура ContentChangeEvent + Selection */
@@ -1201,50 +1280,81 @@ export class SnippetObject
     }
 }
 
+class ILogData
+{
+    FileName?: string;
+    FullText?: string;
+    Postion?: vscode.Position;
+    CacheEnabled?: boolean;
+    Version?: string;
+    ErrorMessage?: string;
+    SurveyData?: Object;
+    StackTrace?: string;
+    Data?: Object;
+}
+
 /** Данные для хранения логов */
 export class LogData 
 {
-    /**
-     * @param data.FileName имя файла в котором произошла ошибка
-     * @param data.Position позиция на которой произошла ошибка
-     * @param data.FullText полный текст файла на момент ошибки
-     */
-    constructor(data: Object)
+
+    constructor(data: ILogData)
     {
-        for (let key in data)
-            this[key] = data[key];
-        this.UserName = getUserName();
+        if (!!data)
+            for (let key in data)
+                this.Data[key] = data[key];
+        // дополнительно
+        if (!this.UserName) this.UserName = getUserName();
+        if (!this.Data.Version) this.Data.Version = getTibVersion();
     }
 
     /** добавляет элемент в отчёт */
-    public add(name: string, value: any): void
+    public add(items: ILogData): void
     {
-        this[name] = value;
+        for (let key in items)
+            this.Data[key] = items[key];
     }
 
     /** преобразует все данные в строку */
     public toString(): string
     {
-        let res = "";
-        for (let key in this)
-            if (key != "FullText" && {}.toString.call(this[key]) !== '[object Function]')
+        let res = "User: " + this.UserName + "\r\n";
+        for (let key in this.Data)
+        {
+            switch (key)
             {
-                res += key + ": " + JSON.stringify(this[key]) + "\r\n";
+                case "FullText":
+                    // текст уберём в конец    
+                    break;
+                case "SurveyData":
+                case "Data":
+                    // разносим на отдельные строки
+                    res += "-------- " + key + " --------\r\n";
+                    for (let dataKey in this.Data[key])
+                    {
+                        res += this.stringifyData(dataKey, this.Data[key]);
+                    }
+                    res += "------------------------\r\n";
+                    break;
+                default:
+                    res += this.stringifyData(key, this.Data);
             }
-        if (!!this.FullText)
+        }
+        if (!!this.Data.FullText)
         {
             res += "______________ TEXT START _______________\r\n"
-            res += this.FullText;
+            res += this.Data.FullText;
             res += "\r\n______________ TEXT END _______________\r\n"
         }
         return res;
     }
 
-    private UserName: string;
-    private FileName: string;
-    private FullText: string;
-    private Postion: vscode.Position;
+    private stringifyData(key: string, data): string
+    {
+        return key + ": " + (typeof data[key] != "string" ? JSON.stringify(data[key]) : ("\"" + data[key] + "\"")) + "\r\n";
+    }
 
+    public UserName: string;
+    private Data = new ILogData();
 }
 
 
@@ -1510,7 +1620,6 @@ export function snippetToCompletitionItem(obj: Object): vscode.CompletionItem
     let ci = new vscode.CompletionItem(snip.prefix, vscode.CompletionItemKind.Snippet);
     ci.detail = snip.description;
     ci.insertText = new vscode.SnippetString(snip.body);
-    vscode.MarkdownString
     return ci;
 }
 
@@ -1540,27 +1649,39 @@ export function createDir(path: string)
  * Создаёт лог (файл) об ошибке 
  * @param text Текст ошибки
  * @param data Данные для лога
- * @param path Путь для сохранения файла
  */
-export function saveError(text: string, data: LogData, path: string)
+export function saveError(text: string, data: LogData)
 {
-    if (!pathExists(path))
+    logToOutput(text, "ERROR: ");
+    if (!pathExists(_LogPath))
     {
+        showError("Не найден путь для сохранения логов! Проверьте правильность настроек.");
         sendLogMessage("Path was not found!");
         return;
     }
     // генерируем имя файла из текста ошибки и сохраняем в папке с именем пользователя
     let hash = "" + shortHash(text);
-    let dir = path + (!!path.match(/[\\\/]$/) ? "" : "\\") + getUserName();
+    if (!data) data = new LogData({ Data: { Error: "Ошибка без данных" } });
+    let dir = _LogPath + (!!_LogPath.match(/[\\\/]$/) ? "" : "\\") + data.UserName;
     if (!pathExists(dir)) createDir(dir);
     let filename = dir + "\\" + hash + ".log";
     if (pathExists(filename)) return;
-    data.add("ErrorMessage", text);
+    data.add({ ErrorMessage: text });
     fs.writeFile(filename, data.toString(), (err) =>
     {
         if (!!err) sendLogMessage(JSON.stringify(err));
         sendLogMessage("Добавлена ошибка:\n`" + text + "`\n\nПуть:\n`" + filename + "`");
     });
+}
+
+
+/** Показ и сохранение ошибки */
+export function tibError(text: string, data: LogData, error?)
+{
+    showError(text);
+    let editor = vscode.window.activeTextEditor;
+    if (!!error) data.add({ StackTrace: error });
+    saveError(text, data);
 }
 
 
@@ -1580,7 +1701,7 @@ export function safeString(text: string): string
 /** Открытие текста файла в новом окне */
 export function openFileText(path: string): void
 {
-    vscode.workspace.openTextDocument(path).then(doc =>
+    /* vscode.workspace.openTextDocument(path).then(doc =>
     { // открываем файл (в памяти)
         let txt = doc.getText();
         vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
@@ -1593,14 +1714,58 @@ export function openFileText(path: string): void
                 });
             });
         })
-    });
+    }); */
+
+    let fileBuffer = fs.readFileSync(path);
+    // по возможности читаем в 1251
+    let text = Parse.win1251Avaliabe(fileBuffer) ? iconv.decode(fileBuffer, 'win1251') : fileBuffer.toString('utf8');
+    vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+    { // создаём пустой tib-файл
+        vscode.window.showTextDocument(newDoc).then(editor => 
+        { // отображаем пустой
+            editor.edit(builder => 
+            { // заливаем в него текст
+                builder.insert(new vscode.Position(0, 0), text)
+            });
+        });
+    })
 }
 
 
-/** Открыть ссылку */
-function execute(link: string)
+/** Открыть файл в VSCode */
+/* function execute(link: string)
 {
     vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
+} */
+
+
+export function openUrl(url: string): Promise<string>
+{
+    return new Promise<string>((resolve, reject) =>
+    {
+        let http = require('https');
+        http.get(url, (res) =>
+        {
+            res.setEncoding("utf8");
+            let body = "";
+            res.on("data", data =>
+            {
+                body += data;
+            });
+            res.on("end", () =>
+            {
+                resolve(body);
+            });
+        }).on('error', (e) =>
+        {
+            let data = new LogData({
+                Data: { Url: url },
+                StackTrace: e
+            });
+            tibError("Не удалось открыть ссылку", data);
+            reject();
+        });
+    });
 }
 
 
@@ -1673,6 +1838,18 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
     });
 }
 
+export function getTibVersion()
+{
+    return vscode.extensions.getExtension("TiburonResearch.tiburonscripter").packageJSON.version;
+}
+
+
+/** Лог в outputChannel */
+export function logToOutput(message: string, prefix = " > "): void
+{
+    let timeLog = "[" + dateFormat(new Date(), "hh:MM:ss.l") + "]";
+    outChannel.appendLine(timeLog + prefix + message);
+}
 
 
 //#endregion
@@ -1707,7 +1884,7 @@ declare global
         /** Возвращает массив уникальных значений */
         //distinct(): T[]
     }
-  
+
 }
 
 String.prototype.find = function (search: string | RegExp): SearchResult
@@ -1739,14 +1916,14 @@ String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
     return res;
 }
 
-String.prototype.replaceRange = function(from: number, substr: string | number, newValue: string): string
+String.prototype.replaceRange = function (from: number, substr: string | number, newValue: string): string
 {
     let pre = (this as string).slice(0, from);
     let middle = newValue;
     let to = from + (typeof substr == "string" ? substr.length : substr);
     let after = (this as string).slice(to);
     return pre + middle + after;
-}    
+}
 
 
 Array.prototype.last = function <T>(): T
@@ -1775,6 +1952,6 @@ Array.prototype.equalsTo = function <T>(ar: Array<T>): boolean
 {
     let orig: Array<T> = this;
     return [... new Set(orig)];
-}  */   
+}  */
 
 //#endregion

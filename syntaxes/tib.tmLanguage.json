@@ -200,6 +200,10 @@
 			"include": "#cs-inline"
 		},
 
+		{
+			"include": "#htmlChars"
+		},
+
 
 
 
@@ -675,6 +679,26 @@
 
 	"repository": {
 
+		"htmlChars":
+		{
+			"patterns": [
+				{
+					"match": "(nbsp|amp)(;)",
+					"name": "entity.other.html-chars",
+					"captures": {
+						"1":
+						{
+							"name": "entity.other.html-chars.name"
+						},
+						"2":
+						{
+							"name": "entity.other.html-chars.semicolon"
+						}
+					}
+				}
+			]
+		},
+
 		"node-id":
 		{
 			"patterns": [
@@ -755,7 +779,7 @@
 					},
 					"patterns":[
 						{
-							"include": "#csharp"
+							"include": "#statement"
 						}
 					]
 				},

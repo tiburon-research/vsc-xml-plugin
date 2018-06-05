@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, showError, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -14,7 +14,7 @@ import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames } from './constant
 
 
 
-export { bot, $, CSFormatter, logError };
+export { bot, $, CSFormatter, logError, outChannel, _LogPath };
 
 
 /*---------------------------------------- глобальные переменные ----------------------------------------*/
@@ -51,7 +51,7 @@ var Methods = new TibMethods();
 var CurrentNodes: SurveyNodes = new SurveyNodes();
 
 /** Настройки расширения */
-var Settings = new ExtensionSettings();
+var Settings: ExtensionSettings;
 
 /** флаг использования Linq */
 var _useLinq = true;
@@ -61,6 +61,15 @@ var Cache: CacheSet;
 
 /** Имена документов из Include */
 var Includes: string[] = [];
+
+/** Канал вывода */
+var outChannel: vscode.OutputChannel;
+
+/** Объект для хранения пользовательских выборов */
+var Refused = {
+    /** Отказ от включения кэша */
+    enableCache: false
+}
 
 //#endregion
 
@@ -73,12 +82,10 @@ export function activate(context: vscode.ExtensionContext)
 {
     let editor = vscode.window.activeTextEditor;
 
-    Settings.update(vscode.workspace.getConfiguration('tib'));
-
     // обновляем настройки при сохранении
     vscode.workspace.onDidChangeConfiguration(event =>
     {
-        Settings.update(vscode.workspace.getConfiguration('tib'));
+        Settings.Update();
     })
 
     /** Обновление документа */
@@ -91,16 +98,18 @@ export function activate(context: vscode.ExtensionContext)
             getSurveyData(editor.document);
         } catch (er)
         {
-            logError("Ошибка при сборе информации", editor);
+            logError("Ошибка при сборе информации", er);
         }
     }
 
     /** Документ сменился */
-    function anotherDocument(needReload = true)
+    function anotherDocument(needReload: boolean, editor: vscode.TextEditor)
     {
         Includes = [];
         Methods.Clear();
         CurrentNodes.Clear();
+        if (!editor || editor.document.languageId != 'tib') return;
+        checkDocument(editor);
         if (needReload) reload();
         inProcess = false;
     }
@@ -117,13 +126,13 @@ export function activate(context: vscode.ExtensionContext)
 
     // для каждого дукумента свои
     reload(false);
-    anotherDocument(false);
+    anotherDocument(false, editor);
 
     // смена документа
     vscode.window.onDidChangeActiveTextEditor(neweditor =>
     {
         editor = neweditor;
-        anotherDocument();
+        anotherDocument(true, neweditor);
     });
 
     // редактирование документа
@@ -139,6 +148,8 @@ export function activate(context: vscode.ExtensionContext)
     });
 
     statusMessage("Tiburon XML Helper запущен!", 3000);
+    logToOutput("Активация завершена");
+
 }
 
 export function deactivate()
@@ -152,12 +163,17 @@ function getStaticData()
     try 
     {
         // сохраняем нужные значения
+        outChannel = vscode.window.createOutputChannel("tib");
+        outChannel.show();
+        logToOutput("Загрузка настроек расширения");
+        Settings = new ExtensionSettings();
         _LogPath = Settings.Item("logPath");
         if (!pathExists(_LogPath)) showWarning("Отчёты об ошибках сохраняться не будут т.к. недоступен путь:\n\"" + _LogPath + "\"");
         _useLinq = Settings.Item("useLinq");
         Cache = new CacheSet();
 
         // получаем фунцию форматирования C#
+        logToOutput("Связка с расширением 'Leopotam.csharpfixformat'");
         let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
         if (!!csharpfixformat)
         {
@@ -169,6 +185,7 @@ function getStaticData()
         }
 
         // запускаем бота
+        logToOutput("Настройка бота для оповещений");
         let dataPath = _LogPath + "\\data.json";
         if (pathExists(dataPath))
         {
@@ -191,6 +208,7 @@ function getStaticData()
         }
 
         // получаем AutoComplete
+        logToOutput("Загрузка списка известных элементов");
         let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });
         let statCS: TibAutoCompleteItem[] = [];
         for (let key in AutoCompleteArray.StaticMethods)
@@ -258,7 +276,7 @@ function getStaticData()
         });
     } catch (er)
     {
-        logError("Ошибка при инициализации расширения", vscode.window.activeTextEditor);
+        logError("Ошибка при инициализации расширения", er);
     }
 }
 
@@ -356,7 +374,7 @@ function registerCommands()
             });
         } catch (error)
         {
-            showError("Ошибка при оборачивании в CDATA");
+            logError("Ошибка при оборачивании в CDATA");
         }
     });
 
@@ -383,7 +401,7 @@ function registerCommands()
             applyChanges(getFullRange(editor.document), res, editor);
         } catch (error)
         {
-            logError("Произошла ошибка при удалении Id вопроса из заголовка", editor);
+            logError("Произошла ошибка при удалении Id вопроса из заголовка", error);
         }
     });
 
@@ -397,7 +415,7 @@ function registerCommands()
             applyChanges(editor.selection, res, editor);
         } catch (error)
         {
-            logError("Ошибка преобразования AnswersToItems", editor);
+            logError("Ошибка преобразования AnswersToItems", error);
         }
     });
 
@@ -411,7 +429,7 @@ function registerCommands()
             applyChanges(editor.selection, res, editor);
         } catch (error)
         {
-            logError("Ошибка преобразования ItemsToAnswers", editor);
+            logError("Ошибка преобразования ItemsToAnswers", error);
         }
     });
 
@@ -458,7 +476,7 @@ function registerCommands()
             });
         } catch (error)
         {
-            logError("Ошибка при сортировке листа", editor);
+            logError("Ошибка при сортировке листа", error);
         }
     });
 
@@ -476,7 +494,7 @@ function registerCommands()
             applyChanges(editor.selection, res, editor, true);
         } catch (error)
         {
-            logError("Ошибка в преобразовании возрастного списка", editor);
+            logError("Ошибка в преобразовании возрастного списка", error);
         }
     });
 
@@ -535,7 +553,7 @@ function registerCommands()
         let path = Settings.Item("demoPath");
         if (!path)
         {
-            showError("Невозможно получить доступ к файлу демки");
+            logError("Невозможно получить доступ к файлу демки");
             return;
         }
 
@@ -548,7 +566,7 @@ function registerCommands()
         let templatePathFolder = Settings.Item("templatePathFolder") + '\\';
         if (!templatePathFolder)
         {
-            showError("Невозможно получить доступ к папке");
+            logError("Невозможно получить доступ к папке");
             return;
         }
 
@@ -605,7 +623,7 @@ function registerCommands()
                 })
             }, (er) =>
                 {
-                    logError(er, editor);
+                    logError(er);
                 });
             // provideDocumentFormattingEdits по ходу не умеет быть async, поэтому выкручиваемся так
             return [];
@@ -1051,7 +1069,7 @@ function definitions()
                 }
                 else
                 {
-                    let word = document.getText(document.getWordRangeAtPosition(position, /[^'"\s]+/));;
+                    let word = document.getText(document.getWordRangeAtPosition(position, /[^'"\s]+/));
                     let enabledNodes = ["Page", "List", "Quota"];
                     enabledNodes.forEach(element =>
                     {
@@ -1065,7 +1083,7 @@ function definitions()
                 }
             } catch (error)
             {
-                logError("Ошибка при получении определения метода");
+                logError("Ошибка при получении определения метода", error);
             }
             return res;
         }
@@ -1169,15 +1187,25 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 
     let change = event.contentChanges[0].text;
     let originalPosition = editor.selection.start.translate(0, 1);
-    let curLine = getPreviousText(editor.document, editor.selection.start, true)
-
     let lang = tag.GetLaguage();
+    let nextCharRange = new vscode.Range(originalPosition, originalPosition.translate(0, 1));
+    let nextChar = editor.document.getText(nextCharRange);
+
+    // удаление лишней скобки
+    if (nextChar == "]" && change[change.length - 1] == "]")
+    {
+        inProcess = true;
+        editor.edit(builder =>
+        {
+            builder.delete(nextCharRange);
+            inProcess = false;
+        })
+    }    
 
     // закрывание скобок
     // автозакрывание этих скобок отключено для языка tib, чтобы нормально закрывать теги
     if (isScriptLanguage(lang) && !tag.InString() && change[change.length - 1] == "[")
     {
-
         inProcess = true;
         editor.insertSnippet(new vscode.SnippetString("$0]"), originalPosition).then(() =>
         {
@@ -1251,7 +1279,7 @@ async function getSurveyData(document: vscode.TextDocument): Promise<void>
         CurrentNodes = nodes;
     } catch (error)
     {
-        logError("Ошибка при сборе сведений о документе");
+        logError("Ошибка при сборе сведений о документе", error);
     }
 }
 
@@ -1266,7 +1294,9 @@ function safeValsEval(query: string): string[]
     }
     catch (error)
     {
-        saveError("Не получилось выполнить eval()", getLogData(), _LogPath);
+        let data = getLogData();
+        data.add({ Data: { EvalString: query }, StackTrace: error });
+        saveError("Не получилось выполнить eval()", data);
     }
     return res;
 }
@@ -1298,7 +1328,7 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
         return new vscode.Range(startPos, endPos);
     } catch (error)
     {
-        logError("Ошибка выделения закрывающегося тега");
+        logError("Ошибка выделения закрывающегося тега", error);
     }
     return null;
 }
@@ -1317,7 +1347,7 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
         return new vscode.Range(startPos, endPos);
     } catch (error)
     {
-        logError("Ошибка выделения открывающегося тега");
+        logError("Ошибка выделения открывающегося тега", error);
         return null;
     }
 }
@@ -1383,7 +1413,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
     }
     catch (error)
     {
-        logError("Ошибка определение положения в XML");
+        logError("Ошибка определение положения в XML", error);
         return null;
     }
     return tag;
@@ -1461,7 +1491,7 @@ function getCurrentLineText(document: vscode.TextDocument, position: vscode.Posi
         return document.getText(new vscode.Range(start, end));
     } catch (error)
     {
-        logError("Ошибка получения текста текущей строки");
+        logError("Ошибка получения текста текущей строки", error);
         return null;
     }
 
@@ -1479,7 +1509,7 @@ function getPreviousText(document: vscode.TextDocument, position: vscode.Positio
         return document.getText(new vscode.Range(start, end));
     } catch (error)
     {
-        logError("Ошибка получения текста документа");
+        logError("Ошибка получения текста документа", error);
         return null;
     }
 }
@@ -1513,7 +1543,7 @@ function getContextChanges(selections: vscode.Selection[], changes: vscode.TextD
         });
     } catch (error)
     {
-        logError("Ошибка связи выделений с изменениями");
+        logError("Ошибка связи выделений с изменениями", error);
     }
     return res;
 }
@@ -1557,7 +1587,7 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
     let langTo = tagTo.GetLaguage();
     if (langFrom != langTo)
     {
-        showError("Начало и конец выделенного фрагмента лежат в разных языковых областях");
+        showWarning("Начало и конец выделенного фрагмента лежат в разных языковых областях. Команда отменена.");
         callback(false);
         return;
     }
@@ -1596,7 +1626,7 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
     
     if (!valid)
     {
-        showWarning("Внутри выделенной области уже есть комментарии");
+        showWarning("Внутри выделенной области уже есть комментарии. Команда отменена.");
         return callback(false);
     }
 
@@ -1642,7 +1672,7 @@ function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text:
         }
         catch (error)
         {
-            logError("Ошибка замены текста в выделении");
+            logError("Ошибка замены текста в выделении", error);
         }
     }, { undoStopAfter: false, undoStopBefore: false }).then(() =>
     {
@@ -1680,12 +1710,11 @@ function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: bo
 
 
 /** сообщение (+ отчёт) об ошибке */
-function logError(text: string, edt?: vscode.TextEditor)
+function logError(text: string, error?)
 {
-    showError(text);
-    let editor = edt || vscode.window.activeTextEditor;
+    let editor = vscode.window.activeTextEditor;
     let data = getLogData(editor);
-    saveError(text, data, _LogPath);
+    tibError(text, data, error);
 }
 
 
@@ -1699,11 +1728,19 @@ function getLogData(edt?: vscode.TextEditor): LogData
         res = new LogData({
             FileName: editor.document.fileName,
             Postion: editor.selection.active,
-            FullText: editor.document.getText()
+            FullText: editor.document.getText(),
+            CacheEnabled: !!Settings.Item("enableCache")
         });
+        let survObj = {
+            Methods: Methods.Keys(),
+            NodesLength: CurrentNodes.Keys().map(x => x + ": " + (CurrentNodes.Item(x).length || 0))
+        };
+        res.add({ SurveyData: survObj });
     } catch (error)
     {
-        logError("Ошибка доступа к редактору");
+        let data = new LogData(null);
+        data.add({StackTrace: error});
+        saveError("Ошибка при сборе сведений", data);
     }
     return res;
 }
@@ -1759,7 +1796,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
     {
         try
         {
-            let sel = selectLines(editor.document, new vscode.Selection(range.start, range.end));
+            let sel = selectLines(editor.document, editor.selection);
             editor.selection = sel;
             let tag = getCurrentTag(editor.document, sel.start);
             let ind = !!tag ? tag.Parents.length + 1 : 0;
@@ -1768,7 +1805,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
         }
         catch (error)
         {
-            logError("Ошибка при обновлении текста документа", editor);
+            logError("Ошибка при обновлении текста документа", error);
         }
     }
     inProcess = false;
@@ -1787,6 +1824,11 @@ function showCurrentInfo(tag: CurrentTag): void
         let lang = Language[tag.GetLaguage()];
         if (lang == "CSharp") lang = "C#";
         info = lang + ":\t" + tag.Parents.map(x => x.Name).concat([tag.Name]).join(" -> ");
+        if (tag.Name == "Var")
+        {
+            let ind = tag.GetVarIndex();
+            if (ind > -1) info += `[${ind}]`;
+        }
     }
     statusMessage(info);
 }
@@ -1800,6 +1842,34 @@ function getIncludePaths(text: string): string[]
     if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
     return txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x));
 }
+
+
+/** Проверки документа */
+function checkDocument(editor: vscode.TextEditor)
+{
+    if (!Refused.enableCache && !Settings.Item("enableCache") && editor.document.lineCount > 5000)
+    {
+        yesNoHelper("Включить кэширование? Кеширование позволяет ускорить работу с большими документами таких функций расширения, как автозавершение, подсказки при вводе и т.д.").then((res) => 
+        {    
+            if (res) Settings.Set("enableCache", true).then(null, (er) => { logError("Ошибка при изменении конфигурации", er); });
+            else Refused.enableCache = true;
+        })
+    }
+}
+
+
+function yesNoHelper(text: string): Promise<boolean>
+{
+    return new Promise<boolean>((resolve) =>
+    {
+        if (Settings.Item("showHelpMessages")) vscode.window.showInformationMessage(text, "Да", "нет").then((res) =>
+        {
+            resolve(res == "Да");
+        });
+        else resolve(false);
+    });
+}
+
 
 
 class CacheSet 
@@ -1862,7 +1932,7 @@ class CacheSet
         }
         catch (error)
         {
-            logError("Ошибка обновления части закешированного документа")
+            logError("Ошибка обновления части закешированного документа", error)
         }
         return false;
     }
@@ -1926,7 +1996,7 @@ class CacheSet
         }
         catch (error)
         {
-            logError("Ошибка обновления закешированного документа");
+            logError("Ошибка обновления закешированного документа", error);
         }
 
     }
@@ -1949,7 +2019,7 @@ class CacheSet
         }
         catch (error)
         {
-            logError("Ошибка очистки кеша")
+            logError("Ошибка очистки кеша", error)
         }
     }
 

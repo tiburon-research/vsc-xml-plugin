@@ -117,7 +117,7 @@ export function encodeElements(text: string, elem: RegExp, delimiter: string): E
         res.Result = result;
     } catch (error)
     {
-        logError("Ошибка кодирования элементов");
+        logError("Ошибка кодирования элементов", error);
     }
     return res;
 }

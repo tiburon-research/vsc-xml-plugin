@@ -5,6 +5,7 @@ import { logError } from "./extension";
 import { clearXMLComments } from "./encoding"
 import { positiveMin, KeyedCollection, CurrentTag } from "./classes"
 import { RegExpPatterns } from './constants'
+import * as charDetect from 'charset-detector'
 
 
 /** Результат поиска тегов */
@@ -91,7 +92,7 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
     }
     catch (err)
     {
-        logError("Ошибка при поиске закрывающегося тега");
+        logError("Ошибка при поиске закрывающегося тега", err);
     }
     return null;
 }
@@ -159,7 +160,7 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
     }
     catch (err)
     {
-        logError("Ошибка при поиске открывающегося тега");
+        logError("Ошибка при поиске открывающегося тега", err);
     }
     return null;
 }
@@ -194,7 +195,7 @@ export function get1LevelNodes(text: string): TagInfo[]
     }
     catch (err)
     {
-        logError("Ошибка при поиске вложенных тегов");
+        logError("Ошибка при поиске вложенных тегов", err);
     }
     return tags;
 }
@@ -221,7 +222,7 @@ export function inString(text: string): boolean
         }
     } catch (error)
     {
-        logError("Ошибка выделения строки");
+        logError("Ошибка выделения строки", error);
     }
     return false;
 }
@@ -250,4 +251,11 @@ export function isMethodDefinition(text: string): boolean
 export function getAttributes(str: string): KeyedCollection<string>
 {
     return CurrentTag.GetAttributesArray(str);
+}
+
+/** Возвращает `true`, если файл может быть прочитан в `windows-1251` */
+export function win1251Avaliabe(buf: Buffer)
+{
+    let charsetMatch: Array<any> = charDetect(buf) || [];
+    return charsetMatch.filter(x => (x.charsetName as string).toLowerCase() == 'windows-1251').length > 0;
 }

@@ -2,7 +2,7 @@
   "name": "tiburonscripter",
   "displayName": "Tiburon XML Helper",
   "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "publisher": "TiburonResearch",
   "author": {
     "name": "GuRu",
@@ -16,7 +16,7 @@
     "url": "https://github.com/tiburon-research/vsc-xml-plugin"
   },
   "icon": "stuff/icon.png",
-  "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/README.md",
+  "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/blob/master/README.md",
   "license": "MIT",
   "engines": {
     "vscode": "^1.17.0"
@@ -27,10 +27,14 @@
   "activationEvents": [
     "onLanguage:tib"
   ],
-  "main": "./out/extension",
+  "main": "./out/src/extension",
   "dependencies": {
+    "@types/dateformat": "^1.0.1",
+    "charset-detector": "0.0.2",
     "clipboardy": "^1.2.2",
     "cssbeautify": "^0.3.1",
+    "dateformat": "^3.0.3",
+    "iconv-lite": "^0.4.23",
     "jquery": "^3.3.1",
     "js-beautify": "^1.7.5",
     "jsdom": "^11.6.2",
@@ -242,6 +246,11 @@
         },
         "tib.showTagInfo": {
           "description": "Показывать информацию о текущем теге",
+          "type": "boolean",
+          "default": true
+        },
+        "tib.showHelpMessages": {
+          "description": "Предлагать подсказки по оптимизации",
           "type": "boolean",
           "default": true
         }

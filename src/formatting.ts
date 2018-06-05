@@ -492,7 +492,7 @@ function formatTag(tag: string): string
     }
     catch (error)
     {
-        logError("Ошибка при форматировании атрибутов тега");
+        logError("Ошибка при форматировании атрибутов тега", error);
     }
 
     return res;
