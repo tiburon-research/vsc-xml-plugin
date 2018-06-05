@@ -668,7 +668,6 @@ export class CurrentTag
     public Parents: Array<SimpleTag> = [];
     public LastParent: SimpleTag;
     /** Откуда начинается */
-    //public StartPosition: vscode.Position;
     public StartIndex: number;
     public OpenTagRange: vscode.Range;
     /** Текст от начала документа до Position */
@@ -922,6 +921,34 @@ export class CurrentTag
         this._reset();
         this._update(tag);
         this.SetFields(fields);
+    }
+
+
+    /** Получает индекс текущего Var в Item 
+     * 
+     * Если найти не получилось, то -1
+    */
+    public GetVarIndex(): number
+    {
+        if (this.Name != "Var" || !this.Parents || this.LastParent.Name != "Item") return -1;
+        try
+        {
+            let res = -1;
+            let prevText = this.PreviousText.slice(0, this.StartIndex);
+            let itemIndex = prevText.lastIndexOf("Item");
+            if (itemIndex > 0)
+            {
+                prevText = prevText.slice(itemIndex);
+                let match = prevText.match(/<Var>/g);
+                if (!!match) return match.length;
+                else return 0;
+            }
+            return res;
+        }
+        catch (error)
+        {
+            return -1;
+        }
     }
 
 }
@@ -1278,7 +1305,7 @@ export class LogData
                     // текст уберём в конец    
                     break;
                 case "SurveyData":
-                case "Data":    
+                case "Data":
                     // разносим на отдельные строки
                     res += "-------- " + key + " --------\r\n";
                     for (let dataKey in this.Data[key])
