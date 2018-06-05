@@ -66,6 +66,11 @@
         ],
         "description": "Список месяцев"
     },
+    "Isolate":{
+        "prefix": "_isoalte",
+        "body": "<Ui Isolate=\"1\"/>",
+        "description": "Кнопка Isolate"
+    },
     "ResetAnswer":{
         "prefix": "_reset",
         "body":[
@@ -97,14 +102,14 @@
     "IntScaleUi": {
         "prefix": "_scaleInt",
         "body":[
-            "<Ui Extend=\"Scale\" Gradient=\"1\" LabelStart=\"$1\" LabelEnd=\"$2\"/>"
+            "<Ui Extend=\"Scale\" Gradient=\"1\" GradientReverse=\"0\" LabelStart=\"$1\" LabelEnd=\"$2\"/>"
         ],
         "description": "Градиентная шкала с цифрами"
     },
     "TextScaleUi": {
         "prefix": "_scaleText",
         "body":[
-            "<Ui Extend=\"Scale\" Gradient=\"1\"/>"
+            "<Ui Extend=\"Scale\" Gradient=\"1\" GradientReverse=\"0\"/>"
         ],
         "description": "Градиентная шкала с метками"
     },
