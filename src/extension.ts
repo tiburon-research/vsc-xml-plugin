@@ -1294,7 +1294,9 @@ function safeValsEval(query: string): string[]
     }
     catch (error)
     {
-        saveError("Не получилось выполнить eval()", getLogData());
+        let data = getLogData();
+        data.add({ Data: { EvalString: query }, StackTrace: error });
+        saveError("Не получилось выполнить eval()", data);
     }
     return res;
 }
@@ -1733,10 +1735,12 @@ function getLogData(edt?: vscode.TextEditor): LogData
             Methods: Methods.Keys(),
             NodesLength: CurrentNodes.Keys().map(x => x + ": " + (CurrentNodes.Item(x).length || 0))
         };
-        res.add("SurveyData", survObj);
+        res.add({ SurveyData: survObj });
     } catch (error)
     {
-        saveError("Ошибка при сборе сведений", new LogData(null));
+        let data = new LogData(null);
+        data.add({StackTrace: error});
+        saveError("Ошибка при сборе сведений", data);
     }
     return res;
 }

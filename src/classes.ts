@@ -1251,17 +1251,19 @@ export class LogData
 
     constructor(data: ILogData)
     {
-        for (let key in data)
-            this.Data[key] = data[key];
+        if (!!data)
+            for (let key in data)
+                this.Data[key] = data[key];
         // дополнительно
         if (!this.UserName) this.UserName = getUserName();
         if (!this.Data.Version) this.Data.Version = getTibVersion();
     }
 
     /** добавляет элемент в отчёт */
-    public add(name: string, value: any): void
+    public add(items: ILogData): void
     {
-        this.Data[name] = value;
+        for (let key in items)
+            this.Data[key] = items[key];
     }
 
     /** преобразует все данные в строку */
@@ -1617,7 +1619,7 @@ export function saveError(text: string, data: LogData)
     if (!pathExists(dir)) createDir(dir);
     let filename = dir + "\\" + hash + ".log";
     if (pathExists(filename)) return;
-    data.add("ErrorMessage", text);
+    data.add({ ErrorMessage: text });
     fs.writeFile(filename, data.toString(), (err) =>
     {
         if (!!err) sendLogMessage(JSON.stringify(err));
@@ -1631,7 +1633,7 @@ export function tibError(text: string, data: LogData, error?)
 {
     showError(text);
     let editor = vscode.window.activeTextEditor;
-    if (!!error) data.add("StackTrace", error);
+    if (!!error) data.add({ StackTrace: error });
     saveError(text, data);
 }
 
