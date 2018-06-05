@@ -398,20 +398,6 @@
             "DateTime.ParseExact(${1:stringDate}, \"${2:dd.MM.yyyy hh:mm:ss}\", null)"
         ],
         "description": "Приведение string к DateTime"
-    },
-    "DataGetCustoms": {
-        "prefix": "DataGetCustoms",
-        "body":[
-            "string[][] data = DataGetCustoms(${1:dataId}, ${2:InterviewPars.RespID});",
-            "if (data.Length > 0)",
-            "{",
-            "\tfor (int i = 0; data.Length > i; i++)",
-            "\t{",
-            "\t\t$0",
-            "\t}",
-            "}"
-        ],
-        "description": "DataGetCustoms"
     }
 
 }

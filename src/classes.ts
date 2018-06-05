@@ -1599,7 +1599,6 @@ export function snippetToCompletitionItem(obj: Object): vscode.CompletionItem
     let ci = new vscode.CompletionItem(snip.prefix, vscode.CompletionItemKind.Snippet);
     ci.detail = snip.description;
     ci.insertText = new vscode.SnippetString(snip.body);
-    vscode.MarkdownString
     return ci;
 }
 

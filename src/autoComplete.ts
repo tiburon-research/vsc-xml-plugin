@@ -2354,7 +2354,18 @@ export const CSSnippets = [
 			"}"
 			],
 		"description": "Блок while"
-	},
+    },
+    {
+        "prefix": "DataGetCustoms",
+        "body":[
+            "string[][] data = DataGetCustoms(${1:dataId}, ${2:InterviewPars.RespID});",
+            "for (int i = 0; data.Length > i; i++)",
+            "{",
+            "\t$0",
+            "}"
+        ],
+        "description": "Стандартный вызов DataGetCustoms"
+    }
 ];
 
 
