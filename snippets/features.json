@@ -11,7 +11,7 @@
         "body": [
             "[img src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\"/]"
         ],
-        "description": "Стандартный путь к материалам проета"
+        "description": "img с путём к материалам проета"
     },
     "blockFolding":{
         "prefix": "<!--block",
@@ -44,7 +44,7 @@
             "\t<Item Id=\"2\" Var=\"Женщины\"><Text>Woman</Text></Item>",
             "</List>"
         ],
-        "description": "Структура List"
+        "description": "Список всех возможных полов"
     },
     "MonthList":{
         "prefix": "_monthList",
@@ -90,14 +90,14 @@
         "body":[
             "<Answer Id=\"${1:98}\" Type=\"Text\" Fix=\"true\"><Text>${2:Другое;Что именно?}</Text></Answer>"
         ],
-        "description": "Исключающий ответ"
+        "description": "Открытый ответ"
     },
     "StepQuestionsUi": {
         "prefix": "_stepQuestions",
         "body":[
             "<Ui Step=\"1\" HeaderFix=\"1\"/>"
         ],
-        "description": "Ui вопроса"
+        "description": "Ui для постепенного выпадения вопросов"
     },
     "IntScaleUi": {
         "prefix": "_scaleInt",
@@ -203,7 +203,8 @@
             "<Page Id=\"${1:complete}\" End=\"true\">",
             "\t<Header>$0</Header>",
             "</Page>"
-        ]
+        ],
+        "description": "Вы прошли отбор!"
     },
     "CompleteRedirectPage": {
         "prefix": "_completeRedirectPage",
@@ -212,7 +213,8 @@
             "\t<Filter>false;</Filter>",
             "\t<Redirect Status=\"18\"/>",
             "</Page>"
-        ]
+        ],
+        "description": "Последняя страница"
     },
     "RespInfo": {
 		"prefix": "_respInfo",
@@ -223,7 +225,7 @@
                 "\t$0",
             "</Page>\n"
 		],
-		"description": "Краткая структура Page"
+		"description": "RespInfo"
     },
     "YandexMetrika": {
         "prefix": "_yandexMetrika",
@@ -388,7 +390,7 @@
             "\t return AnswerExists(\"pre_sex\", \"1\") ? man : woman;",
             "}"
         ],
-        "description": "Вывод информации для тестирования"
+        "description": "Текст в зависимости от пола"
     },
     "ParseDateTime": {
         "prefix": "#parseDateTime",
@@ -408,7 +410,8 @@
             "\t\t$0",
             "\t}",
             "}"
-        ]
+        ],
+        "description": "DataGetCustoms"
     }
 
 }
