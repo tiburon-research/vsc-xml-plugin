@@ -1187,15 +1187,25 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 
     let change = event.contentChanges[0].text;
     let originalPosition = editor.selection.start.translate(0, 1);
-    let curLine = getPreviousText(editor.document, editor.selection.start, true)
-
     let lang = tag.GetLaguage();
+    let nextCharRange = new vscode.Range(originalPosition, originalPosition.translate(0, 1));
+    let nextChar = editor.document.getText(nextCharRange);
+
+    // удаление лишней скобки
+    if (nextChar == "]" && change[change.length - 1] == "]")
+    {
+        inProcess = true;
+        editor.edit(builder =>
+        {
+            builder.delete(nextCharRange);
+            inProcess = false;
+        })
+    }    
 
     // закрывание скобок
     // автозакрывание этих скобок отключено для языка tib, чтобы нормально закрывать теги
     if (isScriptLanguage(lang) && !tag.InString() && change[change.length - 1] == "[")
     {
-
         inProcess = true;
         editor.insertSnippet(new vscode.SnippetString("$0]"), originalPosition).then(() =>
         {
