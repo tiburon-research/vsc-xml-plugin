@@ -88,15 +88,33 @@ export namespace TibDocumentEdits
         let $list = $dom.find("List");
         $list.attr('Id', "ageList");
 
-        for (let i = 0, length = ageLimits.length; i < length; i += 2)
+        for (let i = 0, length = ageLimits.length, addedElementCount = 0; i < length; i + addedElementCount)
         {
+            let isOpened = 0;
             let $item = $.XML("<Item></Item>");
-            $item.attr("Id", i / 2 + 1);
-            $item.attr("Var", ageLimits[i] + "," + ageLimits[i + 1]);
-            $.XML('<Text></Text>').text(ageLimits[i] + "_" + ageLimits[i + 1]).appendTo($item);
+            $item.attr("Id", i + 1);
+            console.log(i);
+            if(parseInt(ageLimits[i]) - parseInt(ageLimits[i + 1]) == 1){
+                if(isOpened){
+                    $item.attr("Var", ageLimits[i] + ",99");
+                    $.XML('<Text></Text>').text(ageLimits[i] + "_99").appendTo($item);
+                    isOpened = 0;
+                    addedElementCount = 1;
+                }else{
+                    $item.attr("Var", "0," + ageLimits[i]);
+                    $.XML('<Text></Text>').text("0_" + ageLimits[i]).appendTo($item);
+                    isOpened = 1;
+                    addedElementCount = 1;
+                }
+            }else{
+                $item.attr("Var", ageLimits[i] + "," + ageLimits[i + 1]);
+                $.XML('<Text></Text>').text(ageLimits[i] + "_" + ageLimits[i + 1]).appendTo($item);
+                addedElementCount = 2;
+            }
+           
             $item.appendTo($list);
         }
-
+        
         return $dom.xml();
     }
 
@@ -970,14 +988,17 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
     {
         let nodes = this.Item(type);
         let res: SurveyNode;
-        for (let i = 0; i < nodes.length; i++)
-        {
-            if (nodes[i].Id == id)
+        if(!!nodes){
+            for (let i = 0; i < nodes.length; i++)
             {
-                res = nodes[i];
-                break;
-            }
-        };
+                if (nodes[i].Id == id)
+                {
+                    res = nodes[i];
+                    break;
+                }
+            };
+        }
+        
         return res;
     }
 
