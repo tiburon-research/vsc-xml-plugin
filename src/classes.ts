@@ -93,14 +93,12 @@ export namespace TibDocumentEdits
         for (let i = 0, length = ageLimits.length, addedElementCount = 1; i < length; i += addedElementCount)
         {
             let $item = $.XML("<Item></Item>");
-            $item.attr("Id", i + 1);
-            console.log(i+" "+ageLimits[i]);
-
+            $item.attr("Id", ~~(i/2) + i%2 + 1);
+            
             if(i+1 == length){
                 $item.attr("Var", ageLimits[i] + ",99");
                 $.XML('<Text></Text>').text(ageLimits[i] + "_99").appendTo($item);
             }else{
-                console.log(i+" "+ageLimits[i]+" "+ageLimits[i+1]);
                 if(parseInt(ageLimits[i+1]) - parseInt(ageLimits[i]) == 1){
                     $item.attr("Var", "0," + ageLimits[i]);
                     $.XML('<Text></Text>').text("0_" + ageLimits[i]).appendTo($item);
