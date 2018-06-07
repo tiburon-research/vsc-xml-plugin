@@ -1524,6 +1524,46 @@ export class CacheItem<T>
 }
 
 
+/** Класс для работы с путями */
+export class Path
+{
+    private path: string;
+
+    constructor(fullPath: string)
+    {
+        this.path = fullPath;
+    }
+    
+    /** Полный путь к файлу */
+    public get FullPath(): string
+    {
+        let res = this.path;
+        if (res.match(/^[a-z]:/))
+            res = res[0].toLocaleUpperCase() + res.slice(1);
+        return res;
+    }
+    public set FullPath(value: string)
+    {
+        let res = value;
+        if (res.match(/^[a-z]:/))
+            res = res[0].toLocaleUpperCase() + res.slice(1);
+        this.path = res;
+    }
+    
+    /** Имя файла с расширением */
+    public get FileName(): string
+    {
+        return this.path.replace(/^.*[\\\/]/, '');
+    }
+
+    /** Расширение файла */
+    public get FileExt(): string
+    {
+        return this.path.replace(/^.*\./, '').toLocaleLowerCase();
+    }
+    
+}
+
 //#endregion
 
 
