@@ -1913,7 +1913,7 @@ function lockDocument(document: vscode.TextDocument, log = false)
 
     if (document.languageId == "tib" && !fileIsLocked(docPath))
     {
-        if (!!noLock && !noLock.contains(docPath)) return;
+        if (!!noLock && noLock.contains(docPath)) return;
         lockFile(docPath);
         createLockInfoFile(path);
         if (!LockedFiles.contains(docPath)) LockedFiles.push(docPath);
