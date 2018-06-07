@@ -229,7 +229,7 @@ function getStaticData()
                     let params = ["logId", "groupId"]; // загружаемые параметры для работы бота
                     bot = new TelegramBot(obj["token"], function (res)
                     {
-                        if (!res) return showWarning("Отправка логов недоступна");
+                        if (!res) return logToOutput("Отправка логов недоступна", " WARNING: ");
                         params.forEach(param =>
                         {
                             if ((param in obj) && obj[param] !== undefined) bot[param] = obj[param];
