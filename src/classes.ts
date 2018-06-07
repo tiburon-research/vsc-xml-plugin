@@ -8,7 +8,7 @@ import * as fs from 'fs'
 import * as os from 'os'
 import { bot, $, OutChannel, _LogPath } from './extension'
 import * as shortHash from "short-hash"
-import { RegExpPatterns } from './constants'
+import { RegExpPatterns, _LockInfoFilePrefix } from './constants'
 import * as iconv from 'iconv-lite'
 import * as dateFormat from 'dateformat'
 import * as winattr from "winattr"
@@ -94,13 +94,16 @@ export namespace TibDocumentEdits
         for (let i = 0, length = ageLimits.length, addedElementCount = 1; i < length; i += addedElementCount)
         {
             let $item = $.XML("<Item></Item>");
-            $item.attr("Id", ~~(i/2) + i%2 + 1);
-            
-            if(i+1 == length){
+            $item.attr("Id", ~~(i / 2) + i % 2 + 1);
+
+            if (i + 1 == length)
+            {
                 $item.attr("Var", ageLimits[i] + ",99");
                 $.XML('<Text></Text>').text(ageLimits[i] + "_99").appendTo($item);
-            }else{
-                if(parseInt(ageLimits[i+1]) - parseInt(ageLimits[i]) == 1){
+            } else
+            {
+                if (parseInt(ageLimits[i + 1]) - parseInt(ageLimits[i]) == 1)
+                {
                     $item.attr("Var", "0," + ageLimits[i]);
                     $.XML('<Text></Text>').text("0_" + ageLimits[i]).appendTo($item);
                 } else
@@ -1527,41 +1530,70 @@ export class CacheItem<T>
 /** Класс для работы с путями */
 export class Path
 {
-    private path: string;
 
-    constructor(fullPath: string)
+    constructor(path: string)
     {
-        this.path = fullPath;
+        this.originalPath = path;
     }
-    
-    /** Полный путь к файлу */
-    public get FullPath(): string
+
+    /** Приведение к стандартному типу */
+    public static Normalize(value: string): string
     {
-        let res = this.path;
-        if (res.match(/^[a-z]:/))
-            res = res[0].toLocaleUpperCase() + res.slice(1);
+        // замена слешей
+        let res = value.replace(/\//, "\\");
+        // убираем слеш в начале и в конце
+        res = res.replace(/(^\\)|(\\$)/, '');
+        // заглавная буква диска
+        if (res.match(/^[a-z]:/)) res = res[0].toLocaleUpperCase() + res.slice(1);
         return res;
     }
-    public set FullPath(value: string)
+
+    /** Полный путь элемента */
+    public get FullPath(): string
     {
-        let res = value;
-        if (res.match(/^[a-z]:/))
-            res = res[0].toLocaleUpperCase() + res.slice(1);
-        this.path = res;
+        return Path.Normalize(this.originalPath);
     }
-    
+
     /** Имя файла с расширением */
     public get FileName(): string
     {
-        return this.path.replace(/^.*[\\\/]/, '');
+        return this.originalPath.replace(/^.+[\\\/]/, '');
     }
 
     /** Расширение файла */
     public get FileExt(): string
     {
-        return this.path.replace(/^.*\./, '').toLocaleLowerCase();
+        return this.originalPath.replace(/^.*\./, '').toLocaleLowerCase();
     }
-    
+
+    /** Объединяет в один нормальный путь */
+    public static Concat(...values: string[]): string
+    {
+        let res = "";
+        values.forEach(element => 
+        {
+            let val = Path.Normalize(element);
+            res += val + "\\";
+        });
+        return res.replace(/\\$/, '');
+    }
+
+    /** Возвращает папку в которой находится текущий элемент */
+    public get Directory(): string
+    {
+        return this.originalPath.replace(/\\[^\\]+$/, '');
+    }
+
+
+
+    private originalPath: string;
+
+}
+
+
+export interface LockData
+{
+    User: string;
 }
 
 //#endregion
@@ -1910,6 +1942,59 @@ export function fileIsLocked(path: string): boolean
     return !!props && !!props.readonly;
 }
 
+
+/** Делает файл hidden */
+function hideFile(path: string)
+{
+    winattr.setSync(path, { hidden: true });
+}
+
+/** Делает файл hidden */
+function showFile(path: string)
+{
+    winattr.setSync(path, { hidden: false });
+}
+
+
+/** Сохраняет файл с данными о блокировке */
+export function createLockInfoFile(path: Path)
+{
+    let fileName = getLockFilePath(path);
+    let data: LockData = {
+        User: getUserName()
+    };
+    if (fs.exists(fileName)) fs.unlinkSync(fileName);
+    fs.writeFileSync(fileName, JSON.stringify(data));
+    hideFile(fileName);
+}
+
+/** Удаляет файл с данными о блокировке */
+export function removeLockInfoFile(path: Path)
+{
+    let fileName = getLockFilePath(path);
+    showFile(fileName);
+    fs.unlinkSync(fileName);
+}
+
+
+/** Путь к файлу с информацией о блокировке */
+export function getLockFilePath(path: Path): string
+{
+    let fileName = _LockInfoFilePrefix + path.FileName + ".json";
+    fileName = Path.Concat(path.Directory, fileName);
+    return fileName;
+}
+
+
+/** Получает информацию из `fileName` */
+export function getLockData(fileName: string): LockData
+{
+    if (!fs.existsSync(fileName)) return null;
+    showFile(fileName);
+    let data = fs.readFileSync(fileName).toString();
+    hideFile(fileName);
+    return JSON.parse(data);
+}
 
 //#endregion
 

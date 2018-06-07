@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -102,6 +102,7 @@ export function activate(context: vscode.ExtensionContext)
         {
             if (clearCache && Cache.Active()) Cache.Clear();
             getSurveyData(editor.document);
+            if (isLocked(editor.document)) showLockInfo(editor.document.fileName);
         } catch (er)
         {
             logError("Ошибка при сборе информации", er);
@@ -146,7 +147,6 @@ export function activate(context: vscode.ExtensionContext)
     vscode.workspace.onDidChangeTextDocument(event =>
     {
         if (InProcess || !editor || event.document.languageId != "tib") return;
-        if (isLocked(event.document)) showError("Этот документ используется!");
         let originalPosition = editor.selection.start.translate(0, 1);
         let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
         let tag = getCurrentTag(editor.document, originalPosition, text);
@@ -1909,11 +1909,13 @@ function yesNoHelper(text: string): Promise<boolean>
 function lockDocument(document: vscode.TextDocument, log = false)
 {
     let noLock = (Settings.Item("doNotLockFiles") as string[]);
-    let docPath = new Path(document.fileName).FullPath;
+    let path = new Path(document.fileName);
+    let docPath = path.FullPath;
 
     if (document.languageId == "tib" && !fileIsLocked(docPath) && !!noLock && !noLock.contains(docPath))
     {
         lockFile(docPath);
+        createLockInfoFile(path);
         if (!LockedFiles.contains(docPath)) LockedFiles.push(docPath);
         if (log) logToOutput("Файл заблокирован: " + docPath);
     }
@@ -1923,10 +1925,12 @@ function lockDocument(document: vscode.TextDocument, log = false)
 /** Разрешает редактирование */
 function unlockDocument(document: vscode.TextDocument, log = false)
 {
-    let docPath = new Path(document.fileName).FullPath;
+    let path = new Path(document.fileName);
+    let docPath = path.FullPath;
     if (document.languageId == "tib" && LockedFiles.contains(docPath))
     {
         unlockFile(docPath);
+        removeLockInfoFile(path);
         if (log) logToOutput("Файл разблокирован: " + docPath);
         LockedFiles.remove(docPath);
     }
@@ -1945,7 +1949,19 @@ function unlockAllDocuments()
 {
     LockedFiles.forEach(file => {
         unlockFile(file);
+        removeLockInfoFile(new Path(file));
     });
+}
+
+
+function showLockInfo(fileName: string)
+{
+    let path = new Path(fileName);
+    let lockPath = getLockFilePath(path)
+    let data = getLockData(lockPath);
+    let user = "непонятно кто";
+    if (!!data && !!data.User) user = data.User;
+    showError("Этот документ использует " + user + "!");
 }
 
 
