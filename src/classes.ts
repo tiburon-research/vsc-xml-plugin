@@ -94,7 +94,7 @@ export namespace TibDocumentEdits
         {
             let $item = $.XML("<Item></Item>");
             $item.attr("Id", ~~(i/2) + i%2 + 1);
-            
+
             if(i+1 == length){
                 $item.attr("Var", ageLimits[i] + ",99");
                 $.XML('<Text></Text>').text(ageLimits[i] + "_99").appendTo($item);
@@ -220,7 +220,7 @@ export namespace TibDocumentEdits
         });
 
         if ($dom.find("List").length > 0)
-        {                                                               //елси взят текст с List
+        {                                                               //если взят текст с List
             $items.appendTo($dom.find("List").html(''));
         } else
         {
