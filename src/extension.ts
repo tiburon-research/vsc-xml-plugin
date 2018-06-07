@@ -571,7 +571,7 @@ function registerCommands()
             lines = pre.map(s => { return s.trim() });
             if (lines.filter(l => { return l.indexOf("\t") > -1; }).length == lines.length)
             {
-                vscode.window.showQuickPick(["Нет", "Да"], { placeHolder: "Разделить запятыми?" }).then(x =>
+                vscode.window.showQuickPick(["Да", "Нет"], { placeHolder: "Разделить запятыми?" }).then(x =>
                 {
                     multiLinePaste(editor, lines, x == "Да");
                 });
