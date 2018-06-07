@@ -6,11 +6,12 @@ import * as Parse from './parsing'
 import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as os from 'os'
-import { bot, $, outChannel, _LogPath } from './extension'
+import { bot, $, OutChannel, _LogPath } from './extension'
 import * as shortHash from "short-hash"
 import { RegExpPatterns } from './constants'
 import * as iconv from 'iconv-lite'
 import * as dateFormat from 'dateformat'
+import * as winattr from "winattr"
 
 
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
@@ -94,26 +95,30 @@ export namespace TibDocumentEdits
         {
             let $item = $.XML("<Item></Item>");
             $item.attr("Id", i + 1);
-            console.log(i+" "+ageLimits[i]);
+            console.log(i + " " + ageLimits[i]);
 
-            if(i+1 == length){
+            if (i + 1 == length)
+            {
                 $item.attr("Var", ageLimits[i] + ",99");
                 $.XML('<Text></Text>').text(ageLimits[i] + "_99").appendTo($item);
-            }else{
-                console.log(i+" "+ageLimits[i]+" "+ageLimits[i+1]);
-                if(parseInt(ageLimits[i+1]) - parseInt(ageLimits[i]) == 1){
+            } else
+            {
+                console.log(i + " " + ageLimits[i] + " " + ageLimits[i + 1]);
+                if (parseInt(ageLimits[i + 1]) - parseInt(ageLimits[i]) == 1)
+                {
                     $item.attr("Var", "0," + ageLimits[i]);
                     $.XML('<Text></Text>').text("0_" + ageLimits[i]).appendTo($item);
-                }else{
-                    $item.attr("Var", ageLimits[i] + "," + ageLimits[i+1]);
-                    $.XML('<Text></Text>').text(ageLimits[i] + "_" + ageLimits[i+1]).appendTo($item);
+                } else
+                {
+                    $item.attr("Var", ageLimits[i] + "," + ageLimits[i + 1]);
+                    $.XML('<Text></Text>').text(ageLimits[i] + "_" + ageLimits[i + 1]).appendTo($item);
                     addedElementCount = 2;
                 }
             }
-           
+
             $item.appendTo($list);
         }
-        
+
         return $dom.xml();
     }
 
@@ -1035,7 +1040,8 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
         let nodes = this.Item(type);
         if (!nodes) return null;
         let res: SurveyNode;
-        if(!!nodes){
+        if (!!nodes)
+        {
             for (let i = 0; i < nodes.length; i++)
             {
                 if (nodes[i].Id == id)
@@ -1045,7 +1051,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
                 }
             };
         }
-        
+
         return res;
     }
 
@@ -1845,7 +1851,28 @@ export function getTibVersion()
 export function logToOutput(message: string, prefix = " > "): void
 {
     let timeLog = "[" + dateFormat(new Date(), "hh:MM:ss.l") + "]";
-    outChannel.appendLine(timeLog + prefix + message);
+    OutChannel.appendLine(timeLog + prefix + message);
+}
+
+
+/** Задаёт файлу режим readonly */
+export function unlockFile(path: string)
+{
+    winattr.setSync(path, { readonly: false });
+}
+
+
+/** Снимает с файла режим readonly */
+export function lockFile(path: string)
+{
+    winattr.setSync(path, { readonly: true });
+}
+
+/** Файл в режиме readonly */
+export function fileIsLocked(path: string): boolean
+{
+    let props = winattr.getSync(path);
+    return !!props && !!props.readonly;
 }
 
 
@@ -1880,6 +1907,10 @@ declare global
         equalsTo(ar: Array<T>): boolean;
         /** Возвращает массив уникальных значений */
         //distinct(): T[]
+        /** Содержит элемент */
+        contains(element: T): boolean;
+        /** Удаляет элемент из массива и возвращает этот элемент */
+        remove(element: T): T;
     }
 
 }
@@ -1950,5 +1981,20 @@ Array.prototype.equalsTo = function <T>(ar: Array<T>): boolean
     let orig: Array<T> = this;
     return [... new Set(orig)];
 }  */
+
+
+Array.prototype.contains = function <T>(element: T): boolean
+{
+    return this.indexOf(element) > -1;
+}
+
+Array.prototype.remove = function <T>(element: T): T
+{
+    let index = this.indexOf(element);
+    let res: T;
+    if (index > -1)
+        res = this.splice(index, 1);
+    return res;
+}
 
 //#endregion
