@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -1908,29 +1908,35 @@ function yesNoHelper(text: string): Promise<boolean>
 /** Запрещает редактирование */
 function lockDocument(document: vscode.TextDocument, log = false)
 {
-    if (document.languageId == "tib" && !fileIsLocked(document.fileName))
+    let noLock = (Settings.Item("doNotLockFiles") as string[]);
+    let docPath = new Path(document.fileName).FullPath;
+
+    if (document.languageId == "tib" && !fileIsLocked(docPath) && !!noLock && !noLock.contains(docPath))
     {
-        lockFile(document.fileName);
-        if (!LockedFiles.contains(document.fileName)) LockedFiles.push(document.fileName);
-        if (log) logToOutput("Файл заблокирован: " + document.fileName);
+        lockFile(docPath);
+        if (!LockedFiles.contains(docPath)) LockedFiles.push(docPath);
+        if (log) logToOutput("Файл заблокирован: " + docPath);
     }
 }
+
 
 /** Разрешает редактирование */
 function unlockDocument(document: vscode.TextDocument, log = false)
 {
-    if (document.languageId == "tib" && LockedFiles.contains(document.fileName))
+    let docPath = new Path(document.fileName).FullPath;
+    if (document.languageId == "tib" && LockedFiles.contains(docPath))
     {
-        unlockFile(document.fileName);
-        if (log) logToOutput("Файл разблокирован: " + document.fileName);
-        LockedFiles.remove(document.fileName);
+        unlockFile(docPath);
+        if (log) logToOutput("Файл разблокирован: " + docPath);
+        LockedFiles.remove(docPath);
     }
 }
 
 /** Документ заблокирован и НЕ находится в LockedFiles */
 function isLocked(document: vscode.TextDocument): boolean
 {
-    return !LockedFiles.contains(document.fileName) && fileIsLocked(document.fileName);
+    let docPath = new Path(document.fileName).FullPath;
+    return !LockedFiles.contains(docPath) && fileIsLocked(docPath);
 }
 
 

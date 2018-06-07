@@ -254,6 +254,11 @@
           "description": "Предлагать подсказки по оптимизации",
           "type": "boolean",
           "default": true
+        },
+        "tib.doNotLockFiles": {
+          "description": "Файлы, для которых не устанавливается режим 'Только чтение' на время редактирования",
+          "type": "array",
+          "default": []
         }
       }
     }
