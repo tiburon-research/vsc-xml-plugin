@@ -42,3 +42,6 @@ export const RegExpPatterns = {
     FormattingHash: /(\s)|(<!\[CDATA\[)|(\]\]>)/g,
     CSComments: /\/\*([\s\S]+?)\*\//g
 }
+
+
+export const _LockInfoFilePrefix = "vscode_tib_lockedInfo_";

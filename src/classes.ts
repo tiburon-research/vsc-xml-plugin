@@ -6,11 +6,12 @@ import * as Parse from './parsing'
 import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as os from 'os'
-import { bot, $, outChannel, _LogPath } from './extension'
+import { bot, $, OutChannel, _LogPath } from './extension'
 import * as shortHash from "short-hash"
-import { RegExpPatterns } from './constants'
+import { RegExpPatterns, _LockInfoFilePrefix } from './constants'
 import * as iconv from 'iconv-lite'
 import * as dateFormat from 'dateformat'
+import * as winattr from "winattr"
 
 
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
@@ -93,25 +94,29 @@ export namespace TibDocumentEdits
         for (let i = 0, length = ageLimits.length, addedElementCount = 1; i < length; i += addedElementCount)
         {
             let $item = $.XML("<Item></Item>");
-            $item.attr("Id", ~~(i/2) + i%2 + 1);
+            $item.attr("Id", ~~(i / 2) + i % 2 + 1);
 
-            if(i+1 == length){
+            if (i + 1 == length)
+            {
                 $item.attr("Var", ageLimits[i] + ",99");
                 $.XML('<Text></Text>').text(ageLimits[i] + "_99").appendTo($item);
-            }else{
-                if(parseInt(ageLimits[i+1]) - parseInt(ageLimits[i]) == 1){
+            } else
+            {
+                if (parseInt(ageLimits[i + 1]) - parseInt(ageLimits[i]) == 1)
+                {
                     $item.attr("Var", "0," + ageLimits[i]);
                     $.XML('<Text></Text>').text("0_" + ageLimits[i]).appendTo($item);
-                }else{
-                    $item.attr("Var", ageLimits[i] + "," + ageLimits[i+1]);
-                    $.XML('<Text></Text>').text(ageLimits[i] + "_" + ageLimits[i+1]).appendTo($item);
+                } else
+                {
+                    $item.attr("Var", ageLimits[i] + "," + ageLimits[i + 1]);
+                    $.XML('<Text></Text>').text(ageLimits[i] + "_" + ageLimits[i + 1]).appendTo($item);
                     addedElementCount = 2;
                 }
             }
-           
+
             $item.appendTo($list);
         }
-        
+
         return $dom.xml();
     }
 
@@ -145,7 +150,7 @@ export namespace TibDocumentEdits
 
         if ($var.length > 0)
         {                        //<Var></Var>
-            res = $var.length;
+            res += $var.length;
         }
         if (typeof $item.attr('Var') !== typeof undefined)
         {      //Var=""
@@ -155,77 +160,90 @@ export namespace TibDocumentEdits
         return res;
     }
 
-    export function sortListBy(list: string, attrName: string, attrIndex?: number): string
+    export function sortListBy(text: string, attrName: string, attrIndex?: number): string
     {
 
-        let $dom = $.XMLDOM(list);              //берём xml текст
-        let $items = $dom.find("Item");         //ищём Item'ы
+        let $dom = $.XMLDOM(text);                                                                      //берём xml текст
+        let $lists = $dom.find("List");                                                                 //ищем List'ы
+        let $listItems = [];                                                                            //массив Item массивов
 
-        $items.sort(function (item1, item2)
-        {      //сортируем массив DOM
+        if($lists.length > 0){                                                                          //если есть List'ы
+            $lists.map(function(i){                                                                     //вытаскивам Item'ы, где индекс номер List'а
+                $listItems.push($lists.eq(i).find("Item"));
+            });
+        }else{
+            $listItems.push($dom.find("Item"));                                                         //иначем ищем Item'ы
+        }
 
-            let sortItems = [item1, item2];
-            let el = [];                        //должно хранится 2 элемента для сравнения
+        $listItems.map(function($items, index){                                                                //перебираем Item'ы
 
-            if (attrIndex > 0)
-            {                                                                          //если есть индекс
-                let attributeValues = $(sortItems[0]).attr(attrName).split(',');
-                let attrLength = attributeValues.length;                                                //берём у первого Item'а количество Var'ов (Var="")
+            $items.sort(function (item1, item2)
+            {                                                                                               //сортируем массив DOM
 
-                for (let i = 0, length = sortItems.length; i < length; i++)
+                let sortItems = [item1, item2];
+                let el = [];                                                                                //должно хранится 2 элемента для сравнения
+
+                if (attrIndex > 0)
+                {                                                                                           //если есть индекс
+                    let attributeValues = $(sortItems[0]).attr(attrName).split(',');
+                    let attrLength = attributeValues.length;                                                //берём у первого Item'а количество Var'ов (Var="")
+
+                    for (let i = 0, length = sortItems.length; i < length; i++)
+                    {
+                        if (attrIndex < attrLength)
+                        {
+                            el[i] = $(sortItems[i]).attr(attrName).split(',')[attrIndex];                   //берём значение по индексу
+                        } else
+                        {
+                            el[i] = $(sortItems[i]).find(attrName).eq(attrIndex - attrLength).text();
+                        }
+                    }
+                } else
                 {
-                    if (attrIndex < attrLength)
+                    for (let i = 0, length = sortItems.length; i < length; i++)
                     {
-                        el[i] = $(sortItems[i]).attr(attrName).split(',')[attrIndex];                   //берём значение по индексу
-                    } else
-                    {
-                        el[i] = $(sortItems[i]).find(attrName).eq(attrIndex - attrLength).text();
+                        if (typeof $(sortItems[i]).attr(attrName) !== typeof undefined)
+                        {                     //если атрибут
+                            el[i] = $(sortItems[i]).attr(attrName);
+                        } else if ($(sortItems[i]).find(attrName).length > 0)
+                        {                                //если дочерний тег
+                            el[i] = $(sortItems[i]).find(attrName).eq(0).text();
+                        }
+
+                        if (typeof el[i] == typeof undefined)
+                        {                                                                                   //если атрибут пуст
+                            el[i] = "";                                                                     //взять как пустое значение
+                        }
                     }
                 }
+
+                if (el[0].match(/^\d+$/) && el[1].match(/^\d+$/))
+                {                                                                                           //проверка на числа
+                    el[0] = parseInt(el[0]);
+                    el[1] = parseInt(el[1]);
+                }
+
+                if (el[0] > el[1])
+                {
+                    return 1;
+                }
+                if (el[0] < el[1])
+                {
+                    return -1;
+                }
+
+                return 0;
+            });
+
+            if ($dom.find("List").length > 0)
+            {                                                                                               //если взят текст с List
+                $items.appendTo($lists.eq(index).html(''));
             } else
             {
-                for (let i = 0, length = sortItems.length; i < length; i++)
-                {
-                    if (typeof $(sortItems[i]).attr(attrName) !== typeof undefined)
-                    {                     //если атрибут
-                        el[i] = $(sortItems[i]).attr(attrName);
-                    } else if ($(sortItems[i]).find(attrName).length > 0)
-                    {                                //если дочерний тег
-                        el[i] = $(sortItems[i]).find(attrName).eq(0).text();
-                    }
-
-                    if (typeof el[i] == typeof undefined)
-                    {                                               //если атрибут пуст
-                        el[i] = "";                                                                     //взять как пустое значение
-                    }
-                }
+                $items.appendTo($dom);                                                                      //если взят тескт только с Item'ами
             }
 
-            if (el[0].match(/^\d+$/) && el[1].match(/^\d+$/))
-            {                                           //проверка на числа
-                el[0] = parseInt(el[0]);
-                el[1] = parseInt(el[1]);
-            }
-
-            if (el[0] > el[1])
-            {
-                return 1;
-            }
-            if (el[0] < el[1])
-            {
-                return -1;
-            }
-
-            return 0;
         });
-
-        if ($dom.find("List").length > 0)
-        {                                                               //если взят текст с List
-            $items.appendTo($dom.find("List").html(''));
-        } else
-        {
-            $items.appendTo($dom);                                                                      //если взят тескт только с Item'ами
-        }
 
         return $dom.xml();
     }
@@ -1033,7 +1051,8 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
         let nodes = this.Item(type);
         if (!nodes) return null;
         let res: SurveyNode;
-        if(!!nodes){
+        if (!!nodes)
+        {
             for (let i = 0; i < nodes.length; i++)
             {
                 if (nodes[i].Id == id)
@@ -1043,7 +1062,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
                 }
             };
         }
-        
+
         return res;
     }
 
@@ -1521,6 +1540,75 @@ export class CacheItem<T>
 }
 
 
+/** Класс для работы с путями */
+export class Path
+{
+
+    constructor(path: string)
+    {
+        this.originalPath = path;
+    }
+
+    /** Приведение к стандартному типу */
+    public static Normalize(value: string): string
+    {
+        // замена слешей
+        let res = value.replace(/\//, "\\");
+        // убираем слеш в начале и в конце
+        res = res.replace(/(^\\)|(\\$)/, '');
+        // заглавная буква диска
+        if (res.match(/^[a-z]:/)) res = res[0].toLocaleUpperCase() + res.slice(1);
+        return res;
+    }
+
+    /** Полный путь элемента */
+    public get FullPath(): string
+    {
+        return Path.Normalize(this.originalPath);
+    }
+
+    /** Имя файла с расширением */
+    public get FileName(): string
+    {
+        return this.originalPath.replace(/^.+[\\\/]/, '');
+    }
+
+    /** Расширение файла */
+    public get FileExt(): string
+    {
+        return this.originalPath.replace(/^.*\./, '').toLocaleLowerCase();
+    }
+
+    /** Объединяет в один нормальный путь */
+    public static Concat(...values: string[]): string
+    {
+        let res = "";
+        values.forEach(element => 
+        {
+            let val = Path.Normalize(element);
+            res += val + "\\";
+        });
+        return res.replace(/\\$/, '');
+    }
+
+    /** Возвращает папку в которой находится текущий элемент */
+    public get Directory(): string
+    {
+        return this.originalPath.replace(/\\[^\\]+$/, '');
+    }
+
+
+
+    private originalPath: string;
+
+}
+
+
+export interface LockData
+{
+    User: string;
+}
+
 //#endregion
 
 
@@ -1843,9 +1931,83 @@ export function getTibVersion()
 export function logToOutput(message: string, prefix = " > "): void
 {
     let timeLog = "[" + dateFormat(new Date(), "hh:MM:ss.l") + "]";
-    outChannel.appendLine(timeLog + prefix + message);
+    OutChannel.appendLine(timeLog + prefix + message);
 }
 
+
+/** Задаёт файлу режим readonly */
+export function unlockFile(path: string)
+{
+    winattr.setSync(path, { readonly: false });
+}
+
+
+/** Снимает с файла режим readonly */
+export function lockFile(path: string)
+{
+    winattr.setSync(path, { readonly: true });
+}
+
+/** Файл в режиме readonly */
+export function fileIsLocked(path: string): boolean
+{
+    let props = winattr.getSync(path);
+    return !!props && !!props.readonly;
+}
+
+
+/** Делает файл hidden */
+function hideFile(path: string)
+{
+    winattr.setSync(path, { hidden: true });
+}
+
+/** Делает файл hidden */
+function showFile(path: string)
+{
+    winattr.setSync(path, { hidden: false });
+}
+
+
+/** Сохраняет файл с данными о блокировке */
+export function createLockInfoFile(path: Path)
+{
+    let fileName = getLockFilePath(path);
+    let data: LockData = {
+        User: getUserName()
+    };
+    if (fs.exists(fileName)) fs.unlinkSync(fileName);
+    fs.writeFileSync(fileName, JSON.stringify(data));
+    hideFile(fileName);
+}
+
+/** Удаляет файл с данными о блокировке */
+export function removeLockInfoFile(path: Path)
+{
+    let fileName = getLockFilePath(path);
+    showFile(fileName);
+    fs.unlinkSync(fileName);
+}
+
+
+/** Путь к файлу с информацией о блокировке */
+export function getLockFilePath(path: Path): string
+{
+    let fileName = _LockInfoFilePrefix + path.FileName + ".json";
+    fileName = Path.Concat(path.Directory, fileName);
+    return fileName;
+}
+
+
+/** Получает информацию из `fileName` */
+export function getLockData(fileName: string): LockData
+{
+    if (!fs.existsSync(fileName)) return null;
+    showFile(fileName);
+    let data = fs.readFileSync(fileName).toString();
+    hideFile(fileName);
+    return JSON.parse(data);
+}
 
 //#endregion
 
@@ -1878,6 +2040,10 @@ declare global
         equalsTo(ar: Array<T>): boolean;
         /** Возвращает массив уникальных значений */
         //distinct(): T[]
+        /** Содержит элемент */
+        contains(element: T): boolean;
+        /** Удаляет элемент из массива и возвращает этот элемент */
+        remove(element: T): T;
     }
 
 }
@@ -1948,5 +2114,20 @@ Array.prototype.equalsTo = function <T>(ar: Array<T>): boolean
     let orig: Array<T> = this;
     return [... new Set(orig)];
 }  */
+
+
+Array.prototype.contains = function <T>(element: T): boolean
+{
+    return this.indexOf(element) > -1;
+}
+
+Array.prototype.remove = function <T>(element: T): T
+{
+    let index = this.indexOf(element);
+    let res: T;
+    if (index > -1)
+        res = this.splice(index, 1);
+    return res;
+}
 
 //#endregion
