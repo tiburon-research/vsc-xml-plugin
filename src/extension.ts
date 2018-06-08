@@ -102,7 +102,6 @@ export function activate(context: vscode.ExtensionContext)
         {
             if (clearCache && Cache.Active()) Cache.Clear();
             getSurveyData(editor.document);
-            if (isLocked(editor.document)) showLockInfo(editor.document.fileName);
         } catch (er)
         {
             logError("Ошибка при сборе информации", er);
@@ -116,7 +115,8 @@ export function activate(context: vscode.ExtensionContext)
         Methods.Clear();
         CurrentNodes.Clear();
         if (!editor || editor.document.languageId != 'tib') return;
-        lockDocument(editor.document, true);
+        if (isLocked(editor.document)) showLockInfo(editor.document.fileName);
+        else lockDocument(editor.document, true);
         checkDocument(editor);
         if (needReload) reload();
         InProcess = false;
@@ -179,9 +179,8 @@ export function activate(context: vscode.ExtensionContext)
         unlockDocument(x, true);
     })
 
-
-
 }
+
 
 export function deactivate()
 {
@@ -230,7 +229,7 @@ function getStaticData()
                     let params = ["logId", "groupId"]; // загружаемые параметры для работы бота
                     bot = new TelegramBot(obj["token"], function (res)
                     {
-                        if (!res) return showWarning("Отправка логов недоступна");
+                        if (!res) return logToOutput("Отправка логов недоступна", " WARNING: ");
                         params.forEach(param =>
                         {
                             if ((param in obj) && obj[param] !== undefined) bot[param] = obj[param];
@@ -572,7 +571,7 @@ function registerCommands()
             lines = pre.map(s => { return s.trim() });
             if (lines.filter(l => { return l.indexOf("\t") > -1; }).length == lines.length)
             {
-                vscode.window.showQuickPick(["Нет", "Да"], { placeHolder: "Разделить запятыми?" }).then(x =>
+                vscode.window.showQuickPick(["Да", "Нет"], { placeHolder: "Разделить запятыми?" }).then(x =>
                 {
                     multiLinePaste(editor, lines, x == "Да");
                 });
@@ -1912,12 +1911,13 @@ function lockDocument(document: vscode.TextDocument, log = false)
     let path = new Path(document.fileName);
     let docPath = path.FullPath;
 
-    if (document.languageId == "tib" && !fileIsLocked(docPath) && !!noLock && !noLock.contains(docPath))
+    if (document.languageId == "tib" && !fileIsLocked(docPath))
     {
+        if (!!noLock && noLock.contains(docPath)) return;
         lockFile(docPath);
         createLockInfoFile(path);
         if (!LockedFiles.contains(docPath)) LockedFiles.push(docPath);
-        if (log) logToOutput("Файл заблокирован: " + docPath);
+        if (log) logToOutput(`Файл "${path.FileName}" заблокирован для других пользователей.`);
     }
 }
 
@@ -1931,7 +1931,7 @@ function unlockDocument(document: vscode.TextDocument, log = false)
     {
         unlockFile(docPath);
         removeLockInfoFile(path);
-        if (log) logToOutput("Файл разблокирован: " + docPath);
+        if (log) logToOutput(`Файл "${path.FileName}" разблокирован`);
         LockedFiles.remove(docPath);
     }
 }
@@ -1957,11 +1957,17 @@ function unlockAllDocuments()
 function showLockInfo(fileName: string)
 {
     let path = new Path(fileName);
-    let lockPath = getLockFilePath(path)
-    let data = getLockData(lockPath);
-    let user = "непонятно кто";
-    if (!!data && !!data.User) user = data.User;
-    showError("Этот документ использует " + user + "!");
+    let lockPath = getLockFilePath(path);
+    let message = "Файл открыт в режиме только для чтения";
+    if (fs.exists(lockPath))
+    {
+        let data = getLockData(lockPath);
+        message = "Этот документ использует ";
+        let user = "непонятно кто";
+        if (!!data && !!data.User) user = data.User;
+        message = message + user + "";
+    }    
+    showWarning(message);
 }
 
 
