@@ -143,94 +143,125 @@ export namespace TibDocumentEdits
     export function getVarCountFromList(list: string): number
     {
 
-        let res = 0;
+        let res = 99999,
+            varCount = 0;                                       //количество Var'ов в List'е
         let $dom = $.XMLDOM(list);
-        let $item = $dom.find("Item").eq(0);        //берём только первый элемент, так как количество Var'ов должно быть одинаково у всех Item
-        let $var = $item.find("Var");               //Ищем дочерний Var
+        let itemIndex = 0;                                      //инедкс первого item'а в List'e
+        let $list = $dom.find("List");                          //ищем List'ы
 
-        if ($var.length > 0)
-        {                        //<Var></Var>
-            res = $var.length;
+        if($list.length == 0){                                  //если нет List'ов, то вставляем первый Item, так как количество Var'ов должно быть одинаково у всех Item
+            $list.push($dom.find("Item").eq(itemIndex));
         }
-        if (typeof $item.attr('Var') !== typeof undefined)
-        {      //Var=""
-            res += $item.attr('Var').split(',').length;
-        }
+
+        $list.map(function(){                                   //проходим все List'ы
+
+            let $item = $dom.find("Item").eq(itemIndex);        //берём только первый элемент List'a, так как количество Var'ов должно быть одинаково у всех Item
+            let $var = $item.find("Var");                       //Ищем дочерний Var
+            varCount = 0;
+
+            if ($var.length > 0)                                //<Var></Var>
+            {                                                   
+                varCount += $var.length;
+            }
+            if (typeof $item.attr('Var') !== typeof undefined)  //Var=""
+            {      
+                varCount += $item.attr('Var').split(',').length;
+            }
+
+            itemIndex += $(this).find("Item").length;           //записываем индекс первого элемента Item'а следующего List'a 
+
+            if(res > varCount){                                 //если количество Var'ов у этого List'а меньше, чем у предыдущих
+                res = varCount;                                 //то записываем это количество               
+            }
+        });
 
         return res;
     }
 
-    export function sortListBy(list: string, attrName: string, attrIndex?: number): string
+    export function sortListBy(text: string, attrName: string, attrIndex?: number): string
     {
 
-        let $dom = $.XMLDOM(list);              //берём xml текст
-        let $items = $dom.find("Item");         //ищём Item'ы
+        let $dom = $.XMLDOM(text);                                                                          //берём xml текст
+        let $lists = $dom.find("List");                                                                     //ищем List'ы
+        let $listItems = [];                                                                                //массив Item массивов
 
-        $items.sort(function (item1, item2)
-        {      //сортируем массив DOM
-
-            let sortItems = [item1, item2];
-            let el = [];                        //должно хранится 2 элемента для сравнения
-
-            if (attrIndex > 0)
-            {                                                                          //если есть индекс
-                let attributeValues = $(sortItems[0]).attr(attrName).split(',');
-                let attrLength = attributeValues.length;                                                //берём у первого Item'а количество Var'ов (Var="")
-
-                for (let i = 0, length = sortItems.length; i < length; i++)
-                {
-                    if (attrIndex < attrLength)
-                    {
-                        el[i] = $(sortItems[i]).attr(attrName).split(',')[attrIndex];                   //берём значение по индексу
-                    } else
-                    {
-                        el[i] = $(sortItems[i]).find(attrName).eq(attrIndex - attrLength).text();
-                    }
-                }
-            } else
-            {
-                for (let i = 0, length = sortItems.length; i < length; i++)
-                {
-                    if (typeof $(sortItems[i]).attr(attrName) !== typeof undefined)
-                    {                     //если атрибут
-                        el[i] = $(sortItems[i]).attr(attrName);
-                    } else if ($(sortItems[i]).find(attrName).length > 0)
-                    {                                //если дочерний тег
-                        el[i] = $(sortItems[i]).find(attrName).eq(0).text();
-                    }
-
-                    if (typeof el[i] == typeof undefined)
-                    {                                               //если атрибут пуст
-                        el[i] = "";                                                                     //взять как пустое значение
-                    }
-                }
-            }
-
-            if (el[0].match(/^\d+$/) && el[1].match(/^\d+$/))
-            {                                           //проверка на числа
-                el[0] = parseInt(el[0]);
-                el[1] = parseInt(el[1]);
-            }
-
-            if (el[0] > el[1])
-            {
-                return 1;
-            }
-            if (el[0] < el[1])
-            {
-                return -1;
-            }
-
-            return 0;
-        });
-
-        if ($dom.find("List").length > 0)
-        {                                                               //елси взят текст с List
-            $items.appendTo($dom.find("List").html(''));
-        } else
-        {
-            $items.appendTo($dom);                                                                      //если взят тескт только с Item'ами
+        if($lists.length > 0){                                                                              //если есть List'ы
+            $lists.map(function(i){                                                                         //вытаскивам Item'ы, где индекс номер List'а
+                $listItems.push($lists.eq(i).find("Item"));
+            });
+        }else{
+            $listItems.push($dom.find("Item"));                                                             //иначе ищем Item'ы
         }
+
+        $listItems.map(function($items, index){                                                             //перебираем Item'ы
+
+            $items.sort(function (item1, item2)
+            {                                                                                               //сортируем массив DOM
+
+                let sortItems = [item1, item2];
+                let el = [];                                                                                //должно хранится 2 элемента для сравнения
+
+                if (attrIndex > 0)
+                {                                                                                           //если есть индекс
+                    let attributeValues = $(sortItems[0]).attr(attrName).split(',');
+                    let attrLength = attributeValues.length;                                                //берём у первого Item'а количество Var'ов (Var="")
+
+                    for (let i = 0, length = sortItems.length; i < length; i++)
+                    {
+                        if (attrIndex < attrLength)
+                        {
+                            el[i] = $(sortItems[i]).attr(attrName).split(',')[attrIndex];                   //берём значение по индексу
+                        } else
+                        {
+                            el[i] = $(sortItems[i]).find(attrName).eq(attrIndex - attrLength).text();
+                        }
+                    }
+                } else
+                {
+                    for (let i = 0, length = sortItems.length; i < length; i++)
+                    {
+                        if (typeof $(sortItems[i]).attr(attrName) !== typeof undefined)                     //если атрибут
+                        {                     
+                            el[i] = $(sortItems[i]).attr(attrName);
+                        } else if ($(sortItems[i]).find(attrName).length > 0)                               //если дочерний тег
+                        {                                
+                            el[i] = $(sortItems[i]).find(attrName).eq(0).text();
+                        }
+
+                        if (typeof el[i] == typeof undefined)
+                        {                                                                                   //если атрибут пуст
+                            el[i] = "";                                                                     //взять как пустое значение
+                        }
+                    }
+                }
+
+                if (el[0].match(/^\d+$/) && el[1].match(/^\d+$/))                                           //проверка на числа
+                {                                                                                           
+                    el[0] = parseInt(el[0]);
+                    el[1] = parseInt(el[1]);
+                }
+
+                if (el[0] > el[1])
+                {
+                    return 1;
+                }
+                if (el[0] < el[1])
+                {
+                    return -1;
+                }
+
+                return 0;
+            });
+
+            if ($lists.length > 0)                                                                          //если взят текст с List
+            {                                                                                               
+                $items.appendTo($lists.eq(index).html(''));
+            } else                                                                                          //если взят тескт только с Item'ами
+            {
+                $items.appendTo($dom);                                                                      
+            }
+
+        });
 
         return $dom.xml();
     }
