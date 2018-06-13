@@ -609,7 +609,7 @@ export class SimpleTag
         let raw = document.getText(range);
         let StartPosition = range.start.translate(0, raw.indexOf("<"));
         this.Raw = raw;
-        let cl = this.Raw.find(RegExpPatterns.OpenTagFull);
+        let cl = this.Raw.trim().find(RegExpPatterns.OpenTagFull);
         let from = document.offsetAt(range.start);
         if (cl.Index > -1)
             this.OpenTagRange = new vscode.Range(StartPosition, document.positionAt(from + cl.Result[0].length));
@@ -640,7 +640,7 @@ export class SimpleTag
     /** Закрыт ли открывающий тег */
     public isClosed(): boolean
     {
-        return !!this.Raw.match(RegExpPatterns.OpenTagFull);
+        return !!this.Raw.trim().match(RegExpPatterns.OpenTagFull);
     }
 
     public readonly Name: string;

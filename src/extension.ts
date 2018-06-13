@@ -2069,6 +2069,7 @@ class CacheSet
                 if (oldText == newText && !restText.match("</" + cachedTag.Name))
                 {
                     foundValidRange = this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
+                    // если получилось, то ничего обновлять не надо
                     if (foundValidRange) return;
                 }
             }
