@@ -1952,7 +1952,7 @@ function showLockInfo(fileName: string)
     let path = new Path(fileName);
     let lockPath = getLockFilePath(path);
     let message = "Файл открыт в режиме только для чтения";
-    if (fs.exists(lockPath))
+    if (fs.existsSync(lockPath))
     {
         let data = getLockData(lockPath);
         message = "Этот документ использует ";
