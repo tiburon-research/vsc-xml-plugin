@@ -36,8 +36,8 @@ export const RegExpPatterns = {
     InlineSpecial: "(repeat)|(place)",
     /** Набор символов разделителя замены */
     DelimiterContent: "[0-9][a-z][A-Z]",
-    SingleAttribute: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/,
-    Attributes: /\s*(\w+)=(("[^"]*")|(('[^']*')))\s*/g,
+    SingleAttribute: /\s*(\w+)=(("[^"]*")|('[^']*'))\s*/,
+    Attributes: /\s*(\w+)=(("[^"]*")|('[^']*'))\s*/g,
     OpenTagFull: /^<\w+(\s*(\w+)=(("[^"]*")|('[^']*')))*\s*\/?>/,
     FormattingHash: /(\s)|(<!\[CDATA\[)|(\]\]>)/g,
     CSComments: /\/\*([\s\S]+?)\*\//g

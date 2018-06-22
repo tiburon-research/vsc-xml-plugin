@@ -5,7 +5,7 @@
 	"patterns": [
 			
 		{  
-			"begin": "(<)(Filter|Redirect|Validate)([^/>]*)(>)(\\s*<!\\[CDATA\\[)?((?:[^ \t]))?$",
+			"begin": "(<)(Filter|Redirect|Validate)(\\s*(\\w+)=((\"[^\"]*\")|('[^']*'))\\s*)?(>)(\\s*<!\\[CDATA\\[)?((?:[^ \t]))?$",
 			"end": "(\\]\\]>)?(</)(\\w+)(\\s*)(>)",
 			"beginCaptures": {
 				"1":
@@ -25,11 +25,11 @@
 						}
 					]
 				},
-				"4":
+				"8":
 				{
 					"name": "punctuation.definition.tag.xml"
 				},
-				"5":
+				"9":
 				{
 					"patterns": [
 						{
@@ -68,7 +68,7 @@
 		},
 
 		{  
-			"begin": "(<)(Filter|Redirect|Validate)([^/>]*)(>)(\\s*<!\\[CDATA\\[)?(.*?)(\\]\\]>)?(</)(\\2)([^>]*)",
+			"begin": "(<)(Filter|Redirect|Validate)(\\s*(\\w+)=((\"[^\"]*\")|('[^']*'))\\s*)?(>)(\\s*<!\\[CDATA\\[)?(.*?)(\\]\\]>)?(</)(\\2)([^>]*)",
 			"end": "(>)",
 			"beginCaptures": {
 				"1":
@@ -88,11 +88,11 @@
 						}
 					]
 				},
-				"4":
+				"8":
 				{
 					"name": "punctuation.definition.tag.xml"
 				},
-				"5":
+				"9":
 				{
 					"patterns": [
 						{
@@ -100,7 +100,7 @@
 						}
 					]
 				},
-				"6":
+				"10":
 				{
 					"patterns":[
 						{
@@ -108,7 +108,7 @@
 						}
 					]
 				},
-				"7":
+				"11":
 				{
 					"patterns": [
 						{
@@ -116,11 +116,11 @@
 						}
 					]
 				},
-				"8":
+				"12":
 				{
 					"name": "punctuation.definition.tag.xml"
 				},
-				"9":
+				"13":
 				{
 					"name": "entity.name.tag.allowcode.tib"
 				}
