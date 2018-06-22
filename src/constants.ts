@@ -40,7 +40,8 @@ export const RegExpPatterns = {
     Attributes: /\s*(\w+)=(("[^"]*")|('[^']*'))\s*/g,
     OpenTagFull: /^<\w+(\s*(\w+)=(("[^"]*")|('[^']*')))*\s*\/?>/,
     FormattingHash: /(\s)|(<!\[CDATA\[)|(\]\]>)/g,
-    CSComments: /\/\*([\s\S]+?)\*\//g
+    CSComments: /\/\*([\s\S]+?)\*\//g,
+    RestAttributes: /^(\s*(\w+)=(("[^"]*")|('[^']*'))\s*)+/,
 }
 
 

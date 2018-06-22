@@ -2056,7 +2056,7 @@ declare global
         find(search: string | RegExp): SearchResult;
         /** Продвинутый lastIndexOf string=Regexp */
         //findLast(search: string): SearchResult;
-        /** Поиск с группами по всему документу */
+        /** Поиск с группами по всей строке */
         matchAll(search: RegExp): RegExpMatchArray[];
         /** Замена, начиная с `from` длиной `subsr` символов (если string, то берётся длина строки) */
         replaceRange(from: number, substr: string | number, newValue: string): string;

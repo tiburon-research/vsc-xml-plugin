@@ -829,17 +829,18 @@ function autoComplete()
             if (!!tag && tag.GetLaguage() == Language.XML && !tag.OpenTagIsClosed && !tag.InString() && AutoCompleteArray.Attributes[tag.Id])
             {
                 let existAttrs = tag.AttributeNames();
-                AutoCompleteArray.Attributes[tag.Id].forEach(element =>
+                let textAfter = document.getText().slice(document.offsetAt(position));
+                let attrs = textAfter.match(RegExpPatterns.RestAttributes);
+                let nexAttrs: string[] = [];
+                if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
+                AutoCompleteArray.Attributes[tag.Id].filter(x => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1 ).forEach(element =>
                 {
-                    if (existAttrs.indexOf(element.Name) < 0)
-                    {
                         let attr = new TibAttribute(element);
                         let ci = attr.ToCompletionItem(function (query)
                         {
                             return safeValsEval(query);
                         });
                         completionItems.push(ci);
-                    }
                 });
             }
             return completionItems;
