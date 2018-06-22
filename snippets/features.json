@@ -197,6 +197,13 @@
         ],
         "description": "ContentOnly"
     },
+    "ComboBox":{
+        "prefix": "_comboBox",
+        "body": [
+            "<Ui Extend=\"ComboBox\" Search=\"0\" Label=\"Выберите\"/>"
+        ],
+        "description": "ComboBox"
+    },
     "CompletePage": {
         "prefix": "_completePage",
         "body":[

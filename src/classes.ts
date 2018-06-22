@@ -1246,6 +1246,8 @@ export class TagInfo
     {
         let res = Language.XML;
 
+        if (!tagName) return res;
+
         if (tagName.match(new RegExp("^(" + RegExpPatterns.AllowCodeTags + ")$"))) return Language.CSharp;
 
         switch (tagName.toLocaleLowerCase())
