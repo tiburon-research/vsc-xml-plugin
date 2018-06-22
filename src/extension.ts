@@ -6,7 +6,6 @@ import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, S
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
-import { SurveyList } from './surveyObjects';
 import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
@@ -221,22 +220,15 @@ function getStaticData()
         let dataPath = _LogPath + "\\data.json";
         if (pathExists(dataPath))
         {
-            vscode.workspace.openTextDocument(dataPath).then(doc =>
+            let data = JSON.parse(fs.readFileSync(dataPath).toString());
+            if (!!data)
             {
-                let obj = JSON.parse(doc.getText());
-                if (!!obj && !!obj["token"])
+                bot = new TelegramBot(data, function (res)
                 {
-                    let params = ["logId", "groupId"]; // загружаемые параметры для работы бота
-                    bot = new TelegramBot(obj["token"], function (res)
-                    {
-                        if (!res) return logToOutput("Отправка логов недоступна", " WARNING: ");
-                        params.forEach(param =>
-                        {
-                            if ((param in obj) && obj[param] !== undefined) bot[param] = obj[param];
-                        });
-                    });
-                }
-            })
+                    if (!res) logToOutput("Отправка логов недоступна", " WARNING: ");
+                    else logToOutput("Бот на свзяи!");
+                });
+            }
         }
 
         // получаем AutoComplete
@@ -1947,7 +1939,8 @@ function isLocked(document: vscode.TextDocument): boolean
 /** разрешает редактирование всех активных документов */
 function unlockAllDocuments()
 {
-    LockedFiles.forEach(file => {
+    LockedFiles.forEach(file =>
+    {
         unlockFile(file);
         removeLockInfoFile(new Path(file));
     });
@@ -1966,7 +1959,7 @@ function showLockInfo(fileName: string)
         let user = "непонятно кто";
         if (!!data && !!data.User) user = data.User;
         message = message + user + "";
-    }    
+    }
     showWarning(message);
 }
 

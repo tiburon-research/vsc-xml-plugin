@@ -1412,12 +1412,28 @@ class TelegramResult
 }
 
 
+export class TelegramBotData
+{
+    constructor(obj)
+    {
+        for (let key in obj)
+            this[key] = obj[key];
+    }
+
+    public logIds: string[];
+    public ignoreUsers: string[];
+    public secret: string;
+    public redirect: string;
+}
+
+
 export class TelegramBot
 {
-    constructor(botToken: string, callback?: (active: boolean) => any)
+    constructor(obj: Object, callback?: (active: boolean) => any)
     {
         this.http = require('https');
-        this.token = botToken;
+        this.Data = new TelegramBotData(obj);
+
         this.check().then(res =>
         {
             this.active = res;
@@ -1433,7 +1449,7 @@ export class TelegramBot
     {
         return new Promise<boolean>((resolve, reject) =>
         {
-            this.request('getMe').then(res =>
+            this.request('check').then(res =>
             {
                 resolve(res.ok);
             }).catch(res =>
@@ -1445,7 +1461,12 @@ export class TelegramBot
 
     public sendLog(text: string): void
     {
-        this.sendMessage(this.logId, text);
+        let curUser = getUserName();
+        if (!!curUser && !!this.Data.ignoreUsers && this.Data.ignoreUsers.contains(curUser)) return;
+        this.Data.logIds.forEach(id =>
+        {
+            this.sendMessage(id, text);
+        });
     }
 
     public sendMessage(user: string, text: string): void
@@ -1453,11 +1474,9 @@ export class TelegramBot
         if (this.active)
         {
             let params = new KeyedCollection<string>();
-            params.AddPair('chat_id', user);
-            params.AddPair('text', text);
-            params.AddPair('parse_mode', 'Markdown');
-            params.AddPair('disable_web_page_preview', 'true');
-            this.request('sendMessage', params).catch(res =>
+            params.AddPair('to', user);
+            params.AddPair('error', text);
+            this.request('log', params).catch(res =>
             {
                 showError("Ошибка при отправке сообщения");
             })
@@ -1507,24 +1526,18 @@ export class TelegramBot
     /** url для запроса */
     private buildURL(method: string, args?: KeyedCollection<string>): string
     {
-        let res = this.host + "bot" + this.token + "/" + method;
-        if (!args || args.Count() == 0) return res;
-        let params = [];
-        args.forEach((key, value) =>
-        {
-            params.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
-        });
+        let res = this.Data.redirect + method;
+        if (!args) args = new KeyedCollection<string>();
+        args.AddPair("secret", this.Data.secret);
+        let params = args.Select((key, value) => encodeURIComponent(key) + '=' + encodeURIComponent(value));
         res += "?" + params.join('&');
         return res;
     }
 
-    private host = "https://api.telegram.org/";
-    private token: string;
     private http;
     /** прошла ли инициализация */
     public active = false;
-    public logId: string;
-    public groupId: string;
+    private Data: TelegramBotData;
 }
 
 
@@ -1757,7 +1770,7 @@ export function saveError(text: string, data: LogData)
     if (!pathExists(_LogPath))
     {
         showError("Не найден путь для сохранения логов! Проверьте правильность настроек.");
-        sendLogMessage("Path was not found!");
+        sendLogMessage("Log path was not found!");
         return;
     }
     // генерируем имя файла из текста ошибки и сохраняем в папке с именем пользователя
@@ -1780,7 +1793,6 @@ export function saveError(text: string, data: LogData)
 export function tibError(text: string, data: LogData, error?)
 {
     showError(text);
-    let editor = vscode.window.activeTextEditor;
     if (!!error) data.add({ StackTrace: error });
     saveError(text, data);
 }
@@ -2056,7 +2068,7 @@ declare global
         last(): T;
         /** Проверяет, что все элементы совпадают, независимо от порядка */
         equalsTo(ar: Array<T>): boolean;
-        /** Возвращает массив уникальных значений */
+        //** Возвращает массив уникальных значений */
         //distinct(): T[]
         /** Содержит элемент */
         contains(element: T): boolean;
