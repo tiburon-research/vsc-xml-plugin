@@ -1500,6 +1500,10 @@ export const Attributes = {
             Type: "String"
         },
         {
+            "Name": "Reverse",
+            "Type": "Boolean"
+        },
+        {
             Name: "Orientation",
             Default: "Vertical",
             Auto: "Horizontal"
