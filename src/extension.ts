@@ -757,8 +757,12 @@ function autoComplete()
             let tag = getCurrentTag(document, position);
             if (tag && tag.GetLaguage() != Language.CSharp)
             {
+                let curOpenMatch = getPreviousText(document, position, true).match(/<(\w+)$/);
+                if (!curOpenMatch) return;
+                let opening = curOpenMatch[1].toLocaleLowerCase();
+                
                 //Item
-                if ("Item".indexOf(tag.Name) > -1)
+                if ("item".indexOf(opening) > -1)
                 {
                     let parent;
                     for (let key in ItemSnippets)
@@ -782,7 +786,7 @@ function autoComplete()
                     }
                 }
                 // Answer
-                else if ("Answer".indexOf(tag.Name) > -1)
+                else if ("answer".indexOf(opening) > -1)
                 {
                     let ci = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
                     let from_pos = tag.OpenTagRange.start;
