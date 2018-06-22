@@ -364,7 +364,7 @@ function registerCommands()
         else
         {
             par = tag.Parents[1].Name;
-            from = tag.Parents.last().OpenTagRange.start;
+            from = tag.Parents[1].OpenTagRange.start;
         }
         let cl = findCloseTag("<", par, ">", editor.document, from.translate(0, 1));
         if (!cl) return;
