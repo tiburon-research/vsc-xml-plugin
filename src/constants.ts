@@ -29,7 +29,6 @@ export const RegExpPatterns = {
     CDATALast: /<!\[CDATA\[[\S\s]*$/,
     XMLComment: /(<!--([\S\s]*?)-->\s*)+/,
     XMLLastComment: /<!--[\S\s]*$/,
-    /** RegExp для XML тегов, которые могут содержать C# */
     AllowCodeTags: "(Filter)|(Redirect)|(Validate)|(Methods)",
     /** RegExp для HTML тегов, которые не нужно закрывать */
     SelfClosedTags: "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)",
@@ -42,6 +41,11 @@ export const RegExpPatterns = {
     FormattingHash: /(\s)|(<!\[CDATA\[)|(\]\]>)/g,
     CSComments: /\/\*([\s\S]+?)\*\//g,
     RestAttributes: /^(\s*(\w+)=(("[^"]*")|('[^']*'))\s*)+/,
+    XMLIterators:
+    {
+        Singele: /(@)((ID)|(Text)|(Pure)|(Itera))((\()(-\d+)(\)))?/,
+        Var: /(@)(Var)((\()(-\d+)(\)))?((\()(([@0-9a-zA-Z]+(\(-\d+\))?)|((@)(Var)((\()(-\d+)(\)))?(\()([@0-9a-zA-Z]+(\(-\d+\))?)(\))))(\)))/
+    }
 }
 
 
