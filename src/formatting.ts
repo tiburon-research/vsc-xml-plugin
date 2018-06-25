@@ -336,7 +336,7 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
             let ind = tab.repeat(indent);
             res = res.replace(/\n([\t ]*\S)/g, "\n" + ind + "$1");
             // возвращаем собак и $repeat
-            //res = getElementsBack(res, encoder.ToEncodeResult());
+            res = getElementsBack(res, encoder.ToEncodeResult());
         }
         else
         {

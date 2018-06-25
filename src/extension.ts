@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -114,7 +114,7 @@ export function activate(context: vscode.ExtensionContext)
         Methods.Clear();
         CurrentNodes.Clear();
         if (!editor || editor.document.languageId != 'tib') return;
-        if (isLocked(editor.document)) showLockInfo(editor.document.fileName);
+        if (isLocked(editor.document)) showLockInfo(editor.document);
         else lockDocument(editor.document, true);
         checkDocument(editor);
         if (needReload) reload();
@@ -833,7 +833,7 @@ function autoComplete()
                 let attrs = textAfter.match(RegExpPatterns.RestAttributes);
                 let nexAttrs: string[] = [];
                 if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
-                AutoCompleteArray.Attributes[tag.Id].filter(x => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1 ).forEach(element =>
+                AutoCompleteArray.Attributes[tag.Id].filter(x => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach(element =>
                 {
                         let attr = new TibAttribute(element);
                         let ci = attr.ToCompletionItem(function (query)
@@ -1902,13 +1902,12 @@ function yesNoHelper(text: string): Promise<boolean>
 
 
 /** Запрещает редактирование */
-function lockDocument(document: vscode.TextDocument, log = false)
+function lockDocument(document: vscode.TextDocument, log = false, force = false)
 {
     let noLock = (Settings.Item("doNotLockFiles") as string[]);
     let path = new Path(document.fileName);
     let docPath = path.FullPath;
-
-    if (document.languageId == "tib" && !fileIsLocked(docPath))
+    if (document.languageId == "tib" && (!fileIsLocked(docPath) || force))
     {
         if (!!noLock && noLock.contains(docPath)) return;
         lockFile(docPath);
@@ -1952,9 +1951,9 @@ function unlockAllDocuments()
 }
 
 
-function showLockInfo(fileName: string)
+function showLockInfo(document: vscode.TextDocument)
 {
-    let path = new Path(fileName);
+    let path = new Path(document.fileName);
     let lockPath = getLockFilePath(path);
     let message = "Файл открыт в режиме только для чтения";
     if (fs.existsSync(lockPath))
@@ -1962,7 +1961,15 @@ function showLockInfo(fileName: string)
         let data = getLockData(lockPath);
         message = "Этот документ использует ";
         let user = "непонятно кто";
-        if (!!data && !!data.User) user = data.User;
+        if (!!data && !!data.User)
+        {
+            user = data.User;
+            if (data.User == getUserName())
+            {
+                yesNoHelper(`Этот документ занят пользователем ${user}. Возможно, он остался заблокированным после прерывания работы расширения. Разблокировать?`).then(res => { if (res) lockDocument(document, true, true) });
+                return;
+            }
+        }
         message = message + user + "";
     }
     showWarning(message);

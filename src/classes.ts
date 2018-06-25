@@ -2007,7 +2007,7 @@ export function createLockInfoFile(path: Path)
     let data: LockData = {
         User: getUserName()
     };
-    if (fs.exists(fileName)) fs.unlinkSync(fileName);
+    if (fs.existsSync(fileName)) fs.unlinkSync(fileName);
     fs.writeFileSync(fileName, JSON.stringify(data));
     hideFile(fileName);
 }
