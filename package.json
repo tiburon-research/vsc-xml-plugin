@@ -170,7 +170,7 @@
         "command": "tib.commentBlock"
       },
       {
-        "key": "ctrl+alt+v",
+        "key": "ctrl+shift+v",
         "command": "tib.paste"
       },
       {
