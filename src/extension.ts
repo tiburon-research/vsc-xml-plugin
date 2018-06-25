@@ -9,7 +9,7 @@ import * as Formatting from './formatting'
 import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
-import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames } from './constants'
+import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix } from './constants'
 
 
 
@@ -199,7 +199,7 @@ function getStaticData()
         logToOutput("Загрузка настроек расширения");
         Settings = new ExtensionSettings();
         _LogPath = Settings.Item("logPath");
-        if (!pathExists(_LogPath)) showWarning("Отчёты об ошибках сохраняться не будут т.к. недоступен путь:\n\"" + _LogPath + "\"");
+        if (!pathExists(_LogPath)) logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
         _useLinq = Settings.Item("useLinq");
         Cache = new CacheSet();
 
@@ -225,7 +225,7 @@ function getStaticData()
             {
                 bot = new TelegramBot(data, function (res)
                 {
-                    if (!res) logToOutput("Отправка логов недоступна", " WARNING: ");
+                    if (!res) logToOutput("Отправка логов недоступна", _WarningLogPrefix);
                     else logToOutput("Бот на свзяи!");
                 });
             }

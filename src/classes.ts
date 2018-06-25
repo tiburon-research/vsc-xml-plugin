@@ -1769,18 +1769,17 @@ export function createDir(path: string)
 export function saveError(text: string, data: LogData)
 {
     logToOutput(text, "ERROR: ");
+    if (!data) data = new LogData({ Data: { Error: "Ошибка без данных" } });
     if (!pathExists(_LogPath))
     {
-        showError("Не найден путь для сохранения логов! Проверьте правильность настроек.");
-        sendLogMessage("Log path was not found!");
+        sendLogMessage("У пользователя `" + data.UserName + "` не найден путь для логов:\n`" + _LogPath + "`");
         return;
     }
     // генерируем имя файла из текста ошибки и сохраняем в папке с именем пользователя
     let hash = "" + shortHash(text);
-    if (!data) data = new LogData({ Data: { Error: "Ошибка без данных" } });
-    let dir = _LogPath + (!!_LogPath.match(/[\\\/]$/) ? "" : "\\") + data.UserName;
+    let dir = Path.Concat(_LogPath, data.UserName);
     if (!pathExists(dir)) createDir(dir);
-    let filename = dir + "\\" + hash + ".log";
+    let filename = Path.Concat(dir, hash + ".log");
     if (pathExists(filename)) return;
     data.add({ ErrorMessage: text });
     fs.writeFile(filename, data.toString(), (err) =>

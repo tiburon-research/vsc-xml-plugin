@@ -81,16 +81,8 @@ export function format(text: string, language: Language, settings: ExtensionSett
                 let hash = text.replace(RegExpPatterns.FormattingHash, '');
                 if (res.Result.replace(RegExpPatterns.FormattingHash, '') != hash)
                 {
-                    if (_pack != "debug")
-                    {
-                        res.Error = "Результат форматирования не прошёл проверку на целостность текста";
-                        reject(res.Error);
-                    }
-                    else
-                    {
-                        showWarning("Результат форматирования не прошёл проверку на целостность текста");
-                        resolve(res.Result);
-                    }
+                    res.Error = "Результат форматирования не прошёл проверку на целостность текста";
+                    reject(res.Error);
                 }
                 else resolve(res.Result);
             }
@@ -344,7 +336,7 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
             let ind = tab.repeat(indent);
             res = res.replace(/\n([\t ]*\S)/g, "\n" + ind + "$1");
             // возвращаем собак и $repeat
-            res = getElementsBack(res, encoder.ToEncodeResult());
+            //res = getElementsBack(res, encoder.ToEncodeResult());
         }
         else
         {
