@@ -326,6 +326,7 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
             encoder.Encode((txt, delimiter) => encodeElements(txt, /\$repeat\([\w@]+\)({.*\[.*\]\s*})?/, delimiter));
             encoder.Encode((txt, delimiter) => encodeElements(txt, RegExpPatterns.XMLIterators.Var, delimiter));
             encoder.Encode((txt, delimiter) => encodeElements(txt, RegExpPatterns.XMLIterators.Singele, delimiter));
+            encoder.Encode((txt, delimiter) => encodeElements(txt, /@(?!")(\w+)/, delimiter)); // для констант
             res = encoder.Result;
             // форматируем
             res = clearIndents(res);
