@@ -85,6 +85,7 @@ var LockedFiles: string[] = [];
 
 export function activate(context: vscode.ExtensionContext)
 {
+    logToOutput("Начало активации");
     let editor = vscode.window.activeTextEditor;
 
     // обновляем настройки при сохранении
@@ -154,9 +155,6 @@ export function activate(context: vscode.ExtensionContext)
         insertSpecialSnippets(event, editor, text, tag);
     });
 
-    statusMessage("Tiburon XML Helper запущен!", 3000);
-    logToOutput("Активация завершена");
-
     vscode.workspace.onWillSaveTextDocument(x =>
     {
         if (x.document.isDirty) // сохранение изменённого документа
@@ -178,6 +176,8 @@ export function activate(context: vscode.ExtensionContext)
         unlockDocument(x, true);
     })
 
+    logToOutput("Активация завершена");
+    statusMessage("Tiburon XML Helper запущен!", 3000);
 }
 
 
@@ -196,7 +196,6 @@ function getStaticData()
         // сохраняем нужные значения
         OutChannel = vscode.window.createOutputChannel("tib");
         OutChannel.show();
-        logToOutput("Загрузка настроек расширения");
         Settings = new ExtensionSettings();
         _LogPath = Settings.Item("logPath");
         if (!pathExists(_LogPath)) logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
@@ -204,7 +203,6 @@ function getStaticData()
         Cache = new CacheSet();
 
         // получаем фунцию форматирования C#
-        logToOutput("Связка с расширением 'Leopotam.csharpfixformat'");
         let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
         if (!!csharpfixformat)
         {
@@ -214,9 +212,9 @@ function getStaticData()
             });
             else getCSFormatter(csharpfixformat);
         }
+        else logToOutput("Расширение 'Leopotam.csharpfixformat' не установлено, C# будет форматироваться, как простой текст", _WarningLogPrefix);
 
         // запускаем бота
-        logToOutput("Настройка бота для оповещений");
         let dataPath = _LogPath + "\\data.json";
         if (pathExists(dataPath))
         {
@@ -226,13 +224,11 @@ function getStaticData()
                 bot = new TelegramBot(data, function (res)
                 {
                     if (!res) logToOutput("Отправка логов недоступна", _WarningLogPrefix);
-                    else logToOutput("Бот на свзяи!");
                 });
             }
         }
 
         // получаем AutoComplete
-        logToOutput("Загрузка списка известных элементов");
         let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });
         let statCS: TibAutoCompleteItem[] = [];
         for (let key in AutoCompleteArray.StaticMethods)
