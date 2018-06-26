@@ -62,7 +62,7 @@ var Cache: CacheSet;
 var Includes: string[] = [];
 
 /** Канал вывода */
-var OutChannel: vscode.OutputChannel;
+var OutChannel = vscode.window.createOutputChannel("tib");
 
 /** Объект для хранения пользовательских выборов */
 var Refused = {
@@ -194,7 +194,6 @@ function getStaticData()
     try 
     {
         // сохраняем нужные значения
-        OutChannel = vscode.window.createOutputChannel("tib");
         OutChannel.show();
         Settings = new ExtensionSettings();
         _LogPath = Settings.Item("logPath");
