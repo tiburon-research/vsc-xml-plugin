@@ -72,10 +72,10 @@ ___
 * **Сочетания клавиш**
 
   Многие сочетания клавиш отличаются от привычного для многих `UltraEdit`, их можно настроить под себя: `Файл -> Параметры -> Сочетания клавиш`.
-    Также на сочетание клавиш можно повесить любой шаблон. Для этого нужно открыть файл `keybindings.json` (ссылка на него есть в окне настройки сочетания клавиш) и добавить туда такую строку:
+    Также на сочетание клавиш можно повесить любой шаблон. Для этого нужно открыть файл `keybindings.json` (ссылка на него есть в окне настройки сочетания клавиш) и добавить туда такой элемент:
   ```JSON
     {
-      "key": "ctrl", // сочетание клавиш
+      "key": "ctrl+alt+.", // сочетание клавиш
       "command": "editor.action.insertSnippet",
       "args": {
         "name": "RedirectStatus" // имя шаблона
@@ -84,61 +84,61 @@ ___
   ```
   Список шаблонов расширения:
   * `ftpPath` - Стандартный путь к материалам проета;
-  * `src` - img с путём к материалам проета;
-  * `blockFolding` - Сворачиваемый блок;
-  * `blockLight` - Зелёный блок;
-  * `blockWarning` - Красный блок;
-  * `SexList` - Список всех возможных полов;
-  * `MonthList` - Список месяцев;
-  * `Isolate` - Кнопка Isolate;
-  * `ResetAnswer` - Исключающий ответ;
-  * `ResetAnswerShort` - Исключающий ответ (кратко);
-  * `OpenAnswer` - Открытый ответ;
-  * `StepQuestionsUi` - Ui для постепенного выпадения вопросов;
-  * `IntScaleUi` - Градиентная шкала с цифрами;
-  * `TextScaleUi` - Градиентная шкала с метками;
-  * `TextScaleVerticalUi` - Вертикальная градиентная шкала с метками;
-  * `ShapeUi` - Областной клик-тест/полка;
-  * `SliderDiscreteUi` - Дискретный Slider;
-  * `SliderContinousUi` - Непрерывный Slider;
-  * `StarsUi` - Звёзды;
-  * `ClickTextUi` - Текстовый ClickTest;
-  * `DragItemRangeUi` - DragItem Range;
-  * `DragItemCardUi` - DragItem Card;
-  * `MaxDiffUi` - MaxDiff;
-  * `VideoUi` - MediaPlayer Video;
-  * `AudioUi` - MediaPlayer Audio;
-  * `ContentOnlyUi` - ContentOnly;
-  * `CompletePage` - Вы прошли отбор!;
-  * `CompleteRedirectPage` - Последняя страница;
-  * `RespInfo` - RespInfo;
-  * `YandexMetrika` - Яндекс.Метрика;
-  * `DataExpand` - Увеличение по клику (2) или по наведению (3);
-  * `SumCounter` - Счётчик;
-  * `GetCell` - Метод для получения ячейки;
-  * `GetShape` - Метод для сеточного клик-теста;
-  * `IsMoble` - Мобильное устройство;
-  * `DebugPrint` - Вывод отладочной информации;
-  * `DebugData` - Сохранение данных для отладки;
-  * `TestPrint` - Вывод информации для тестирования;
-  * `SexText` - Текст в зависимости от пола;
-  * `ParseDateTime` - Приведение string к DateTime;
-  * `DataGetCustoms` - DataGetCustoms;
-  * `PageFull` - Полная структура Page;
-  * `PageShort` - Краткая структура Page;
-  * `Question` - Структура Question;
-  * `Block` - Структура Block;
-  * `List` - Структура List;
-  * `RedirectCode` - Структура Redirect;
-  * `RedirectStatus` - Структура Redirect со статусом;
-  * `Redirect18` - Финальный Redirect;
-  * `Validate` - Структура Validate;
-  * `Filter` - Структура Filter;
-  * `CDATA` - CDATA;
-  * `CustomText1` - CustomText1;
-  * `CustomText2` - CustomText2 (+style);
-  * `Quota` - Структура Quota;
-  * `Methods` - Структура Methods;
+	* `src` - img с путём к материалам проета;
+	* `blockFolding` - Сворачиваемый блок;
+	* `blockLight` - Зелёный блок;
+	* `blockWarning` - Красный блок;
+	* `SexList` - Список всех возможных полов;
+	* `MonthList` - Список месяцев;
+	* `Isolate` - Кнопка Isolate;
+	* `ResetAnswer` - Исключающий ответ;
+	* `ResetAnswerShort` - Исключающий ответ (кратко);
+	* `OpenAnswer` - Открытый ответ;
+	* `StepQuestionsUi` - Ui для постепенного выпадения вопросов;
+	* `IntScaleUi` - Градиентная шкала с цифрами;
+	* `TextScaleUi` - Градиентная шкала с метками;
+	* `TextScaleVerticalUi` - Вертикальная градиентная шкала с метками;
+	* `ShapeUi` - Областной клик-тест/полка;
+	* `SliderDiscreteUi` - Дискретный Slider;
+	* `SliderContinousUi` - Непрерывный Slider;
+	* `StarsUi` - Звёзды;
+	* `ClickTextUi` - Текстовый ClickTest;
+	* `DragItemRangeUi` - DragItem Range;
+	* `DragItemCardUi` - DragItem Card;
+	* `MaxDiffUi` - MaxDiff;
+	* `VideoUi` - MediaPlayer Video;
+	* `AudioUi` - MediaPlayer Audio;
+	* `ContentOnlyUi` - ContentOnly;
+	* `ComboBox` - ComboBox;
+	* `CompletePage` - Вы прошли отбор!;
+	* `CompleteRedirectPage` - Последняя страница;
+	* `RespInfo` - RespInfo;
+	* `YandexMetrika` - Яндекс.Метрика;
+	* `DataExpand` - Увеличение по клику (2) или по наведению (3);
+	* `SumCounter` - Счётчик;
+	* `GetCell` - Метод для получения ячейки;
+	* `GetShape` - Метод для сеточного клик-теста;
+	* `IsMoble` - Мобильное устройство;
+	* `DebugPrint` - Вывод отладочной информации;
+	* `DebugData` - Сохранение данных для отладки;
+	* `TestPrint` - Вывод информации для тестирования;
+	* `SexText` - Текст в зависимости от пола;
+	* `ParseDateTime` - Приведение string к DateTime;
+	* `PageFull` - Полная структура Page;
+	* `PageShort` - Краткая структура Page;
+	* `Question` - Структура Question;
+	* `Block` - Структура Block;
+	* `List` - Структура List;
+	* `RedirectCode` - Структура Redirect;
+	* `RedirectStatus` - Структура Redirect со статусом;
+	* `Redirect18` - Финальный Redirect;
+	* `Validate` - Структура Validate;
+	* `Filter` - Структура Filter;
+	* `CDATA` - CDATA;
+	* `CustomText1` - CustomText1;
+	* `CustomText2` - CustomText2 (+style);
+	* `Quota` - Структура Quota;
+	* `Methods` - Структура Methods;
 
 * **Количество видимых редакторов**
   
@@ -149,6 +149,15 @@ ___
 ___
 
 # Функционал
+
+### Редактирование файлов
+
+Т.к. на данный момент VSCode никак не предупреждает о стороннем изменении открытых в редакторе файлов в расширение добавлена следующая схема блокировки:
+- при открытии файла для него устанавливается режим только для чтения (т.е. при попытке изменить и сохранить этот файл все остальные пользователи будут видеть предупреждение о том, что файл защищён от записи);
+- при открытии файла, заблокированного другим пользователем показывается предупреждение с указанием имени этого пользователя;
+- при закрытии файла блокировка снимается.
+
+**P.S.** Всегда можно отредактировать файл, занятый другим пользователем, если каждый раз утвердительно отвечать на вопрос VSCode о перезаписи защищённого файла.
 
 ### Подсветка синтаксиса
 
@@ -337,7 +346,7 @@ ___
 
 ### Сочетания клавиш для вызова команд
 
-Все команды расширения завязаны по умолчанию на сочетания клавиш, начинающиеся с `Ctrl`+`Alt`, что является не рекомендуемым вариантом для Windows =) Поэтому в случае возникновения проблем просьба сообщать.
+Все команды (за исключением мультистрочной вставки) расширения завязаны по умолчанию на сочетания клавиш, начинающиеся с `Ctrl`+`Alt`, что является не рекомендуемым вариантом для Windows =) Поэтому в случае возникновения проблем просьба сообщать.
 
 
 ___
@@ -346,7 +355,4 @@ ___
 
 * GitHub: 
   - [репозиторий](https://github.com/tiburon-research/vsc-xml-plugin),
-  - [проблемы](https://github.com/tiburon-research/vsc-xml-plugin/issues).
-
-* можно писать [напрямую в Telegram](https://t.me/Gulyaev_Ruslan)
-* или в [беседу Telegram](https://t.me/joinchat/B-Eb_kGQNrjF6IPE2Zqfbw)
+  - [проблемы/предложения](https://github.com/tiburon-research/vsc-xml-plugin/issues).
