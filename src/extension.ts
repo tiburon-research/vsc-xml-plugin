@@ -194,7 +194,6 @@ function getStaticData()
     try 
     {
         // сохраняем нужные значения
-        OutChannel.show();
         Settings = new ExtensionSettings();
         _LogPath = Settings.Item("logPath");
         if (!pathExists(_LogPath)) logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
