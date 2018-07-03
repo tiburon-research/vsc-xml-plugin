@@ -470,20 +470,25 @@ export class TibAttribute
             this[key] = obj[key];
     }
 
-    ToCompletionItem(callback: (query: string) => string[]): vscode.CompletionItem
+    /** `nameOnly` - не подставлять значения */
+    ToCompletionItem(callback: (query: string) => string[], nameOnly = false): vscode.CompletionItem
     {
         let item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Property);
-        let snip = this.Name + '="';
-        let valAr: string[];
-        let auto = this.AutoValue();
-        if (!auto)
+        let snip = this.Name;
+        if (!nameOnly)
         {
-            valAr = this.ValueCompletitions(callback);
-            if (valAr.length > 0) snip += "${1|" + valAr.join(",") + "|}";
-            else snip += "$1";
+            snip += '="';
+            let valAr: string[];
+            let auto = this.AutoValue();
+            if (!auto)
+            {
+                valAr = this.ValueCompletitions(callback);
+                if (valAr.length > 0) snip += "${1|" + valAr.join(",") + "|}";
+                else snip += "$1";
+            }
+            else snip += auto;
+            snip += '"';
         }
-        else snip += auto;
-        snip += '"';
         let res = new vscode.SnippetString(snip);
         item.insertText = res;
         item.detail = (this.Detail ? this.Detail : this.Name) + (this.Type ? (" (" + this.Type + ")") : "");

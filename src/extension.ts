@@ -825,6 +825,7 @@ function autoComplete()
                 let existAttrs = tag.AttributeNames();
                 let textAfter = document.getText().slice(document.offsetAt(position));
                 let attrs = textAfter.match(RegExpPatterns.RestAttributes);
+                let nameOnly = !!textAfter.match(/^=["']/);
                 let nexAttrs: string[] = [];
                 if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
                 AutoCompleteArray.Attributes[tag.Id].filter(x => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach(element =>
@@ -833,7 +834,7 @@ function autoComplete()
                         let ci = attr.ToCompletionItem(function (query)
                         {
                             return safeValsEval(query);
-                        });
+                        }, nameOnly);
                         completionItems.push(ci);
                 });
             }
