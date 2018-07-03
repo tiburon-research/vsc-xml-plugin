@@ -296,6 +296,14 @@
         ],
         "description": "Счётчик"
     },
+    "YesNoAnswers": {
+        "prefix": "_yesNoAnswers",
+        "body":[
+            "<Answer Id=\"1\"><Text>Да</Text></Answer>",
+            "<Answer Id=\"2\"><Text>Нет</Text></Answer>"
+        ],
+        "description": "Счётчик"
+    },
 
 
 

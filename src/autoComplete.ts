@@ -2362,7 +2362,7 @@ export const CSSnippets = [
     {
         "prefix": "DataGetCustoms",
         "body":[
-            "string[][] data = DataGetCustoms(${1:dataId}, ${2:InterviewPars.RespID});",
+            "string[][] data = DataGetCustoms(${1:dataId}, ${2:AnswerValue(\"pre_data\", \"ridn\")});",
             "for (int i = 0; data.Length > i; i++)",
             "{",
             "\t$0",
