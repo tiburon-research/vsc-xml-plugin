@@ -796,14 +796,20 @@ function autoComplete()
                         else
                             ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:@Itera}\"><Text>${2:@Itera}</Text></Answer>");
                         ci.documentation = ci.insertText.value;
+                        completionItems.push(ci);
                     }
                     else
                     {
+                        let ci2 = Object.assign({}, ci);
                         ci.detail = "Структура Answer";
                         ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:1}\"><Text>$2</Text></Answer>");
                         ci.documentation = ci.insertText.value;
+                        ci2.detail = "Краткая структура Answer";
+                        ci2.insertText = new vscode.SnippetString("<Answer Id=\"${1:1}\"/>");
+                        ci2.documentation = ci2.insertText.value;
+                        completionItems.push(ci);
+                        completionItems.push(ci2);
                     }
-                    completionItems.push(ci);
                 }
             }
             return completionItems;
