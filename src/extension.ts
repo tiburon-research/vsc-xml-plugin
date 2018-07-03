@@ -1218,6 +1218,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 
     let change = event.contentChanges[0].text;
     let originalPosition = editor.selection.start.translate(0, 1);
+    let positions = editor.selections.map(x => new vscode.Position(x.active.line, x.active.character+1));
     let lang = tag.GetLaguage();
     let nextCharRange = new vscode.Range(originalPosition, originalPosition.translate(0, 1));
     let nextChar = editor.document.getText(nextCharRange);
@@ -1248,7 +1249,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
     let tagT = text.match(/\[([a-zA-Z]\w*(#)?)(\s[^\]\[]*)?(\/)?\]$/);
     if
     (
-        change[change.length - 1] == "]" &&
+        change == "]" &&
         !!tagT &&
         !!tagT[1] &&
         !tagT[4] &&
@@ -1259,7 +1260,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
     {
         InProcess = true;
         let str = tagT[2] ? "$0;[/c#]" : "$0[/" + tagT[1] + "]";
-        editor.insertSnippet(new vscode.SnippetString(str), originalPosition).then(() =>
+        editor.insertSnippet(new vscode.SnippetString(str), positions).then(() =>
         {
             InProcess = false;
         });
