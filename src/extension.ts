@@ -1950,18 +1950,18 @@ function showLockInfo(document: vscode.TextDocument)
 {
     let path = new Path(document.fileName);
     let lockPath = getLockFilePath(path);
-    let message = "Файл открыт в режиме только для чтения";
+    let message = `Файл ${document.fileName} открыт в режиме только для чтения`;
     if (fs.existsSync(lockPath))
     {
         let data = getLockData(lockPath);
-        message = "Этот документ использует ";
+        message = `Файл ${document.fileName} использует `;
         let user = "непонятно кто";
         if (!!data && !!data.User)
         {
             user = data.User;
             if (data.User == getUserName())
             {
-                yesNoHelper(`Этот документ занят пользователем ${user}. Возможно, он остался заблокированным после прерывания работы расширения. Разблокировать?`).then(res => { if (res) lockDocument(document, true, true) });
+                yesNoHelper(`Файл ${document.fileName} занят пользователем ${user}. Возможно, он остался заблокированным после прерывания работы расширения. Разблокировать?`).then(res => { if (res) lockDocument(document, true, true) });
                 return;
             }
         }
