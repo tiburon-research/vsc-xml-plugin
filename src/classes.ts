@@ -1058,10 +1058,9 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 
     GetIds(type: string): string[]
     {
-        return this.Item(type).map(function (e)
-        {
-            return e.Id;
-        });
+        let res = [];
+        if (this.Contains(type)) res = this.Item(type).map(e => e.Id);
+        return res;
     }
 
     GetItem(id: string, type?: string): SurveyNode
