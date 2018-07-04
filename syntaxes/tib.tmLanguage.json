@@ -779,6 +779,9 @@
 					},
 					"patterns":[
 						{
+							"include": "#cdata"
+						},
+						{
 							"include": "#statement"
 						}
 					]
@@ -831,6 +834,30 @@
 					}
 				},
 				{
+					"include": "#inline-repeat"
+				}
+			]
+		},
+
+		"tib-iterator":
+		{
+			"patterns": [
+				{
+					"include": "#tib-iterator-single"
+				},
+				{
+					"include": "#tib-iterator-var"
+				},
+				{
+					"include": "#tib-constants"
+				}
+			]
+		},
+
+		"inline-repeat":
+		{
+			"patterns": [
+				{
 					"begin": "(\\$)(repeat)\\(([@\\)\\(\\w\\[\\]]+)\\)((\\{)(.+?)((\\[)([^\\]]+)(\\]))?(\\}))",
 					"end": "",
 					"name": "entity.name.repeat-inline.tib",
@@ -880,15 +907,24 @@
 			]
 		},
 
-		"tib-iterator":
+		"tib-constants":
 		{
 			"patterns": [
 				{
-					"include": "#tib-iterator-single"
-				},
-				{
-					"include": "#tib-iterator-var"
-				}
+					"begin": "(@)((?!(ID|Text|Pure|Itera|Var|AnswerExists|AnswerExistsAny)\\b)[a-zA-Z][a-zA-Z0-9_]*)",
+					"end": "",
+					"name": "tib.constant",
+					"beginCaptures": {
+						"1":
+						{
+							"name": "tib.constant.prefix"
+						},
+						"2":
+						{
+							"name": "tib.constant.name"
+						}
+					}
+				}	
 			]
 		},
 
@@ -4269,6 +4305,9 @@
 				}
 			},
 			"patterns": [
+				{
+					"include": "#inline-repeat"
+				},
 				{
 					"include": "#string-character-escape"
 				},

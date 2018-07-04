@@ -39,6 +39,14 @@
 		},
 		{
 			"scope": [
+				"tib.constant"
+			],
+			"settings": {
+				"foreground": "#9a70af"
+			}
+		},
+		{
+			"scope": [
 				"punctuation.definition.comment.description",
 				"comment.block.cs"
 			],
