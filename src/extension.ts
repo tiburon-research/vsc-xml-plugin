@@ -118,8 +118,11 @@ export function activate(context: vscode.ExtensionContext)
         Methods.Clear();
         CurrentNodes.Clear();
         if (!editor || editor.document.languageId != 'tib') return;
-        if (isLocked(editor.document)) showLockInfo(editor.document);
-        else lockDocument(editor.document, true);
+        if (!editor.document.isUntitled)
+        {
+            if (isLocked(editor.document)) showLockInfo(editor.document);
+            else lockDocument(editor.document, true);   
+        }
         checkDocument(editor);
         if (needReload) reload();
         InProcess = false;
@@ -578,8 +581,8 @@ function registerCommands()
             logError("Невозможно получить доступ к файлу демки");
             return;
         }
-
-        openFileText(path);
+        CurrentStatus.setProcessMessage("Открывается демка...");
+        openFileText(path).then(x => CurrentStatus.removeCurrentMessage());
     });
 
     //Создание tibXML шаблона

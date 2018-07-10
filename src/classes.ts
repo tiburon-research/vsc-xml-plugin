@@ -1858,36 +1858,42 @@ export function safeString(text: string): string
 
 
 /** Открытие текста файла в новом окне */
-export function openFileText(path: string): void
+export function openFileText(path: string): Promise<void>
 {
-    /* vscode.workspace.openTextDocument(path).then(doc =>
-    { // открываем файл (в памяти)
-        let txt = doc.getText();
+    return new Promise<void>((resolve, reject) =>
+    {
+        /* vscode.workspace.openTextDocument(path).then(doc =>
+        { // открываем файл (в памяти)
+            let txt = doc.getText();
+            vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+            { // создаём пустой tib-файл
+                vscode.window.showTextDocument(newDoc).then(editor => 
+                { // отображаем пустой
+                    editor.edit(builder => 
+                    { // заливаем в него текст
+                        builder.insert(new vscode.Position(0, 0), txt)
+                    });
+                });
+            })
+        }); */
+
+        let fileBuffer = fs.readFileSync(path);
+        // по возможности читаем в 1251
+        let text = Parse.win1251Avaliabe(fileBuffer) ? iconv.decode(fileBuffer, 'win1251') : fileBuffer.toString('utf8');
         vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
         { // создаём пустой tib-файл
+            if (!newDoc) return reject();
             vscode.window.showTextDocument(newDoc).then(editor => 
             { // отображаем пустой
+                if (!editor) return reject();
                 editor.edit(builder => 
                 { // заливаем в него текст
-                    builder.insert(new vscode.Position(0, 0), txt)
+                    builder.insert(new vscode.Position(0, 0), text);
+                    resolve();
                 });
             });
         })
-    }); */
-
-    let fileBuffer = fs.readFileSync(path);
-    // по возможности читаем в 1251
-    let text = Parse.win1251Avaliabe(fileBuffer) ? iconv.decode(fileBuffer, 'win1251') : fileBuffer.toString('utf8');
-    vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
-    { // создаём пустой tib-файл
-        vscode.window.showTextDocument(newDoc).then(editor => 
-        { // отображаем пустой
-            editor.edit(builder => 
-            { // заливаем в него текст
-                builder.insert(new vscode.Position(0, 0), text)
-            });
-        });
-    })
+    });
 }
 
 
