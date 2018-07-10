@@ -149,28 +149,31 @@ export namespace TibDocumentEdits
         let itemIndex = 0;                                      //инедкс первого item'а в List'e
         let $list = $dom.find("List");                          //ищем List'ы
 
-        if($list.length == 0){                                  //если нет List'ов, то вставляем первый Item, так как количество Var'ов должно быть одинаково у всех Item
+        if ($list.length == 0)
+        {                                  //если нет List'ов, то вставляем первый Item, так как количество Var'ов должно быть одинаково у всех Item
             $list.push($dom.find("Item").eq(itemIndex));
         }
 
-        $list.map(function(){                                   //проходим все List'ы
+        $list.map(function ()
+        {                                   //проходим все List'ы
 
             let $item = $dom.find("Item").eq(itemIndex);        //берём только первый элемент List'a, так как количество Var'ов должно быть одинаково у всех Item
             let $var = $item.find("Var");                       //Ищем дочерний Var
             varCount = 0;
 
             if ($var.length > 0)                                //<Var></Var>
-            {                                                   
+            {
                 varCount += $var.length;
             }
             if (typeof $item.attr('Var') !== typeof undefined)  //Var=""
-            {      
+            {
                 varCount += $item.attr('Var').split(',').length;
             }
 
             itemIndex += $(this).find("Item").length;           //записываем индекс первого элемента Item'а следующего List'a 
 
-            if(res > varCount){                                 //если количество Var'ов у этого List'а меньше, чем у предыдущих
+            if (res > varCount)
+            {                                 //если количество Var'ов у этого List'а меньше, чем у предыдущих
                 res = varCount;                                 //то записываем это количество               
             }
         });
@@ -185,15 +188,19 @@ export namespace TibDocumentEdits
         let $lists = $dom.find("List");                                                                     //ищем List'ы
         let $listItems = [];                                                                                //массив Item массивов
 
-        if($lists.length > 0){                                                                              //если есть List'ы
-            $lists.map(function(i){                                                                         //вытаскивам Item'ы, где индекс номер List'а
+        if ($lists.length > 0)
+        {                                                                              //если есть List'ы
+            $lists.map(function (i)
+            {                                                                         //вытаскивам Item'ы, где индекс номер List'а
                 $listItems.push($lists.eq(i).find("Item"));
             });
-        }else{
+        } else
+        {
             $listItems.push($dom.find("Item"));                                                             //иначе ищем Item'ы
         }
 
-        $listItems.map(function($items, index){                                                             //перебираем Item'ы
+        $listItems.map(function ($items, index)
+        {                                                             //перебираем Item'ы
 
             $items.sort(function (item1, item2)
             {                                                                                               //сортируем массив DOM
@@ -221,10 +228,10 @@ export namespace TibDocumentEdits
                     for (let i = 0, length = sortItems.length; i < length; i++)
                     {
                         if (typeof $(sortItems[i]).attr(attrName) !== typeof undefined)                     //если атрибут
-                        {                     
+                        {
                             el[i] = $(sortItems[i]).attr(attrName);
                         } else if ($(sortItems[i]).find(attrName).length > 0)                               //если дочерний тег
-                        {                                
+                        {
                             el[i] = $(sortItems[i]).find(attrName).eq(0).text();
                         }
 
@@ -236,7 +243,7 @@ export namespace TibDocumentEdits
                 }
 
                 if (el[0].match(/^\d+$/) && el[1].match(/^\d+$/))                                           //проверка на числа
-                {                                                                                           
+                {
                     el[0] = parseInt(el[0]);
                     el[1] = parseInt(el[1]);
                 }
@@ -254,11 +261,11 @@ export namespace TibDocumentEdits
             });
 
             if ($lists.length > 0)                                                                          //если взят текст с List
-            {                                                                                               
+            {
                 $items.appendTo($lists.eq(index).html(''));
             } else                                                                                          //если взят тескт только с Item'ами
             {
-                $items.appendTo($dom);                                                                      
+                $items.appendTo($dom);
             }
 
         });
@@ -1646,6 +1653,59 @@ export interface LockData
     User: string;
 }
 
+
+export class StatusBar
+{
+    private busy = false;
+    private currentStatus: vscode.Disposable;
+
+    /** Устанавливает сообщение на время */
+    public setInfoMessage(text: string, after: number)
+    {
+        this.statusMessage(text, after);
+    }
+
+    /** выводит в строку состояния информацию о текущем теге */
+    public setTagInfo(tag: CurrentTag): void
+    {
+        let info = "";
+        if (!tag) info = "";
+        else
+        {
+            let lang = Language[tag.GetLaguage()];
+            if (lang == "CSharp") lang = "C#";
+            info = lang + ":\t" + tag.Parents.map(x => x.Name).concat([tag.Name]).join(" -> ");
+            if (tag.Name == "Var")
+            {
+                let ind = tag.GetVarIndex();
+                if (ind > -1) info += `[${ind}]`;
+            }
+        }
+        this.statusMessage(info);
+    }
+
+    /** выводит в строку состояния информацию о текущем процессе */
+    public setProcessMessage(text: string)
+    {
+        this.currentStatus = this.statusMessage(text);
+    }
+
+    /** очищает строку состояния */
+    public removeCurrentMessage()
+    {
+        if (!!this.currentStatus) this.currentStatus.dispose();
+        else this.statusMessage('');
+    }
+
+    private statusMessage(text: string, after?: number): vscode.Disposable
+    {
+        let res: vscode.Disposable;
+        if (!!after) res = vscode.window.setStatusBarMessage(text, after);
+        else res = vscode.window.setStatusBarMessage(text);
+        return res;
+    }
+}
+
 //#endregion
 
 
@@ -1711,25 +1771,6 @@ export function copyToCB(text: string)
 export function getFromClioboard(): string
 {
     return clipboard.readSync();
-}
-
-
-export function statusMessage(text: string, after?: number | Thenable<any>): void
-{
-    if (typeof after == "number")
-    {
-        let num = after;
-        vscode.window.setStatusBarMessage(text, num);
-    }
-    else if (after !== undefined)
-    {
-        let th = after;
-        vscode.window.setStatusBarMessage(text, th);
-    }
-    else
-    {
-        vscode.window.setStatusBarMessage(text);
-    }
 }
 
 

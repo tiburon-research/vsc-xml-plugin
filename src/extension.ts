@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, statusMessage, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -75,6 +75,9 @@ var IsBeforeSave = false;
 
 /** Пути к заблокированным файлам */
 var LockedFiles: string[] = [];
+
+
+var CurrentStatus = new StatusBar();
 
 //#endregion
 
@@ -177,7 +180,7 @@ export function activate(context: vscode.ExtensionContext)
     })
 
     logToOutput("Активация завершена");
-    statusMessage("Tiburon XML Helper запущен!", 3000);
+    CurrentStatus.setInfoMessage("Tiburon XML Helper запущен!", 3000);
 }
 
 
@@ -608,10 +611,10 @@ function registerCommands()
         vscode.window.showInformationMessage("Подстановка Linq " + (_useLinq ? "включена" : "отключена"))
     });
 
-
     vscode.languages.registerDocumentFormattingEditProvider('tib', {
         provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[]
         {
+            CurrentStatus.setProcessMessage("Форматирование...");
             let editor = vscode.window.activeTextEditor;
             let range;
             let indent;
@@ -633,17 +636,21 @@ function registerCommands()
             }
             let text = document.getText(range);
 
-            let res = text;
-            Formatting.format(text, Language.XML, Settings, "\t", indent).then((res) => 
-            {
-                vscode.window.activeTextEditor.edit(builder =>
+            Formatting.format(text, Language.XML, Settings, "\t", indent).then(
+                (res) => 
                 {
-                    builder.replace(range, res);
-                })
-            }, (er) =>
+                    vscode.window.activeTextEditor.edit(builder =>
+                    {
+                        builder.replace(range, res);
+                        //CurrentStatus.removeCurrentMessage();
+                    })
+                },
+                (er) =>
                 {
                     logError(er);
-                });
+                    CurrentStatus.removeCurrentMessage();
+                }
+            )
             // provideDocumentFormattingEdits по ходу не умеет быть async, поэтому выкручиваемся так
             return [];
         }
@@ -754,7 +761,7 @@ function autoComplete()
                 let curOpenMatch = getPreviousText(document, position, true).match(/<(\w+)$/);
                 if (!curOpenMatch) return;
                 let opening = curOpenMatch[1].toLocaleLowerCase();
-                
+
                 //Item
                 if ("item".indexOf(opening) > -1)
                 {
@@ -836,12 +843,12 @@ function autoComplete()
                 if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
                 AutoCompleteArray.Attributes[tag.Id].filter(x => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach(element =>
                 {
-                        let attr = new TibAttribute(element);
-                        let ci = attr.ToCompletionItem(function (query)
-                        {
-                            return safeValsEval(query);
-                        }, nameOnly);
-                        completionItems.push(ci);
+                    let attr = new TibAttribute(element);
+                    let ci = attr.ToCompletionItem(function (query)
+                    {
+                        return safeValsEval(query);
+                    }, nameOnly);
+                    completionItems.push(ci);
                 });
             }
             return completionItems;
@@ -1218,7 +1225,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 
     let change = event.contentChanges[0].text;
     let originalPosition = editor.selection.start.translate(0, 1);
-    let positions = editor.selections.map(x => new vscode.Position(x.active.line, x.active.character+1));
+    let positions = editor.selections.map(x => new vscode.Position(x.active.line, x.active.character + 1));
     let lang = tag.GetLaguage();
     let nextCharRange = new vscode.Range(originalPosition, originalPosition.translate(0, 1));
     let nextChar = editor.document.getText(nextCharRange);
@@ -1428,7 +1435,7 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
             });
         }
     }
-    showCurrentInfo(tag);
+    if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
     return tag;
 }
 
@@ -1842,27 +1849,6 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
     }
     InProcess = false;
     return res;
-}
-
-
-/** выводит в строку состояния информацию о текущем теге */
-function showCurrentInfo(tag: CurrentTag): void
-{
-    if (!Settings.Item("showTagInfo")) return;
-    let info = "";
-    if (!tag) info = "";
-    else
-    {
-        let lang = Language[tag.GetLaguage()];
-        if (lang == "CSharp") lang = "C#";
-        info = lang + ":\t" + tag.Parents.map(x => x.Name).concat([tag.Name]).join(" -> ");
-        if (tag.Name == "Var")
-        {
-            let ind = tag.GetVarIndex();
-            if (ind > -1) info += `[${ind}]`;
-        }
-    }
-    statusMessage(info);
 }
 
 
