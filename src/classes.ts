@@ -2039,7 +2039,6 @@ export function logToOutput(message: string, prefix = " > "): void
 {
     let timeLog = "[" + dateFormat(new Date(), "hh:MM:ss.l") + "]";
     OutChannel.appendLine(timeLog + prefix + message);
-    OutChannel.show();
 }
 
 
