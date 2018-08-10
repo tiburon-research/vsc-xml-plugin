@@ -9,6 +9,7 @@ import * as Formatting from './formatting'
 import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
+import { getWarnings } from './diagnostic'
 import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix } from './constants'
 
 
@@ -1104,6 +1105,17 @@ function hoverDocs()
     });
 }
 
+
+
+/** Подсказки и ошибки */
+export function diagnostic(document: vscode.TextDocument)
+{
+    let warns = vscode.languages.createDiagnosticCollection('tib_warnings');
+    getWarnings(document).then(res =>
+    {
+        warns.set(document.uri, res);
+    })
+}
 
 
 /** Переход к определениям */

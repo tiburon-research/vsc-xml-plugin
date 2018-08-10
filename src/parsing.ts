@@ -1,6 +1,6 @@
 'use strict'
 
-import { TextRange, safeString, TagInfo } from "./classes";
+import { ITextRange, safeString, TagInfo } from "./classes";
 import { logError } from "./extension";
 import { clearXMLComments } from "./encoding"
 import { positiveMin, KeyedCollection, CurrentTag } from "./classes"
@@ -11,7 +11,7 @@ import * as charDetect from 'charset-detector'
 /** Результат поиска тегов */
 export interface FindTagResult
 {
-    Range: TextRange;
+    Range: ITextRange;
     /** Самозакрывающийся тег */
     SelfClosed: boolean;
 }

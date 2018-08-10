@@ -33,11 +33,34 @@ interface SearchResult
  * @param From Включаемая граница
  * @param To Не влючамая граница
 */
-export interface TextRange
+export class ITextRange
 {
     From: number;
     To: number;
     Length?: number;
+}
+
+class TextRange implements ITextRange
+{
+    From: number;
+    To: number;
+    Length?: number;
+
+    constructor(obj: ITextRange)
+    {
+        if (!!obj)
+        {
+            for (let key in obj)
+            {
+                this[key] = obj[key];
+            }
+        }
+    }
+
+    ToRange(document: vscode.TextDocument): vscode.Range
+    {
+        return new vscode.Range(document.positionAt(this.From), document.positionAt(this.To));
+    }
 }
 
 
@@ -1246,7 +1269,7 @@ export class TagInfo
                 if (this.Closed) this.CloseTag = { From: this.CloseTag.From + offset, To: this.CloseTag.To + offset };
                 this.Body = { From: this.Body.From + offset, To: this.Body.To + offset };
             }
-            this.FullLines = { From: lineFrom, To: lineTo };
+            this.FullLines = new TextRange({ From: lineFrom, To: lineTo });
             this.Found = true;
         }
     }
@@ -1288,9 +1311,9 @@ export class TagInfo
         return res;
     }
 
-    public OpenTag: TextRange;
-    public CloseTag: TextRange;
-    public Body: TextRange;
+    public OpenTag: ITextRange;
+    public CloseTag: ITextRange;
+    public Body: ITextRange;
     public Name: string;
     public IsAllowCodeTag: boolean;
     /** Валидация: получилось ли распарсить */
