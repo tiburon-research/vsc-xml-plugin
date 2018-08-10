@@ -1656,17 +1656,16 @@ export interface LockData
 
 export class StatusBar
 {
-    private busy = false;
     private currentStatus: vscode.Disposable;
 
     /** Устанавливает сообщение на время */
-    public setInfoMessage(text: string, after: number)
+    public setInfoMessage(text: string, after: number): Promise<vscode.Disposable>
     {
-        this.statusMessage(text, after);
+        return this.statusMessage(text, after);
     }
 
     /** выводит в строку состояния информацию о текущем теге */
-    public setTagInfo(tag: CurrentTag): void
+    public setTagInfo(tag: CurrentTag): Promise<vscode.Disposable>
     {
         let info = "";
         if (!tag) info = "";
@@ -1681,13 +1680,14 @@ export class StatusBar
                 if (ind > -1) info += `[${ind}]`;
             }
         }
-        this.statusMessage(info);
+        return this.statusMessage(info);
     }
 
     /** выводит в строку состояния информацию о текущем процессе */
-    public setProcessMessage(text: string)
+    public async setProcessMessage(text: string): Promise<vscode.Disposable>
     {
-        this.currentStatus = this.statusMessage(text);
+        this.currentStatus = await this.statusMessage(text);
+        return this.currentStatus;
     }
 
     /** очищает строку состояния */
@@ -1697,12 +1697,14 @@ export class StatusBar
         else this.statusMessage('');
     }
 
-    private statusMessage(text: string, after?: number): vscode.Disposable
+    private statusMessage(text: string, after?: number): Promise<vscode.Disposable>
     {
-        let res: vscode.Disposable;
-        if (!!after) res = vscode.window.setStatusBarMessage(text, after);
-        else res = vscode.window.setStatusBarMessage(text);
-        return res;
+        return new Promise<vscode.Disposable>((resolve, reject) => {
+            let res: vscode.Disposable;
+            if (!!after) res = vscode.window.setStatusBarMessage(text, after);
+            else res = vscode.window.setStatusBarMessage(text);
+            setTimeout(x => { resolve(res) }, 100);
+        });
     }
 }
 

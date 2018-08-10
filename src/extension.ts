@@ -121,7 +121,7 @@ export function activate(context: vscode.ExtensionContext)
         if (!editor.document.isUntitled)
         {
             if (isLocked(editor.document)) showLockInfo(editor.document);
-            else lockDocument(editor.document, true);   
+            else lockDocument(editor.document, true);
         }
         checkDocument(editor);
         if (needReload) reload();
@@ -417,16 +417,20 @@ function registerCommands()
     registerCommand('tib.remove.QuestionIds', () =>
     {
         let editor = vscode.window.activeTextEditor;
-
-        try
+        CurrentStatus.setProcessMessage("Удаление Id из заголовков...").then(x =>
         {
-            let text = editor.document.getText();
-            let res = TibDocumentEdits.RemoveQuestionIds(text);
-            applyChanges(getFullRange(editor.document), res, editor);
-        } catch (error)
-        {
-            logError("Произошла ошибка при удалении Id вопроса из заголовка", error);
-        }
+            try
+            {
+                let text = editor.document.getText();
+                let res = TibDocumentEdits.RemoveQuestionIds(text);
+                applyChanges(getFullRange(editor.document), res, editor).then(() => CurrentStatus.removeCurrentMessage());
+            } catch (error)
+            {
+                CurrentStatus.removeCurrentMessage();
+                logError("Произошла ошибка при удалении Id вопроса из заголовка", error);
+            }
+            x.dispose();
+        })
     });
 
     registerCommand('tib.transform.AnswersToItems', () => 
@@ -461,48 +465,50 @@ function registerCommands()
     registerCommand('tib.transform.SortList', () =>
     {
         let editor = vscode.window.activeTextEditor;
-
-        try
+        CurrentStatus.setProcessMessage("Сортировка списка...").then(x =>
         {
-
-            let sortBy = ["Id", "Text"];        //элементы сортировки
-
-            let text = editor.document.getText(editor.selection);               //Берём выделенный текст
-            let varCount = TibDocumentEdits.getVarCountFromList(text);          //Получаем количество Var'ов
-
-            for (let i = 0; i < varCount; i++)
-            {      //заполняем Var'ы
-                sortBy.push("Var(" + i + ")");
-            }
-
-            vscode.window.showQuickPick(sortBy, { placeHolder: "Сортировать по" }).then(x =>
+            try
             {
+                let sortBy = ["Id", "Text"];        //элементы сортировки
 
-                if (typeof x !== typeof undefined)
+                let text = editor.document.getText(editor.selection);               //Берём выделенный текст
+                let varCount = TibDocumentEdits.getVarCountFromList(text);          //Получаем количество Var'ов
+
+                for (let i = 0; i < varCount; i++)
+                {      //заполняем Var'ы
+                    sortBy.push("Var(" + i + ")");
+                }
+
+                vscode.window.showQuickPick(sortBy, { placeHolder: "Сортировать по" }).then(x =>
                 {
 
-                    let res;
-                    let attr = x;
+                    if (typeof x !== typeof undefined)
+                    {
 
-                    if (attr.includes("Var"))
-                    {
-                        let index = parseInt(attr.match(/\d+/)[0]);
-                        res = TibDocumentEdits.sortListBy(text, "Var", index);
-                    } else
-                    {
-                        res = TibDocumentEdits.sortListBy(text, x);         //сортируем
+                        let res;
+                        let attr = x;
+
+                        if (attr.includes("Var"))
+                        {
+                            let index = parseInt(attr.match(/\d+/)[0]);
+                            res = TibDocumentEdits.sortListBy(text, "Var", index);
+                        } else
+                        {
+                            res = TibDocumentEdits.sortListBy(text, x);         //сортируем
+                        }
+
+                        res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");     //форматируем xml
+
+
+                        applyChanges(editor.selection, res, editor, true).then(() => CurrentStatus.removeCurrentMessage());      //заменяем текст
                     }
-
-                    res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");     //форматируем xml
-
-
-                    applyChanges(editor.selection, res, editor, true);      //заменяем текст
-                }
-            });
-        } catch (error)
-        {
-            logError("Ошибка при сортировке листа", error);
-        }
+                });
+            } catch (error)
+            {
+                logError("Ошибка при сортировке листа", error);
+            }
+            x.dispose();
+        });
     });
 
     //преобразовать в список c возрастом
@@ -581,8 +587,13 @@ function registerCommands()
             logError("Невозможно получить доступ к файлу демки");
             return;
         }
-        CurrentStatus.setProcessMessage("Открывается демка...");
-        openFileText(path).then(x => CurrentStatus.removeCurrentMessage());
+        CurrentStatus.setProcessMessage("Открывается демка...").then(x =>
+        {
+            openFileText(path).then(x => CurrentStatus.removeCurrentMessage()).then(res =>
+            {
+                x.dispose();
+            });
+        });
     });
 
     //Создание tibXML шаблона
@@ -617,43 +628,45 @@ function registerCommands()
     vscode.languages.registerDocumentFormattingEditProvider('tib', {
         provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[]
         {
-            CurrentStatus.setProcessMessage("Форматирование...");
-            let editor = vscode.window.activeTextEditor;
-            let range;
-            let indent;
-            // либо весь документ
-            if (editor.selection.start.isEqual(editor.selection.end))
+            CurrentStatus.setProcessMessage("Форматирование...").then(x => 
             {
-                range = getFullRange(document);
-                indent = 0;
-            }
-            else
-            {
-                // либо выделяем строки целиком
-                let sel = selectLines(document, editor.selection);
-                editor.selection = sel;
-                range = sel;
-                let tag = getCurrentTag(document, sel.start);
-                if (!tag) indent = 0;
-                else indent = tag.Parents.length + 1;
-            }
-            let text = document.getText(range);
-
-            Formatting.format(text, Language.XML, Settings, "\t", indent).then(
-                (res) => 
+                let editor = vscode.window.activeTextEditor;
+                let range;
+                let indent;
+                // либо весь документ
+                if (editor.selection.start.isEqual(editor.selection.end))
                 {
-                    vscode.window.activeTextEditor.edit(builder =>
-                    {
-                        builder.replace(range, res);
-                        //CurrentStatus.removeCurrentMessage();
-                    })
-                },
-                (er) =>
-                {
-                    logError(er);
-                    CurrentStatus.removeCurrentMessage();
+                    range = getFullRange(document);
+                    indent = 0;
                 }
-            )
+                else
+                {
+                    // либо выделяем строки целиком
+                    let sel = selectLines(document, editor.selection);
+                    editor.selection = sel;
+                    range = sel;
+                    let tag = getCurrentTag(document, sel.start);
+                    if (!tag) indent = 0;
+                    else indent = tag.Parents.length + 1;
+                }
+                let text = document.getText(range);
+
+                Formatting.format(text, Language.XML, Settings, "\t", indent).then(
+                    (res) => 
+                    {
+                        vscode.window.activeTextEditor.edit(builder =>
+                        {
+                            builder.replace(range, res);
+                            x.dispose();
+                        })
+                    },
+                    (er) =>
+                    {
+                        logError(er);
+                        x.dispose();
+                    }
+                )
+            });
             // provideDocumentFormattingEdits по ходу не умеет быть async, поэтому выкручиваемся так
             return [];
         }
