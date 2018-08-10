@@ -18,7 +18,7 @@ import * as winattr from "winattr"
 //#region
 
 
-export enum Language { XML, CSharp, CSS, JS, PlainTetx, Inline };
+export enum Language { XML, CSharp, CSS, JS, PlainText, Inline };
 
 
 /** Результат поиска в строке */
@@ -1301,7 +1301,7 @@ export class TagInfo
             case "value":
             case "label":
             case "var":
-                res = Language.PlainTetx;
+                res = Language.PlainText;
                 break;
 
             default:

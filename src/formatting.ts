@@ -30,7 +30,7 @@ function LanguageFunction(language: Language)//: (text: string, tab?: string, in
 
     switch (language)
     {
-        case Language.PlainTetx:
+        case Language.PlainText:
             func = formatPlainText;
             break;
 
