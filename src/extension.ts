@@ -1971,21 +1971,19 @@ function showLockInfo(document: vscode.TextDocument)
 {
     let path = new Path(document.fileName);
     let lockPath = getLockFilePath(path);
+    let strPath = getFilePathForMessage(document.fileName);
     if (fs.existsSync(lockPath))
     {
         let data = getLockData(lockPath);
-        let message = `Файл ${document.fileName} использует `;
+        let message = `Файл ${strPath} использует `;
         let user = "непонятно кто";
         if (!!data && !!data.User)
         {
             user = data.User;
-            if (data.Id == getUserId())
-            {
-                return lockDocument(document, true, true);
-            }
             if (data.User == getUserName())
             {
-                yesNoHelper(`Файл ${document.fileName} занят пользователем ${user}. Возможно, он остался заблокированным после прерывания работы расширения. Разблокировать?`).then(res => { if (res) lockDocument(document, true, true) });
+                if (data.Id == getUserId()) return lockDocument(document, true, true);
+                yesNoHelper(`Файл ${strPath} занят пользователем ${user}. Возможно, он остался заблокированным после прерывания работы расширения. Разблокировать?`).then(res => { if (res) lockDocument(document, true, true) });
                 return;
             }
         }
@@ -1994,13 +1992,21 @@ function showLockInfo(document: vscode.TextDocument)
     }
     else
     {
-        yesNoHelper(`Файл ${document.fileName} защищён от записи. Разрешить запись?`).then(res =>
+        yesNoHelper(`Файл ${strPath} защищён от записи. Разрешить запись?`).then(res =>
         {
             if (res) unlockFile(document.fileName, true);
         });
     }
 }
 
+
+/** Возвращает длинный или короткий путь к файлу согласно настройке 'showFullPath' */
+function getFilePathForMessage(path: string)
+{
+    let res = path;
+    if (!Settings.Item("showFullPath")) res = new Path(path).FileName;
+    return `"${res}"`;
+}
 
 
 class CacheSet 
