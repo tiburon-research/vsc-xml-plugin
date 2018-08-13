@@ -2043,9 +2043,10 @@ export function logToOutput(message: string, prefix = " > "): void
 
 
 /** Задаёт файлу режим readonly */
-export function unlockFile(path: string)
+export function unlockFile(path: string, log = false)
 {
     winattr.setSync(path, { readonly: false });
+    if (log) logToOutput(`Запись в файл ${path} разрешена`);
 }
 
 

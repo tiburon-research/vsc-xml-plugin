@@ -1908,7 +1908,7 @@ function yesNoHelper(text: string): Promise<boolean>
 {
     return new Promise<boolean>((resolve) =>
     {
-        if (Settings.Item("showHelpMessages")) vscode.window.showInformationMessage(text, "Да", "нет").then((res) =>
+        if (Settings.Item("showHelpMessages")) vscode.window.showInformationMessage(text, "Да", "Нет").then((res) =>
         {
             resolve(res == "Да");
         });
@@ -1971,11 +1971,10 @@ function showLockInfo(document: vscode.TextDocument)
 {
     let path = new Path(document.fileName);
     let lockPath = getLockFilePath(path);
-    let message = `Файл ${document.fileName} открыт в режиме только для чтения`;
     if (fs.existsSync(lockPath))
     {
         let data = getLockData(lockPath);
-        message = `Файл ${document.fileName} использует `;
+        let message = `Файл ${document.fileName} использует `;
         let user = "непонятно кто";
         if (!!data && !!data.User)
         {
@@ -1987,8 +1986,15 @@ function showLockInfo(document: vscode.TextDocument)
             }
         }
         message = message + user + "";
+        showWarning(message);
     }
-    showWarning(message);
+    else
+    {
+        yesNoHelper(`Файл ${document.fileName} защищён от записи. Разрешить запись?`).then(res =>
+        {
+            if (res) unlockFile(document.fileName, true);
+        });
+    }
 }
 
 
