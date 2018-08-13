@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -1979,6 +1979,10 @@ function showLockInfo(document: vscode.TextDocument)
         if (!!data && !!data.User)
         {
             user = data.User;
+            if (data.Id == getUserId())
+            {
+                return lockDocument(document, true, true);
+            }
             if (data.User == getUserName())
             {
                 yesNoHelper(`Файл ${document.fileName} занят пользователем ${user}. Возможно, он остался заблокированным после прерывания работы расширения. Разблокировать?`).then(res => { if (res) lockDocument(document, true, true) });
