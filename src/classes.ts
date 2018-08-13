@@ -12,6 +12,15 @@ import { RegExpPatterns, _LockInfoFilePrefix } from './constants'
 import * as iconv from 'iconv-lite'
 import * as dateFormat from 'dateformat'
 import * as winattr from "winattr"
+import { machineIdSync } from "node-machine-id"
+
+
+// переменная для кэширования информации о пользователе
+var userInfo: UserInfo =
+{
+    Name: null,
+    Id: null
+}
 
 
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
@@ -20,12 +29,18 @@ import * as winattr from "winattr"
 
 export enum Language { XML, CSharp, CSS, JS, PlainText, Inline };
 
-
 /** Результат поиска в строке */
 interface SearchResult
 {
     Result: RegExpMatchArray;
     Index: number;
+}
+
+
+interface UserInfo
+{
+    Name: string;
+    Id: string;
 }
 
 
@@ -1674,6 +1689,7 @@ export class Path
 export interface LockData
 {
     User: string;
+    Id: string;
 }
 
 
@@ -1820,7 +1836,16 @@ export function pathExists(path: string): boolean
 /** Возвращаетмя пользователя */
 export function getUserName()
 {
-    return os.userInfo().username;
+    if (!!userInfo.Name) return userInfo.Name;
+    return (userInfo.Name = os.userInfo().username);
+}
+
+
+/** Возвращает machineId */
+export function getUserId()
+{
+    if (!!userInfo.Id) return userInfo.Id;
+    return (userInfo.Id = machineIdSync());
 }
 
 
@@ -2082,7 +2107,8 @@ export function createLockInfoFile(path: Path)
 {
     let fileName = getLockFilePath(path);
     let data: LockData = {
-        User: getUserName()
+        User: getUserName(),
+        Id: getUserId()
     };
     if (fs.existsSync(fileName)) fs.unlinkSync(fileName);
     fs.writeFileSync(fileName, JSON.stringify(data));
