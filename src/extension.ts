@@ -1040,11 +1040,13 @@ function helper()
             //пропускаем объявления
             if (Parse.isMethodDefinition(lastLine)) return;
             let ar = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Method"));
-            let mtch = lastLine.match(/(?:(^)|(.*\b))(\w+)\([^\(\)]*$/);
-            if (!mtch || mtch.length < 3) return sign;
+            let mtch = lastLine.match(/((^)|(.*\b))(\w+)\([^\(\)]*$/);
+            if (!mtch || mtch.length < 4) return sign;
+            let reg = mtch[1].match(/(\w+)\.$/);
+            let parent = !!reg ? reg[1] : null;
             ar.forEach(element =>
             {
-                if (element.Name == mtch[3])
+                if (element.Name == mtch[4] && (element.Kind == vscode.CompletionItemKind.Function || !!parent && element.Parent == parent))
                 {
                     if (element.Overloads.length == 0) sign.signatures.push(element.ToSignatureInformation());
                     else element.Overloads.forEach(el =>
@@ -1054,7 +1056,7 @@ function helper()
                 }
             });
             // Custom Methods
-            Methods.SignatureArray(mtch[3]).forEach(element =>
+            Methods.SignatureArray(mtch[4]).forEach(element =>
             {
                 sign.signatures.push(element);
             });
@@ -1079,10 +1081,17 @@ function hoverDocs()
             if (!tag) return;
             if (tag.GetLaguage() != Language.CSharp) return;
             let text = document.getText(range);
+            let parent = null;
+            let lastText = getPreviousText(document, position);
+            let reg = lastText.match(/(\w+)\.\w*$/);
+            if (!!reg)
+            {
+                parent = reg[1];
+            }
             // надо проверить родителя!
             let suit = CodeAutoCompleteArray.filter(x =>
             {
-                return x.Name == text;
+                return x.Name == text && (!x.Parent || x.Parent == parent);
             });
             for (let i = 0; i < suit.length; i++)
             {
