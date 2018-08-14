@@ -71,9 +71,6 @@ var Refused = {
     enableCache: false
 }
 
-/** Показывает, что документ в процессе сохранения */
-var IsBeforeSave = false;
-
 /** Пути к заблокированным файлам */
 var LockedFiles: string[] = [];
 
@@ -167,14 +164,11 @@ export function activate(context: vscode.ExtensionContext)
         if (x.document.isDirty) // сохранение изменённого документа
         {
             unlockDocument(x.document);
-            IsBeforeSave = true;
         }
-        else IsBeforeSave = false;
     })
 
     vscode.workspace.onDidSaveTextDocument(x =>
     {
-        IsBeforeSave = false;
         lockDocument(x);
     });
 

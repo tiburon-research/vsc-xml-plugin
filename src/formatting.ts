@@ -319,8 +319,10 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
         if (!!CSFormatter)
         {
             // CDATA форматировать не надо
-            let hasCDATA = !!res.match(/^\s*<!\[CDATA\[[\s\S]*\]\]>\s*$/);
-            if (hasCDATA) res = res.replace(/^\s*<!\[CDATA\[*([\s\S]*)\]\]>\s*$/, "$1");
+            let reg = res.match(/^\s*<!\[CDATA\[([\s\S]*)\]\]>\s*$/);
+            let hasCDATA = !!reg;
+            if (hasCDATA) res = reg[1];
+            let multiline = res.indexOf("\n") > -1;
             // убираем собак и $repeat
             let encoder = new Encoder(res);
             encoder.Encode((txt, delimiter) => encodeElements(txt, /\$repeat\([\w@]+\)({.*\[.*\]\s*})?/, delimiter));
@@ -331,7 +333,6 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
             // форматируем
             res = clearIndents(res);
             res = await CSFormatter(res);
-            let multiline = res.indexOf("\n") > -1;
             let space = multiline ? "\n" : " ";
             if (hasCDATA) res = res.replace(/^([\s\S]*)$/, "<![CDATA[" + space + "$1" + space + "]]>");
             let ind = tab.repeat(indent);
