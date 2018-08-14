@@ -599,6 +599,7 @@ export class TibMethod
         mds.value = this.Signature;
         if (this.Type) item.detail = this.Type;
         item.documentation = mds;
+        item.sortText = '0';
         return item;
     }
 

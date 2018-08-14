@@ -905,7 +905,7 @@ function autoComplete()
                     let ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Variable"), TibAutoCompleteList.Item("Enum"), TibAutoCompleteList.Item("Class"), TibAutoCompleteList.Item("Type"), TibAutoCompleteList.Item("Struct"));
                     ar.forEach(element =>
                     {
-                        if (element) completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/)));
+                        if (element) completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/), '1'));
                     });
                     //C# Snippets
                     AutoCompleteArray.CSSnippets.forEach(element =>
@@ -1483,7 +1483,7 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
     }
     catch (error)
     {
-        logError("Ошибка определение положения в XML", error);
+        logError("Ошибка определения положения в XML", error);
         return null;
     }
     return tag;
