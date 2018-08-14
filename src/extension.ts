@@ -959,12 +959,12 @@ function autoComplete()
                         let reg = new RegExp(element.Parent + "\\.\\w*$");
                         m = !!lastLine.match(reg);
                     }
-                    if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "0" + element.Name));
+                    if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "0" + element.Kind + element.Name));
                 });
                 // добавляем Linq
                 if (lastLine.match(/\.\w*$/) && (!parent || ClassTypes.indexOf(parent) == -1) && _useLinq)
                 {
-                    let linqAr = TibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "1" + x.Name));
+                    let linqAr = TibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "1" + x.Kind + x.Name));
                     completionItems = completionItems.concat(linqAr);
                 }
             }
