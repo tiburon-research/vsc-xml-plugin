@@ -670,9 +670,11 @@ function registerCommands()
 
 
 
-/** Подсветка открывающегося и закрывающегося тегов */
+
+/** Подсветка открывающегося и закрывающегося элементов */
 function higlight()
 {
+	// теги
 	vscode.languages.registerDocumentHighlightProvider('tib', {
 		provideDocumentHighlights(document, position)
 		{
@@ -751,6 +753,57 @@ function higlight()
 						break;
 					}
 			}
+			return res;
+		}
+	})
+
+	// блоки
+	vscode.languages.registerDocumentHighlightProvider('tib', {
+		provideDocumentHighlights(document, position)
+		{
+			let res = [];
+			let lineText = getCurrentLineText(document, position);
+			let reg = lineText.match(/<!--#(end)?block.*-->/);
+			if (!reg) return res;
+			if (reg.index > position.character || reg.index + reg[0].length < position.character) return;
+			let nextRange: vscode.Range;
+			
+			if (!!reg[1])
+			{
+				let prevRange = new vscode.Range(
+					new vscode.Position(0, 0),
+					new vscode.Position(position.line, 0)
+				);
+				let prevText = document.getText(prevRange);
+				let res = prevText.matchAll(/<!--#block.*-->/);
+				if (!res || res.length == 0) return res;
+
+				let match = res.last();
+				nextRange = new vscode.Range(
+					document.positionAt(match.index),
+					document.positionAt(match.index + match[0].length)
+				);
+			}
+			else
+			{
+				let offset = reg.index + reg[0].length;
+				let after = document.getText().slice(offset);
+				let res = after.match(/<!--#endblock-->/);
+				if (!res) return res;
+
+				nextRange = new vscode.Range(
+					document.positionAt(offset + res.index),
+					document.positionAt(offset + res.index + res[0].length)
+				);
+			}
+			
+			let thisRange = new vscode.Range(
+				new vscode.Position(position.line, reg.index),
+				new vscode.Position(position.line, reg.index + reg[0].length)
+			);
+
+			res.push(new vscode.DocumentHighlight(thisRange));
+			res.push(new vscode.DocumentHighlight(nextRange));
 			return res;
 		}
 	})
