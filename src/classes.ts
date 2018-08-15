@@ -48,18 +48,21 @@ interface UserInfo
  * @param From Включаемая граница
  * @param To Не влючамая граница
 */
-export class ITextRange
+class ITextRange
 {
 	From: number;
 	To: number;
-	Length?: number;
 }
 
-class TextRange implements ITextRange
+export class TextRange
 {
 	From: number;
 	To: number;
-	Length?: number;
+	
+	get Length(): number
+	{
+		return this.To - this.From;
+	}
 
 	constructor(obj: ITextRange)
 	{
@@ -313,6 +316,18 @@ export namespace TibDocumentEdits
 
 }
 
+export class KeyValuePair<T>
+{
+	constructor(key: string, value: T)
+	{
+		this.Key = key;
+		this.Value = value;
+	}
+
+	Key: string;
+	Value: T;
+}
+
 export class KeyedCollection<T>
 {
 	protected items: { [index: string]: T } = {};
@@ -330,6 +345,11 @@ export class KeyedCollection<T>
 	public Count(): number
 	{
 		return this.count;
+	}
+
+	public AddElement(element: KeyValuePair<T>)
+	{
+		this.AddPair(element.Key, element.Value);
 	}
 
 	/** Добавляет или заменяет */
@@ -884,7 +904,7 @@ export class CurrentTag
 		});
 	}
 
-	/** возвращает коллекцию атрибутов */
+	/** возвращает коллекцию атрибутов из переданной строки */
 	public static GetAttributesArray(str: string): KeyedCollection<string>
 	{
 		let mt = str.match(RegExpPatterns.Attributes);
@@ -899,6 +919,16 @@ export class CurrentTag
 			});
 		}
 		return res;
+	}
+	
+	/** Получает все атрибуты, независимо от Position */
+	public GetAllAttributes(document: vscode.TextDocument): KeyedCollection<string>
+	{
+		if (this.OpenTagIsClosed) return this.Attributes.toKeyedCollection(x => new KeyValuePair<string>(x.Name, x.Value));
+		let fromStart = document.getText().slice(this.StartIndex);
+		let tag = new TagInfo(fromStart);
+		if (!tag || !tag.OpenTag) return this.Attributes.toKeyedCollection(x => new KeyValuePair<string>(x.Name, x.Value));
+		return CurrentTag.GetAttributesArray(fromStart.slice(0, tag.OpenTag.Length));
 	}
 
 	/** Язык содержимого */
@@ -1253,7 +1283,7 @@ export class TagInfo
 			// выделяем AllowCode fake
 			this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + RegExpPatterns.AllowCodeTags + "$")) && !text.substr(to).match(/^([\s\n]*)*<\w/g);
 			if (this.Language == Language.CSharp && !this.IsAllowCodeTag) this.Language = Language.XML;
-			this.OpenTag = { From: from, To: to };
+			this.OpenTag = new TextRange({ From: from, To: to });
 			let before = text.substr(0, this.OpenTag.From + 1);
 			let newLine = text.indexOf("\n", to - 1);
 			this.Multiline = newLine > -1;
@@ -1262,9 +1292,9 @@ export class TagInfo
 			this.SelfClosed = !!clt && clt.SelfClosed;
 			if (!!clt && !this.SelfClosed)
 			{
-				this.CloseTag = { From: clt.Range.From, To: clt.Range.To + 1 };
+				this.CloseTag = new TextRange({ From: clt.Range.From, To: clt.Range.To + 1 });
 				this.Closed = true;
-				this.Body = { From: to, To: clt.Range.From };
+				this.Body = new TextRange({ From: to, To: clt.Range.From });
 				this.HasCDATA = !!text.slice(this.Body.From, this.Body.To).match(/^\s*<!\[CDATA\[/);
 				let after = text.indexOf("\n", this.CloseTag.To - 1);
 				if (after > -1) lineTo = after;
@@ -1272,18 +1302,18 @@ export class TagInfo
 			}
 			else
 			{
-				this.Body = { From: to, To: (this.SelfClosed ? to : text.length) };
+				this.Body = new TextRange({ From: to, To: (this.SelfClosed ? to : text.length) });
 				this.Closed = this.SelfClosed;
-				this.CloseTag = { From: this.Body.To, To: this.Body.To };
+				this.CloseTag = new TextRange({ From: this.Body.To, To: this.Body.To });
 				lineTo = this.Body.To;
 			}
 			if (offset != 0)
 			{
 				lineTo += offset;
 				lineFrom += offset;
-				this.OpenTag = { From: this.OpenTag.From + offset, To: this.OpenTag.To + offset };
-				if (this.Closed) this.CloseTag = { From: this.CloseTag.From + offset, To: this.CloseTag.To + offset };
-				this.Body = { From: this.Body.From + offset, To: this.Body.To + offset };
+				this.OpenTag = new TextRange({ From: this.OpenTag.From + offset, To: this.OpenTag.To + offset });
+				if (this.Closed) this.CloseTag = new TextRange({ From: this.CloseTag.From + offset, To: this.CloseTag.To + offset });
+				this.Body = new TextRange({ From: this.Body.From + offset, To: this.Body.To + offset });
 			}
 			this.FullLines = new TextRange({ From: lineFrom, To: lineTo });
 			this.Found = true;
@@ -1327,9 +1357,9 @@ export class TagInfo
 		return res;
 	}
 
-	public OpenTag: ITextRange;
-	public CloseTag: ITextRange;
-	public Body: ITextRange;
+	public OpenTag: TextRange;
+	public CloseTag: TextRange;
+	public Body: TextRange;
 	public Name: string;
 	public IsAllowCodeTag: boolean;
 	/** Валидация: получилось ли распарсить */
@@ -2179,6 +2209,8 @@ declare global
 		contains(element: T): boolean;
 		/** Удаляет элемент из массива и возвращает этот элемент */
 		remove(element: T): T;
+		/** Прелбразует массив в коллекцию T */
+		toKeyedCollection(func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
 	}
 
 }
@@ -2262,6 +2294,16 @@ Array.prototype.remove = function <T>(element: T): T
 	let res: T;
 	if (index > -1)
 		res = this.splice(index, 1);
+	return res;
+}
+
+Array.prototype.toKeyedCollection = function <T>(func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
+{
+	let res = new KeyedCollection<T>();
+	this.forEach(element =>
+	{
+		res.AddElement(func(element));
+	});
 	return res;
 }
 

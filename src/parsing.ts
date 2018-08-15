@@ -1,6 +1,6 @@
 'use strict'
 
-import { ITextRange, safeString, TagInfo } from "./classes";
+import { TextRange, safeString, TagInfo } from "./classes";
 import { logError } from "./extension";
 import { clearXMLComments } from "./encoding"
 import { positiveMin, KeyedCollection, CurrentTag } from "./classes"
@@ -11,7 +11,7 @@ import * as charDetect from 'charset-detector'
 /** Результат поиска тегов */
 export interface FindTagResult
 {
-	Range: ITextRange;
+	Range: TextRange;
 	/** Самозакрывающийся тег */
 	SelfClosed: boolean;
 }
@@ -87,7 +87,7 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
 		let clLast = rest.indexOf(clBracket);
 		if (cl < 0 || clLast < 0) return null;
 		
-		tResult.Range = { From: fullText.length - rest.length - 1, To: fullText.length - rest.length + clLast, Length: clLast + 1 };	
+		tResult.Range = new TextRange({ From: fullText.length - rest.length - 1, To: fullText.length - rest.length + clLast });
 		return tResult;
 	}
 	catch (err)
@@ -155,7 +155,7 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 
 		let to = txt.indexOf(clBracket, rest.length + 1);
 		
-		tResult.Range = { From: rest.length, To: to, Length: to - rest.length };
+		tResult.Range = new TextRange({ From: rest.length, To: to });
 		return tResult;
 	}
 	catch (err)

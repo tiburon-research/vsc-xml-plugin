@@ -1177,36 +1177,62 @@ export function diagnostic(document: vscode.TextDocument)
 /** Переход к определениям */
 function definitions()
 {
+	// C#
 	vscode.languages.registerDefinitionProvider('tib', {
 		provideDefinition(document, position, token)
 		{
 			let tag = getCurrentTag(document, position);
+			if (!tag || tag.GetLaguage() != Language.CSharp || tag.InCSString()) return;
 			let res: vscode.Location;
 			try
 			{
-				if (!!tag && tag.GetLaguage() == Language.CSharp && !tag.InCSString())
-				{
-					let word = document.getText(document.getWordRangeAtPosition(position));
-					if (Methods.Contains(word)) res = Methods.Item(word).GetLocation();
-				}
-				else
-				{
-					let word = document.getText(document.getWordRangeAtPosition(position, /[^'"\s]+/));
-					let enabledNodes = ["Page", "List", "Quota"];
-					enabledNodes.forEach(element =>
-					{
-						let item = CurrentNodes.GetItem(word, element);
-						if (item)
-						{
-							res = item.GetLocation();
-							return res;
-						}
-					});
-				}
+				let word = document.getText(document.getWordRangeAtPosition(position));
+				if (Methods.Contains(word)) res = Methods.Item(word).GetLocation();
 			} catch (error)
 			{
 				logError("Ошибка при получении определения метода", error);
 			}
+			return res;
+		}
+	});
+
+
+	// XML узлы
+	vscode.languages.registerDefinitionProvider('tib', {
+		provideDefinition(document, position, token)
+		{
+			let res: vscode.Location;
+			try
+			{
+				let word = document.getText(document.getWordRangeAtPosition(position, /[^'"\s]+/));
+				let enabledNodes = ["Page", "List", "Quota"];
+				enabledNodes.forEach(element =>
+				{
+					let item = CurrentNodes.GetItem(word, element);
+					if (item)
+					{
+						res = item.GetLocation();
+						return res;
+					}
+				});
+			} catch (error)
+			{
+				logError("Ошибка при получении определения узла XML", error);
+			}
+			return res;
+		}
+	});
+
+	// include
+	vscode.languages.registerDefinitionProvider('tib', {
+		provideDefinition(document, position, token)
+		{
+			let tag = getCurrentTag(document, position);
+			if (!tag || tag.Name != "Include") return;
+			let attrs = tag.GetAllAttributes(document);
+			let fileName = attrs.Item("FileName");
+			if (!fileName) return;
+			let res = new vscode.Location(vscode.Uri.file(fileName), new vscode.Position(0,0));
 			return res;
 		}
 	});
