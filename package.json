@@ -261,7 +261,7 @@
           "type": "array",
           "default": []
         },
-        "showFullPath": {
+        "tib.showFullPath": {
           "description": "Всегда показывать полные пути к файлам (во всплывающих окошках)",
           "type": "bool",
           "default": false
