@@ -461,6 +461,38 @@ export class KeyedCollection<T>
 		})
 	}
 
+	/** Преобразует коллекцию в новую */
+	public Map(func: (key: string, value: T) => KeyValuePair<any>): KeyedCollection<T>
+	{
+		let res = new KeyedCollection<T>();
+		this.forEach((key, value) =>
+		{
+			res.AddElement(func(key, value));
+		});
+		return res;
+	}
+
+	/** Преобразует коллекцию в массив */
+	public ToArray(func: (element: KeyValuePair<T>) => any): any[]
+	{
+		let ar: KeyValuePair<T>[] = [];
+		this.forEach((key, value) => { ar.push(new KeyValuePair(key, value)); });
+		return ar.map(func);
+	}
+
+
+	/** Возвращает отсортированную коллекцию */
+	public OrderBy(func: (x: KeyValuePair<T>) => number): KeyedCollection<T>
+	{
+		let res = new KeyedCollection<T>();
+		let sortedAr: KeyValuePair<T>[] = this.ToArray(x => x);		
+		sortedAr = sortedAr.sort(x => func(x));
+		sortedAr.forEach(element => {
+			res.AddElement(element);
+		});
+		return res;
+	}
+
 }
 
 
@@ -2109,12 +2141,14 @@ export function unlockFile(path: string, log = false)
 /** Снимает с файла режим readonly */
 export function lockFile(path: string)
 {
+	if (!pathExists(path)) return;
 	winattr.setSync(path, { readonly: true });
 }
 
 /** Файл в режиме readonly */
 export function fileIsLocked(path: string): boolean
 {
+	if (!pathExists(path)) return false;
 	let props = winattr.getSync(path);
 	return !!props && !!props.readonly;
 }
@@ -2136,6 +2170,7 @@ function showFile(path: string)
 /** Сохраняет файл с данными о блокировке */
 export function createLockInfoFile(path: Path)
 {
+	if (!pathExists(path.FullPath)) return;
 	let fileName = getLockFilePath(path);
 	let data: LockData = {
 		User: getUserName(),
@@ -2167,7 +2202,7 @@ export function getLockFilePath(path: Path): string
 /** Получает информацию из `fileName` */
 export function getLockData(fileName: string): LockData
 {
-	if (!fs.existsSync(fileName)) return null;
+	if (!pathExists(fileName)) return null;
 	showFile(fileName);
 	let data = fs.readFileSync(fileName).toString();
 	hideFile(fileName);
@@ -2195,6 +2230,8 @@ declare global
 		matchAll(search: RegExp): RegExpMatchArray[];
 		/** Замена, начиная с `from` длиной `subsr` символов (если string, то берётся длина строки) */
 		replaceRange(from: number, substr: string | number, newValue: string): string;
+		/** Заменяет все Key (отсортированные) на Value */
+		replaceValues(items: KeyedCollection<string>): string
 	}
 
 	interface Array<T>
@@ -2209,8 +2246,10 @@ declare global
 		contains(element: T): boolean;
 		/** Удаляет элемент из массива и возвращает этот элемент */
 		remove(element: T): T;
-		/** Прелбразует массив в коллекцию T */
+		/** Преjбразует массив в коллекцию T */
 		toKeyedCollection(func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
+		/** Преjбразует массив в коллекцию T */
+		toKeyedCollection(func: (x: T) => Object): KeyedCollection<any>
 	}
 
 }
@@ -2252,6 +2291,19 @@ String.prototype.replaceRange = function (from: number, substr: string | number,
 	let after = (this as string).slice(to);
 	return pre + middle + after;
 }
+
+
+String.prototype.replaceValues = function (items: KeyedCollection<string>): string
+{
+	let res = this as string;
+	let sorted: KeyValuePair<string>[] = items.OrderBy(x => x.Key.length).ToArray(x => x);
+	sorted.forEach(x =>
+	{
+		res = res.replace(x.Key, x.Value);
+	});
+	return res;
+}
+
 
 
 Array.prototype.last = function <T>(): T
@@ -2303,6 +2355,19 @@ Array.prototype.toKeyedCollection = function <T>(func: (x: T) => KeyValuePair<an
 	this.forEach(element =>
 	{
 		res.AddElement(func(element));
+	});
+	return res;
+}
+
+
+Array.prototype.toKeyedCollection = function <T>(func: (x: T) => Object): KeyedCollection<any>
+{
+	let res = new KeyedCollection<T>();
+	(this as T[]).forEach(element =>
+	{
+		let obj = func(element);
+		let key = Object.keys(obj)[0];
+		res.AddPair(key, obj[key] as T);
 	});
 	return res;
 }
