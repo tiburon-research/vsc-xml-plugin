@@ -265,6 +265,11 @@
           "description": "Всегда показывать полные пути к файлам (во всплывающих окошках)",
           "type": "bool",
           "default": false
+        },
+        "tib.upcaseFirstLetter": {
+          "description": "Автоматически заменять первую букву тегов на заглавную",
+          "type": "bool",
+          "default": true
         }
       }
     }

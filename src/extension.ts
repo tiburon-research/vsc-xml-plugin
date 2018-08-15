@@ -155,8 +155,9 @@ export function activate(context: vscode.ExtensionContext)
 		let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
 		let tag = getCurrentTag(editor.document, originalPosition, text);
 		reload(false);
-		insertAutoCloseTag(event, editor, tag, text);
+		insertAutoCloseTag(event, editor, tag);
 		insertSpecialSnippets(event, editor, text, tag);
+		upcaseFirstLetter(event, editor, tag, text);
 	});
 
 	vscode.workspace.onWillSaveTextDocument(x =>
@@ -767,7 +768,7 @@ function higlight()
 			if (!reg) return res;
 			if (reg.index > position.character || reg.index + reg[0].length < position.character) return;
 			let nextRange: vscode.Range;
-			
+
 			if (!!reg[1])
 			{
 				let prevRange = new vscode.Range(
@@ -796,7 +797,7 @@ function higlight()
 					document.positionAt(offset + res.index + res[0].length)
 				);
 			}
-			
+
 			let thisRange = new vscode.Range(
 				new vscode.Position(position.line, reg.index),
 				new vscode.Position(position.line, reg.index + reg[0].length)
@@ -1162,9 +1163,34 @@ function hoverDocs()
 }
 
 
+/** Делает первую букву тега заглавной */
+function upcaseFirstLetter(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag, text: string)
+{
+	if (!tag || !Settings.Item("upcaseFirstLetter") || tag.GetLaguage() != Language.XML) return;
+	let lastTag = text.match(/(<\/?)([a-z]\w*)$/);
+	if (!lastTag) return;
+	try
+	{
+		let up = lastTag[2];
+		up = up[0].toLocaleUpperCase() + up.slice(1);
+		let pos = event.document.positionAt(lastTag.index).translate(0, lastTag[1].length);
+		let range = new vscode.Range(
+			pos,
+			pos.translate(0, lastTag[1].length)
+		);
+		editor.edit(builder =>
+		{
+			builder.replace(range, up);
+		});
+	} catch (error)
+	{
+		logError("Ошибка при добавлении заглавной буквы", error);
+	}
+}
+
 
 /** Подсказки и ошибки */
-export function diagnostic(document: vscode.TextDocument)
+function diagnostic(document: vscode.TextDocument)
 {
 	let warns = vscode.languages.createDiagnosticCollection('tib_warnings');
 	getWarnings(document).then(res =>
@@ -1233,7 +1259,7 @@ function definitions()
 			let fileName = attrs.Item("FileName");
 			if (!fileName) return;
 			fileName = applyConstants(fileName);
-			let res = new vscode.Location(vscode.Uri.file(fileName), new vscode.Position(0,0));
+			let res = new vscode.Location(vscode.Uri.file(fileName), new vscode.Position(0, 0));
 			return res;
 		}
 	});
@@ -1275,7 +1301,7 @@ function makeIndent(): void
 
 
 /** автоматическое закрывание <тегов> */
-function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag, text: string): void
+function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag): void
 {
 	if (!tag || InProcess || !editor || !event || !event.contentChanges.length) return;
 	let changes = getContextChanges(editor.selections, event.contentChanges);
