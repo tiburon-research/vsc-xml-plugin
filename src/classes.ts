@@ -992,6 +992,16 @@ export class CurrentTag
 					)
 						tagLanguage = Language.XML;
 				}
+				// проверка, что не внутри style/script
+				this.Parents.forEach(x =>
+				{
+					let pLang = TagInfo.getTagLanguage(x.Name);
+					if (isScriptLanguage(pLang))
+					{
+						tagLanguage = pLang;
+						return;
+					}
+				});
 			}
 		this.Language = tagLanguage;
 		return tagLanguage;
