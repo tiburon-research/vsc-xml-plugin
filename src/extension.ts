@@ -928,7 +928,7 @@ function autoComplete()
 	vscode.languages.registerCompletionItemProvider('tib', {
 		provideCompletionItems(document, position, token, context)
 		{
-			let completionItems = [];
+			let completionItems: vscode.CompletionItem[] = [];
 			let tag = getCurrentTag(document, position);
 			if (!tag || tag.GetLaguage() != Language.CSharp) return;
 
@@ -957,9 +957,10 @@ function autoComplete()
 				if (!tag.InCSString())
 				{
 					let ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Variable"), TibAutoCompleteList.Item("Enum"), TibAutoCompleteList.Item("Class"), TibAutoCompleteList.Item("Type"), TibAutoCompleteList.Item("Struct"));
+					let adBracket = !str.match(/\w*\(/);
 					ar.forEach(element =>
 					{
-						if (element) completionItems.push(element.ToCompletionItem(!str.match(/\w*\(/), '1'));
+						if (element) completionItems.push(element.ToCompletionItem(adBracket));
 					});
 					//C# Snippets
 					AutoCompleteArray.CSSnippets.forEach(element =>
@@ -975,10 +976,24 @@ function autoComplete()
 						let stuff = curLine.substr(0, qt);
 						// Lists
 						if (stuff.match(/CurrentSurvey\.Lists\[\s*$/))
+						{
 							completionItems = completionItems.concat(CurrentNodes.CompletitionItems("List"));
-						// Pages
-						if (stuff.match(/Page\s*=\s*$/))
-							completionItems = completionItems.concat(CurrentNodes.CompletitionItems("Page"));
+						}
+						else
+						{
+							// Pages
+							if (stuff.match(/Page\s*=\s*$/))
+							{
+								completionItems = completionItems.concat(CurrentNodes.CompletitionItems("Page"));
+							}
+							else // всё подряд
+							{
+								_NodeStoreNames.forEach(name =>
+								{
+									completionItems = completionItems.concat(CurrentNodes.CompletitionItems(name));
+								});
+							}
+						}
 					}
 				}
 			}
@@ -1013,12 +1028,12 @@ function autoComplete()
 						let reg = new RegExp(element.Parent + "\\.\\w*$");
 						m = !!lastLine.match(reg);
 					}
-					if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "0" + element.Kind + element.Name));
+					if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "__" + element.Name));
 				});
 				// добавляем Linq
 				if (lastLine.match(/\.\w*$/) && (!parent || ClassTypes.indexOf(parent) == -1) && _useLinq)
 				{
-					let linqAr = TibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "1" + x.Kind + x.Name));
+					let linqAr = TibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "zzz" + x.Name));
 					completionItems = completionItems.concat(linqAr);
 				}
 			}
@@ -1231,7 +1246,7 @@ function definitions()
 			try
 			{
 				let word = document.getText(document.getWordRangeAtPosition(position, /[^'"\s]+/));
-				let enabledNodes = ["Page", "List", "Quota"];
+				let enabledNodes = ["Page", "List", "Question"];
 				enabledNodes.forEach(element =>
 				{
 					let item = CurrentNodes.GetItem(word, element);

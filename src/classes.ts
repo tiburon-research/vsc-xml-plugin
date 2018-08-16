@@ -651,7 +651,7 @@ export class TibMethod
 		mds.value = this.Signature;
 		if (this.Type) item.detail = this.Type;
 		item.documentation = mds;
-		item.sortText = '0';
+		item.sortText = '___' + this.Name;
 		return item;
 	}
 
@@ -1136,18 +1136,41 @@ export class SurveyNode
 		this.Position = pos;
 		this.FileName = fileName;
 		this.Uri = vscode.Uri.file(fileName);
+		this.IconKind = this.GetKind(type);
 	}
 
 	public Id: string = "";
 	public Type: string = "";
 	public Position: vscode.Position;
 	public FileName: string;
+	public IconKind: vscode.CompletionItemKind;
 
 	private Uri: vscode.Uri;
 
 	GetLocation(): vscode.Location
 	{
 		return new vscode.Location(this.Uri, this.Position);
+	}
+
+	/** Чтобы иконки отличались */
+	private GetKind(nodeName: string): vscode.CompletionItemKind
+	{
+		switch (nodeName) {
+			case "Page":
+				return vscode.CompletionItemKind.File;
+			
+			case "Question":
+				return vscode.CompletionItemKind.EnumMember;
+			
+			case "List":
+				return vscode.CompletionItemKind.Unit;	
+			
+			case "Quota":
+				return vscode.CompletionItemKind.Event;
+			
+			default:
+				break;
+		}
 	}
 }
 
@@ -1224,6 +1247,8 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 			let ci = new vscode.CompletionItem(element.Id, vscode.CompletionItemKind.Enum);
 			ci.detail = name;
 			ci.insertText = new vscode.SnippetString(element.Id + closeQt);
+			ci.kind = element.IconKind;
+			ci.sortText = name + ci.insertText;
 			res.push(ci);
 		});
 		return res;
