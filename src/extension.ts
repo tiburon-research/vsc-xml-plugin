@@ -943,11 +943,17 @@ function autoComplete()
 			if (Parse.isMethodDefinition(curLine)) return;
 
 			let str = getCurrentLineText(document, position).substr(position.character);
-			if (tag.CSSingle() || !!mt[1] && mt[1] == "$") // добавляем snippet для $repeat
+			if (tag.CSSingle() || !!mt[1] && mt[1] == "$")
 			{
+				// добавляем snippet для $repeat
 				let ci = new vscode.CompletionItem("repeat", vscode.CompletionItemKind.Snippet);
 				ci.detail = "Строчный repeat";
 				ci.insertText = new vscode.SnippetString("repeat(${1|" + getAllLists().join(',') + "|}){${2:@ID}[${3:,}]}");
+				completionItems.push(ci);
+				// добавляем snippet для $place
+				ci = new vscode.CompletionItem("place", vscode.CompletionItemKind.Snippet);
+				ci.detail = "Указатель на вложенный вопрос";
+				ci.insertText = new vscode.SnippetString("place(${1|" + getAllQuestions().join(',') + "|})");
 				completionItems.push(ci);
 				if (!tag.CSSingle()) return completionItems;
 			}
