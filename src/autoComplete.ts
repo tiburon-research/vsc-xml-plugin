@@ -1422,6 +1422,7 @@ export const Attributes = {
 		},
 		{
 			"Name": "MixId",
+			Result: "MixIds",
 			"Type": "String"
 		},
 		{
@@ -1575,10 +1576,12 @@ export const Attributes = {
 		},
 		{
 			"Name": "UnionMixId",
+			Result: "MixIds",
 			"Type": "String"
 		},
 		{
 			"Name": "MixId",
+			Result: "MixIds",
 			"Type": "String"
 		},
 		{
@@ -1913,6 +1916,7 @@ export const Attributes = {
 		},
 		{
 			"Name": "MixId",
+			Result: "MixIds",
 			"AllowCode": "true",
 			"Type": "String"
 		},
@@ -1958,6 +1962,7 @@ export const Attributes = {
 		},
 		{
 			"Name": "MixId",
+			Result: "MixIds",
 			"Type": "String"
 		},
 		{

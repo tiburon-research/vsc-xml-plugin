@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair, getMixIds } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -49,6 +49,9 @@ var Methods = new TibMethods();
 
 /** Список Id */
 var CurrentNodes: SurveyNodes = new SurveyNodes();
+
+/** Список MixId */
+var MixIds: string[] = [];
 
 /** Настройки расширения */
 var Settings: ExtensionSettings;
@@ -1458,6 +1461,7 @@ async function getSurveyData(document: vscode.TextDocument): Promise<void>
 	let includes = getIncludePaths(document.getText());
 	let methods = new TibMethods();
 	let nodes = new SurveyNodes();
+	let mixIds: string[] = [];
 	// если Include поменялись, то обновляем все
 	if (!Includes || !Includes.equalsTo(includes))
 	{
@@ -1478,11 +1482,15 @@ async function getSurveyData(document: vscode.TextDocument): Promise<void>
 			let doc = docs[i] == document.fileName ? document : await vscode.workspace.openTextDocument(docs[i])
 			let mets = await getDocumentMethods(doc, Settings);
 			let nods = await getDocumentNodeIds(doc, Settings, _NodeStoreNames);
+			let mixs = await getMixIds(doc, Settings);
+			console.log(mixs);
 			methods.AddRange(mets);
 			nodes.AddRange(nods);
+			mixIds = mixIds.concat(mixs);
 		}
 		Methods = methods;
 		CurrentNodes = nodes;
+		MixIds = mixIds;
 	} catch (error)
 	{
 		logError("Ошибка при сборе сведений о документе", error);

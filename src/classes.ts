@@ -2151,6 +2151,23 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
 	});
 }
 
+
+/** Возвращает список MixId (без Store-вопросов) */
+export function getMixIds(document: vscode.TextDocument, Settings: ExtensionSettings): Promise<string[]>
+{
+	return new Promise<string[]>((resolve, reject) => {
+		let res: string[] = [];
+		let txt = document.getText();
+		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
+		let matches = txt.matchAll(/MixId=('|")((?!:)(\w+))(\1)/);
+		let matchesStore = txt.matchAll(/<Question[^>]+Store=('|")(\w+)(\1)/);
+		if (!!matches) res = res.concat(matches.map(x => x[2]));
+		if (!!matchesStore) res = res.concat(matchesStore.map(x => ":" + x[2]));
+		resolve(res);
+	});
+}
+
+
 export function getTibVersion()
 {
 	return vscode.extensions.getExtension("TiburonResearch.tiburonscripter").packageJSON.version;
