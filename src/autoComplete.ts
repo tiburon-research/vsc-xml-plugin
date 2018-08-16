@@ -80,11 +80,6 @@ var ManualCode = [
 		Parent: "CurrentSurvey"
 	},
 	{
-		Name: "QuestionPage",
-		Kind: "Property",
-		Parent: "CurrentSurvey"
-	},
-	{
 		Name: "ID",
 		Kind: "Property",
 		Parent: "CurrentSurvey"
@@ -1557,7 +1552,8 @@ export const Attributes = {
 		},
 		{
 			"Name": "Store",
-			"Type": "String"
+			"Type": "String",
+			Result: "getAllQuestions()"
 		},
 		{
 			"Name": "CornerText",
@@ -1783,7 +1779,8 @@ export const Attributes = {
 		},
 		{
 			"Name": "Question",
-			"Type": "String"
+			"Type": "String",
+			Result: "getAllQuestions()"
 		},
 		{
 			"Name": "Answer",
@@ -1975,7 +1972,8 @@ export const Attributes = {
 	"Validate": [
 		{
 			"Name": "PinQuestion",
-			"Type": "String"
+			"Type": "String",
+			Result: "getAllQuestions()"
 		},
 		{
 			"Name": "PinAnswer",
@@ -2155,7 +2153,8 @@ export const Attributes = {
 		},
 		{
 			"Name": "Question",
-			"Type": "string"
+			"Type": "string",
+			Result: "getAllQuestions()"
 		},
 		{
 			"Name": "Answer",

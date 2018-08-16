@@ -974,25 +974,40 @@ function autoComplete()
 					if (qt > -1) // от недоверия к tag.InCSString()
 					{
 						let stuff = curLine.substr(0, qt);
-						// Lists
-						if (stuff.match(/CurrentSurvey\.Lists\[\s*$/))
+						let match = stuff.match(/((CurrentSurvey\.Lists\[)|(Page\s*=)|(Question\s*=))\s*$/);
+						const matchResults =
 						{
-							completionItems = completionItems.concat(CurrentNodes.CompletitionItems("List"));
+							List: 2,
+							Page: 3,
+							Question: 4
+						};
+						if (!!match)
+						{
+							let resultMatch = match.findIndex((val, index) => { return index > 1 && !!val; });
+							switch (resultMatch)
+							{
+								case matchResults.List:
+									completionItems = completionItems.concat(CurrentNodes.CompletitionItems("List"));
+									break;
+
+								case matchResults.Page:
+									completionItems = completionItems.concat(CurrentNodes.CompletitionItems("Page"));
+									break;
+
+								case matchResults.Question:
+									completionItems = completionItems.concat(CurrentNodes.CompletitionItems("Question"));
+									break;
+
+								default:
+									break;
+							}
 						}
-						else
+						else // всё подряд
 						{
-							// Pages
-							if (stuff.match(/Page\s*=\s*$/))
+							_NodeStoreNames.forEach(name =>
 							{
-								completionItems = completionItems.concat(CurrentNodes.CompletitionItems("Page"));
-							}
-							else // всё подряд
-							{
-								_NodeStoreNames.forEach(name =>
-								{
-									completionItems = completionItems.concat(CurrentNodes.CompletitionItems(name));
-								});
-							}
+								completionItems = completionItems.concat(CurrentNodes.CompletitionItems(name));
+							});
 						}
 					}
 				}
@@ -1501,6 +1516,11 @@ function getAllPages(): string[]
 function getAllLists(): string[]
 {
 	return CurrentNodes.GetIds('List');
+}
+
+function getAllQuestions(): string[]
+{
+	return CurrentNodes.GetIds('Question');
 }
 
 
