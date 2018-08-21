@@ -39,7 +39,9 @@
 		},
 		{
 			"scope": [
-				"tib.constant"
+				"tib.constant",
+				"entity.name.inline-function",
+				"entity.name.inline-prefix",
 			],
 			"settings": {
 				"foreground": "#9a70af"
@@ -120,7 +122,6 @@
 		},
 		{
 			"scope":[
-				"entity.name.inline-prefix",
 				"entity.name.repeat-inline.tib punctuation.curlybrace.open",
 				"entity.name.repeat-inline.tib punctuation.curlybrace.close"
 			],
