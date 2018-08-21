@@ -65,10 +65,17 @@ public int CurrentInterviewOrder
 
 public bool InterviewExists(string questionId, string answerId, string val)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{ "Question", questionId},
+    {"Answer", answerId}});
     return _db.DataInterviewExists(CurrentInterview, questionId, answerId, val);
 }
 private void AnswerInsert(string pageId, string questionId, string answerId, string val)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId},
+    {"Answer", answerId}});
     _db.DataResultAdd(CurrentInterview, pageId, questionId, answerId, String.IsNullOrEmpty(val) ? "$$s" : val);
 }
 private void AnswerInsert(string pageId, string questionId, string answerId)
@@ -100,8 +107,168 @@ private void ExtInterviewAnswerDelete(int interviewId, string questionId, string
     _db.DataAnswerDelete(interviewId, questionId, answerId);
 }
 
+//start https://github.com/tinchurin/survey.engine/issues/345
+
+public void ExtSurveyAnswerInsert(int extSurveyId, string pageId, string questionId, string answerId, string val = null)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    _db.DataExtResultAdd(extInterviewId, pageId, questionId, answerId, String.IsNullOrEmpty(val) ? "$$s" : val);
+}
+
+public void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, string answerId, string val = null)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    _db.DataResultUpdate(extInterviewId, pageId, questionId, answerId, val);
+}
+
+public void ExtSurveyAnswerUpdate(int extSurveyId, string questionId, string answerId, string val = null)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    _db.DataResultUpdate(CurrentInterview, questionId, answerId, val);
+}
+
+public void ExtSurveyAnswerDelete(int extSurveyId, string pageId, string questionId, string answerId)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    _db.DataAnswerDelete(extInterviewId, pageId, questionId, answerId);
+}
+
+public void ExtSurveyAnswerDelete(int extSurveyId, string questionId, string answerId)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    _db.DataAnswerDelete(extInterviewId, questionId, answerId);
+}
+
+public bool ExtSurveyAnswerExists(int extSurveyId, string pageId, string questionId, string answerId)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    return (_db.DataResultGet(extInterviewId, pageId, questionId, answerId).Return == 0);
+}
+
+public bool ExtSurveyAnswerExists(int extSurveyId, string questionId, string answerId)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    return (_db.DataExtResultGet(extInterviewId, extSurveyId, questionId, answerId).Return == 0);
+}
+
+public bool ExtSurveyAnswerExistsAny(int extSurveyId, string questionId, string srcRange)
+{
+    return ExtSurveyAnswerExistsForRange(extSurveyId, questionId, srcRange, LogicalOperator.Or);
+}
+
+public bool ExtSurveyAnswerExistsAny(int extSurveyId, string pageId, string questionId, string srcRange)
+{
+    return ExtSurveyAnswerExistsForRange(extSurveyId, questionId, srcRange, LogicalOperator.Or);
+}
+
+public bool ExtSurveyAnswerExistsForRange(int extSurveyId, string questionId, string srcRange, LogicalOperator oper)
+{
+    char replacementSymbol = '&';
+    switch (oper)
+    {
+        case LogicalOperator.Or:
+            replacementSymbol = '|';
+            break;
+        case LogicalOperator.Xor:
+            replacementSymbol = '^';
+            break;
+    }
+
+    Range range = new Range(QuestionType.Integer, srcRange.Replace(',', replacementSymbol));
+
+    bool ret = (oper == LogicalOperator.Or ? false : true);
+
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    DataView dvAnswers = _db.DataAnswerSelectList(extInterviewId, String.Empty, questionId);
+
+    foreach (DataRowView dr in dvAnswers)
+    {
+        if (oper == LogicalOperator.Or)
+            ret |= range.IsInRange(Common.GetInt32Value(dr["ResultAnswer"].ToString()));
+        else
+            ret &= range.IsInRange(Common.GetInt32Value(dr["ResultAnswer"].ToString()));
+    }
+
+    return ret;
+}
+
+public string ExtSurveyAnswerValue(int extSurveyId, string pageId, string questionId, string answerId)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    SurveyEngine.Server.DB.ResultValue ret = _db.DataResultGet(extInterviewId, pageId, questionId, answerId);
+    if (ret.Return == 0)
+    {
+        //CheckRotation(pageId, questionId, answerId, ret.Value);
+        return ret.Value;
+    }
+    else
+        return String.Empty;
+}
+
+public string ExtSurveyAnswerValue(int extSurveyId, string questionId, string answerId)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    SurveyEngine.Server.DB.ResultValue ret = _db.DataResultGet(extInterviewId, questionId, answerId);
+    if (ret.Return == 0)
+    {
+        //CheckRotation(String.Empty, questionId, answerId, ret.Value);
+        return ret.Value;
+    }
+    else
+        return String.Empty;
+}
+
+public string ExtSurveyAnswerID(int extSurveyId, string pageId, string questionId)
+{
+    return ExtSurveyAnswerMarked(extSurveyId, pageId, questionId);
+}
+
+public string ExtSurveyAnswerMarked(int extSurveyId, string pageId, string questionId)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    SurveyEngine.Server.DB.ResultValue ret = _db.DataAnswerMarked(extInterviewId, pageId, questionId);
+    if (ret.Return == 0)
+        return ret.Value;
+    return String.Empty;
+}
+
+private string[] ExtSurveyAnswerIDs(int extSurveyId, string pageId, string questionId)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    return _db.DataAnswerSelectedId(extInterviewId, pageId, questionId);
+}
+
+public int ExtSurveyAnswerCount(int extSurveyId, string pageId, string questionId)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    return _db.DataAnswerGetCount(extInterviewId, pageId, questionId);
+}
+
+public int ExtSurveyInterviewID(int extSurveyId)
+{
+    return _db.GetExtSurveyInterviewID(extSurveyId);
+}
+
+public string ExtSurveyRespondent(int extSurveyId)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    return _db.GetExtSurveyRespondent(extInterviewId);
+}
+
+public int ExtSurveyInterviewStatus(int extSurveyId)
+{
+    int extInterviewId = _db.GetExtSurveyInterviewID(extSurveyId);
+    return _db.GetExtSurveyInterviewStatus(extInterviewId);
+}
+
+//end https://github.com/tinchurin/survey.engine/issues/345
+
 private void AnswerInsertOnce(string pageId, string questionId, string answerId, string val)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId},
+    {"Answer", answerId}});
     _db.DataResultAddOnce(CurrentInterview, pageId, questionId, answerId, String.IsNullOrEmpty(val) ? "$$s" : val);
 }
 private void AnswerInsertOnce(string pageId, string questionId, string answerId)
@@ -111,6 +278,21 @@ private void AnswerInsertOnce(string pageId, string questionId, string answerId)
 
 private void AnswerUpdateP(string pageId, string questionId, string answerId, string val)
 {
+    Dictionary<string, string> ids = new Dictionary<string, string>();
+    if (!String.IsNullOrEmpty(pageId))
+    {
+        ids.Add("Page", pageId);
+    }
+    if (!String.IsNullOrEmpty(questionId))
+    {
+        ids.Add("Question", questionId);
+    }
+    if (!String.IsNullOrEmpty(answerId))
+    {
+        ids.Add("Answer", answerId);
+    }
+    Common.ValidateID(ids);
+
     if (String.IsNullOrEmpty(pageId))
         _db.DataResultUpdate(CurrentInterview, questionId, answerId, String.IsNullOrEmpty(val) ? null : val);
     else
@@ -132,23 +314,35 @@ private void AnswerUpdate(string questionId, string answerId)
 
 private void PageClear(string pageId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId}});
     _db.DataResultClearList(CurrentInterview, pageId);
 }
 private void QuestionClear(string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId}});
     _db.DataResultClearQuestion(CurrentInterview, questionId);
 }
 private void QuestionClear(int interviewId, string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId}});
     _db.DataResultClearQuestion(interviewId, questionId);
 }
 private void AnswerClear(string questionId, string answerId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId},
+    {"Answer", answerId}});
     _db.DataAnswerDelete(CurrentInterview, questionId, answerId);
 }
 
 public bool AnswerExistsForRange(string questionId, string srcRange, LogicalOperator oper)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId}});
+
     char replacementSymbol = '&';
     switch (oper)
     {
@@ -178,15 +372,25 @@ public bool AnswerExistsForRange(string questionId, string srcRange, LogicalOper
 }
 public bool AnswerExistsAny(string questionId, string srcRange)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId}});
+
     return this.AnswerExistsForRange(questionId, srcRange, LogicalOperator.Or);
 }
 public bool AnswerExistsAll(string questionId, string srcRange)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId}});
+
     return this.AnswerExistsForRange(questionId, srcRange, LogicalOperator.And);
 }
 
 public bool AnswerExistsOnce(string pageId, string questionId, int answerStart, int answerEnd)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     bool ret = AnswerExists(pageId, questionId, answerStart.ToString());
     for (int i = answerStart + 1; i <= answerEnd; i++)
         ret |= AnswerExists(pageId, questionId, i.ToString());
@@ -194,6 +398,9 @@ public bool AnswerExistsOnce(string pageId, string questionId, int answerStart, 
 }
 public bool AnswerExistsOnce(string questionId, int answerStart, int answerEnd)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId}});
+
     bool ret = AnswerExists(questionId, answerStart.ToString());
     for (int i = answerStart + 1; i <= answerEnd; i++)
         ret |= AnswerExists(questionId, i.ToString());
@@ -202,10 +409,17 @@ public bool AnswerExistsOnce(string questionId, int answerStart, int answerEnd)
 
 public string AnswerID(string pageId, string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     return this.AnswerMarked(pageId, questionId);
 }
 public string AnswerID(string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId}});
+
     return this.AnswerMarked(questionId);
 }
 
@@ -213,6 +427,11 @@ public string AnswerID(string questionId)
 
 public bool AnswerExists(string pageId, string questionId, string answerId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId},
+    {"Answer", answerId}});
+
     Common.ValidateAnswerExists(pageId, questionId, answerId);
     return (_db.DataResultGet(CurrentInterview, pageId, questionId, answerId).Return == 0);
 }
@@ -222,6 +441,10 @@ public bool AnswerExists(string questionId, string srcRangeOrNot)
     {
         return AnswerExistsAny(questionId, srcRangeOrNot);
     }*/
+
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId}});
+
     Common.ValidateAnswerExists(questionId, srcRangeOrNot);
     return (_db.DataResultGet(CurrentInterview, questionId, srcRangeOrNot).Return == 0);
 }
@@ -293,6 +516,21 @@ public bool ExtInterviewAnswerExistsAll(int externalInterview, string questionId
 
 private void CheckRotation(string pageId, string questionId, string answerId, string val)
 {
+    Dictionary<string, string> ids = new Dictionary<string, string>();
+    if (!String.IsNullOrEmpty(pageId))
+    {
+        ids.Add("Page", pageId);
+    }
+    if (!String.IsNullOrEmpty(questionId))
+    {
+        ids.Add("Question", questionId);
+    }
+    if (!String.IsNullOrEmpty(answerId))
+    {
+        ids.Add("Answer", answerId);
+    }
+    Common.ValidateID(ids);
+
     if (CurrentSurvey == null || String.IsNullOrEmpty(val) || CurrentQuestion == null)
         return;
 
@@ -332,6 +570,21 @@ private void CheckRotation(string pageId, string questionId, string answerId, st
 
 public string AnswerValue(string pageId, string questionId, string answerId)
 {
+    Dictionary<string, string> ids = new Dictionary<string, string>();
+    if (!String.IsNullOrEmpty(pageId))
+    {
+        ids.Add("Page", pageId);
+    }
+    if (!String.IsNullOrEmpty(questionId))
+    {
+        ids.Add("Question", questionId);
+    }
+    if (!String.IsNullOrEmpty(answerId))
+    {
+        ids.Add("Answer", answerId);
+    }
+    Common.ValidateID(ids);
+
     SurveyEngine.Server.DB.ResultValue ret = _db.DataResultGet(CurrentInterview, pageId, questionId, answerId);
     if (ret.Return == 0)
     {
@@ -343,6 +596,10 @@ public string AnswerValue(string pageId, string questionId, string answerId)
 }
 public string AnswerValue(string questionId, string answerId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId},
+    {"Answer", answerId}});
+
     SurveyEngine.Server.DB.ResultValue ret = _db.DataResultGet(CurrentInterview, questionId, answerId);
     if (ret.Return == 0)
     {
@@ -467,16 +724,26 @@ private string[] ExtInterviewsAnswerId(int[] interviewList, string pageId, strin
 
 public int AnswerCount(string pageId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId}});
+
     return _db.DataAnswerGetCount(CurrentInterview, pageId);
 }
 
 public int AnswerCount(string pageId, string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     return _db.DataAnswerGetCount(CurrentInterview, pageId, questionId);
 }
 
 public int AnswerCountRange(string questionId, string srcRange)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId}});
+
     int ret = 0;
     char replacementSymbol = '|';
     Range range = new Range(QuestionType.Integer, srcRange.Replace(',', replacementSymbol));
@@ -494,16 +761,29 @@ public int AnswerCountRange(string questionId, string srcRange)
 
 private void InsertResult(string pageId, string questionId, string answerId, string val)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId},
+    {"Answer", answerId}});
+
     _db.DataResultAdd(CurrentInterview, pageId, questionId, answerId, String.IsNullOrEmpty(val) ? "$$s" : val);
 }
 
 private void InsertResult(string pageId, string questionId, string answerId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId},
+    {"Answer", answerId}});
+
     InsertResult(pageId, questionId, answerId, String.Empty);
 }
 
 public string AnswerMarked(string pageId, string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     SurveyEngine.Server.DB.ResultValue ret = _db.DataAnswerMarked(CurrentInterview, pageId, questionId);
     if (ret.Return == 0)
         return ret.Value;
@@ -512,6 +792,9 @@ public string AnswerMarked(string pageId, string questionId)
 
 public string AnswerMarked(string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId}});
+
     SurveyEngine.Server.DB.ResultValue ret = _db.DataAnswerMarked(CurrentInterview, questionId);
     if (ret.Return == 0)
         return ret.Value;
@@ -545,11 +828,18 @@ private string[] DataGetCustomSingleRandomWithConditions(int index, int key, int
 
 private void ClearResults(string pageId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId}});
+
     _db.DataResultClearList(CurrentInterview, pageId);
 }
 
 private void ClearResults(string pageId, string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     _db.DataResultClearList(CurrentInterview, pageId, questionId);
 }
 
@@ -591,6 +881,10 @@ public bool IsEmailCorrect(string email)
 
 public string GetAnswerID(string pageId, string questionId, string val)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     SurveyEngine.Server.DB.ResultValue ret = _db.DataAnswerIdByValueGet(CurrentInterview, pageId, questionId, val);
     if (ret.Return == 0)
         return ret.Value;
@@ -599,6 +893,9 @@ public string GetAnswerID(string pageId, string questionId, string val)
 
 public string GetAnswerID(string questionId, string val)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId}});
+
     SurveyEngine.Server.DB.ResultValue ret = _db.DataAnswerIdByValueGet(CurrentInterview, questionId, val);
     if (ret.Return == 0)
         return ret.Value;
@@ -612,11 +909,20 @@ public List<string[]> GetSurveyUserMails(int surveyId)
 
 private void AnswerDelete(string pageId, string questionId, string answerId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId},
+    {"Answer", answerId}});
+
     _db.DataAnswerDelete(CurrentInterview, pageId, questionId, answerId);
 }
 
 private void AnswerDelete(string questionId, string answerId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Question", questionId},
+    {"Answer", answerId}});
+
     _db.DataAnswerDelete(CurrentInterview, questionId, answerId);
 }
 
@@ -641,36 +947,64 @@ public string WriteFlash(int width, int height, string filePath, string flashVar
 
 private string[][] QuestionResults(string pageId, string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     return _db.DataQuestionSelectedIdValue(CurrentInterview, pageId, questionId);
 }
 
 private string[][] QuestionResults(int interviewId, string pageId, string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     return _db.DataQuestionSelectedIdValue(interviewId, pageId, questionId);
 }
 
 private string[] AnswerIDs(string pageId, string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     return _db.DataAnswerSelectedId(CurrentInterview, pageId, questionId);
 }
 
 private string[] AnswerIDs(int interviewId, string pageId, string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     return _db.DataAnswerSelectedId(interviewId, pageId, questionId);
 }
 
 private DataView AnswersSelect(string pageId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId}});
+
     return _db.DataAnswerSelectList(CurrentInterview, pageId);
 }
 
 private DataView AnswersSelect(string pageId, string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     return _db.DataAnswerSelectList(CurrentInterview, pageId, questionId);
 }
 
 public string AnswerText(string pageId, string questionId, string answerId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId},
+    {"Answer", answerId}});
+
     string ret = String.Empty;
 
     try
@@ -699,16 +1033,27 @@ private void InterviewStatusChange(int statusId)
 
 public string QuestionText(string pageId, string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     return CurrentSurvey.Pages[pageId].Questions[questionId].Text;
 }
 
 public string QuestionHeader(string pageId, string questionId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId},
+    {"Question", questionId}});
+
     return CurrentSurvey.Pages[pageId].Questions[questionId].Header;
 }
 
 public string PageHeader(string pageId)
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId}});
+
     return CurrentSurvey.Pages[pageId].Header;
 }
 
@@ -1020,8 +1365,11 @@ public string getRedirectUrl()
     return String.Empty;
 }
 
-public DateTime GetPageTime(string pageId, string side = "Client")
+public int GetPageTime(string pageId, string side = "Client")
 {
+    Common.ValidateID(new Dictionary<string, string>()
+    {{"Page", pageId}});
+
     return _db.GetPageTime(InterviewPars.InterviewID, pageId, side);
 }
 

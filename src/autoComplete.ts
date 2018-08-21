@@ -895,6 +895,120 @@ var KnownCode = [
 		"Detail": "bool",
 		"Kind": "Function",
 		"Documentation": "bool DataHashExist(string hash)"
+	},
+	{
+		"Name": "ExtSurveyAnswerInsert",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerInsert(int extSurveyId, string pageId, string questionId, string answerId, string val = null)"
+	},
+	{
+		"Name": "ExtSurveyAnswerUpdateP",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, string answerId, string val = null)"
+	},
+	{
+		"Name": "ExtSurveyAnswerUpdate",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerUpdate(int extSurveyId, string questionId, string answerId, string val = null)"
+	},
+	{
+		"Name": "ExtSurveyAnswerDelete",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerDelete(int extSurveyId, string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "ExtSurveyAnswerDelete",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerDelete(int extSurveyId, string questionId, string answerId)"
+	},
+	{
+		"Name": "ExtSurveyAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExists(int extSurveyId, string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "ExtSurveyAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExists(int extSurveyId, string questionId, string answerId)"
+	},
+	{
+		"Name": "ExtSurveyAnswerExistsAny",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExistsAny(int extSurveyId, string questionId, string srcRange)"
+	},
+	{
+		"Name": "ExtSurveyAnswerExistsAny",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExistsAny(int extSurveyId, string pageId, string questionId, string srcRange)"
+	},
+	{
+		"Name": "ExtSurveyAnswerExistsForRange",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExistsForRange(int extSurveyId, string questionId, string srcRange, LogicalOperator oper)"
+	},
+	{
+		"Name": "ExtSurveyAnswerValue",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtSurveyAnswerValue(int extSurveyId, string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "ExtSurveyAnswerValue",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtSurveyAnswerValue(int extSurveyId, string questionId, string answerId)"
+	},
+	{
+		"Name": "ExtSurveyAnswerID",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtSurveyAnswerID(int extSurveyId, string pageId, string questionId)"
+	},
+	{
+		"Name": "ExtSurveyAnswerMarked",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtSurveyAnswerMarked(int extSurveyId, string pageId, string questionId)"
+	},
+	{
+		"Name": "ExtSurveyAnswerIDs",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] ExtSurveyAnswerIDs(int extSurveyId, string pageId, string questionId)"
+	},
+	{
+		"Name": "ExtSurveyAnswerCount",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int ExtSurveyAnswerCount(int extSurveyId, string pageId, string questionId)"
+	},
+	{
+		"Name": "ExtSurveyInterviewID",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int ExtSurveyInterviewID(int extSurveyId)"
+	},
+	{
+		"Name": "ExtSurveyRespondent",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtSurveyRespondent(int extSurveyId)"
+	},
+	{
+		"Name": "ExtSurveyInterviewStatus",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int ExtSurveyInterviewStatus(int extSurveyId)"
 	}
 ];
 
