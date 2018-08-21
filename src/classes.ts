@@ -2146,7 +2146,11 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
 			let item = new SurveyNode(element[1], element[idIndex], pos, document.fileName);
 			nodes.Add(item);
 		});
+		// дополнительно
 		nodes.Add(new SurveyNode("Page", "pre_data", null, document.fileName));
+		nodes.Add(new SurveyNode("Question", "pre_data", null, document.fileName));
+		nodes.Add(new SurveyNode("Page", "debug", null, document.fileName));
+		nodes.Add(new SurveyNode("Question", "debug", null, document.fileName));
 		resolve(nodes);
 	});
 }
