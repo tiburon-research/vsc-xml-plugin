@@ -974,9 +974,9 @@ export class CurrentTag
 			tagLanguage = Language.Inline;
 		}
 		else
-			// по-любому C#
+		{
 			if (this.CSSingle() || this.CSInline())
-			{
+			{// по-любому C#
 				tagLanguage = Language.CSharp;
 			}
 			else
@@ -996,13 +996,14 @@ export class CurrentTag
 				this.Parents.forEach(x =>
 				{
 					let pLang = TagInfo.getTagLanguage(x.Name);
-					if (isScriptLanguage(pLang))
+					if (pLang == Language.JS || pLang == Language.CSS)
 					{
 						tagLanguage = pLang;
 						return;
 					}
 				});
 			}
+		}
 		this.Language = tagLanguage;
 		return tagLanguage;
 	}
