@@ -2163,7 +2163,7 @@ export function getMixIds(document: vscode.TextDocument, Settings: ExtensionSett
 		let matchesStore = txt.matchAll(/<Question[^>]+Store=('|")(\w+)(\1)/);
 		if (!!matches) res = res.concat(matches.map(x => x[2]));
 		if (!!matchesStore) res = res.concat(matchesStore.map(x => ":" + x[2]));
-		resolve(res);
+		resolve(res.distinct());
 	});
 }
 
@@ -2293,7 +2293,7 @@ declare global
 		/** Проверяет, что все элементы совпадают, независимо от порядка */
 		equalsTo(ar: Array<T>): boolean;
 		//** Возвращает массив уникальных значений */
-		//distinct(): T[]
+		distinct(): T[]
 		/** Содержит элемент */
 		contains(element: T): boolean;
 		/** Удаляет элемент из массива и возвращает этот элемент */
@@ -2380,11 +2380,11 @@ Array.prototype.equalsTo = function <T>(ar: Array<T>): boolean
 }
 
 
-/* Array.prototype.distinct = function<T>(): T[]
+Array.prototype.distinct = function<T>(): T[]
 {
 	let orig: Array<T> = this;
 	return [... new Set(orig)];
-}  */
+} 
 
 
 Array.prototype.contains = function <T>(element: T): boolean

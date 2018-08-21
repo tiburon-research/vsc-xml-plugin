@@ -1489,7 +1489,6 @@ async function getSurveyData(document: vscode.TextDocument): Promise<void>
 			let mets = await getDocumentMethods(doc, Settings);
 			let nods = await getDocumentNodeIds(doc, Settings, _NodeStoreNames);
 			let mixs = await getMixIds(doc, Settings);
-			console.log(mixs);
 			methods.AddRange(mets);
 			nodes.AddRange(nods);
 			mixIds = mixIds.concat(mixs);
