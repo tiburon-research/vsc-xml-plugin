@@ -1261,7 +1261,6 @@ function definitions()
 		}
 	});
 
-
 	// XML узлы
 	vscode.languages.registerDefinitionProvider('tib', {
 		provideDefinition(document, position, token)
@@ -1269,7 +1268,7 @@ function definitions()
 			let res: vscode.Location;
 			try
 			{
-				let word = document.getText(document.getWordRangeAtPosition(position, /[^'"\s]+/));
+				let word = document.getText(document.getWordRangeAtPosition(position));
 				let enabledNodes = ["Page", "List", "Question"];
 				enabledNodes.forEach(element =>
 				{
