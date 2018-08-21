@@ -1077,9 +1077,9 @@ function autoComplete()
 			let tag = getCurrentTag(document, position);
 			if (!tag || tag.OpenTagIsClosed) return;
 			let text = getPreviousText(document, position, true);
-			let needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
+			//let needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
 
-			let curAttr = text.match(/(\w+)=(["'])(\w*)$/);
+			let curAttr = text.match(/(\w+)=(["'])(:?\w*)$/);
 			if (!curAttr) return;
 
 			let atrs: TibAttribute[] = AutoCompleteArray.Attributes[tag.Id];
@@ -1090,6 +1090,7 @@ function autoComplete()
 				return e.Name == curAttr[1];
 			});
 			if (!attr) return;
+
 
 			let attrT = new TibAttribute(attr);
 			let vals = attrT.ValueCompletitions(function (query)
@@ -1102,14 +1103,13 @@ function autoComplete()
 				ci.insertText = v;
 				completionItems.push(ci);
 			});
-
 			return completionItems;
 		},
 		resolveCompletionItem(item, token)
 		{
 			return item;
 		}
-	}, "\"", "'");
+	}, ":", "");
 }
 
 
