@@ -793,7 +793,7 @@
 					{
 						"1":
 						{
-							"name": "entity.name.inline-prefix"
+							"name": "tib.inline.method.prefix"
 						},
 						"2":
 						{
@@ -834,7 +834,7 @@
 					}
 				},
 				{
-					"include": "#inline-functions"
+					"include": "#inline-specials"
 				}
 			]
 		},
@@ -854,22 +854,22 @@
 			]
 		},
 
-		"inline-functions":
+		"inline-specials":
 		{
 			"patterns": [
 				{
 					"begin": "(\\$)(repeat)\\(([@\\)\\(\\w\\[\\]]+)\\)((\\{)(.+?)((\\[)([^\\]]+)(\\]))?(\\}))",
 					"end": "",
-					"name": "entity.name.repeat-inline.tib",
+					"name": "tib.inline.special",
 					"beginCaptures": {
 						"1": {
-							"name": "entity.name.inline-prefix"
+							"name": "tib.inline.special.prefix"
 						},
 						"2": {
-							"name": "entity.name.inline-function"
+							"name": "tib.inline.special.name"
 						},
 						"3": {
-							"name": "entity.name.repeat-source",
+							"name": "tib.inline.repeat-source",
 							"patterns": [
 								{
 									"include": "#tib-iterator"
@@ -877,13 +877,13 @@
 							]
 						},
 						"4": {
-							"name": "entity.name.repeat-iterator"
+							"name": "tib.inline.repeat-iterator"
 						},
 						"5": {
 							"name": "punctuation.curlybrace.open"
 						},
 						"6":{
-							"name": "entity.name.repeat-iterator",
+							"name": "tib.inline.repeat-iterator",
 							"patterns": [
 								{
 									"include": "#tib-iterator"
@@ -894,13 +894,47 @@
 							"name": "punctuation.squarebracket.open"
 						},
 						"9": {
-							"name": "entity.name.repeat-delimiter"
+							"name": "tib.inline.repeat-delimiter"
 						},
 						"10": {
 							"name": "punctuation.squarebracket.close"
 						},
 						"11": {
 							"name": "punctuation.curlybrace.close"
+						}
+					}
+				},
+				{
+					"begin": "(\\$)(place)\\(([@\\)\\(\\w\\[\\]]+?)\\)",
+					"end": "",
+					"name": "tib.inline.special",
+					"beginCaptures": {
+						"1": {
+							"name": "tib.inline.special.prefix"
+						},
+						"2": {
+							"name": "tib.inline.special.name"
+						},
+						"3": {
+							"name": "tib.inline.place-source",
+							"patterns": [
+								{
+									"include": "#tib-iterator"
+								}
+							]
+						}
+					}
+				},
+				{
+					"begin": "(\\$)(today)",
+					"end": "",
+					"name": "tib.inline.special",
+					"beginCaptures": {
+						"1": {
+							"name": "tib.inline.special.prefix"
+						},
+						"2": {
+							"name": "tib.inline.special.name"
 						}
 					}
 				}
@@ -4306,7 +4340,7 @@
 			},
 			"patterns": [
 				{
-					"include": "#inline-functions"
+					"include": "#inline-specials"
 				},
 				{
 					"include": "#string-character-escape"

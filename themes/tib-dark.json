@@ -40,8 +40,8 @@
 		{
 			"scope": [
 				"tib.constant",
-				"entity.name.inline-function",
-				"entity.name.inline-prefix",
+				"tib.inline.special.prefix",
+				"tib.inline.special.name"
 			],
 			"settings": {
 				"foreground": "#9a70af"
@@ -91,7 +91,7 @@
 		},
 		{
 			"scope": [
-				"entity.name.repeat-iterator"
+				"tib.inline.repeat-iterator"
 			],
 			"settings": {
 				"foreground": "#CE9178"
@@ -122,8 +122,9 @@
 		},
 		{
 			"scope":[
-				"entity.name.repeat-inline.tib punctuation.curlybrace.open",
-				"entity.name.repeat-inline.tib punctuation.curlybrace.close"
+				"tib.inline.method.prefix",
+				"tib.inline.repeat-inline.tib punctuation.curlybrace.open",
+				"tib.inline.repeat-inline.tib punctuation.curlybrace.close"
 			],
 			"settings": {
 				"foreground": "#DCDCAA"
@@ -150,7 +151,8 @@
 				"string.quoted.double.xml",
 				"string.quoted.single.xml",
 				"entity.stuff.tag.html.tib string.value.id",
-				"entity.name.repeat-source"
+				"tib.inline.repeat-source",
+				"tib.inline.place-source"
 			],
 			"settings": {
 				"foreground": "#9c9c9c"
