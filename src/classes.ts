@@ -2152,7 +2152,7 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
 }
 
 
-/** Возвращает список MixId (без Store-вопросов) */
+/** Возвращает список MixId */
 export function getMixIds(document: vscode.TextDocument, Settings: ExtensionSettings): Promise<string[]>
 {
 	return new Promise<string[]>((resolve, reject) => {
@@ -2160,9 +2160,16 @@ export function getMixIds(document: vscode.TextDocument, Settings: ExtensionSett
 		let txt = document.getText();
 		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
 		let matches = txt.matchAll(/MixId=('|")((?!:)(\w+))(\1)/);
-		let matchesStore = txt.matchAll(/<Question[^>]+Store=('|")(\w+)(\1)/);
+		let matchesStore = txt.matchAll(/<Question[^>]+Store=('|")(\w+?)(\1)[^>]*>/);
+		let mixIdsStore: string[] = [];
+		matchesStore.forEach(element =>
+		{
+			let idmt = element[0].match(/Id=("|')(.+?)\1/);
+			if (!idmt) return;
+			mixIdsStore.push(":" + idmt[2]);
+		});
 		if (!!matches) res = res.concat(matches.map(x => x[2]));
-		if (!!matchesStore) res = res.concat(matchesStore.map(x => ":" + x[2]));
+		if (!!matchesStore) res = res.concat(mixIdsStore);
 		resolve(res.distinct());
 	});
 }
