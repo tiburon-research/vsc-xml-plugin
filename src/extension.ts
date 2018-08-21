@@ -858,33 +858,34 @@ function autoComplete()
 				else if ("answer".indexOf(opening) > -1)
 				{
 					let ci = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
+					let ciS = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
 					let from_pos = tag.OpenTagRange.start;
 					let range = new vscode.Range(from_pos.translate(0, 1), position);
 					ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
+					ciS.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
+
+					let iterator = "1";
+					let text = "$2";
 
 					if (tag.LastParent && tag.LastParent.Name == "Repeat")
 					{
-						ci.detail = "Структура Answer в Repeat";
 						let source = tag.LastParent.getRepeatSource();
-						if (source == "List")
-							ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:@ID}\"><Text>${2:@Text}</Text></Answer>");
-						else
-							ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:@Itera}\"><Text>${2:@Itera}</Text></Answer>");
-						ci.documentation = ci.insertText.value;
-						completionItems.push(ci);
+						ci.detail = "Полная структура Answer в Repeat по " + source;
+						ciS.detail = "Краткая структура Answer в Repeat по " + source;
+						iterator = source == "List" ? "@ID" : "@Itera";
+						text = source == "List" ? "@Text" : "@Itera";
 					}
 					else
 					{
-						let ci2 = Object.assign({}, ci);
-						ci.detail = "Структура Answer";
-						ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:1}\"><Text>$2</Text></Answer>");
-						ci.documentation = ci.insertText.value;
-						ci2.detail = "Краткая структура Answer";
-						ci2.insertText = new vscode.SnippetString("<Answer Id=\"${1:1}\"/>");
-						ci2.documentation = ci2.insertText.value;
-						completionItems.push(ci);
-						completionItems.push(ci2);
+						ci.detail = "Полная структура Answer";
+						ciS.detail = "Краткая структура Answer";
 					}
+					// полный вариант
+					ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:" + iterator + "}\"><Text>${2:" + text + "}</Text></Answer>");
+					completionItems.push(ci);
+					// краткий вариант
+					ciS.insertText = new vscode.SnippetString("<Answer Id=\"${1:" + iterator + "}\"/>");
+					completionItems.push(ciS);
 				}
 			}
 			return completionItems;
