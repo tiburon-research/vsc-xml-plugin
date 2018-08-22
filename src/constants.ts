@@ -53,3 +53,6 @@ export const _LockInfoFilePrefix = "vscode_tib_lockedInfo_";
 
 /** Префикс для Warning в logToOutput */
 export const _WarningLogPrefix = " WARNING: ";
+
+
+export const QuestionTypes = ["RadioButton", "CheckBox", "Text", "Memo", "Integer", "Number", "File"];

@@ -1627,7 +1627,7 @@ export const Attributes = {
 			"Name": "Type",
 			"Default": "RadioButton",
 			"Type": "QuestionType",
-			"Values": ["RadioButton", "CheckBox", "Text", "Memo", "Integer", "Number", "File"]
+			Result: "getQuestionTypes()"
 		},
 		{
 			"Name": "SyncId",

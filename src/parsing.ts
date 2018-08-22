@@ -17,6 +17,13 @@ export interface FindTagResult
 }
 
 
+export interface ParsedElementObject
+{
+	Id: string;
+	Text: string;
+}
+
+
 /** 
  * Поиск закрывающего тега.
  * 
@@ -86,7 +93,7 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
 
 		let clLast = rest.indexOf(clBracket);
 		if (cl < 0 || clLast < 0) return null;
-		
+
 		tResult.Range = new TextRange({ From: fullText.length - rest.length - 1, To: fullText.length - rest.length + clLast });
 		return tResult;
 	}
@@ -128,7 +135,7 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 
 		if (op === null || op < 0) return null;
 
-		cl = tagIndex(rest, opBracket + "/" + tagName);		
+		cl = tagIndex(rest, opBracket + "/" + tagName);
 
 		let cO = 0;
 		let cC = 1;
@@ -154,7 +161,7 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 		if (op === null || clLast < 0) return null;
 
 		let to = txt.indexOf(clBracket, rest.length + 1);
-		
+
 		tResult.Range = new TextRange({ From: rest.length, To: to });
 		return tResult;
 	}
@@ -258,4 +265,63 @@ export function win1251Avaliabe(buf: Buffer)
 {
 	let charsetMatch: Array<any> = charDetect(buf) || [];
 	return charsetMatch.filter(x => (x.charsetName as string).toLowerCase() == 'windows-1251').length > 0;
+}
+
+
+/** Разбирает текст на `Id` + `Text` */
+export function parseElements(text: string): ParsedElementObject[]
+{
+	let res: ParsedElementObject[];
+	let strings = text.split("\n");
+	if (strings.length == 0) return res;
+	strings = strings.map(x => x.trim()).filter(x => x.length > 0);
+
+	// пробуем разбить на Id + text
+	let regTests = [
+		{
+			Regex: /^(\d+)([\.\-—:]*\s*)(.+?)$/,
+			IdGroup: 1,
+			TextGroup: 3
+		},
+		{
+			Regex: /^(.+?)([\.\-—:]*\s*)(\d+)$/,
+			IdGroup: 3,
+			TextGroup: 1
+		}
+	];
+
+	let withIds = false;
+
+	for (let i = 0; i < regTests.length; i++)
+	{
+		const reg = regTests[i];
+		res = [];
+		let found = true;
+		for (let j = 0; j < strings.length; j++)
+		{
+			const str = strings[j];
+			let match = str.match(reg.Regex);
+			if (!match)
+			{
+				found = false;
+				break;
+			}
+			res.push({ Id: match[reg.IdGroup], Text: match[reg.TextGroup] });
+		}
+		if (found)
+		{
+			withIds = true;
+			break;
+		}
+	}
+
+	if (!withIds)
+	{
+		for (let i = 0; i < strings.length; i++)
+		{
+			res.push({ Id: '' + (i + 1), Text: strings[i] });
+		}
+	}
+
+	return res;
 }

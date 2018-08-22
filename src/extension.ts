@@ -10,7 +10,8 @@ import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
 import { getWarnings } from './diagnostic'
-import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix } from './constants'
+import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes } from './constants'
+import { SurveyElementType } from './surveyObjects';
 
 
 
@@ -331,6 +332,30 @@ function registerCommands()
 	});
 
 
+	// выделение элементов из текста
+	registerCommand('tib.getElements', () => 
+	{
+		let editor = vscode.window.activeTextEditor;
+		let text = editor.document.getText(editor.selection);
+		let cases = new KeyedCollection<SurveyElementType>();
+		cases.AddPair("Answers", SurveyElementType.Answer);
+		cases.AddPair("Items", SurveyElementType.Item);
+		let res = new vscode.SnippetString(text);
+		InProcess = true;
+		vscode.window.showQuickPick(cases.Keys(), { placeHolder: "Создать элементы:" }).then(x =>
+		{
+			res = TibDocumentEdits.createElements(text, cases.Item(x));
+			let tag = getCurrentTag(editor.document, editor.selection.active);
+			let indent = !!tag ? tag.GetIndent() : 1;
+			Formatting.format(res.value, Language.XML, Settings, "\t", indent).then(x =>
+			{
+				res.value = x;
+				vscode.window.activeTextEditor.insertSnippet(res).then(x => { InProcess = true });
+			});
+		});
+	});
+
+
 	// выделение ближайшего <тега>
 	registerCommand('tib.selectTag.closest', () => 
 	{
@@ -646,7 +671,7 @@ function registerCommands()
 					range = sel;
 					let tag = getCurrentTag(document, sel.start);
 					if (!tag) indent = 0;
-					else indent = tag.Parents.length + 1;
+					else indent = tag.GetIndent();
 				}
 				let text = document.getText(range);
 
@@ -1536,6 +1561,10 @@ function getAllQuestions(): string[]
 	return CurrentNodes.GetIds('Question');
 }
 
+function getQuestionTypes(): string[]
+{
+	return QuestionTypes;
+}
 
 /** Возвращает `null`, если тег не закрыт или SelfClosed */
 function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range
@@ -2023,7 +2052,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 			let sel = selectLines(editor.document, editor.selection);
 			editor.selection = sel;
 			let tag = getCurrentTag(editor.document, sel.start);
-			let ind = !!tag ? tag.Parents.length + 1 : 0;
+			let ind = !!tag ? tag.GetIndent() : 0;
 			res = await Formatting.format(res, Language.XML, Settings, "\t", ind);
 			return applyChanges(sel, res, editor, false);
 		}

@@ -13,6 +13,7 @@ import * as iconv from 'iconv-lite'
 import * as dateFormat from 'dateformat'
 import * as winattr from "winattr"
 import { machineIdSync } from "node-machine-id"
+import { SurveyElementType, SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList } from './surveyObjects';
 
 
 // переменная для кэширования информации о пользователе
@@ -58,7 +59,7 @@ export class TextRange
 {
 	From: number;
 	To: number;
-	
+
 	get Length(): number
 	{
 		return this.To - this.From;
@@ -314,6 +315,42 @@ export namespace TibDocumentEdits
 		return $dom.xml();
 	}
 
+	export function createElements(text: string, type: SurveyElementType): vscode.SnippetString
+	{
+		let elements = Parse.parseElements(text);
+		if (!elements || elements.length == 0) new vscode.SnippetString(text);
+
+		let res = new vscode.SnippetString();
+		switch (type)
+		{
+			case SurveyElementType.Answer:
+				{
+					let items = new KeyedCollection<SurveyAnswer>();
+					elements.forEach(element => {
+						items.AddPair(element.Id, new SurveyAnswer(element.Id, element.Text));
+					});
+					let q = new SurveyQuestion();
+					q.Answers = items;
+					res = q.ToSnippet();
+					break;
+				}
+
+			case SurveyElementType.Item:
+				{
+					let items = new KeyedCollection<SurveyListItem>();
+					elements.forEach(element => {
+						items.AddPair(element.Id, new SurveyListItem(element.Id, element.Text));
+					});
+					let q = new SurveyList();
+					q.Items = items;
+					res = q.ToSnippet();
+					break;
+				}
+		}
+
+		return res;
+	}
+
 }
 
 export class KeyValuePair<T>
@@ -485,9 +522,10 @@ export class KeyedCollection<T>
 	public OrderBy(func: (x: KeyValuePair<T>) => number): KeyedCollection<T>
 	{
 		let res = new KeyedCollection<T>();
-		let sortedAr: KeyValuePair<T>[] = this.ToArray(x => x);		
+		let sortedAr: KeyValuePair<T>[] = this.ToArray(x => x);
 		sortedAr = sortedAr.sort(x => func(x));
-		sortedAr.forEach(element => {
+		sortedAr.forEach(element =>
+		{
 			res.AddElement(element);
 		});
 		return res;
@@ -952,7 +990,7 @@ export class CurrentTag
 		}
 		return res;
 	}
-	
+
 	/** Получает все атрибуты, независимо от Position */
 	public GetAllAttributes(document: vscode.TextDocument): KeyedCollection<string>
 	{
@@ -1124,6 +1162,13 @@ export class CurrentTag
 		}
 	}
 
+
+	public GetIndent(): number
+	{
+		if (!this.Parents) return 0;
+		return this.Parents.length + 1;
+	}
+
 }
 
 
@@ -1156,19 +1201,20 @@ export class SurveyNode
 	/** Чтобы иконки отличались */
 	private GetKind(nodeName: string): vscode.CompletionItemKind
 	{
-		switch (nodeName) {
+		switch (nodeName)
+		{
 			case "Page":
 				return vscode.CompletionItemKind.File;
-			
+
 			case "Question":
 				return vscode.CompletionItemKind.EnumMember;
-			
+
 			case "List":
-				return vscode.CompletionItemKind.Unit;	
-			
+				return vscode.CompletionItemKind.Unit;
+
 			case "Quota":
 				return vscode.CompletionItemKind.Event;
-			
+
 			default:
 				break;
 		}
@@ -1837,7 +1883,8 @@ export class StatusBar
 
 	private statusMessage(text: string, after?: number): Promise<vscode.Disposable>
 	{
-		return new Promise<vscode.Disposable>((resolve, reject) => {
+		return new Promise<vscode.Disposable>((resolve, reject) =>
+		{
 			let res: vscode.Disposable;
 			if (!!after) res = vscode.window.setStatusBarMessage(text, after);
 			else res = vscode.window.setStatusBarMessage(text);
@@ -2160,7 +2207,8 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
 /** Возвращает список MixId */
 export function getMixIds(document: vscode.TextDocument, Settings: ExtensionSettings): Promise<string[]>
 {
-	return new Promise<string[]>((resolve, reject) => {
+	return new Promise<string[]>((resolve, reject) =>
+	{
 		let res: string[] = [];
 		let txt = document.getText();
 		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
@@ -2310,7 +2358,7 @@ declare global
 		contains(element: T): boolean;
 		/** Удаляет элемент из массива и возвращает этот элемент */
 		remove(element: T): T;
-		/** Преjбразует массив в коллекцию T */
+		/** Преобразует массив в коллекцию */
 		toKeyedCollection(func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
 		/** Преjбразует массив в коллекцию T */
 		toKeyedCollection(func: (x: T) => Object): KeyedCollection<any>
@@ -2392,11 +2440,11 @@ Array.prototype.equalsTo = function <T>(ar: Array<T>): boolean
 }
 
 
-Array.prototype.distinct = function<T>(): T[]
+Array.prototype.distinct = function <T>(): T[]
 {
 	let orig: Array<T> = this;
 	return [... new Set(orig)];
-} 
+}
 
 
 Array.prototype.contains = function <T>(element: T): boolean
@@ -2415,7 +2463,7 @@ Array.prototype.remove = function <T>(element: T): T
 
 Array.prototype.toKeyedCollection = function <T>(func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
 {
-	let res = new KeyedCollection<T>();
+	let res = new KeyedCollection<any>();
 	this.forEach(element =>
 	{
 		res.AddElement(func(element));
@@ -2426,7 +2474,7 @@ Array.prototype.toKeyedCollection = function <T>(func: (x: T) => KeyValuePair<an
 
 Array.prototype.toKeyedCollection = function <T>(func: (x: T) => Object): KeyedCollection<any>
 {
-	let res = new KeyedCollection<T>();
+	let res = new KeyedCollection<any>();
 	(this as T[]).forEach(element =>
 	{
 		let obj = func(element);

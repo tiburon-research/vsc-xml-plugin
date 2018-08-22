@@ -155,6 +155,11 @@
         "command": "tib.debugTestCommand",
         "title": "Отладочная комманда",
         "category": "tib"
+      },
+      {
+        "command": "tib.getElements",
+        "title": "Выделить элементы из текста",
+        "category": "tib"
       }
     ],
     "keybindings": [
@@ -197,6 +202,10 @@
       {
         "key": "ctrl+alt+shift+d",
         "command": "tib.debugTestCommand"
+      },
+      {
+        "key": "ctrl+alt+shift+e",
+        "command": "tib.getElements"
       }
     ],
     "configurationDefaults": {

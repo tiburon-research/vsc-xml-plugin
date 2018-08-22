@@ -1,30 +1,39 @@
 'use strict';
 
+import * as vscode from 'vscode';
+
+
 
 import { KeyedCollection, InlineAttribute } from './classes';
+import { QuestionTypes } from './constants';
 
+
+export enum SurveyElementType { Item, ListItem, Answer, List, Question };
 
 
 
 /** Универсальный класс для элементов XML */
-export class SurveyItem
+class SurveyElement
 {
     /** Element TagName */
     protected readonly TagName: string;
     /** Список атрибутов */
     protected Attributes = new KeyedCollection<InlineAttribute>();
     /** Дети поимённо */
-    protected Children = new KeyedCollection<SurveyItem[]>();
+    protected Children = new KeyedCollection<SurveyElement[]>();
     /** текст элемента */
     public Text: string;
     /** Оставить однострочные дочерние теги на той же строке */
     public CollapseTags = false;
+    /** Хранит тип элемента (если известен) */
+    public ElementType: SurveyElementType;
 
 
-    constructor(name: string, id?: string)
+    constructor(name: string, id?: string, type?: SurveyElementType)
     {
         this.TagName = name;
         if (!!id) this.SetAttr("Id", id);
+        if (!!type) this.ElementType = type;
     }
 
     /** Получение полного XML */
@@ -47,11 +56,23 @@ export class SurveyItem
         return res;
     }
 
+    /** Сниппет с курсором на Id */
+    public ToSnippet(): vscode.SnippetString
+    {
+        let res = new vscode.SnippetString();
+        let prevId = this.AttrValue("Id");
+        let newId = !!prevId ? "${1:" + prevId + "}" : "$1";
+        this.SetAttr("Id", newId);
+        res.value = this.ToXML();
+        this.SetAttr("Id", prevId);
+        return res;
+    }
+
     /** возвращает XML строку атрибутов */
     public GetAttributes(): string
     {
         let res = "";
-        this.Attributes.forEach((key, value) =>
+        this.Attributes.OrderBy(x => x.Key == "Id" ? 0 : 1).forEach((key, value) =>
         {
             res += " " + value.Text;
         })
@@ -136,10 +157,10 @@ export class SurveyItem
     }
 
     /** добавляет дочерний элемент */
-    public AddChild(child: string | SurveyItem): void
+    public AddChild(child: string | SurveyElement): void
     {
         let name = typeof child == "string" ? child : child.TagName;
-        let value = typeof child == "string" ? new SurveyItem(child) : child;
+        let value = typeof child == "string" ? new SurveyElement(child) : child;
 
         if (!this.Children.Contains(name))
             this.Children.AddPair(name, [value]);
@@ -147,7 +168,7 @@ export class SurveyItem
     }
 
     /** возвращает полный массив детей */
-    public GetChildren(): SurveyItem[]
+    public GetChildren(): SurveyElement[]
     {
         let res = [];
         this.Children.forEach((key, value) =>
@@ -156,18 +177,30 @@ export class SurveyItem
         })
         return res;
     }
+
+    public ToListItem(): SurveyListItem
+    {
+        return new SurveyListItem(this.AttrValue("Id"), this.Text);
+    }
+
+    public ToAnswer(): SurveyAnswer
+    {
+        return new SurveyAnswer(this.AttrValue("Id"), this.Text);
+    }
+
 }
 
 
 /** <Item> */
-export class SurveyElementItem extends SurveyItem
+export class SurveyItem extends SurveyElement
 {
     constructor(id?: string, text?: string)
     {
         super("Item", id);
-        let textItem = new SurveyItem("Text");
+        let textItem = new SurveyElement("Text");
         textItem.Text = text;
         this.AddChild(textItem);
+        this.ElementType = SurveyElementType.Item;
     }
 }
 
@@ -207,7 +240,7 @@ class SurveyListItemVars
 
 
 /** Элементы <Item> для <List> */
-export class SurveyListItem extends SurveyElementItem
+export class SurveyListItem extends SurveyItem
 {
     /** Коллекция Var */
     public Vars: SurveyListItemVars;
@@ -217,23 +250,24 @@ export class SurveyListItem extends SurveyElementItem
     {
         super(id, text);
         this.CollapseTags = true;
+        this.ElementType = SurveyElementType.ListItem;
     }
 
     /** преобразует к стандартному классу */
-    public ToSurveyItem(separateVars: boolean): SurveyItem
+    public ToSurveyItem(separateVars: boolean): SurveyElement
     {
-        let res = new SurveyItem("Item");
+        let res = new SurveyElement("Item");
         // копируем все свойства
         res = Object.assign(res, this);
 
         // добавляем Var
-        if (this.Vars.Count() > 0)
+        if (!!this.Vars && this.Vars.Count() > 0)
         {
             if (separateVars)
             {
                 this.Vars.Items.forEach(x =>
                 {
-                    let Var = new SurveyItem("Var");
+                    let Var = new SurveyElement("Var");
                     Var.Text = x;
                     res.AddChild(Var);
                 })
@@ -259,7 +293,7 @@ interface SurveyListItemObject
 
 
 /** класс для <List> */
-export class SurveyList extends SurveyItem
+export class SurveyList extends SurveyElement
 {
     /** Каждый Var - отдельный тег */
     public VarsAsTags = true;
@@ -270,6 +304,7 @@ export class SurveyList extends SurveyItem
     constructor(id?: string)
     {
         super("List", id);
+        this.ElementType = SurveyElementType.List;
     }
 
     /** 
@@ -313,4 +348,98 @@ export class SurveyList extends SurveyItem
         return super.ToXML();
     }
 
+}
+
+
+export class SurveyAnswer extends SurveyElement
+{
+    constructor(id?: string, text?: string)
+    {
+        super("Answer", id);
+        let textItem = new SurveyElement("Text");
+        textItem.Text = text;
+        this.AddChild(textItem);
+        this.ElementType = SurveyElementType.Answer;
+        this.CollapseTags = true;
+    }
+
+    /** преобразует к стандартному классу */
+    public ToSurveyItem(): SurveyElement
+    {
+        let res = new SurveyElement("Answer");
+        // копируем все свойства
+        res = Object.assign(res, this);
+        return res;
+    }
+}
+
+
+export class SurveyQuestion extends SurveyElement
+{
+    /** Элементы Item */
+    public Answers = new KeyedCollection<SurveyAnswer>();
+    /** Заголовок вопроса */
+    public Header = "";
+
+
+    constructor(id?: string, questionType?: string, header?: string)
+    {
+        super("Question", id);
+        if (!!questionType) this.SetAttr("Type", questionType);
+        this.ElementType = SurveyElementType.Question;
+        if (!!header) this.Header = header;
+        let headerTag = new SurveyElement("Header");
+        headerTag.Text = this.Header;
+        this.AddChild(headerTag);
+    }
+
+    /** 
+     * Добавляет новый Answer 
+     * 
+     * Если `answer.Id` не задан, то генерируется автоматически
+     * 
+     * Если элемент с таким Id существует, то он будет заменён!
+     * 
+     * Возвращает Id нового элемента
+    */
+    public AddAnswer(answer: SurveyAnswer): string
+    {
+        let id = answer.AttrValue("Id");
+        // генерируем Id автоматически
+        if (!!id)
+        {
+            let answerIds = this.Answers.Keys().map(x => Number(x)).filter(x => !!x).sort(x => x);
+            if (answerIds.length == 0) id = "1";
+            else id = '' + (answerIds[answerIds.length - 1] + 1);
+        }
+
+        let res = new SurveyAnswer(id, answer.Text);
+        if (!!answer.Text) res.Text = answer.Text;
+        // предупреждаем о перезаписи
+        if (this.Answers.Contains(id)) console.warn("Ответ '" + id + "' уже существует в вопросе '" + this.AttrValue("Id") + "', он будет заменён.");
+        this.Answers.AddPair(id, res);
+        return id;
+    }
+
+
+    public ToXML(): string
+    {
+        // Answers не числятся в Children
+        this.Answers.forEach((id, item) =>
+        {
+            this.AddChild(item.ToSurveyItem());
+        })
+        return super.ToXML();
+    }
+
+    /** Сниппет с курсором на Id */
+    public ToSnippet(): vscode.SnippetString
+    {
+        let prevType = this.AttrValue("Type");
+        let types = "${2|" + QuestionTypes.join(",") + "|}";
+        this.SetAttr("Type", types);
+        let res = super.ToSnippet();
+        this.SetAttr("Type", prevType);
+        return res;
+    }
 }
