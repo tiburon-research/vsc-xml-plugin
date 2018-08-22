@@ -13,7 +13,7 @@ import * as iconv from 'iconv-lite'
 import * as dateFormat from 'dateformat'
 import * as winattr from "winattr"
 import { machineIdSync } from "node-machine-id"
-import { SurveyElementType, SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList } from './surveyObjects';
+import { SurveyElementType, SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElement } from './surveyObjects';
 
 
 // переменная для кэширования информации о пользователе
@@ -317,7 +317,19 @@ export namespace TibDocumentEdits
 
 	export function createElements(text: string, type: SurveyElementType): vscode.SnippetString
 	{
-		let elements = Parse.parseElements(text);
+		let strings = text.split("\n");
+		let insertPage = false;
+		let questionResult: Parse.ParsedElementObject;
+		if (type == SurveyElementType.Answer && strings.length > 1)
+		{ // пробуем найти Question
+			questionResult = Parse.parseQuestion(strings[0]);
+			if (!!questionResult.Id)
+			{
+				strings.shift();
+				insertPage = true;
+			}
+		}
+		let elements = Parse.parseElements(strings);
 		if (!elements || elements.length == 0) new vscode.SnippetString(text);
 
 		let res = new vscode.SnippetString();
@@ -329,9 +341,16 @@ export namespace TibDocumentEdits
 					elements.forEach(element => {
 						items.AddPair(element.Id, new SurveyAnswer(element.Id, element.Text));
 					});
-					let q = new SurveyQuestion();
-					q.Answers = items;
-					res = q.ToSnippet();
+					if (insertPage)
+					{
+						let q = new SurveyQuestion(questionResult.Id);
+						q.Answers = items;
+						q.Header.Text = questionResult.Text;
+						let p = new SurveyPage(questionResult.Id);
+						p.AddChild(q);
+						res = p.ToSnippet();
+					}
+					else res.value = items.ToArray(pair => pair.Value.ToXML()).join("\n");
 					break;
 				}
 

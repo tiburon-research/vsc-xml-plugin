@@ -21,6 +21,7 @@ export interface ParsedElementObject
 {
 	Id: string;
 	Text: string;
+	Prefix?: string;
 }
 
 
@@ -269,22 +270,21 @@ export function win1251Avaliabe(buf: Buffer)
 
 
 /** Разбирает текст на `Id` + `Text` */
-export function parseElements(text: string): ParsedElementObject[]
+export function parseElements(strings: string[]): ParsedElementObject[]
 {
 	let res: ParsedElementObject[];
-	let strings = text.split("\n");
 	if (strings.length == 0) return res;
 	strings = strings.map(x => x.trim()).filter(x => x.length > 0);
 
 	// пробуем разбить на Id + text
 	let regTests = [
 		{
-			Regex: /^(\d+)([\.\-—:]*\s*)(.+?)$/,
+			Regex: /^(\d+)([\.\-—:\s]*)(.+?)$/,
 			IdGroup: 1,
 			TextGroup: 3
 		},
 		{
-			Regex: /^(.+?)([\.\-—:]*\s*)(\d+)$/,
+			Regex: /^(.+?)([\.\-—:\s]*)(\d+)$/,
 			IdGroup: 3,
 			TextGroup: 1
 		}
@@ -323,5 +323,17 @@ export function parseElements(text: string): ParsedElementObject[]
 		}
 	}
 
+	return res;
+}
+
+
+export function parseQuestion(text: string): ParsedElementObject
+{
+	let res = { Id: "", Text: text, Prefix: "" };
+	let match = text.match(/^([A-Za-z]+\d+)(\.?\s*)(.*)/);
+	if (!match) return res;
+	res.Id = match[1];
+	res.Prefix = match[2];
+	res.Text = match[3];
 	return res;
 }

@@ -8,12 +8,12 @@ import { KeyedCollection, InlineAttribute } from './classes';
 import { QuestionTypes } from './constants';
 
 
-export enum SurveyElementType { Item, ListItem, Answer, List, Question };
+export enum SurveyElementType { Item, ListItem, Answer, List, Question, Page };
 
 
 
 /** Универсальный класс для элементов XML */
-class SurveyElement
+export class SurveyElement
 {
     /** Element TagName */
     protected readonly TagName: string;
@@ -379,7 +379,7 @@ export class SurveyQuestion extends SurveyElement
     /** Элементы Item */
     public Answers = new KeyedCollection<SurveyAnswer>();
     /** Заголовок вопроса */
-    public Header = "";
+    public Header: SurveyElement;
 
 
     constructor(id?: string, questionType?: string, header?: string)
@@ -387,9 +387,9 @@ export class SurveyQuestion extends SurveyElement
         super("Question", id);
         if (!!questionType) this.SetAttr("Type", questionType);
         this.ElementType = SurveyElementType.Question;
-        if (!!header) this.Header = header;
         let headerTag = new SurveyElement("Header");
-        headerTag.Text = this.Header;
+        this.Header = headerTag;
+        if (!!header) this.Header.Text = header;
         this.AddChild(headerTag);
     }
 
@@ -440,6 +440,35 @@ export class SurveyQuestion extends SurveyElement
         this.SetAttr("Type", types);
         let res = super.ToSnippet();
         this.SetAttr("Type", prevType);
+        return res;
+    }
+}
+
+export class SurveyPage extends SurveyElement
+{
+    constructor(id?: string)
+    {
+        super("Page", id);
+        this.ElementType = SurveyElementType.Page;
+    }
+
+    /** Сниппет с курсором на Id */
+    public ToSnippet(): vscode.SnippetString
+    {
+        let prevId = this.AttrValue("Id");
+        let newId = !!prevId ? "${1:" + prevId + "}" : "$1";
+        this.SetAttr("Id", newId);
+        let prevQuestions = this.Children.Item("Question");
+        let newQuestions = prevQuestions;
+        
+        for (let i = 0; i < newQuestions.length; i++)
+        {
+            newQuestions[i].SetAttr("Id", "$1");
+        }
+        //this.Children.AddPair("Question", newQuestions);
+        let res = super.ToSnippet();
+        this.SetAttr("Id", prevId);
+        //this.Children.AddPair("Question", prevQuestions);
         return res;
     }
 }
