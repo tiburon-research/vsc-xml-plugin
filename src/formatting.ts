@@ -1,6 +1,6 @@
 'use strict';
 
-import { Language, logString, safeString, showWarning, ExtensionSettings } from "./classes";
+import { Language, safeString, ExtensionSettings } from "./classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { logError, CSFormatter } from "./extension";

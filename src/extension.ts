@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, TibMethod, CurrentTag, SurveyNode, SurveyNodes, TibMethods, TibDocumentEdits, ExtensionSettings, ContextChange, KeyedCollection, Language, positiveMin, isScriptLanguage, logString, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair, getMixIds } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair, getMixIds, getContextChanges } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -12,6 +12,7 @@ import * as debug from './debug'
 import { getWarnings } from './diagnostic'
 import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes } from './constants'
 import { SurveyElementType } from './surveyObjects';
+import * as TibDocumentEdits from './documentEdits'
 
 
 
@@ -1627,7 +1628,7 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 		// собираем тег заново
 		let pure: string;
 		if (!pure) pure = CurrentTag.PrepareXML(text);
-		let ranges = getParentRanges(document, pure);
+		let ranges = Parse.getParentRanges(document, pure);
 		// где-то вне
 		if (ranges.length == 0) tag = null;//new CurrentTag("XML");
 		else
@@ -1673,66 +1674,6 @@ function getCurrentTag(document: vscode.TextDocument, position: vscode.Position,
 }
 
 
-/** массив из Range всех незакрытых тегов 
- * @param prevText предыдущий текст (от начала документа)
- * @param startFrom откуда начинать
-*/
-function getParentRanges(document: vscode.TextDocument, prevText: string, startFrom: number = 0): vscode.Range[]
-{
-	let res: vscode.Range[] = [];
-	let rest = prevText.slice(startFrom);
-	let next = getNextParent(document, rest, prevText);
-	let i = 0;
-	while (!!next && i < 50)
-	{
-		res.push(next);
-		rest = prevText.slice(document.offsetAt(next.end));
-		next = getNextParent(document, rest, prevText);
-	}
-	if (i >= 50) logError("Найдено слишком много вложенных тегов");
-	return res;
-}
-
-
-/** Поиск позиции следующего незакрытого тега 
- * 
- * Возвращает Range открывающего или `null` если больше нет
-*/
-function getNextParent(document: vscode.TextDocument, text: string, fullPrevText?: string): vscode.Range
-{
-	let res = text.find(/<((?!xml)(\w+))/); // находим открывающийся
-	if (res.Index < 0) return null;// открытых больше нет
-	let rest = text.slice(res.Index); // от начала открывающегося
-	let lastIndex = Parse.indexOfOpenedEnd(rest); // ищем его конец	
-
-	if (!fullPrevText) fullPrevText = text; // если первый раз
-	let shift = fullPrevText.length - text.length + res.Index; // сдвиг относительно начала документа
-	let from = document.positionAt(shift); // стартовая позиция
-
-	if (lastIndex < 0) // если открывающий тег неполный, то считаем, что курсор сейчас в нём
-	{
-		let to = document.positionAt(fullPrevText.length - 1).translate(0, 1);
-		return new vscode.Range(from, to);
-	}
-
-	// двигаем относительно начала тега
-	lastIndex += shift;
-
-	// ищем закрывающий
-	let closingTag = Parse.findCloseTag("<", res.Result[1], ">", shift, fullPrevText);
-
-	if (!closingTag) // если не закрыт, то возвращаем его
-	{
-		let to = document.positionAt(lastIndex + 1);
-		return new vscode.Range(from, to);
-	}
-
-	// продолжаем искать после закрывающего
-	if (closingTag.SelfClosed) rest = fullPrevText.slice(lastIndex);
-	else rest = fullPrevText.slice(closingTag.Range.To + 1);
-	return getNextParent(document, rest, fullPrevText);
-}
-
 
 function getCurrentLineText(document: vscode.TextDocument, position: vscode.Position): string
 {
@@ -1773,32 +1714,6 @@ function getPreviousText(document: vscode.TextDocument, position: vscode.Positio
 function clearFromCSTags(text: string): string
 {
 	return text.replace(/\[c#([^\]]*)\]([\s\S]+?)\[\/c#([^\]]*)\]/g, "*c#$1*$2*/c#$3*");
-}
-
-
-/** Возвращает совмещённую структуру из изменений и соответствующих выделений */
-function getContextChanges(selections: vscode.Selection[], changes: vscode.TextDocumentContentChangeEvent[]): ContextChange[]
-{
-	let res: ContextChange[] = [];
-	try
-	{
-		selections.forEach(selection =>
-		{
-			for (let i = 0; i < changes.length; i++)
-			{
-				if (selection.start.character == changes[i].range.start.character &&
-					selection.start.line == changes[i].range.start.line)
-				{
-					res.push(new ContextChange(changes[i], selection));
-					continue;
-				}
-			}
-		});
-	} catch (error)
-	{
-		logError("Ошибка связи выделений с изменениями", error);
-	}
-	return res;
 }
 
 
@@ -2240,7 +2155,7 @@ class CacheSet
 			this.PreviousText.Set(prevText);
 
 			// обновляем Tag
-			let ranges = getParentRanges(document, cachedSafe, ind);
+			let ranges = Parse.getParentRanges(document, cachedSafe, ind);
 			if (ranges.length > 0)
 				ranges.forEach(range => validParents.push(new SimpleTag(document, range)));
 			if (validParents.length > 0)

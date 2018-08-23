@@ -6,6 +6,7 @@ import { clearXMLComments } from "./encoding"
 import { positiveMin, KeyedCollection, CurrentTag } from "./classes"
 import { RegExpPatterns } from './constants'
 import * as charDetect from 'charset-detector'
+import * as vscode from 'vscode'
 
 
 /** Результат поиска тегов */
@@ -336,4 +337,65 @@ export function parseQuestion(text: string): ParsedElementObject
 	res.Prefix = match[2];
 	res.Text = match[3];
 	return res;
+}
+
+
+/** массив из Range всех незакрытых тегов 
+ * @param prevText предыдущий текст (от начала документа)
+ * @param startFrom откуда начинать
+*/
+export function getParentRanges(document: vscode.TextDocument, prevText: string, startFrom: number = 0): vscode.Range[]
+{
+	let res: vscode.Range[] = [];
+	let rest = prevText.slice(startFrom);
+	let next = getNextParent(document, rest, prevText);
+	let i = 0;
+	while (!!next && i < 50)
+	{
+		res.push(next);
+		rest = prevText.slice(document.offsetAt(next.end));
+		next = getNextParent(document, rest, prevText);
+	}
+	if (i >= 50) logError("Найдено слишком много вложенных тегов");
+	return res;
+}
+
+
+/** Поиск позиции следующего незакрытого тега 
+ * 
+ * Возвращает Range открывающего или `null` если больше нет
+*/
+function getNextParent(document: vscode.TextDocument, text: string, fullPrevText?: string): vscode.Range
+{
+	let res = text.find(/<((?!xml)(\w+))/); // находим открывающийся
+	if (res.Index < 0) return null;// открытых больше нет
+	let rest = text.slice(res.Index); // от начала открывающегося
+	let lastIndex = indexOfOpenedEnd(rest); // ищем его конец	
+
+	if (!fullPrevText) fullPrevText = text; // если первый раз
+	let shift = fullPrevText.length - text.length + res.Index; // сдвиг относительно начала документа
+	let from = document.positionAt(shift); // стартовая позиция
+
+	if (lastIndex < 0) // если открывающий тег неполный, то считаем, что курсор сейчас в нём
+	{
+		let to = document.positionAt(fullPrevText.length - 1).translate(0, 1);
+		return new vscode.Range(from, to);
+	}
+
+	// двигаем относительно начала тега
+	lastIndex += shift;
+
+	// ищем закрывающий
+	let closingTag = findCloseTag("<", res.Result[1], ">", shift, fullPrevText);
+
+	if (!closingTag) // если не закрыт, то возвращаем его
+	{
+		let to = document.positionAt(lastIndex + 1);
+		return new vscode.Range(from, to);
+	}
+
+	// продолжаем искать после закрывающего
+	if (closingTag.SelfClosed) rest = fullPrevText.slice(lastIndex);
+	else rest = fullPrevText.slice(closingTag.Range.To + 1);
+	return getNextParent(document, rest, fullPrevText);
 }
