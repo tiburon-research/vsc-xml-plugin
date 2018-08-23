@@ -2108,6 +2108,12 @@ export const Attributes = {
 			"Type": "LogicalOperator"
 		}
 	],
+	"Methods": [
+		{
+			Name: "Action",
+			Default: "Append"
+		}
+	],
 	"Split": [
 		{
 			"Name": "Name",
