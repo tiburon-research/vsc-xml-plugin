@@ -2076,6 +2076,16 @@ export function getLockData(fileName: string): LockData
 	return JSON.parse(data);
 }
 
+
+/** Проверка текущего положения курсора на нахождение в CDATA */
+export function inCDATA(document: vscode.TextDocument, position: vscode.Position): boolean
+{
+	let range = new vscode.Range(new vscode.Position(0, 0), position);
+	let text = document.getText(range);
+	return text.lastIndexOf("<![CDATA[") > text.lastIndexOf("]]>");
+}
+
+
 //#endregion
 
 
