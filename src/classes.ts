@@ -689,7 +689,7 @@ export class CurrentTag
 	{
 		// замазываем комментарии
 		let pure = Encoding.clearXMLComments(text);
-		// удаление закрытых _AllowCodeTag из остатка кода (чтобы не искать <int>)
+		// удаление _AllowCodeTag из остатка кода (чтобы не искать <int>)
 		pure = Encoding.clearCSContents(pure);
 		return pure;
 	}

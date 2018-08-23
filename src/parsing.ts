@@ -1,6 +1,6 @@
 'use strict'
 
-import { TextRange, safeString, TagInfo } from "./classes";
+import { TextRange, safeString, TagInfo, Language, logString } from "./classes";
 import { logError } from "./extension";
 import { clearXMLComments } from "./encoding"
 import { positiveMin, KeyedCollection, CurrentTag } from "./classes"
@@ -237,7 +237,7 @@ export function inString(text: string): boolean
 }
 
 
-/** Индекс конца закрывающегося тега. 
+/** Индекс конца открывающегося тега. 
  * 
  * Текст должен начинаться с открывающегося тега. Если не находит возвращает -1.
 */
@@ -340,9 +340,17 @@ export function parseQuestion(text: string): ParsedElementObject
 }
 
 
+interface ParentSearchResult
+{
+	Range: vscode.Range;
+	TagName: string;
+}
+
 /** массив из Range всех незакрытых тегов 
  * @param prevText предыдущий текст (от начала документа)
  * @param startFrom откуда начинать
+ * 
+ * Теги JS, CSS и PlainText не парсятся
 */
 export function getParentRanges(document: vscode.TextDocument, prevText: string, startFrom: number = 0): vscode.Range[]
 {
@@ -352,9 +360,14 @@ export function getParentRanges(document: vscode.TextDocument, prevText: string,
 	let i = 0;
 	while (!!next && i < 50)
 	{
-		res.push(next);
-		rest = prevText.slice(document.offsetAt(next.end));
+		res.push(next.Range);
+		rest = prevText.slice(document.offsetAt(next.Range.end));
 		next = getNextParent(document, rest, prevText);
+		if (!!next && !tagNeedToBeParsed(next.TagName))
+		{
+			res.push(next.Range);
+			break;
+		}
 	}
 	if (i >= 50) logError("Найдено слишком много вложенных тегов");
 	return res;
@@ -364,11 +377,14 @@ export function getParentRanges(document: vscode.TextDocument, prevText: string,
 /** Поиск позиции следующего незакрытого тега 
  * 
  * Возвращает Range открывающего или `null` если больше нет
+ * 
+ * теги JS, CSS и PlainText не парсятся
 */
-function getNextParent(document: vscode.TextDocument, text: string, fullPrevText?: string): vscode.Range
+function getNextParent(document: vscode.TextDocument, text: string, fullPrevText?: string): ParentSearchResult
 {
 	let res = text.find(/<((?!xml)(\w+))/); // находим открывающийся
 	if (res.Index < 0) return null;// открытых больше нет
+	let tagName = res.Result[1];
 	let rest = text.slice(res.Index); // от начала открывающегося
 	let lastIndex = indexOfOpenedEnd(rest); // ищем его конец	
 
@@ -379,7 +395,7 @@ function getNextParent(document: vscode.TextDocument, text: string, fullPrevText
 	if (lastIndex < 0) // если открывающий тег неполный, то считаем, что курсор сейчас в нём
 	{
 		let to = document.positionAt(fullPrevText.length - 1).translate(0, 1);
-		return new vscode.Range(from, to);
+		return { Range: new vscode.Range(from, to), TagName: tagName };
 	}
 
 	// двигаем относительно начала тега
@@ -391,11 +407,20 @@ function getNextParent(document: vscode.TextDocument, text: string, fullPrevText
 	if (!closingTag) // если не закрыт, то возвращаем его
 	{
 		let to = document.positionAt(lastIndex + 1);
-		return new vscode.Range(from, to);
+		return { Range: new vscode.Range(from, to), TagName: tagName };
 	}
 
 	// продолжаем искать после закрывающего
 	if (closingTag.SelfClosed) rest = fullPrevText.slice(lastIndex);
 	else rest = fullPrevText.slice(closingTag.Range.To + 1);
 	return getNextParent(document, rest, fullPrevText);
+}
+
+
+/** Проверяет нужно ли парсить этот тег */
+function tagNeedToBeParsed(tagName: string): boolean
+{
+	let lang = TagInfo.getTagLanguage(tagName);
+	let stopLangs = [ Language.PlainText, Language.CSS, Language.JS ];
+	return stopLangs.indexOf(lang) < 0;
 }
