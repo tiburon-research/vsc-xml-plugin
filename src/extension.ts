@@ -744,8 +744,7 @@ function higlight()
 				case "[":
 					{
 						// открывающийся
-						let txt = word != "c#" ? clearFromCSTags(fullText) : fullText;
-						let endpos = document.positionAt(txt.indexOf("]", text.length) + 1);
+						let endpos = document.positionAt(fullText.indexOf("]", text.length) + 1);
 						curRange = new vscode.Range(curRange.start.translate(0, -1), endpos);
 						res.push(new vscode.DocumentHighlight(curRange));
 
@@ -772,8 +771,7 @@ function higlight()
 				case "[/":
 					{
 						// закрывающийся
-						let txt = word != "c#" ? clearFromCSTags(fullText) : fullText;
-						let endpos = document.positionAt(txt.indexOf("]", text.length) + 1);
+						let endpos = document.positionAt(fullText.indexOf("]", text.length) + 1);
 						curRange = new vscode.Range(curRange.start.translate(0, -2), endpos);
 						res.push(new vscode.DocumentHighlight(curRange));
 
@@ -1573,7 +1571,6 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 	try
 	{
 		let fullText = document.getText();
-		if (tagName != 'c#') fullText = clearFromCSTags(fullText);
 		let prevText = getPreviousText(document, position);
 		let res = Parse.findCloseTag(opBracket, tagName, clBracket, prevText, fullText);
 		if (!res || !res.Range) return null;
@@ -1593,7 +1590,6 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 	try
 	{
 		let prevText = getPreviousText(document, position);
-		if (tagName != 'c#') prevText = clearFromCSTags(prevText);
 		let res = Parse.findOpenTag(opBracket, tagName, clBracket, prevText);
 		if (!res) return null;
 		let startPos = document.positionAt(res.Range.From);
@@ -1708,13 +1704,6 @@ function getPreviousText(document: vscode.TextDocument, position: vscode.Positio
 	}
 }
 
-
-// TODO: проверить нафига такой костыль?
-/** Костыль для неучитывания c# вставок (заменяет '['и ']' на '*') */
-function clearFromCSTags(text: string): string
-{
-	return text.replace(/\[c#([^\]]*)\]([\s\S]+?)\[\/c#([^\]]*)\]/g, "*c#$1*$2*/c#$3*");
-}
 
 
 /** Range всего документа */
