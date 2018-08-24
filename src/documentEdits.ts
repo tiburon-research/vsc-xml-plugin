@@ -266,7 +266,7 @@ export function createElements(text: string, type: SurveyElementType): vscode.Sn
 				{
 					let q = new SurveyQuestion(questionResult.Id);
 					q.Answers = items;
-					q.Header.Text = questionResult.Text;
+					q.Header = questionResult.Text.trim();
 					let p = new SurveyPage(questionResult.Id);
 					p.AddChild(q);
 					res = p.ToSnippet();

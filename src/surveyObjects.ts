@@ -396,19 +396,15 @@ export class SurveyQuestion extends SurveyElement
 {
     /** Элементы Item */
     public Answers = new KeyedCollection<SurveyAnswer>();
+    
     /** Заголовок вопроса */
-    public Header: SurveyElement;
+    public Header: string;
 
-
-    constructor(id?: string, questionType?: string, header?: string)
+    constructor(id?: string, questionType?: string)
     {
         super("Question", id);
         if (!!questionType) this.SetAttr("Type", questionType);
         this.ElementType = SurveyElementType.Question;
-        let headerTag = new SurveyElement("Header");
-        this.Header = headerTag;
-        if (!!header) this.Header.Text = header;
-        this.AddChild(headerTag);
     }
 
     /** 
@@ -442,6 +438,9 @@ export class SurveyQuestion extends SurveyElement
 
     public ToXML(): string
     {
+        let headerTag = new SurveyElement("Header");
+        headerTag.Text = this.Header;
+        this.AddChild(headerTag);
         // Answers не числятся в Children
         this.Answers.forEach((id, item) =>
         {
