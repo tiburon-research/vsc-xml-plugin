@@ -36,6 +36,24 @@ export class SurveyElement
         if (!!type) this.ElementType = type;
     }
 
+    /** Копирует элемент */
+    public Clone(): SurveyElement
+    {
+        let res = new SurveyElement(this.TagName);
+
+        res = Object.assign(res, this);
+        
+        res.Children.Clear();
+        this.Children.forEach((key, value) =>
+        {
+            value.forEach(element => {
+                res.AddChild(element.Clone());
+            });
+        });
+
+        return res as SurveyElement;
+    }
+
     /** Получение полного XML */
     public ToXML(): string
     {
@@ -458,17 +476,17 @@ export class SurveyPage extends SurveyElement
         let prevId = this.AttrValue("Id");
         let newId = !!prevId ? "${1:" + prevId + "}" : "$1";
         this.SetAttr("Id", newId);
-        let prevQuestions = this.Children.Item("Question");
-        let newQuestions = prevQuestions;
+        let prevQuestions: SurveyItem[] = this.Children.Item("Question").map(x => x.Clone());
+        let currentQuestions = this.Children.Item("Question");
         
-        for (let i = 0; i < newQuestions.length; i++)
+        for (let i = 0; i < currentQuestions.length; i++)
         {
-            newQuestions[i].SetAttr("Id", "$1");
+            currentQuestions[i].SetAttr("Id", "$1");
         }
-        //this.Children.AddPair("Question", newQuestions);
         let res = super.ToSnippet();
         this.SetAttr("Id", prevId);
-        //this.Children.AddPair("Question", prevQuestions);
+        this.Children.AddPair("Question", prevQuestions);
+        //console.log(this.Children.Item("Question")[0]);
         return res;
     }
 }
