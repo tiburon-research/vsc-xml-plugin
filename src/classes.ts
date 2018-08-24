@@ -290,7 +290,7 @@ export class TibAutoCompleteItem
 	{
 		let kind: keyof typeof vscode.CompletionItemKind = this.Kind;
 		let item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind[kind]);
-		if (addBracket && (this.Kind == "Function" || this.Kind == "Method")) item.insertText = new vscode.SnippetString(this.Name + "($1)");
+		if (addBracket && (this.Kind == "Function" || this.Kind == "Method")) item.insertText = new vscode.SnippetString(this.Name + "($0)");
 		let mds = new vscode.MarkdownString();
 		if (this.Description) mds.value = this.Description;
 		else if (this.Documentation) mds.value = this.Documentation;
@@ -413,7 +413,7 @@ export class TibMethod
 	ToCompletionItem()
 	{
 		let item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Function);
-		if (this.IsFunction) item.insertText = new vscode.SnippetString(this.Name + "($1)");
+		if (this.IsFunction) item.insertText = new vscode.SnippetString(this.Name + "($0)");
 		let mds = new vscode.MarkdownString();
 		mds.value = this.Signature;
 		if (this.Type) item.detail = this.Type;
