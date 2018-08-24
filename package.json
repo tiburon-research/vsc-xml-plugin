@@ -157,8 +157,13 @@
         "category": "tib"
       },
       {
-        "command": "tib.getElements",
-        "title": "Выделить элементы из текста",
+        "command": "tib.getAnswers",
+        "title": "Преобразовать в Answers",
+        "category": "tib"
+      },
+      {
+        "command": "tib.getItems",
+        "title": "Преобразовать в Items",
         "category": "tib"
       }
     ],
@@ -204,8 +209,12 @@
         "command": "tib.debugTestCommand"
       },
       {
-        "key": "ctrl+alt+shift+e",
-        "command": "tib.getElements"
+        "key": "ctrl+alt+a",
+        "command": "tib.getAnswers"
+      },
+      {
+        "key": "ctrl+alt+i",
+        "command": "tib.getItems"
       }
     ],
     "configurationDefaults": {

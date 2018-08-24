@@ -333,27 +333,16 @@ function registerCommands()
 	});
 
 
-	// выделение элементов из текста
-	registerCommand('tib.getElements', () => 
+	// выделение Answer из текста
+	registerCommand('tib.getAnswers', () => 
 	{
-		let editor = vscode.window.activeTextEditor;
-		let text = editor.document.getText(editor.selection);
-		let cases = new KeyedCollection<SurveyElementType>();
-		cases.AddPair("Answers", SurveyElementType.Answer);
-		cases.AddPair("Items", SurveyElementType.Item);
-		let res = new vscode.SnippetString(text);
-		InProcess = true;
-		vscode.window.showQuickPick(cases.Keys(), { placeHolder: "Создать элементы:" }).then(x =>
-		{
-			res = TibDocumentEdits.createElements(text, cases.Item(x));
-			let tag = getCurrentTag(editor.document, editor.selection.active);
-			let indent = !!tag ? tag.GetIndent() : 1;
-			Formatting.format(res.value, Language.XML, Settings, "\t", indent).then(x =>
-			{
-				res.value = x;
-				vscode.window.activeTextEditor.insertSnippet(res).then(x => { InProcess = true });
-			});
-		});
+		createElements(SurveyElementType.Answer);
+	});
+
+	// выделение Item из текста
+	registerCommand('tib.getItems', () => 
+	{
+		createElements(SurveyElementType.ListItem);
 	});
 
 
@@ -2104,6 +2093,23 @@ function applyConstants(input: string): string
 {
 	let cons = AutoCompleteArray.PreDifinedConstants.toKeyedCollection(x => x).Map((key, value) => new KeyValuePair<string>('@' + key, value));
 	return input.replaceValues(cons);
+}
+
+
+async function createElements(elementTYpe: SurveyElementType)
+{
+	let editor = vscode.window.activeTextEditor;
+	let text = editor.document.getText(editor.selection);
+	let res = TibDocumentEdits.createElements(text, elementTYpe);
+
+	InProcess = true;
+	let tag = getCurrentTag(editor.document, editor.selection.active);
+	let indent = !!tag ? tag.GetIndent() : 1;
+	Formatting.format(res.value, Language.XML, Settings, "\t", indent).then(x =>
+	{
+		res.value = x;
+		vscode.window.activeTextEditor.insertSnippet(res).then(x => { InProcess = false });
+	});
 }
 
 
