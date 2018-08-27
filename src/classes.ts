@@ -1018,6 +1018,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 	CompletitionItems(name: string, closeQt: string = ""): vscode.CompletionItem[]
 	{
 		let res: vscode.CompletionItem[] = [];
+		if (!this.Item(name)) return res;
 		this.Item(name).forEach(element =>
 		{
 			let ci = new vscode.CompletionItem(element.Id, vscode.CompletionItemKind.Enum);
@@ -1939,7 +1940,7 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
 		let nNames = NodeStoreNames;
 		let txt = document.getText();
 		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
-		let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]+Id=(\"|')([^\"']+)(\"|')", "g");
+		let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')", "g");
 		let idIndex = nNames.length + 3;
 		let nodes = new SurveyNodes();
 		let res = txt.matchAll(reg);
@@ -1972,7 +1973,7 @@ export function getMixIds(document: vscode.TextDocument, Settings: ExtensionSett
 		let mixIdsStore: string[] = [];
 		matchesStore.forEach(element =>
 		{
-			let idmt = element[0].match(/Id=("|')(.+?)\1/);
+			let idmt = element[0].match(/\sId=("|')(.+?)\1/);
 			if (!idmt) return;
 			mixIdsStore.push(":" + idmt[2]);
 		});
@@ -2148,12 +2149,13 @@ String.prototype.findLast = function (search: string): SearchResult
 
 String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
 {
-	let newText = this;
+	let newText: string = this;
 	let res: RegExpMatchArray[] = [];
 	let mat = search.exec(this);
 	while (!!mat)
 	{
-		newText = newText.replace(mat[0]);
+		let textToReplace = " ".repeat(mat[0].length);
+		newText = newText.replace(mat[0], textToReplace);
 		res.push(mat);
 		mat = search.exec(newText);
 	}
