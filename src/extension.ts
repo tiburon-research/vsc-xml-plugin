@@ -9,7 +9,7 @@ import * as Formatting from './formatting'
 import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
-import { getWarnings } from './diagnostic'
+import { getDiagnosticElements } from './diagnostic'
 import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes } from './constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
@@ -82,6 +82,9 @@ var LockedFiles: string[] = [];
 
 var CurrentStatus = new StatusBar();
 
+
+var Diagnostics = vscode.languages.createDiagnosticCollection('tib_diagnostic');
+
 //#endregion
 
 
@@ -108,6 +111,7 @@ export function activate(context: vscode.ExtensionContext)
 		{
 			if (clearCache && Cache.Active()) Cache.Clear();
 			getSurveyData(editor.document);
+			diagnostic(editor.document);
 		} catch (er)
 		{
 			logError("Ошибка при сборе информации", er);
@@ -1243,13 +1247,11 @@ function upcaseFirstLetter(event: vscode.TextDocumentChangeEvent, editor: vscode
 
 
 /** Подсказки и ошибки */
-function diagnostic(document: vscode.TextDocument)
+async function diagnostic(document: vscode.TextDocument)
 {
-	let warns = vscode.languages.createDiagnosticCollection('tib_warnings');
-	getWarnings(document).then(res =>
-	{
-		warns.set(document.uri, res);
-	})
+	let res = await getDiagnosticElements(document);
+	Diagnostics.delete(document.uri);
+	if (!!res) Diagnostics.set(document.uri, res);
 }
 
 

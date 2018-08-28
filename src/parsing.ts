@@ -421,6 +421,45 @@ function getNextParent(document: vscode.TextDocument, text: string, fullPrevText
 function tagNeedToBeParsed(tagName: string): boolean
 {
 	let lang = TagInfo.getTagLanguage(tagName);
-	let stopLangs = [ Language.PlainText, Language.CSS, Language.JS ];
+	let stopLangs = [Language.PlainText, Language.CSS, Language.JS];
 	return stopLangs.indexOf(lang) < 0;
+}
+
+
+/** Хранит информацию о расположении и тексте */
+export interface DocumentElement
+{
+	Value: RegExpMatchArray;
+	Range: vscode.Range;
+	From: number;
+	To: number;
+	Location: vscode.Location;
+	Message: string;
+}
+
+
+/** Возвращает массив найденных `DocumentElement` */
+export async function getDocumentElements(document: vscode.TextDocument, search: RegExp, errorMessage: string): Promise<DocumentElement[]>
+{
+	let res: DocumentElement[] = [];
+	let text = document.getText();
+	let matches = text.matchAll(search);
+	if (!!matches)
+	{
+		matches.forEach(element =>
+		{
+			let to = element.index + element[0].length;
+			let range = new vscode.Range(document.positionAt(element.index), document.positionAt(to));;
+			res.push({
+				Value: element,
+				From: element.index,
+				To: to,
+				Range: range,
+				Location: new vscode.Location(document.uri, range),
+				Message: errorMessage
+			}
+			);
+		});
+	}
+	return res;
 }
