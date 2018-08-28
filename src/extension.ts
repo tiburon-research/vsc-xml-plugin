@@ -16,7 +16,7 @@ import * as TibDocumentEdits from './documentEdits'
 
 
 
-export { bot, $, CSFormatter, logError, OutChannel, _LogPath };
+export { bot, $, CSFormatter, logError, OutChannel, _LogPath, Settings };
 
 
 /*---------------------------------------- глобальные переменные ----------------------------------------*/
@@ -52,7 +52,7 @@ var Methods = new TibMethods();
 /** Список Id */
 var CurrentNodes: SurveyNodes = new SurveyNodes();
 
-/** Список MixId */
+/** Список MixId (подставляется в значениях атрибутов) */
 var MixIds: string[] = [];
 
 /** Настройки расширения */

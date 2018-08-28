@@ -8,7 +8,7 @@ const _AllDiagnostics: IDiagnosticType[] =
 	[
 		{
 			Type: vscode.DiagnosticSeverity.Error,
-			Functions: [ getWrongIds ]
+			Functions: [ getWrongIds, getLongIds ]
 		}
 	];
 
@@ -59,9 +59,16 @@ async function _diagnosticElements(document: vscode.TextDocument, type: vscode.D
 
 
 
-/** получаем неправильные Id */
+/** Id с недопустимым набором символов */
 async function getWrongIds(document: vscode.TextDocument): Promise<DocumentElement[]>
 {
 	let res = getDocumentElements(document, /\sId=("|')(\w*[^\w'"\n@\-\(\)]\w*)+(\1)/, "Недопустимые символы в Id");
+	return res;
+}
+
+/** слишком длинные Id */
+async function getLongIds(document: vscode.TextDocument): Promise<DocumentElement[]>
+{
+	let res = getDocumentElements(document, /\sId=("|')[^'"\n]{25,}(\1)/, "Недопустимые символы в Id");
 	return res;
 }

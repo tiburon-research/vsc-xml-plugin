@@ -1,7 +1,7 @@
 'use strict'
 
 import { TextRange, safeString, TagInfo, Language, logString } from "./classes";
-import { logError } from "./extension";
+import { logError, Settings } from "./extension";
 import { clearXMLComments } from "./encoding"
 import { positiveMin, KeyedCollection, CurrentTag } from "./classes"
 import { RegExpPatterns } from './constants'
@@ -443,6 +443,7 @@ export async function getDocumentElements(document: vscode.TextDocument, search:
 {
 	let res: DocumentElement[] = [];
 	let text = document.getText();
+	if (!!Settings.Item("ignoreComments")) text = clearXMLComments(text);
 	let matches = text.matchAll(search);
 	if (!!matches)
 	{
