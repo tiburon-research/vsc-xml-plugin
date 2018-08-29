@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { DocumentElement, getDocumentElements } from './parsing';
+import { clearCDATA } from './encoding';
 
 
 
@@ -8,7 +9,7 @@ const _AllDiagnostics: IDiagnosticType[] =
 	[
 		{
 			Type: vscode.DiagnosticSeverity.Error,
-			Functions: [ getWrongIds, getLongIds ]
+			Functions: [ getWrongIds, getLongIds, getWrongXML ]
 		}
 	];
 
@@ -62,13 +63,24 @@ async function _diagnosticElements(document: vscode.TextDocument, type: vscode.D
 /** Id с недопустимым набором символов */
 async function getWrongIds(document: vscode.TextDocument): Promise<DocumentElement[]>
 {
-	let res = getDocumentElements(document, /\sId=("|')(\w*[^\w'"\n@\-\(\)]\w*)+(\1)/, "Недопустимые символы в Id");
+	let res = await getDocumentElements(document, /\sId=("|')(\w*[^\w'"\n@\-\(\)]\w*)+(\1)/, "In english, please!");
 	return res;
 }
+
 
 /** слишком длинные Id */
 async function getLongIds(document: vscode.TextDocument): Promise<DocumentElement[]>
 {
-	let res = getDocumentElements(document, /\sId=("|')[^'"\n]{25,}(\1)/, "Недопустимые символы в Id");
+	// проверять на длину можно только \w+
+	let res = await getDocumentElements(document, /\sId=("|')\w{25,}(\1)/, "Слишком много букв");
+	return res;
+}
+
+
+/** проверка недопустимых символов XML */
+async function getWrongXML(document: vscode.TextDocument): Promise<DocumentElement[]>
+{
+	let text = clearCDATA(document.getText());
+	let res = await getDocumentElements(document, /(&)|(<(?![\?\/!]?\w+)(.*))/, "Такое надо прикрывать посредством CDATA", text);
 	return res;
 }

@@ -438,14 +438,19 @@ export interface DocumentElement
 }
 
 
-/** Возвращает массив найденных `DocumentElement` */
-export async function getDocumentElements(document: vscode.TextDocument, search: RegExp, errorMessage: string): Promise<DocumentElement[]>
+/** 
+ * Возвращает массив найденных `DocumentElement` 
+ * 
+ * Если задан `preparedText`, то используется он (но сначала сравнивается длина)
+*/
+export async function getDocumentElements(document: vscode.TextDocument, search: RegExp, errorMessage: string, preparedText?: string): Promise<DocumentElement[]>
 {
 	let res: DocumentElement[] = [];
-	let text = document.getText();
+	let docText = document.getText();
+	let text = !!preparedText && preparedText.length == docText.length ? preparedText : docText;
 	if (!!Settings.Item("ignoreComments")) text = clearXMLComments(text);
 	let matches = text.matchAll(search);
-	if (!!matches)
+	if (!!matches && matches.length > 0)
 	{
 		matches.forEach(element =>
 		{

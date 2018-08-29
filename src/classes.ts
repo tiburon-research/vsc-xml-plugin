@@ -2155,7 +2155,7 @@ String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
 	while (!!mat)
 	{
 		let textToReplace = " ".repeat(mat[0].length);
-		newText = newText.replace(mat[0], textToReplace);
+		newText = newText.replace(search, textToReplace);
 		res.push(mat);
 		mat = search.exec(newText);
 	}

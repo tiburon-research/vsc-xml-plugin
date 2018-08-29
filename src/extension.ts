@@ -1249,6 +1249,7 @@ function upcaseFirstLetter(event: vscode.TextDocumentChangeEvent, editor: vscode
 /** Подсказки и ошибки */
 async function diagnostic(document: vscode.TextDocument)
 {
+	if (document.languageId != 'tib') return;
 	let res = await getDiagnosticElements(document);
 	Diagnostics.delete(document.uri);
 	if (!!res) Diagnostics.set(document.uri, res);
