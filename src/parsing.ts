@@ -426,15 +426,35 @@ function tagNeedToBeParsed(tagName: string): boolean
 }
 
 
-/** Хранит информацию о расположении и тексте */
-export interface DocumentElement
+export interface IDocumentElement
 {
 	Value: RegExpMatchArray;
-	Range: vscode.Range;
 	From: number;
 	To: number;
-	Location: vscode.Location;
 	Message: string;
+}
+
+
+/** Хранит информацию о расположении и тексте */
+export class DocumentElement implements IDocumentElement
+{
+	constructor(document: vscode.TextDocument, obj: IDocumentElement)
+	{
+		for (const key in obj)
+		{
+			this[key] = obj[key];
+		}
+		this.Range = new vscode.Range(document.positionAt(this.From), document.positionAt(this.To));
+		this.Location = new vscode.Location(document.uri, this.Range);
+	}
+
+	public Value: RegExpMatchArray;
+	public From: number;
+	public To: number;
+	public Message: string;
+
+	public Range: vscode.Range;
+	public Location: vscode.Location;
 }
 
 
@@ -455,16 +475,12 @@ export async function getDocumentElements(document: vscode.TextDocument, search:
 		matches.forEach(element =>
 		{
 			let to = element.index + element[0].length;
-			let range = new vscode.Range(document.positionAt(element.index), document.positionAt(to));;
-			res.push({
+			res.push(new DocumentElement(document, {
 				Value: element,
 				From: element.index,
 				To: to,
-				Range: range,
-				Location: new vscode.Location(document.uri, range),
 				Message: errorMessage
-			}
-			);
+			}));
 		});
 	}
 	return res;

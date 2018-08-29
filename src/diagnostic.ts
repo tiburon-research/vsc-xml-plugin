@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { DocumentElement, getDocumentElements } from './parsing';
-import { clearCDATA } from './encoding';
+import { clearCDATA, clearXMLComments } from './encoding';
+import { Settings } from './extension';
 
 
 
@@ -9,7 +10,11 @@ const _AllDiagnostics: IDiagnosticType[] =
 	[
 		{
 			Type: vscode.DiagnosticSeverity.Error,
-			Functions: [ getWrongIds, getLongIds, getWrongXML ]
+			Functions: [getWrongIds, getLongIds, getWrongXML]
+		},
+		{
+			Type: vscode.DiagnosticSeverity.Warning,
+			Functions: [dangerousConstandIds]
 		}
 	];
 
@@ -25,7 +30,7 @@ interface IDiagnosticType
 }
 
 
-/** Возвращает все найденные предупреждения */
+/** Возвращает все найденные предупреждения/ошибки */
 export async function getDiagnosticElements(document: vscode.TextDocument): Promise<vscode.Diagnostic[]>
 {
 	let res: vscode.Diagnostic[] = [];
@@ -60,6 +65,9 @@ async function _diagnosticElements(document: vscode.TextDocument, type: vscode.D
 
 
 
+//#region Ошибки
+
+
 /** Id с недопустимым набором символов */
 async function getWrongIds(document: vscode.TextDocument): Promise<DocumentElement[]>
 {
@@ -84,3 +92,56 @@ async function getWrongXML(document: vscode.TextDocument): Promise<DocumentEleme
 	let res = await getDocumentElements(document, /(&)|(<(?![\?\/!]?\w+)(.*))/, "Такое надо прикрывать посредством CDATA", text);
 	return res;
 }
+
+
+//#endregion
+
+
+
+//#region Предупреждения
+
+
+/** Константы, начинающиеся не с того */
+async function dangerousConstandIds(document: vscode.TextDocument): Promise<DocumentElement[]>
+{
+	let res: DocumentElement[] = [];
+	let constants = await getDocumentElements(document, /(<Constants[^>]*>)([\s\S]+?)<\/Constants[^>]*>/, "");
+	const itemsGroup = 2;
+	const constTagGroup = 1;
+	const regStart = /^(ID|Text|Pure|Itera|Var|AnswerExists)/;
+	const regItem = /(<Item[^>]*Id=("|'))([^"'\n]+)(\2)/;
+	const itemPreGroup = 1;
+	const itemIdGroup = 3;
+
+	if (!!constants && constants.length > 0)
+	{
+		for (const constantTag of constants)
+		{
+			let items = constantTag.Value[itemsGroup].matchAll(regItem);
+			if (!!items && items.length > 0)
+			{
+				for (const item of items)
+				{
+					if (!item) continue;
+					let match = regStart.exec(item[itemIdGroup]);
+					if (!!match)
+					{
+						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length + match.index;
+						let wrongItem = new DocumentElement(document, {
+							Value: match,
+							Message: `Не стоит начинать Id константы с "${match[0]}"`,
+							From: from,
+							To: from + match[0].length
+						});
+						res.push(wrongItem);
+					}
+				}
+			}
+		}
+	}
+
+	return res;
+}
+
+
+//#endregion
