@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { DocumentElement, getDocumentElements } from './parsing';
 import { clearCDATA, clearXMLComments } from './encoding';
-import { Settings } from './extension';
 
 
 
@@ -56,7 +55,8 @@ async function _diagnosticElements(document: vscode.TextDocument, type: vscode.D
 	{
 		elements.forEach(element =>
 		{
-			let diagItem = new vscode.Diagnostic(element.Range, element.Message, type);
+			let t = element.Type !== null ? element.Type : type;
+			let diagItem = new vscode.Diagnostic(element.Range, element.Message, t);
 			res.push(diagItem);
 		});
 	}
@@ -143,7 +143,8 @@ async function dangerousConstandIds(document: vscode.TextDocument): Promise<Docu
 							Value: [ "_" ],
 							Message: "Константы с '_' не распознаются в расширении как константы ¯\\_(ツ)_/¯",
 							From: from,
-							To: from + item[itemIdGroup].length
+							To: from + item[itemIdGroup].length,
+							Type: vscode.DiagnosticSeverity.Information
 						});
 						res.push(wrongItem);
 					}

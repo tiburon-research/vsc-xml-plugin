@@ -432,6 +432,7 @@ export interface IDocumentElement
 	From: number;
 	To: number;
 	Message: string;
+	Type?: vscode.DiagnosticSeverity;
 }
 
 
@@ -452,6 +453,8 @@ export class DocumentElement implements IDocumentElement
 	public From: number;
 	public To: number;
 	public Message: string;
+	/** используется, только если задан вручную и не `null` */
+	public Type?: vscode.DiagnosticSeverity = null;
 
 	public Range: vscode.Range;
 	public Location: vscode.Location;
