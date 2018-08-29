@@ -126,12 +126,24 @@ async function dangerousConstandIds(document: vscode.TextDocument): Promise<Docu
 					let match = regStart.exec(item[itemIdGroup]);
 					if (!!match)
 					{
-						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length + match.index;
+						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length;
 						let wrongItem = new DocumentElement(document, {
 							Value: match,
 							Message: `Не стоит начинать Id константы с "${match[0]}"`,
 							From: from,
 							To: from + match[0].length
+						});
+						res.push(wrongItem);
+					}
+					let _ = item[itemIdGroup].indexOf("_");
+					if (_ > -1)
+					{
+						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length;
+						let wrongItem = new DocumentElement(document, {
+							Value: [ "_" ],
+							Message: "Константы с '_' не распознаются в расширении как константы ¯\\_(ツ)_/¯",
+							From: from,
+							To: from + item[itemIdGroup].length
 						});
 						res.push(wrongItem);
 					}
