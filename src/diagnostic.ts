@@ -4,6 +4,8 @@ import { clearCDATA } from './encoding';
 import { registerCommand, KeyedCollection, logString, IPair } from './classes';
 
 
+//#region --------------------------- const type interface
+
 const translationArray = {
 	rus: ["А", "Б", "В", "Г", "Д", "Е", "Ё", "Ж", "З", "И", "Й", "К", "Л", "М", "Н", "О", "П", "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ъ", "Ы", "Ь", "Э", "Ю", "Я", "а", "б", "в", "г", "д", "е", "ё", "ж", "з", "и", "й", "к", "л", "м", "н", "о", "п", "р", "с", "т", "у", "ф", "х", "ц", "ч", "ш", "щ", "ъ", "ы", "ь", "э", "ю", "я"],
 	eng: ["A", "B", "V", "G", "D", "E", "Yo", "Zh", "Z", "I", "Y", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "F", "H", "Ts", "Ch", "Sh", "Shch", "", "I", "", "E", "Yu", "Ya", "a", "b", "v", "g", "d", "e", "yo", "zh", "z", "i", "y", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u", "f", "h", "ts", "ch", "sh", "shch", "", "i", "", "e", "yu", "ya"]
@@ -60,6 +62,15 @@ interface IDiagnosticType
 }
 
 
+
+//#endregion
+
+
+
+//#region --------------------------- EXPORT
+
+
+
 /** Возвращает все найденные предупреждения/ошибки */
 export async function getDiagnosticElements(document: vscode.TextDocument): Promise<vscode.Diagnostic[]>
 {
@@ -78,28 +89,43 @@ export async function getDiagnosticElements(document: vscode.TextDocument): Prom
 
 
 
-/** универсальная функция для преобразования `DocumentElement[]` в `Diagnostic[]` */
-async function _diagnosticElements(document: vscode.TextDocument, type: vscode.DiagnosticSeverity, func: (document: vscode.TextDocument) => Promise<DocumentElement[]>, diagnosticId: number | string): Promise<vscode.Diagnostic[]>
+/** Создаёт команды + CodeActions */
+export async function registeActionCommands()
 {
-	let res: vscode.Diagnostic[] = [];
-	let elements = await func(document);
-	if (!!elements)
-	{
-		elements.forEach(element =>
+	
+	// транслитерация
+	createCommandActionPair("tib.translateRange", "Транслитерация",
+		(range: vscode.Range) => 
 		{
-			let t = !!element.DiagnosticProperties.Type ? element.DiagnosticProperties.Type : type;
-			let code = !!element.DiagnosticProperties.Code ? element.DiagnosticProperties.Code : diagnosticId;
-			let diagItem = new vscode.Diagnostic(element.Range, element.Message, t);
-			diagItem.code = code;
-			res.push(diagItem);
-		});
-	}
-	return res;
+			let editor = vscode.window.activeTextEditor;
+			let text = editor.document.getText(range);
+			let res = translate(text);
+			editor.edit(builder =>
+			{
+				builder.replace(range, res);
+			});
+		},
+		(doc, range, cont) =>
+		{
+			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == "wrongIds";
+			return {
+				Enabled: en,
+				Arguments: !!en ? [cont.diagnostics[0].range] : []
+			}
+		}
+	);
+
+	
 }
 
 
 
-//#region Ошибки
+//#endregion
+
+
+
+
+//#region --------------------------- Функции получения ошибок
 
 
 /** Id с недопустимым набором символов */
@@ -136,7 +162,7 @@ async function getWrongXML(document: vscode.TextDocument): Promise<DocumentEleme
 
 
 
-//#region Предупреждения
+//#region --------------------------- Функции получения предупреждений
 
 
 /** Константы, начинающиеся не с того */
@@ -204,7 +230,27 @@ async function dangerousConstandIds(document: vscode.TextDocument): Promise<Docu
 
 
 
-//#region code actions
+//#region --------------------------- универсальные
+
+
+/** универсальная функция для преобразования `DocumentElement[]` в `Diagnostic[]` */
+async function _diagnosticElements(document: vscode.TextDocument, type: vscode.DiagnosticSeverity, func: (document: vscode.TextDocument) => Promise<DocumentElement[]>, diagnosticId: number | string): Promise<vscode.Diagnostic[]>
+{
+	let res: vscode.Diagnostic[] = [];
+	let elements = await func(document);
+	if (!!elements)
+	{
+		elements.forEach(element =>
+		{
+			let t = !!element.DiagnosticProperties.Type ? element.DiagnosticProperties.Type : type;
+			let code = !!element.DiagnosticProperties.Code ? element.DiagnosticProperties.Code : diagnosticId;
+			let diagItem = new vscode.Diagnostic(element.Range, element.Message, t);
+			diagItem.code = code;
+			res.push(diagItem);
+		});
+	}
+	return res;
+}
 
 
 function createCodeAction(actionTitle: string, commandName: string, argumentInvoker: ArgumentsInvoker)
@@ -231,35 +277,20 @@ function createCodeAction(actionTitle: string, commandName: string, argumentInvo
 
 
 
-
-/** Создаёт команды для CodeActions */
-export async function registeActionCommands()
+/** Создаёт комманду и CodeAction для неё */
+async function createCommandActionPair(cmdName: string, actionTitle: string, commandFunction: Function, argumentInvoker: ArgumentsInvoker): Promise<void>
 {
-	// транслитерация
-	registerCommand('tib.translateRange', (range: vscode.Range) => 
-	{
-		let editor = vscode.window.activeTextEditor;
-		let text = editor.document.getText(range);
-		let res = translate(text);
-		editor.edit(builder =>
-		{
-			builder.replace(range, res);
-		});
-	});
-
-	createCodeAction("Транслитерация", "tib.translateRange", (doc, range, cont) =>
-	{
-		let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == "wrongIds";
-		return {
-			Enabled: en,
-			Arguments: !!en ? [cont.diagnostics[0].range] : []
-		}
-	});
+	registerCommand(cmdName, commandFunction);
+	createCodeAction(actionTitle, cmdName, argumentInvoker);
 }
+
 
 
 //#endregion
 
+
+
+//#region --------------------------- Дополнительно
 
 
 /** Транслитерация с учётом итераторов (`allowIterators`) */
@@ -279,3 +310,7 @@ function translate(input: string, allowIterators = true): string
 	}
 	return res;
 }
+
+
+
+//#endregion
