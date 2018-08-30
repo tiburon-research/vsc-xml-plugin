@@ -275,7 +275,7 @@ export function createElements(text: string, type: SurveyElementType): vscode.Sn
 				break;
 			}
 
-		case SurveyElementType.Item:
+		case SurveyElementType.ListItem:
 			{
 				let items = new KeyedCollection<SurveyListItem>();
 				elements.forEach(element => {
