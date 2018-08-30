@@ -115,7 +115,41 @@ export async function registeActionCommands()
 		}
 	);
 
-	
+
+	// убираем _ из констант
+	createCommandActionPair("tib.replace_", "Назвать константу нормально",
+		(range: vscode.Range) => 
+		{
+			let editor = vscode.window.activeTextEditor;
+			let text = editor.document.getText(range);
+			let res = text;
+			let matches = text.matchAll(/_([a-zA-Z@\-\(\)]?)/);
+			matches.forEach(element => {
+				let search = "_";
+				let repl = "";
+				if (!!element[1])
+				{
+					search += element[1];
+					repl = element[1].toLocaleUpperCase();
+				}
+				res = res.replace(new RegExp(search, "g"), repl);
+			});
+			editor.edit(builder =>
+			{
+				builder.replace(range, res);
+			});
+		},
+		(doc, range, cont) =>
+		{
+			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == "delimitedConstant";
+			return {
+				Enabled: en,
+				Arguments: !!en ? [cont.diagnostics[0].range] : []
+			}
+		}
+	);
+
+
 }
 
 
