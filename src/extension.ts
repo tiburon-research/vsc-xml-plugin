@@ -2,14 +2,14 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair, getMixIds, getContextChanges, inCDATA } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair, getMixIds, getContextChanges, inCDATA, registerCommand } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
-import { getDiagnosticElements } from './diagnostic'
+import { getDiagnosticElements, registeActionCommands } from './diagnostic'
 import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes } from './constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
@@ -143,6 +143,7 @@ export function activate(context: vscode.ExtensionContext)
 	helper();
 	definitions();
 	registerCommands();
+	registeActionCommands();
 	higlight();
 
 	// для каждого дукумента свои
@@ -335,7 +336,6 @@ function registerCommands()
 		// выполняем дебажный тест
 		debug.test();
 	});
-
 
 	// выделение Answer из текста
 	registerCommand('tib.getAnswers', () => 
@@ -1894,22 +1894,6 @@ function getLogData(edt?: vscode.TextEditor): LogData
 	return res;
 }
 
-
-function isTib()
-{
-	return vscode.window.activeTextEditor.document.languageId == "tib";
-}
-
-
-/** Создаёт команду только для языка tib */
-function registerCommand(name: string, command: Function): void
-{
-	vscode.commands.registerCommand(name, () => 
-	{
-		if (!isTib()) return;
-		command();
-	});
-}
 
 
 /** получаем функцию для форматирования C# */

@@ -82,7 +82,17 @@ export class TextRange
 }
 
 
-export class KeyValuePair<T>
+
+/** Пара ключ-значение */
+export interface IPair<T>
+{
+	Key: string;
+	Value: T;
+}
+
+
+/** Элемент `KeyedCollection` */
+export class KeyValuePair<T> implements IPair<T>
 {
 	constructor(key: string, value: T)
 	{
@@ -90,7 +100,7 @@ export class KeyValuePair<T>
 		this.Value = value;
 	}
 
-	Key: string;
+ 	Key: string;
 	Value: T;
 }
 
@@ -101,6 +111,29 @@ export class KeyedCollection<T>
 
 	constructor()
 	{
+	}
+
+	/** Создаёт коллекцию из массивов ключей и значений */
+	public static FromArrays<T>(keys: string[], values: T[]): KeyedCollection<T>
+	{
+		if (keys.length != values.length) return null;
+		let res = new KeyedCollection<T>();
+		for (let i = 0; i < keys.length; i++)
+		{
+			res.AddPair(keys[i], values[i]);
+		}
+		return res;
+	}
+
+	/** Создаёт коллекцию из массива `IPair` */
+	public static FromPairs<T>(pairs: IPair<T>[]): KeyedCollection<T>
+	{
+		let res = new KeyedCollection<T>();
+		pairs.forEach(pair =>
+		{
+			res.AddPair(pair.Key, pair.Value);
+		});
+		return res;
 	}
 
 	public Contains(key: string): boolean
@@ -2084,6 +2117,23 @@ export function inCDATA(document: vscode.TextDocument, position: vscode.Position
 	let range = new vscode.Range(new vscode.Position(0, 0), position);
 	let text = document.getText(range);
 	return text.lastIndexOf("<![CDATA[") > text.lastIndexOf("]]>");
+}
+
+/** проверяет язык для activeTextEditor */
+function isTib()
+{
+	return vscode.window.activeTextEditor.document.languageId == "tib";
+}
+
+
+/** Создаёт команду только для языка tib */
+export async function registerCommand(name: string, command: Function): Promise<void>
+{
+	await vscode.commands.registerCommand(name, (...args: any[]) => 
+	{
+		if (!isTib()) return;
+		command(...args);
+	});
 }
 
 

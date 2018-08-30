@@ -1,8 +1,5 @@
 'use strict'
 
-import { KeyedCollection } from './classes'
-
-
 
 
 /** Тип сборки */
