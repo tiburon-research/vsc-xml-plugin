@@ -12,6 +12,19 @@ const translationArray = {
 const _translation = KeyedCollection.FromArrays(translationArray.rus, translationArray.eng);
 
 
+
+interface CodeActionCallback
+{
+	Arguments?: any[];
+	Enabled: boolean;
+}
+
+
+type ArgumentsInvoker = ((document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext) => CodeActionCallback);
+
+
+
+
 /** Массив из всех типов диагностик */
 const _AllDiagnostics: IDiagnosticType[] =
 	[
@@ -48,19 +61,19 @@ interface IDiagnosticType
 
 
 /** Возвращает все найденные предупреждения/ошибки */
-export function getDiagnosticElements(document: vscode.TextDocument): Promise<vscode.Diagnostic[]>
+export async function getDiagnosticElements(document: vscode.TextDocument): Promise<vscode.Diagnostic[]>
 {
-	return new Promise<vscode.Diagnostic[]>((resolve, reject) => {
-		let res: vscode.Diagnostic[] = [];
-		for (const diagnosticType of _AllDiagnostics) 
+	let res: vscode.Diagnostic[] = [];
+	let stack = [];
+	for (const diagnosticType of _AllDiagnostics) 
+	{
+		diagnosticType.Functions.forEach((name, func) =>
 		{
-			diagnosticType.Functions.forEach((name, func) =>
-			{
-				_diagnosticElements(document, diagnosticType.Type, func, name).then(x => res = res.concat(x));
-			});
-		};
-		resolve(res);
-	});
+			stack.push(_diagnosticElements(document, diagnosticType.Type, func, name).then(x => res = res.concat(x)));
+		});
+	};
+	await Promise.all(stack);
+	return res;
 }
 
 
@@ -74,9 +87,10 @@ async function _diagnosticElements(document: vscode.TextDocument, type: vscode.D
 	{
 		elements.forEach(element =>
 		{
-			let t = element.Type !== null ? element.Type : type;
+			let t = !!element.DiagnosticProperties.Type ? element.DiagnosticProperties.Type : type;
+			let code = !!element.DiagnosticProperties.Code ? element.DiagnosticProperties.Code : diagnosticId;
 			let diagItem = new vscode.Diagnostic(element.Range, element.Message, t);
-			diagItem.code = diagnosticId;
+			diagItem.code = code;
 			res.push(diagItem);
 		});
 	}
@@ -96,10 +110,6 @@ async function getWrongIds(document: vscode.TextDocument): Promise<DocumentEleme
 	{
 		res[i].Range = new vscode.Range(res[i].Range.start.translate(0, res[i].Value[1].length), res[i].Range.end.translate(0, -1));
 	}
-	res.forEach(element =>
-	{
-		createCodeAction("Транслитерация", "tib.translateRange", [element.Range]);
-	});
 	return res;
 }
 
@@ -172,7 +182,11 @@ async function dangerousConstandIds(document: vscode.TextDocument): Promise<Docu
 							Message: "Константы с '_' не распознаются в расширении как константы ¯\\_(ツ)_/¯",
 							From: from,
 							To: from + item[itemIdGroup].length,
-							Type: vscode.DiagnosticSeverity.Information
+							DiagnosticProperties:
+							{
+								Type: vscode.DiagnosticSeverity.Information,
+								Code: "delimitedConstant"
+							}
 						});
 						res.push(wrongItem);
 					}
@@ -193,19 +207,22 @@ async function dangerousConstandIds(document: vscode.TextDocument): Promise<Docu
 //#region code actions
 
 
-function createCodeAction(actionTitle: string, commandName: string, commandArgs: any[])
+function createCodeAction(actionTitle: string, commandName: string, argumentInvoker: ArgumentsInvoker)
 {
-	let cmd: vscode.Command =
-	{
-		command: commandName,
-		title: actionTitle,
-		tooltip: 'wtf?',
-		arguments: commandArgs
-	};
-
 	vscode.languages.registerCodeActionsProvider('tib', {
 		provideCodeActions(document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext, token: vscode.CancellationToken)
 		{
+			let inner = argumentInvoker(document, range, context);
+			if (!inner.Enabled) return;
+			let cmd: vscode.Command =
+			{
+				command: commandName,
+				title: actionTitle
+			};
+			if (!!inner.Arguments)
+			{
+				cmd.arguments = inner.Arguments;
+			}
 			let res = [cmd];
 			return res;
 		}
@@ -228,6 +245,15 @@ export async function registeActionCommands()
 		{
 			builder.replace(range, res);
 		});
+	});
+
+	createCodeAction("Транслитерация", "tib.translateRange", (doc, range, cont) =>
+	{
+		let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == "wrongIds";
+		return {
+			Enabled: en,
+			Arguments: !!en ? [cont.diagnostics[0].range] : []
+		}
 	});
 }
 
