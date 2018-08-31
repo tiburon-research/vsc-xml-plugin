@@ -1932,7 +1932,7 @@ export function getDocumentMethods(document: vscode.TextDocument, Settings: Exte
 			resolve(res);
 			return;
 		}
-		let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/, "g");
+		let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/);
 		let groups = {
 			Full: 0,
 			Modificator: 1,
@@ -1973,7 +1973,7 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
 		let nNames = NodeStoreNames;
 		let txt = document.getText();
 		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
-		let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')", "g");
+		let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')");
 		let idIndex = nNames.length + 3;
 		let nodes = new SurveyNodes();
 		let res = txt.matchAll(reg);
@@ -2154,7 +2154,10 @@ declare global
 		find(search: string | RegExp): SearchResult;
 		/** Продвинутый lastIndexOf string=Regexp */
 		//findLast(search: string): SearchResult;
-		/** Поиск с группами по всей строке */
+		/** Поиск с группами по всей строке 
+		 *  
+		 * Нельзя использовать флаг `g`!
+		*/
 		matchAll(search: RegExp): RegExpMatchArray[];
 		/** Замена, начиная с `from` длиной `subsr` символов (если string, то берётся длина строки) */
 		replaceRange(from: number, substr: string | number, newValue: string): string;

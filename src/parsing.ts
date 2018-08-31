@@ -474,7 +474,10 @@ export class DocumentElement implements IDocumentElement
 /** 
  * Возвращает массив найденных `DocumentElement` 
  * 
+ * Нельзя использовать флаг `g`!
+ * 
  * Если задан `preparedText`, то используется он (но сначала сравнивается длина)
+ * 
 */
 export async function getDocumentElements(document: vscode.TextDocument, search: RegExp, errorMessage: string, preparedText?: string): Promise<DocumentElement[]>
 {
