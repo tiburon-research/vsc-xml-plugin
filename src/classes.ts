@@ -2231,7 +2231,7 @@ String.prototype.replaceValues = function (items: KeyedCollection<string>): stri
 	let sorted: KeyValuePair<string>[] = items.OrderBy(x => x.Key.length).ToArray(x => x);
 	sorted.forEach(x =>
 	{
-		res = res.replace(x.Key, x.Value);
+		res = res.replace(new RegExp(safeString(x.Key), "g"), x.Value);
 	});
 	return res;
 }
