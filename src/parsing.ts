@@ -331,7 +331,7 @@ export function parseElements(strings: string[]): ParsedElementObject[]
 export function parseQuestion(text: string): ParsedElementObject
 {
 	let res = { Id: "", Text: text, Prefix: "" };
-	let match = text.match(/^([A-Za-z]+\d+)(\.?\s*)(.*)/);
+	let match = text.match(/^([A-Za-z]+\w+)(\.?\s*)(.*)/);
 	if (!match) return res;
 	res.Id = match[1];
 	res.Prefix = match[2];
