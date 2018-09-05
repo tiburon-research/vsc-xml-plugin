@@ -1986,6 +1986,8 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
 		// дополнительно
 		nodes.Add(new SurveyNode("Page", "pre_data", null, document.fileName));
 		nodes.Add(new SurveyNode("Question", "pre_data", null, document.fileName));
+		nodes.Add(new SurveyNode("Question", "pre_sex", null, document.fileName));
+		nodes.Add(new SurveyNode("Question", "pre_age", null, document.fileName));
 		nodes.Add(new SurveyNode("Page", "debug", null, document.fileName));
 		nodes.Add(new SurveyNode("Question", "debug", null, document.fileName));
 		resolve(nodes);
