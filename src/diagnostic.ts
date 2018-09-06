@@ -187,7 +187,7 @@ async function getLongIds(document: vscode.TextDocument): Promise<DocumentElemen
 async function getWrongXML(document: vscode.TextDocument): Promise<DocumentElement[]>
 {
 	let text = clearCDATA(document.getText());
-	let res = await getDocumentElements(document, /(&)|(<(?![\?\/!]?\w+)(.*))/, "Такое надо прикрывать посредством CDATA", text);
+	let res = await getDocumentElements(document, /(&+)|(<(?![\?\/!]?\w+)(.*))/, "Такое надо прикрывать посредством CDATA", text);
 	return res;
 }
 
