@@ -28,6 +28,15 @@ var bot: TelegramBot;
 
 // константы
 
+/** Соответствие {{Elements}} и функции для получения */
+const _ElementFunctions = {
+	Questions: getAllQuestions,
+	QuestionTypes: getQuestionTypes,
+	Pages: getAllPages,
+	Lists: getAllLists,
+	MixIds: getAllMixIds
+};
+
 const $ = initJQuery();
 
 /** Во избежание рекурсивыных изменений */
@@ -858,7 +867,7 @@ function autoComplete()
 							break;
 						}
 					if (!parent || !ItemSnippets[parent]) parent = "List";
-					let res = new vscode.SnippetString(ItemSnippets[parent].replace("Page=\"$1\"", "Page=\"${1|" + getAllPages().join(",") + "|}\""));
+					let res = new vscode.SnippetString(extractElements(ItemSnippets[parent]));
 					if (res)
 					{
 						let ci = new vscode.CompletionItem("Item", vscode.CompletionItemKind.Snippet);
@@ -1543,6 +1552,31 @@ function safeValsEval(query: string): string[]
 }
 
 
+
+// функции для получения элементов
+
+/** Заменяет {{Elements}} на строку для Snippet */
+export function extractElements(input: string): string
+{
+	let res = new KeyedCollection<string[]>();
+	let match = input.matchAll(/{{(\w+)}}/);
+	if (!match || match.length == 0) return input;
+	match.forEach(element => {
+		if (!!_ElementFunctions[element[1]] && !res.Contains(element[1]))
+		{
+			res.AddPair(element[1], _ElementFunctions[element[1]]());
+		}
+	});
+	let resultStr = input;
+	let i = 1;
+	res.forEach((key, value) =>
+	{
+		resultStr = resultStr.replace(new RegExp("{{" + key + "}}", "g"), "${" + i + "|" + value.join(",") + "|}");
+		i++;
+	});
+	return resultStr;
+}
+
 function getAllPages(): string[]
 {
 	return CurrentNodes.GetIds('Page');
@@ -1562,6 +1596,14 @@ function getQuestionTypes(): string[]
 {
 	return QuestionTypes;
 }
+
+function getAllMixIds(): string[]
+{
+	return MixIds;
+}
+
+
+
 
 /** Возвращает `null`, если тег не закрыт или SelfClosed */
 function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range
