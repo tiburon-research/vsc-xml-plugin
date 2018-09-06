@@ -5,7 +5,6 @@ import * as vscode from 'vscode';
 
 
 import { KeyedCollection, InlineAttribute } from './classes';
-import { QuestionTypes } from './constants';
 
 
 export enum SurveyElementType { Item, ListItem, Answer, List, Question, Page };
@@ -74,15 +73,10 @@ export class SurveyElement
         return res;
     }
 
-    /** Сниппет с курсором на Id */
     public ToSnippet(): vscode.SnippetString
     {
         let res = new vscode.SnippetString();
-        let prevId = this.AttrValue("Id");
-        let newId = !!prevId ? "${1:" + prevId + "}" : "$1";
-        this.SetAttr("Id", newId);
         res.value = this.ToXML();
-        this.SetAttr("Id", prevId);
         return res;
     }
 
@@ -448,17 +442,6 @@ export class SurveyQuestion extends SurveyElement
         })
         return super.ToXML();
     }
-
-    /** Сниппет с курсором на Id */
-    public ToSnippet(): vscode.SnippetString
-    {
-        let prevType = this.AttrValue("Type");
-        let types = "${2|" + QuestionTypes.join(",") + "|}";
-        this.SetAttr("Type", types);
-        let res = super.ToSnippet();
-        this.SetAttr("Type", prevType);
-        return res;
-    }
 }
 
 export class SurveyPage extends SurveyElement
@@ -467,25 +450,5 @@ export class SurveyPage extends SurveyElement
     {
         super("Page", id);
         this.ElementType = SurveyElementType.Page;
-    }
-
-    /** Сниппет с курсором на Id */
-    public ToSnippet(): vscode.SnippetString
-    {
-        let prevId = this.AttrValue("Id");
-        let newId = !!prevId ? "${1:" + prevId + "}" : "$1";
-        this.SetAttr("Id", newId);
-        let prevQuestions: SurveyItem[] = this.Children.Item("Question").map(x => x.Clone());
-        let currentQuestions = this.Children.Item("Question");
-        
-        for (let i = 0; i < currentQuestions.length; i++)
-        {
-            currentQuestions[i].SetAttr("Id", "$1");
-        }
-        let res = super.ToSnippet();
-        this.SetAttr("Id", prevId);
-        this.Children.AddPair("Question", prevQuestions);
-        //console.log(this.Children.Item("Question")[0]);
-        return res;
     }
 }

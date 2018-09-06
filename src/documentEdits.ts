@@ -5,6 +5,7 @@ import { SurveyElementType, SurveyListItem, SurveyQuestion, SurveyAnswer, Survey
 import * as Parse from './parsing'
 import { KeyedCollection } from './classes'
 import * as vscode from 'vscode'
+import { QuestionTypes } from './constants';
 
 
 export function AnswersToItems(text: string): string
@@ -259,15 +260,18 @@ export function createElements(text: string, type: SurveyElementType): vscode.Sn
 		case SurveyElementType.Answer:
 			{
 				let items = new KeyedCollection<SurveyAnswer>();
-				elements.forEach(element => {
+				elements.forEach(element =>
+				{
 					items.AddPair(element.Id, new SurveyAnswer(element.Id, element.Text));
 				});
 				if (insertPage)
 				{
-					let q = new SurveyQuestion(questionResult.Id);
+					let id = "${1:" + questionResult.Id + "}";
+					let q = new SurveyQuestion(questionResult.Id, "${2|" + QuestionTypes.join(',') + "|}");
 					q.Answers = items;
+					q.SetAttr("Id", id);
 					q.Header = questionResult.Text.trim();
-					let p = new SurveyPage(questionResult.Id);
+					let p = new SurveyPage(id);
 					p.AddChild(q);
 					res = p.ToSnippet();
 				}
@@ -278,7 +282,8 @@ export function createElements(text: string, type: SurveyElementType): vscode.Sn
 		case SurveyElementType.ListItem:
 			{
 				let items = new KeyedCollection<SurveyListItem>();
-				elements.forEach(element => {
+				elements.forEach(element =>
+				{
 					items.AddPair(element.Id, new SurveyListItem(element.Id, element.Text));
 				});
 				let q = new SurveyList();
