@@ -795,16 +795,17 @@ function higlight()
 			let lineText = getCurrentLineText(document, position);
 			let reg = lineText.match(/<!--#(end)?block.*-->/);
 			if (!reg) return res;
-			if (reg.index > position.character || reg.index + reg[0].length < position.character) return;
+			if (reg.index > position.character || reg.index + reg[0].length < position.character) return res;
 			let nextRange: vscode.Range;
+
+			let prevRange = new vscode.Range(
+				new vscode.Position(0, 0),
+				new vscode.Position(position.line, 0)
+			);
+			let prevText = document.getText(prevRange);
 
 			if (!!reg[1])
 			{
-				let prevRange = new vscode.Range(
-					new vscode.Position(0, 0),
-					new vscode.Position(position.line, 0)
-				);
-				let prevText = document.getText(prevRange);
 				let res = prevText.matchAll(/<!--#block.*-->/);
 				if (!res || res.length == 0) return res;
 
@@ -816,7 +817,7 @@ function higlight()
 			}
 			else
 			{
-				let offset = reg.index + reg[0].length;
+				let offset = prevText.length;
 				let after = document.getText().slice(offset);
 				let res = after.match(/<!--#endblock-->/);
 				if (!res) return res;
