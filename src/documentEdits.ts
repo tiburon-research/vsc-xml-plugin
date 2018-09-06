@@ -286,7 +286,7 @@ export function createElements(text: string, type: SurveyElementType): vscode.Sn
 				{
 					items.AddPair(element.Id, new SurveyListItem(element.Id, element.Text));
 				});
-				let q = new SurveyList();
+				let q = new SurveyList("$1");
 				q.Items = items;
 				res = q.ToSnippet();
 				break;
