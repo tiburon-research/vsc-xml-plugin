@@ -299,8 +299,8 @@ export class KeyedCollection<T>
 export class TibAutoCompleteItem 
 {
 	Name: string;
-	/** тип объекта (vscode.CompletionItemKind) */
-	Kind;
+	/** тип объекта (string из vscode.CompletionItemKind) */
+	Kind: keyof typeof vscode.CompletionItemKind;
 	/** краткое описание (появляется в редакторе в той же строчке) */
 	Detail: string = "";
 	/** подробное описание (появляется при клике на i (зависит от настроек)) */

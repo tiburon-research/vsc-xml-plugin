@@ -1151,7 +1151,7 @@ function helper()
 			let parent = !!reg ? reg[1] : null;
 			ar.forEach(element =>
 			{
-				if (element.Name == mtch[4] && (element.Kind == vscode.CompletionItemKind.Function || !!parent && element.Parent == parent))
+				if (element.Name == mtch[4] && (element.Kind == vscode.CompletionItemKind[vscode.CompletionItemKind.Function] || !!parent && element.Parent == parent))
 				{
 					if (element.Overloads.length == 0) sign.signatures.push(element.ToSignatureInformation());
 					else element.Overloads.forEach(el =>
@@ -1193,11 +1193,17 @@ function hoverDocs()
 			{
 				parent = reg[1];
 			}
-			// надо проверить родителя!
-			let suit = CodeAutoCompleteArray.filter(x =>
+			// надо проверить родителя: если нашёлся static, то только его, иначе всё подходящее
+			let suit = CodeAutoCompleteArray.filter(x => x.Name == text);
+			let staticParens = CodeAutoCompleteArray.filter(x => x.Kind == vscode.CompletionItemKind[vscode.CompletionItemKind.Class]).map(x => x.Name);
+			if (staticParens.contains(parent))
 			{
-				return x.Name == text && (!x.Parent || x.Parent == parent);
-			});
+				suit = suit.filter(x =>
+				{
+					return x.Name == text && (x.Parent == parent);
+				});
+			}
+
 			for (let i = 0; i < suit.length; i++)
 			{
 				if (suit[i].Documentation && suit[i].Description)
