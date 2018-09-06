@@ -875,7 +875,7 @@ function autoComplete()
 				else if ("answer".indexOf(opening) > -1)
 				{
 					let ci = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
-					let ciS = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
+					let ciS = new vscode.CompletionItem("AnswerShort", vscode.CompletionItemKind.Snippet);
 					let from_pos = tag.OpenTagRange.start;
 					let range = new vscode.Range(from_pos.translate(0, 1), position);
 					ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
