@@ -926,7 +926,7 @@
 					}
 				},
 				{
-					"begin": "(\\$)(today)",
+					"begin": "(\\$)(today|all)",
 					"end": "",
 					"name": "tib.inline.special",
 					"beginCaptures": {
