@@ -375,11 +375,7 @@
     "DebugData": {
         "prefix": "#debugData",
         "body":[
-            "public void DebugData(string a, string v)",
-            "{",
-            "\tif (!InterviewPars.Host.StartsWith(\"debug\")) return;",
-            "\tAnswerUpdateP(\"Debug\", \"Debug\", a, v);",
-            "}"
+            "AnswerUpdateP(\"debug\", \"debug\", \"${1:1}\", $2);"
         ],
         "description": "Сохранение данных для отладки"
     },
