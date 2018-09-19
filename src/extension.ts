@@ -658,8 +658,8 @@ function registerCommands()
 			CurrentStatus.setProcessMessage("Форматирование...").then(x => 
 			{
 				let editor = vscode.window.activeTextEditor;
-				let range;
-				let indent;
+				let range: vscode.Range;
+				let indent: number;
 				// либо весь документ
 				if (editor.selection.start.isEqual(editor.selection.end))
 				{
@@ -681,16 +681,25 @@ function registerCommands()
 				Formatting.format(text, Language.XML, Settings, "\t", indent).then(
 					(res) => 
 					{
-						vscode.window.activeTextEditor.edit(builder =>
+						if (!res.Error)
 						{
-							builder.replace(range, res);
+							vscode.window.activeTextEditor.edit(builder =>
+							{
+								builder.replace(range, res.Result);
+								x.dispose();
+							})
+						}
+						else
+						{
+							let error = res.Error.Text;
+							if (!!res.Error.TagName && !!res.Error.TagOffsetIndex)
+							{
+								let offset = range.start.line + document.positionAt(res.Error.TagOffsetIndex).line + 1;
+								error = "Ошибка при форматировании: тег " + res.Error.TagName + " в строке " + offset + " не закрыт.";
+							}
+							logError(error);
 							x.dispose();
-						})
-					},
-					(er) =>
-					{
-						logError(er);
-						x.dispose();
+						}
 					}
 				)
 			});
@@ -1976,19 +1985,26 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 	// форматируем
 	if (format)
 	{
+		let er: string;
 		try
 		{
 			let sel = selectLines(editor.document, editor.selection);
 			editor.selection = sel;
 			let tag = getCurrentTag(editor.document, sel.start);
 			let ind = !!tag ? tag.GetIndent() : 0;
-			res = await Formatting.format(res, Language.XML, Settings, "\t", ind);
-			return applyChanges(sel, res, editor, false);
+			let result = await Formatting.format(res, Language.XML, Settings, "\t", ind);
+			if (!result.Error)
+				return applyChanges(sel, res, editor, false);
+			else
+			{
+				er = result.Error.Text;
+			}
 		}
 		catch (error)
 		{
-			logError("Ошибка при обновлении текста документа", error);
+			er = error;
 		}
+		if (!!er) logError("Ошибка при обновлении текста документа", er);
 	}
 	InProcess = false;
 	return res;
@@ -2141,11 +2157,12 @@ async function createElements(elementTYpe: SurveyElementType)
 	InProcess = true;
 	let tag = getCurrentTag(editor.document, editor.selection.active);
 	let indent = !!tag ? tag.GetIndent() : 1;
-	Formatting.format(res.value, Language.XML, Settings, "\t", indent).then(x =>
+	let result = await Formatting.format(res.value, Language.XML, Settings, "\t", indent);
+	if (!!result.Error)
 	{
-		res.value = x;
-		vscode.window.activeTextEditor.insertSnippet(res).then(x => { InProcess = false });
-	});
+		res.value = result.Result;
+	}
+	vscode.window.activeTextEditor.insertSnippet(res).then(x => { InProcess = false });
 }
 
 
