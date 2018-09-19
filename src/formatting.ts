@@ -1,31 +1,24 @@
 'use strict';
 
-import { Language, safeString, ExtensionSettings, logString } from "./classes";
+import { Language, safeString, ExtensionSettings } from "./classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { logError, CSFormatter } from "./extension";
 import { get1LevelNodes } from "./parsing"
 import { getReplaceDelimiter, encodeCS, getElementsBack, encodeElements, EncodeResult, Encoder } from "./encoding"
 import { _pack, RegExpPatterns } from './constants'
-import * as vscode from 'vscode';
 
 
 
 var _settings: ExtensionSettings;
 
-interface FormatResultError
-{
-	Text: string;
-	TagOffsetIndex?: number;
-	TagName?: string;
-}
 
 export class FormatResult 
 {
 	constructor()
 	{ }
 
-	Error: FormatResultError = null;
+	Error: string;
 	Result: string = "";
 }
 
@@ -71,9 +64,9 @@ function LanguageFunction(language: Language)//: (text: string, tab?: string, in
 		- возвращаем c# вставки по Id
 */
 /** Форматирование согласно языку */
-export function format(text: string, language: Language, settings: ExtensionSettings, tab: string = "\t", indent: number = 0): Promise<FormatResult>
+export function format(text: string, language: Language, settings: ExtensionSettings, tab: string = "\t", indent: number = 0): Promise<string>
 {
-	return new Promise<FormatResult>((resolve, reject) =>
+	return new Promise<string>((resolve, reject) =>
 	{
 		_settings = settings;
 		let txt = text;
@@ -88,10 +81,12 @@ export function format(text: string, language: Language, settings: ExtensionSett
 				let hash = text.replace(RegExpPatterns.FormattingHash, '');
 				if (res.Result.replace(RegExpPatterns.FormattingHash, '') != hash)
 				{
-					res.Error = { Text: "Результат форматирования не прошёл проверку на целостность текста" };
+					res.Error = "Результат форматирования не прошёл проверку на целостность текста";
+					reject(res.Error);
 				}
+				else resolve(res.Result);
 			}
-			resolve(res)
+			else reject(res.Error);
 		});
 	});
 }
@@ -119,20 +114,17 @@ async function formatXML(text: string, tab: string = "\t", indent: number = 0): 
 		for (let i = 0; i < tags.length; i++)
 		{
 			let tag = tags[i];
-			if (!tag.Closed) res.Error = { Text: "Тег " + tag.Name + " не закрыт", TagName: tag.Name, TagOffsetIndex: tag.OpenTag.From };
-
-			if (!!res.Error) continue; // если накопленная ошибка уже есть, то пропускаем всё
-
+			if (!!res.Error) continue; // если ошибка уже есть, то пропускаем всё
 			let body = oldText.slice(tag.Body.From, tag.Body.To);
 			let formattedBody = body;
 			let openTag = oldText.slice(tag.OpenTag.From, tag.OpenTag.To);
-			let closeTag = oldText.slice(tag.CloseTag.From, tag.CloseTag.To);
+			let closeTag = tag.Closed ? oldText.slice(tag.CloseTag.From, tag.CloseTag.To) : "";
 			let oldFull = oldText.slice(tag.FullLines.From, tag.FullLines.To); // то, что надо заменить на новое
 			if (!oldFull) continue;
 			let before = oldText.slice(tag.FullLines.From, tag.OpenTag.From); // то, что идёт перед <тегом> на одной строке
 			let after = oldText.slice(tag.CloseTag.To, tag.FullLines.To); // то, что идёт после </тега> на одной строке
 			let newFul;
-			// форматируем то, что вне тега на тех же строках
+			// форматируем то, что вне тега на тех же строках\
 			if (!before.match(/^\s*$/)) before = before.replace(/^\s*(\S.*)\s*/, '$1\n'); else before = '';
 			if (!after.match(/^\s*$/)) after = after.replace(/^\s*(\S.*)\s*/, ' $1'); else after = '';
 
@@ -147,10 +139,7 @@ async function formatXML(text: string, tab: string = "\t", indent: number = 0): 
 					let tmpRes = await formatBody(formattedBody, tab, indent + 1, tag.Language);
 					if (!!tmpRes.Error)
 					{
-						let offset = tag.OpenTag.To + (tmpRes.Error.TagOffsetIndex || 0) + 1;
-						res.Error = tmpRes.Error;
-						res.Error.TagOffsetIndex = offset;
-						res.Error.Text = "Ошибка при форматировании тега" + (!!tag && !!tag.Name ? (" " + tag.Name) : "") + ":\n" + tmpRes.Error.Text;
+						res.Error = "Ошибка при форматировании тега" + (!!tag && !!tag.Name ? (" " + tag.Name) : "") + ":\n" + tmpRes.Error;
 						continue;
 					}
 					formattedBody = "\n" + tmpRes.Result + "\n";
@@ -158,7 +147,7 @@ async function formatXML(text: string, tab: string = "\t", indent: number = 0): 
 				// отступ для AllowCode fake
 				if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + RegExpPatterns.AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
 					formattedBody = " " + formattedBody;
-				if (!tag.SelfClosed) closeTag = (tag.Multiline ? ind : "") + closeTag;
+				if (tag.Closed && !tag.SelfClosed) closeTag = (tag.Multiline ? ind : "") + closeTag;
 			}
 			else formattedBody = "";
 			// формируем результат
@@ -269,11 +258,7 @@ async function formatPlainText(text: string, tab: string = "\t", indent: number 
 	// обрезаем хвосты
 	res = res.replace(/(\n|^)(.*\S)[\t ]+(\r?\n)/, "$1$2$3");
 
-	let result = new FormatResult();
-	result.Result = res;
-	if (!!err) result.Error = { Text: err };
-
-	return result;
+	return { Result: res, Error: err };
 }
 
 
@@ -295,12 +280,7 @@ async function formatCSS(text: string, tab: string = "\t", indent: number = 0): 
 	}
 	let ind = tab.repeat(indent);
 	newText = ind + newText.replace(/\n/g, "\n" + ind);
-
-	let result = new FormatResult();
-	result.Result = newText;
-	if (!!er) result.Error = { Text: er };
-
-	return result;
+	return { Result: newText, Error: er };
 }
 
 
@@ -325,12 +305,7 @@ async function formatJS(text: string, tab: string = "\t", indent: number = 0): P
 	}
 	let ind = tab.repeat(indent);
 	newText = ind + newText.replace(/\n/g, "\n" + ind);
-
-	let result = new FormatResult();
-	result.Result = newText;
-	if (!!er) result.Error = { Text: er };
-
-	return result;
+	return { Result: newText, Error: er };
 }
 
 
@@ -376,12 +351,7 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
 	{
 		er = "Ошибка при форматировании C#";
 	}
-	
-	let result = new FormatResult();
-	result.Result = res;
-	if (!!er) result.Error = { Text: er };
-
-	return result;
+	return { Result: res, Error: er };
 }
 
 
@@ -441,7 +411,7 @@ async function formatBetweenTags(text: string, tab: string = "\t", indent: numbe
 	}
 	catch (error)
 	{
-		res.Error = { Text: "Ошибка форматирования области между тегами" };
+		res.Error = "Ошибка форматирования области между тегами";
 	}
 
 	res.Result = newText;
