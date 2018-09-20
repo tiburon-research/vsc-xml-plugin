@@ -1317,6 +1317,7 @@ class ILogData
 	Data?: Object;
 	VSCVerion?: string;
 	UserIP?: string;
+	UserId?: string;
 }
 
 /** Данные для хранения логов */
@@ -1332,6 +1333,7 @@ export class LogData
 		if (!this.UserName) this.UserName = getUserName();
 		if (!this.Data.Version) this.Data.Version = getTibVersion();
 		this.Data.VSCVerion = vscode.version;
+		this.Data.UserId = getUserId();
 		this.Data.UserIP = getUserIP();
 	}
 
