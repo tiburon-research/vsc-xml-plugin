@@ -1931,7 +1931,9 @@ function getLogData(edt?: vscode.TextEditor): LogData
 		});
 		let survObj = {
 			Methods: Methods.Keys(),
-			NodesLength: CurrentNodes.Keys().map(x => x + ": " + (CurrentNodes.Item(x).length || 0))
+			NodesLength: CurrentNodes.Keys().map(x => x + ": " + (CurrentNodes.Item(x).length || 0)),
+			MixIds: MixIds,
+			Includes: Includes
 		};
 		res.add({ SurveyData: survObj });
 	} catch (error)

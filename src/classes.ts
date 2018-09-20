@@ -1312,13 +1312,15 @@ class ILogData
 	Postion?: vscode.Position;
 	CacheEnabled?: boolean;
 	Version?: string;
-	ErrorMessage?: string;
 	SurveyData?: Object;
 	StackTrace?: string;
 	Data?: Object;
 	VSCVerion?: string;
-	UserIP?: string;
-	UserId?: string;
+	ActiveExtensions?: string[];
+	UserData?: {
+		UserIP?: string;
+		UserId?: string;			
+	}
 }
 
 /** Данные для хранения логов */
@@ -1331,12 +1333,17 @@ export class LogData
 			for (let key in data)
 				this.Data[key] = data[key];
 		// дополнительно
+		if (!this.Data) this.Data = {};
 		if (!this.UserName) this.UserName = getUserName();
 		if (!this.Data.Version) this.Data.Version = getTibVersion();
 		this.Data.VSCVerion = vscode.version;
-		this.Data.UserId = getUserId();
-		this.Data.UserIP = getUserIP();
+		this.Data.UserData =
+		{
+			UserId: getUserId(),
+			UserIP: getUserIP()
+		};
 		this.Data.Date = (new Date()).toLocaleString('ru');
+		this.Data.ActiveExtensions = vscode.extensions.all.filter(x => x.isActive && !x.id.startsWith('vscode.')).map(x => x.id);
 	}
 
 	/** добавляет элемент в отчёт */
@@ -1349,7 +1356,7 @@ export class LogData
 	/** преобразует все данные в строку */
 	public toString(): string
 	{
-		let res = "User: " + this.UserName + "\r\n";
+		let res = `Error: ${this.ErrorMessage}\r\nUser: ${this.UserName}\r\n`;
 		for (let key in this.Data)
 		{
 			switch (key)
@@ -1386,6 +1393,7 @@ export class LogData
 	}
 
 	public UserName: string;
+	public ErrorMessage: string;
 	private Data = new ILogData();
 }
 
@@ -1848,7 +1856,7 @@ export function saveError(text: string, data: LogData)
 	if (!pathExists(dir)) createDir(dir);
 	let filename = Path.Concat(dir, hash + ".log");
 	if (pathExists(filename)) return;
-	data.add({ ErrorMessage: text });
+	data.ErrorMessage = text;
 	fs.writeFile(filename, data.toString(), (err) =>
 	{
 		if (!!err) sendLogMessage(JSON.stringify(err));
