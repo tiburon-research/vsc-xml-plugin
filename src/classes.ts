@@ -1308,6 +1308,7 @@ class ILogData
 {
 	FileName?: string;
 	FullText?: string;
+	Date?: string;
 	Postion?: vscode.Position;
 	CacheEnabled?: boolean;
 	Version?: string;
@@ -1335,6 +1336,7 @@ export class LogData
 		this.Data.VSCVerion = vscode.version;
 		this.Data.UserId = getUserId();
 		this.Data.UserIP = getUserIP();
+		this.Data.Date = (new Date()).toLocaleString('ru');
 	}
 
 	/** добавляет элемент в отчёт */
