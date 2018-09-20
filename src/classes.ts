@@ -1174,14 +1174,20 @@ export class TagInfo
 {
 	constructor(text: string, offset: number = 0)
 	{
-		let mt = text.match(/(\n|^)[\t ]*<(\w+)/);
+		let mt = text.match(/((\s*(\n|^))[\t ]*)<(\w+)/);
+		// группы mt
+		let groups = {
+			beforeFull: 1,
+			linesBefore: 2,
+			tagName: 4
+		};
 		if (!!mt)
 		{
-			this.Name = mt[2];
-			let lineFrom = text.indexOf(mt[0]) + mt[1].length;
+			this.Name = mt[groups.tagName];
+			let lineFrom = text.indexOf(mt[0]) + mt[groups.linesBefore].length;
 			let lineTo = text.length;
 			this.Language = TagInfo.getTagLanguage(this.Name);
-			let from = text.indexOf("<" + this.Name);
+			let from = mt[groups.beforeFull].length;
 			let to = text.indexOf(">", from) + 1;
 			// выделяем AllowCode fake
 			this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + RegExpPatterns.AllowCodeTags + "$")) && !text.substr(to).match(/^([\s\n]*)*<\w/g);
@@ -1190,7 +1196,6 @@ export class TagInfo
 			let before = text.substr(0, this.OpenTag.From + 1);
 			let newLine = text.indexOf("\n", to - 1);
 			this.Multiline = newLine > -1;
-			let openTag = text.slice(from, to);
 			let clt = Parse.findCloseTag("<", this.Name, ">", before, text);
 			this.SelfClosed = !!clt && clt.SelfClosed;
 			if (!!clt && !this.SelfClosed)
