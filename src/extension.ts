@@ -176,7 +176,7 @@ export function activate(context: vscode.ExtensionContext)
 		reload(false);
 		insertAutoCloseTag(event, editor, tag);
 		insertSpecialSnippets(event, editor, text, tag);
-		upcaseFirstLetter(event, editor, tag, text);
+		upcaseFirstLetter(event, editor, tag);
 	});
 
 	vscode.workspace.onWillSaveTextDocument(x =>
@@ -1237,24 +1237,40 @@ function hoverDocs()
 
 
 /** Делает первую букву тега заглавной */
-function upcaseFirstLetter(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag, text: string)
+function upcaseFirstLetter(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag)
 {
+	// если хоть одна позиция такова, то нафиг
 	if (!tag || !Settings.Item("upcaseFirstLetter") || tag.GetLaguage() != Language.XML || inCDATA(editor.document, editor.selection.active)) return;
-	let lastTag = text.match(/(<\/?)([a-z]\w*)$/);
-	if (!lastTag) return;
+	let tagRegex = /(<\/?)(\w+)$/;
+	let changes = getContextChanges(editor.selections, event.contentChanges);
+	let nullPosition = new vscode.Position(0, 0);
 	try
 	{
-		let up = lastTag[2];
-		up = up[0].toLocaleUpperCase() + up.slice(1);
-		let pos = event.document.positionAt(lastTag.index).translate(0, lastTag[1].length);
-		let range = new vscode.Range(
-			pos,
-			pos.translate(0, lastTag[1].length)
-		);
+		let replaces: { Range: vscode.Range, Value: string }[] = [];
+
+		changes.forEach(change =>
+		{
+			let text = event.document.getText(new vscode.Range(nullPosition, change.Active));
+			let lastTag = text.match(tagRegex);
+			if (!lastTag) return;
+			let up = lastTag[2];
+			up = up[0].toLocaleUpperCase(); // делаем первую заглавной
+			if (lastTag[2].length > 1) up += lastTag[2][1].toLocaleLowerCase(); // убираем вторую заглавную
+			let pos = event.document.positionAt(lastTag.index).translate(0, lastTag[1].length);
+			let range = new vscode.Range(
+				pos,
+				pos.translate(0, up.length)
+			);
+			replaces.push({ Range: range, Value: up });
+		});
+
 		editor.edit(builder =>
 		{
-			builder.replace(range, up);
+			replaces.forEach(element => {
+				builder.replace(element.Range, element.Value);``
+			});
 		});
+
 	} catch (error)
 	{
 		logError("Ошибка при добавлении заглавной буквы", error);
@@ -1562,7 +1578,8 @@ export function extractElements(input: string): string
 	let res = new KeyedCollection<string[]>();
 	let match = input.matchAll(/{{(\w+)}}/);
 	if (!match || match.length == 0) return input;
-	match.forEach(element => {
+	match.forEach(element =>
+	{
 		if (!!_ElementFunctions[element[1]] && !res.Contains(element[1]))
 		{
 			res.AddPair(element[1], _ElementFunctions[element[1]]());
