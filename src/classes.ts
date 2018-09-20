@@ -1313,6 +1313,7 @@ class ILogData
 	SurveyData?: Object;
 	StackTrace?: string;
 	Data?: Object;
+	VSCVerion?: string;
 }
 
 /** Данные для хранения логов */
@@ -1327,6 +1328,7 @@ export class LogData
 		// дополнительно
 		if (!this.UserName) this.UserName = getUserName();
 		if (!this.Data.Version) this.Data.Version = getTibVersion();
+		this.Data.VSCVerion = vscode.version;
 	}
 
 	/** добавляет элемент в отчёт */
