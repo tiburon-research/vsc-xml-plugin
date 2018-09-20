@@ -19,7 +19,8 @@ import { machineIdSync } from "node-machine-id"
 var userInfo: UserInfo =
 {
 	Name: null,
-	Id: null
+	Id: null,
+	IP: null
 }
 
 
@@ -41,6 +42,7 @@ interface UserInfo
 {
 	Name: string;
 	Id: string;
+	IP: string;
 }
 
 
@@ -100,7 +102,7 @@ export class KeyValuePair<T> implements IPair<T>
 		this.Value = value;
 	}
 
- 	Key: string;
+	Key: string;
 	Value: T;
 }
 
@@ -1314,6 +1316,7 @@ class ILogData
 	StackTrace?: string;
 	Data?: Object;
 	VSCVerion?: string;
+	UserIP?: string;
 }
 
 /** Данные для хранения логов */
@@ -1329,6 +1332,7 @@ export class LogData
 		if (!this.UserName) this.UserName = getUserName();
 		if (!this.Data.Version) this.Data.Version = getTibVersion();
 		this.Data.VSCVerion = vscode.version;
+		this.Data.UserIP = getUserIP();
 	}
 
 	/** добавляет элемент в отчёт */
@@ -1788,6 +1792,28 @@ export function getUserId()
 {
 	if (!!userInfo.Id) return userInfo.Id;
 	return (userInfo.Id = machineIdSync());
+}
+
+
+/** Возвращает external Ipv4 */
+export function getUserIP()
+{
+	if (!!userInfo.IP) return userInfo.IP;
+	let ifs = os.networkInterfaces();
+	for (const key in ifs)
+	{
+		if (!userInfo.IP && ifs.hasOwnProperty(key))
+		{
+			ifs[key].forEach(n =>
+			{
+				if (!userInfo.IP && 'IPv4' == n.family && !n.internal)
+				{
+					userInfo.IP = n.address;
+				}
+			});
+		}
+	}
+	return userInfo.IP || "not found";
 }
 
 
