@@ -845,19 +845,27 @@ function higlight()
 /** Автозавершения */
 function autoComplete()
 {
-	// Item/Answer Snippets
+	// XML Snippets
 	vscode.languages.registerCompletionItemProvider('tib', {
 		provideCompletionItems(document, position, token, context)
 		{
 			let completionItems = [];
 			let tag = getCurrentTag(document, position);
-			if (tag && tag.GetLaguage() != Language.CSharp)
+			if (tag && tag.GetLaguage() == Language.XML)
 			{
-				let curOpenMatch = getPreviousText(document, position, true).match(/<(\w+)$/);
+				let text = getPreviousText(document, position, true);
+				
+				// XML Features
+				if (tag.OpenTagIsClosed && text.match(/^[^\w]?_\w*$/))
+				{
+					return AutoCompleteArray.XMLFeatures.map(x => snippetToCompletitionItem(x));
+				}
+
+				let curOpenMatch = text.match(/<(\w+)$/);
 				if (!curOpenMatch) return;
 				let opening = curOpenMatch[1].toLocaleLowerCase();
 
-				//Item
+				//Item Snippet
 				if ("item".indexOf(opening) > -1)
 				{
 					let parent;
@@ -881,7 +889,7 @@ function autoComplete()
 						completionItems.push(ci);
 					}
 				}
-				// Answer
+				// Answer Snippet
 				else if ("answer".indexOf(opening) > -1)
 				{
 					let ci = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
@@ -961,17 +969,18 @@ function autoComplete()
 		{
 			let completionItems: vscode.CompletionItem[] = [];
 			let tag = getCurrentTag(document, position);
-			if (!tag || tag.GetLaguage() != Language.CSharp) return;
+			if (!tag) return;
 
 			let curLine = getPreviousText(document, position, true);
-			let mt = curLine.match(/(#|\$)?\w+$/);
+			let mt = curLine.match(/(#|\$)?\w*$/);
 			if (!mt) return;
+			if (tag.GetLaguage() != Language.CSharp && mt[1] != "$") return;
 
 			//пропускаем объявления
 			if (Parse.isMethodDefinition(curLine)) return;
 
 			let str = getCurrentLineText(document, position).substr(position.character);
-			if (tag.CSSingle() || !!mt[1] && mt[1] == "$")
+			if (mt[1] == "$")
 			{
 				// добавляем snippet для $repeat
 				let ci = new vscode.CompletionItem("repeat", vscode.CompletionItemKind.Snippet);
@@ -983,11 +992,27 @@ function autoComplete()
 				ci.detail = "Указатель на вложенный вопрос";
 				ci.insertText = new vscode.SnippetString("place(${1|" + getAllQuestions().join(',') + "|})");
 				completionItems.push(ci);
-				if (!tag.CSSingle()) return completionItems;
+				// добавляем $today
+				ci = new vscode.CompletionItem("today", vscode.CompletionItemKind.Snippet);
+				ci.detail = "Сегодняшнее число";
+				completionItems.push(ci);
+				//if (!tag.CSSingle()) return completionItems;
 			}
 
 			let customMethods = Methods.CompletionArray();
 			if (customMethods && !tag.InCSString()) completionItems = completionItems.concat(customMethods); //Custom Methods
+
+			// если начинается с $, то больше ничего не надо
+			if (mt[1] == "$") return completionItems;
+
+			//C# Featrues
+			if (mt[1] == "#")
+			{
+				AutoCompleteArray.CSFeatures.forEach(element =>
+				{
+					completionItems.push(snippetToCompletitionItem(element));
+				});
+			}
 
 			if (!tag.CSSingle() && !curLine.match(/\w+\.\w*$/))
 			{
@@ -1055,7 +1080,7 @@ function autoComplete()
 		{
 			return item;
 		}
-	}, "\"", "");
+	}, "\"", "", "$", "#");
 
 	//Properties, Methods, EnumMembers, Linq
 	vscode.languages.registerCompletionItemProvider('tib', {
