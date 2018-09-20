@@ -759,7 +759,7 @@ export class CurrentTag
 		if (this.OpenTagIsClosed) return this.Attributes.toKeyedCollection(x => new KeyValuePair<string>(x.Name, x.Value));
 		let fromStart = document.getText().slice(this.StartIndex);
 		let tag = new TagInfo(fromStart);
-		if (!tag || !tag.OpenTag) return this.Attributes.toKeyedCollection(x => new KeyValuePair<string>(x.Name, x.Value));
+		if (!tag.Found || !tag.OpenTag) return this.Attributes.toKeyedCollection(x => new KeyValuePair<string>(x.Name, x.Value));
 		return CurrentTag.GetAttributesArray(fromStart.slice(0, tag.OpenTag.Length));
 	}
 
@@ -1188,7 +1188,7 @@ export class TagInfo
 			let lineTo = text.length;
 			this.Language = TagInfo.getTagLanguage(this.Name);
 			let from = mt[groups.beforeFull].length;
-			let to = text.indexOf(">", from) + 1;
+			let to = text.indexOf(">", from) + 1; // TODO: вот это отстойный вариант, но другие очень сложные
 			// выделяем AllowCode fake
 			this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + RegExpPatterns.AllowCodeTags + "$")) && !text.substr(to).match(/^([\s\n]*)*<\w/g);
 			if (this.Language == Language.CSharp && !this.IsAllowCodeTag) this.Language = Language.XML;
