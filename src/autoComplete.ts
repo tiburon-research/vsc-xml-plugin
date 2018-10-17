@@ -1677,7 +1677,8 @@ export const Attributes = {
 		},
 		{
 			"Name": "Union",
-			"Type": "String"
+			"Type": "String",
+			"Auto": "\\$all"
 		},
 		{
 			"Name": "Range",
@@ -2551,7 +2552,7 @@ export const XMLFeatures = [
     {
         "prefix": "_isoalte",
         "body": "<Ui Isolate=\"1\"/>",
-        "description": "Кнопка Isolate"
+        "description": "AnswerUi: Кнопка Isolate"
     },
     {
         "prefix": "_reset",
@@ -2579,112 +2580,112 @@ export const XMLFeatures = [
         "body":[
             "<Ui Step=\"1\" HeaderFix=\"1\"/>"
         ],
-        "description": "Ui для постепенного выпадения вопросов"
+        "description": "PageUi для постепенного выпадения вопросов"
     },
     {
         "prefix": "_scaleInt",
         "body":[
             "<Ui Extend=\"Scale\" Gradient=\"1\" GradientReverse=\"0\" LabelStart=\"$1\" LabelEnd=\"$2\"/>"
         ],
-        "description": "Градиентная шкала с цифрами"
+        "description": "QuestionUi: Градиентная шкала с цифрами"
     },
     {
         "prefix": "_scaleText",
         "body":[
             "<Ui Extend=\"Scale\" Gradient=\"1\" GradientReverse=\"0\"/>"
         ],
-        "description": "Градиентная шкала с метками"
+        "description": "QuestionUi: Градиентная шкала с метками"
     },
     {
         "prefix": "_scaleTextVertical",
         "body":[
             "<Ui Extend=\"Scale\" Gradient=\"1\" Orientation=\"Vertical\"/>"
         ],
-        "description": "Вертикальная градиентная шкала с метками"
+        "description": "QuestionUi: Вертикальная градиентная шкала с метками"
     },
     {
         "prefix": "_shape",
         "body":[
             "<Ui Extend=\"Shape\" Color=\"#F0FF00\" Opacity=\"0.3\" OpacitySelected=\"0.6\" WidthBorder=\"2\" ColorBorder=\"#f00\" Src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1\"/>"
         ],
-        "description": "Областной клик-тест/полка"
+        "description": "QuestionUi: Областной клик-тест/полка"
     },
     {
         "prefix": "_sliderDiscrete",
         "body":[
             "<Ui Extend=\"Slider\" Type=\"Discrete\"/>"
         ],
-        "description": "Дискретный Slider"
+        "description": "QuestionUi: Дискретный Slider"
     },
     {
         "prefix": "_sliderContinous",
         "body":[
             "<Ui Extend=\"Slider\" Type=\"Continuous\" MinVal=\"0\" MaxVal=\"250\" SliderStep=\"1\" LabelEnd=\" руб.\" LabelTop=\"1\" ValueShow=\"1\"/>"
         ],
-        "description": "Непрерывный Slider"
+        "description": "QuestionUi: Непрерывный Slider"
     },
     {
         "prefix": "_stars",
         "body":[
             "<Ui Extend=\"Stars\" ClearCaption=\"Оценки нет\" HoverColor=\"#fde16d\" SelectedColor=\"#fde16d\" BackColor=\"#aaa\"/>"
         ],
-        "description": "Звёзды"
+        "description": "QuestionUi: Звёзды"
     },
     {
         "prefix": "_clickText",
         "body":[
             "<Ui Extend=\"ClickText\" SelectedFontColor=\"black\" SelectedBackgroundColor=\"orange\" SplittingType=\"1\"/>"
         ],
-        "description": "Текстовый ClickTest"
+        "description": "QuestionUi: Текстовый ClickTest"
     },
     {
         "prefix": "_dragItemRange",
         "body":[
             "<Ui Extend=\"DragItem\" Type=\"Range\" SourceContainer=\"0,0\" TargetContainer=\"0,0\" DragItemAllowClick=\"1\"/>"
         ],
-        "description": "DragItem Range"
+        "description": "QuestionUi: DragItem Range"
     },
     {
         "prefix": "_dragItemCard",
         "body":[
             "<Ui Extend=\"DragItem\" Type=\"Card\" SourceContainer=\"550,0\" TargetContainer=\"0,0\" DragItemAllowClick=\"1\" FontSizeSource=\"1rem\" FontSizeTarget=\".8rem\"/>"
         ],
-        "description": "DragItem Card"
+        "description": "QuestionUi: DragItem Card"
     },
     {
         "prefix": "_maxDiff",
         "body":[
             "<Ui Extend=\"MaxDiff\" LabelMost=\"$1\" LabelLeast=\"$2\"/>"
         ],
-        "description": "MaxDiff"
+        "description": "QuestionUi: MaxDiff"
     },
     {
         "prefix": "_video",
         "body":[
             "<Ui Extend=\"MediaPlayer\" Type=\"Video\" Src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.mp4,@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.webm,@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.ogv\" PlayAuto=\"1\" SeekEnable=\"1\"/>"
         ],
-        "description": "MediaPlayer Video"
+        "description": "QuestionUi: MediaPlayer Video"
     },
     {
         "prefix": "_audio",
         "body":[
             "<Ui Extend=\"MediaPlayer\" Type=\"Audio\" Src='@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.mp3;@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.ogg' PlayAuto=\"1\" PlayRedirect=\"1\" PauseEnable=\"0\" SeekEnable=\"1\"/>"
         ],
-        "description": "MediaPlayer Audio"
+        "description": "QuestionUi: MediaPlayer Audio"
     },
     {
         "prefix": "_contentOnly",
         "body":[
             "<Ui Extend=\"ContentOnly\"/>"
         ],
-        "description": "ContentOnly"
+        "description": "QuestionUi: ContentOnly"
     },
     {
         "prefix": "_comboBox",
         "body": [
             "<Ui Extend=\"ComboBox\" Search=\"0\" Label=\"Выберите\"/>"
         ],
-        "description": "ComboBox"
+        "description": "QuestionUi: ComboBox"
     },
     {
         "prefix": "_completePage",
@@ -2703,7 +2704,7 @@ export const XMLFeatures = [
             "\t<Redirect Status=\"18\"/>",
             "</Page>"
         ],
-        "description": "Последняя страница"
+        "description": "Последняя страница (заглушка)"
     },
     {
 		"prefix": "_respInfo",
@@ -2714,7 +2715,7 @@ export const XMLFeatures = [
                 "\t$0",
             "</Page>\n"
 		],
-		"description": "RespInfo"
+		"description": "Страница RespInfo"
     },
     {
         "prefix": "_yandexMetrika",
@@ -2776,7 +2777,7 @@ export const XMLFeatures = [
             "\treturn AnswerIDs(\"${1:PageId}\", \"${2:QuestionId}\").Select(x => int.Parse(AnswerValue(\"${2:QuestionId}\", x))).Sum() == 100;",
             "</Validate>"
         ],
-        "description": "Счётчик"
+        "description": "Счётчик (Footer + Validate)"
     },
     {
         "prefix": "_yesNoAnswers",
@@ -2784,7 +2785,7 @@ export const XMLFeatures = [
             "<Answer Id=\"1\"><Text>Да</Text></Answer>",
             "<Answer Id=\"2\"><Text>Нет</Text></Answer>"
         ],
-        "description": "Счётчик"
+        "description": "Два ответа (Да + Нет)"
     }
 ];
 
@@ -2844,14 +2845,10 @@ export const CSFeatures = [
         "body":[
             "public string DebugPrint(string text)",
             "{",
-            "\tif (InterviewPars.Host.StartsWith(\"debug\"))",
-            "\t{",
-            "\t\treturn \"[div style='color: red']\" + text + \"[/div]\";",
-            "\t}",
-            "\treturn \"\";",
+            "\treturn \"[div class=\"d color-red\"]\" + text + \"[/div]\";",
             "}"
         ],
-        "description": "Вывод отладочной информации"
+        "description": "Метод для вывод отладочной информации (только для debug)"
     },
     {
         "prefix": "#debugData",
@@ -2861,20 +2858,6 @@ export const CSFeatures = [
         "description": "Сохранение данных для отладки"
     },
     {
-        "prefix": "#testPrint",
-        "body":[
-            "public string TestPrint(string text)",
-            "{",
-            "\tif (AnswerExists(\"pre_data\", \"test\"))",
-            "\t{",
-            "\t\treturn text;",
-            "\t}",
-            "\treturn \"\";",
-            "}"
-        ],
-        "description": "Вывод информации для тестирования"
-    },
-    {
         "prefix": "#sexText",
         "body":[
             "public string SexText(string man, string woman)",
@@ -2882,7 +2865,7 @@ export const CSFeatures = [
             "\t return AnswerExists(\"pre_sex\", \"1\") ? man : woman;",
             "}"
         ],
-        "description": "Текст в зависимости от пола"
+        "description": "Метод: текст в зависимости от пола"
     },
     {
         "prefix": "#parseDateTime",
