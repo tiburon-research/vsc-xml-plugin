@@ -794,6 +794,8 @@ export class CurrentTag
 					)
 						tagLanguage = Language.XML;
 				}
+				// проверка что для PlainText тег закрыт
+				if (tagLanguage == Language.PlainText && !this.OpenTagIsClosed) tagLanguage = Language.XML;
 				// проверка, что не внутри style/script
 				this.Parents.forEach(x =>
 				{
@@ -893,8 +895,11 @@ export class CurrentTag
 	/** Обновляет только текущий тег */
 	public Update(tag: string | SimpleTag, fields: CurrentTagFields)
 	{
-		this._reset();
-		this._update(tag);
+		if (!!tag)
+		{
+			this._reset();
+			this._update(tag);
+		}
 		this.SetFields(fields);
 	}
 
