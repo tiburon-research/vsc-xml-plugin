@@ -1,15 +1,13 @@
 import * as vscode from 'vscode';
-import { DocumentElement, getDocumentElements } from './parsing';
-import { clearCDATA } from './encoding';
+import { DocumentElement, getDocumentElements, getDuplicatedElementsIds } from './parsing';
+import { clearCDATA, clearXMLComments } from './encoding';
 import { registerCommand, KeyedCollection, logString, IPair } from './classes';
+import { Settings } from './extension';
+import { translationArray } from './constants';
 
 
 //#region --------------------------- const type interface
 
-const translationArray = {
-	rus: ["А", "Б", "В", "Г", "Д", "Е", "Ё", "Ж", "З", "И", "Й", "К", "Л", "М", "Н", "О", "П", "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ъ", "Ы", "Ь", "Э", "Ю", "Я", "а", "б", "в", "г", "д", "е", "ё", "ж", "з", "и", "й", "к", "л", "м", "н", "о", "п", "р", "с", "т", "у", "ф", "х", "ц", "ч", "ш", "щ", "ъ", "ы", "ь", "э", "ю", "я"],
-	eng: ["A", "B", "V", "G", "D", "E", "Yo", "Zh", "Z", "I", "Y", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "F", "H", "Ts", "Ch", "Sh", "Shch", "", "I", "", "E", "Yu", "Ya", "a", "b", "v", "g", "d", "e", "yo", "zh", "z", "i", "y", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u", "f", "h", "ts", "ch", "sh", "shch", "", "i", "", "e", "yu", "ya"]
-};
 
 const _translation = KeyedCollection.FromArrays(translationArray.rus, translationArray.eng);
 
@@ -36,7 +34,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 				[
 					{ Key: "wrongIds", Value: getWrongIds },
 					{ Key: "longIds", Value: getLongIds },
-					{ Key: "wrongXML", Value: getWrongXML }
+					{ Key: "wrongXML", Value: getWrongXML },
+					{ Key: "duplicatedId", Value: getDuplicatedIds }
 				]
 			)
 		},
@@ -58,7 +57,7 @@ interface IDiagnosticType
 	/** Тип диагностики */
 	Type: vscode.DiagnosticSeverity;
 	/** Массив функций для этого типа диагностики */
-	Functions: KeyedCollection<(document: vscode.TextDocument) => Promise<DocumentElement[]>>;
+	Functions: KeyedCollection<(document: vscode.TextDocument, preparedText: string) => Promise<DocumentElement[]>>;
 }
 
 
@@ -76,11 +75,15 @@ export async function getDiagnosticElements(document: vscode.TextDocument): Prom
 {
 	let res: vscode.Diagnostic[] = [];
 	let stack = [];
+	let text = document.getText();
+	if (!!Settings.Item("ignoreComments")) text = clearXMLComments(text);
+	text = clearCDATA(text);
+
 	for (const diagnosticType of _AllDiagnostics) 
 	{
 		diagnosticType.Functions.forEach((name, func) =>
 		{
-			stack.push(_diagnosticElements(document, diagnosticType.Type, func, name).then(x => res = res.concat(x)));
+			stack.push(_diagnosticElements(document, diagnosticType.Type, text, func, name).then(x => res = res.concat(x)));
 		});
 	};
 	await Promise.all(stack);
@@ -163,9 +166,9 @@ export async function registeActionCommands()
 
 
 /** Id с недопустимым набором символов */
-async function getWrongIds(document: vscode.TextDocument): Promise<DocumentElement[]>
+async function getWrongIds(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
 {
-	let res = await getDocumentElements(document, /(\sId=("|'))(\w*[^\w'"\n@\-\(\)]\w*)+(\2)/, "In english, please!");
+	let res = await getDocumentElements(document, /(\sId=("|'))(\w*[^\w'"\n@\-\(\)]\w*)+(\2)/, "In english, please!", prepearedText);
 	for (let i = 0; i < res.length; i++)
 	{
 		res[i].Range = new vscode.Range(res[i].Range.start.translate(0, res[i].Value[1].length), res[i].Range.end.translate(0, -1));
@@ -175,20 +178,25 @@ async function getWrongIds(document: vscode.TextDocument): Promise<DocumentEleme
 
 
 /** слишком длинные Id */
-async function getLongIds(document: vscode.TextDocument): Promise<DocumentElement[]>
+async function getLongIds(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
 {
-	// проверять на длину можно только \w+
-	let res = await getDocumentElements(document, /\sId=("|')\w{25,}(\1)/, "Слишком много букв");
+	let res = await getDocumentElements(document, /\sId=("|')\w{25,}(\1)/, "Слишком много букв", prepearedText);
 	return res;
 }
 
 
 /** проверка недопустимых символов XML */
-async function getWrongXML(document: vscode.TextDocument): Promise<DocumentElement[]>
+async function getWrongXML(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
 {
-	let text = clearCDATA(document.getText());
-	let res = await getDocumentElements(document, /(&+)|(<(?![\?\/!]?\w+)(.*))/, "Такое надо прикрывать посредством CDATA", text);
+	let res = await getDocumentElements(document, /(&+)|(<(?![\?\/!]?\w+)(.*))/, "Такое надо прикрывать посредством CDATA", prepearedText);
 	return res;
+}
+
+
+/** проверка уникальности Id */
+async function getDuplicatedIds(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
+{
+	return await getDuplicatedElementsIds(document, prepearedText);
 }
 
 
@@ -200,10 +208,10 @@ async function getWrongXML(document: vscode.TextDocument): Promise<DocumentEleme
 
 
 /** Константы, начинающиеся не с того */
-async function dangerousConstandIds(document: vscode.TextDocument): Promise<DocumentElement[]>
+async function dangerousConstandIds(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
 {
 	let res: DocumentElement[] = [];
-	let constants = await getDocumentElements(document, /(<Constants[^>]*>)([\s\S]+?)<\/Constants[^>]*>/, "");
+	let constants = await getDocumentElements(document, /(<Constants[^>]*>)([\s\S]+?)<\/Constants[^>]*>/, "", prepearedText);
 	const itemsGroup = 2;
 	const constTagGroup = 1;
 	const regStart = /^(ID|Text|Pure|Itera|Var|AnswerExists)/;
@@ -268,10 +276,10 @@ async function dangerousConstandIds(document: vscode.TextDocument): Promise<Docu
 
 
 /** универсальная функция для преобразования `DocumentElement[]` в `Diagnostic[]` */
-async function _diagnosticElements(document: vscode.TextDocument, type: vscode.DiagnosticSeverity, func: (document: vscode.TextDocument) => Promise<DocumentElement[]>, diagnosticId: number | string): Promise<vscode.Diagnostic[]>
+async function _diagnosticElements(document: vscode.TextDocument, type: vscode.DiagnosticSeverity, preparedText: string, func: (document: vscode.TextDocument, prepearedText: string) => Promise<DocumentElement[]>, diagnosticId: number | string): Promise<vscode.Diagnostic[]>
 {
 	let res: vscode.Diagnostic[] = [];
-	let elements = await func(document);
+	let elements = await func(document, preparedText);
 	if (!!elements)
 	{
 		elements.forEach(element =>

@@ -32,7 +32,7 @@ export const RegExpPatterns = {
 	InlineSpecial: "(repeat)|(place)",
 	/** Набор символов разделителя замены */
 	DelimiterContent: "[0-9][a-z][A-Z]",
-	SingleAttribute: /\s*(\w+)=(("[^"]*")|('[^']*'))\s*/,
+	SingleAttribute: "\\s*(\\w+)=((\"[^\"]*\")|('[^']*'))\\s*",
 	Attributes: /\s*(\w+)=(("[^"]*")|('[^']*'))\s*/g,
 	OpenTagFull: /^<\w+(\s*(\w+)=(("[^"]*")|('[^']*')))*\s*\/?>/,
 	FormattingHash: /(\s)|(<!\[CDATA\[)|(\]\]>)/g,
@@ -53,3 +53,8 @@ export const _WarningLogPrefix = " WARNING: ";
 
 
 export const QuestionTypes = ["RadioButton", "CheckBox", "Text", "Memo", "Integer", "Number", "File"];
+
+export const translationArray = {
+	rus: ["А", "Б", "В", "Г", "Д", "Е", "Ё", "Ж", "З", "И", "Й", "К", "Л", "М", "Н", "О", "П", "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ъ", "Ы", "Ь", "Э", "Ю", "Я", "а", "б", "в", "г", "д", "е", "ё", "ж", "з", "и", "й", "к", "л", "м", "н", "о", "п", "р", "с", "т", "у", "ф", "х", "ц", "ч", "ш", "щ", "ъ", "ы", "ь", "э", "ю", "я"],
+	eng: ["A", "B", "V", "G", "D", "E", "Yo", "Zh", "Z", "I", "Y", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "F", "H", "Ts", "Ch", "Sh", "Shch", "", "I", "", "E", "Yu", "Ya", "a", "b", "v", "g", "d", "e", "yo", "zh", "z", "i", "y", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u", "f", "h", "ts", "ch", "sh", "shch", "", "i", "", "e", "yu", "ya"]
+};
