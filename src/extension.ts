@@ -13,6 +13,7 @@ import { getDiagnosticElements, registeActionCommands } from './diagnostic'
 import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes } from './constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
+import { CacheSet } from './cache'
 
 
 
