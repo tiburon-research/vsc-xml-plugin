@@ -1550,35 +1550,6 @@ export class TelegramBot
 
 
 
-export class CacheItem<T>
-{
-	private Value: T;
-
-	public Set(item: T)
-	{
-		this.Value = item;
-	}
-
-	public Get(): T
-	{
-		return this.Value;
-	}
-
-	/** Очистка */
-	public Remove()
-	{
-		this.Value = undefined;
-	}
-
-	/** Проверка на undefined */
-	public IsSet()
-	{
-		return typeof this.Value !== 'undefined';
-	}
-
-}
-
-
 /** Класс для работы с путями */
 export class Path
 {
