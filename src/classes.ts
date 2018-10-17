@@ -2181,6 +2181,8 @@ declare global
 		replaceRange(from: number, substr: string | number, newValue: string): string;
 		/** Заменяет все Key (отсортированные) на Value */
 		replaceValues(items: KeyedCollection<string>): string
+		/** Проверяет вхождение */
+		contains(search: string): boolean
 	}
 
 	interface Array<T>
@@ -2252,6 +2254,12 @@ String.prototype.replaceValues = function (items: KeyedCollection<string>): stri
 		res = res.replace(new RegExp(safeString(x.Key), "g"), x.Value);
 	});
 	return res;
+}
+
+
+String.prototype.contains = function (search: string): boolean
+{
+	return this.indexOf(search) > -1;
 }
 
 
