@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair, getMixIds, getContextChanges, inCDATA, registerCommand } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair, getMixIds, getContextChanges, inCDATA, registerCommand, logString } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -857,7 +857,7 @@ function autoComplete()
 				let text = getPreviousText(document, position, true);
 				
 				// XML Features
-				if (tag.OpenTagIsClosed && text.match(/^[^\w]?_\w*$/))
+				if (tag.OpenTagIsClosed && text.match(/\b_\w*$/))
 				{
 					return AutoCompleteArray.XMLFeatures.map(x => snippetToCompletitionItem(x));
 				}
@@ -1736,7 +1736,7 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 
 
 /** Самое главное в этом расширении */
-function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
+export function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
 {
 	if (_pack == "debug") return __getCurrentTag(document, position, txt, force);
 
@@ -1773,7 +1773,7 @@ function getCurrentLineText(document: vscode.TextDocument, position: vscode.Posi
 
 
 /** Получает текст от начала документа до `position` */
-function getPreviousText(document: vscode.TextDocument, position: vscode.Position, lineOnly: boolean = false): string
+export function getPreviousText(document: vscode.TextDocument, position: vscode.Position, lineOnly: boolean = false): string
 {
 	try
 	{
