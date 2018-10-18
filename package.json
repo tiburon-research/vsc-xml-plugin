@@ -225,7 +225,7 @@
       }
     },
     "configuration": {
-      "title": "Параметры Tiburon XML Helper",
+      "title": "Tiburon XML Helper",
       "properties": {
         "tib.ignoreComments": {
           "description": "Игнорировать комментарии",
@@ -281,12 +281,12 @@
         },
         "tib.showFullPath": {
           "description": "Всегда показывать полные пути к файлам (во всплывающих окошках)",
-          "type": "bool",
+          "type": "boolean",
           "default": false
         },
         "tib.upcaseFirstLetter": {
           "description": "Автоматически заменять первую букву тегов на заглавную",
-          "type": "bool",
+          "type": "boolean",
           "default": true
         }
       }
@@ -302,7 +302,6 @@
   "devDependencies": {
     "@types/mocha": "^2.2.42",
     "@types/node": "^7.0.43",
-    "node-machine-id": "^1.1.10",
     "typescript": "^2.5.3",
     "vscode": "^1.1.14"
   }
