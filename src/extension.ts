@@ -17,7 +17,7 @@ import { CacheSet } from './cache'
 
 
 
-export { bot, $, CSFormatter, logError, OutChannel, _LogPath, Settings };
+export { bot, CSFormatter, logError, OutChannel, _LogPath, Settings };
 
 
 /*---------------------------------------- глобальные переменные ----------------------------------------*/

@@ -1,12 +1,13 @@
 'use strict'
 
 import { TextRange, safeString, TagInfo, Language, logString } from "./classes";
-import { logError, Settings, $ } from "./extension";
+import { logError, Settings } from "./extension";
 import { clearXMLComments } from "./encoding"
 import { positiveMin, KeyedCollection, CurrentTag } from "./classes"
 import { RegExpPatterns } from './constants'
 import * as charDetect from 'charset-detector'
 import * as vscode from 'vscode'
+import { initJQuery } from "./TibJQuery";
 
 
 
@@ -505,6 +506,7 @@ export async function getDocumentElements(document: vscode.TextDocument, search:
 /** Возвращает все повторяющиеся Id, как `DocumentElement` */
 export async function getDuplicatedElementsIds(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
 {
+	let $ = initJQuery();
 	let res: DocumentElement[] = [];
 	let tagNames = ['Page', 'List', 'Question', 'Block'];
 	let $dom;
