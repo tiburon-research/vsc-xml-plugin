@@ -2550,7 +2550,7 @@ export const XMLFeatures = [
         "description": "Список месяцев"
     },
     {
-        "prefix": "_isoalte",
+        "prefix": "_isolate",
         "body": "<Ui Isolate=\"1\"/>",
         "description": "AnswerUi: Кнопка Isolate"
     },
