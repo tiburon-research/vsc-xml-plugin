@@ -565,7 +565,38 @@ function registerCommands()
 		// отсортированные от начала к концу выделения
 		if (selections.length > 1) selections = selections.sort(function (a, b)
 		{
-			return editor.document.offsetAt(b.start) - editor.document.offsetAt(a.start);
+			return editor.document.offsetAt(b.active) - editor.document.offsetAt(a.active);
+		});
+		// для каждого выделения
+		InProcess = true;
+		commentAllBlocks(editor, selections, function (done)
+		{
+			InProcess = false;
+		});
+	});
+
+	// комментирование строки
+	registerCommand('editor.action.commentLine', () => 
+	{
+		let editor = vscode.window.activeTextEditor;
+		let selections = editor.selections;
+
+		if (selections.length > 1)
+		{
+			// отсортированные от начала к концу выделения
+			selections = selections.sort(function (a, b)
+			{
+				return editor.document.offsetAt(b.active) - editor.document.offsetAt(a.active);
+			});
+		}
+		// выделяем строки
+		selections = selections.map(x =>
+		{
+			let line = editor.document.lineAt(x.active.line);
+			let from = line.range.start;
+			let spaces = line.text.match(/^(\s+)\S/);
+			if (!!spaces) from = from.translate(0, spaces[1].length);
+			return new vscode.Selection(from, line.range.end);
 		});
 		// для каждого выделения
 		InProcess = true;
@@ -855,7 +886,7 @@ function autoComplete()
 			if (tag && tag.GetLaguage() == Language.XML)
 			{
 				let text = getPreviousText(document, position, true);
-				
+
 				// XML Features
 				if (tag.OpenTagIsClosed && text.match(/\b_\w*$/))
 				{
@@ -1292,8 +1323,9 @@ function upcaseFirstLetter(event: vscode.TextDocumentChangeEvent, editor: vscode
 
 		editor.edit(builder =>
 		{
-			replaces.forEach(element => {
-				builder.replace(element.Range, element.Value);``
+			replaces.forEach(element =>
+			{
+				builder.replace(element.Range, element.Value); ``
 			});
 		});
 
