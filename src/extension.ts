@@ -10,7 +10,7 @@ import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
 import { getDiagnosticElements, registeActionCommands } from './diagnostic'
-import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes } from './constants'
+import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes, XMLEmbeddings } from './constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
 import { CacheSet } from './cache'
@@ -1036,10 +1036,13 @@ function autoComplete()
 				ci.detail = "Указатель на вложенный вопрос";
 				ci.insertText = new vscode.SnippetString("place(${1|" + getAllQuestions().join(',') + "|})");
 				completionItems.push(ci);
-				// добавляем $today
-				ci = new vscode.CompletionItem("today", vscode.CompletionItemKind.Snippet);
-				ci.detail = "Сегодняшнее число";
-				completionItems.push(ci);
+				// добавляем тандартные константы
+				XMLEmbeddings.forEach(x =>
+				{
+					ci = new vscode.CompletionItem(x.Name, vscode.CompletionItemKind.Snippet);
+					ci.detail = x.Title;
+					completionItems.push(ci);
+				});
 				//if (!tag.CSSingle()) return completionItems;
 			}
 
@@ -1544,7 +1547,7 @@ function insertSpecialSnippets(changes: ContextChange[], editor: vscode.TextEdit
 	if (isScriptLanguage(lang) && !tag.InString() && change[change.length - 1] == "[")
 	{
 		InProcess = true;
-		editor.insertSnippet(new vscode.SnippetString("$0]"), changes.map(x => x.Selection.active.translate(0, 1) )).then(() =>
+		editor.insertSnippet(new vscode.SnippetString("$0]"), changes.map(x => x.Selection.active.translate(0, 1))).then(() =>
 		{
 			InProcess = false;
 		});
