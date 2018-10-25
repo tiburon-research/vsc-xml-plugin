@@ -1181,7 +1181,7 @@ export class TagInfo
 {
 	constructor(text: string, offset: number = 0)
 	{
-		let mt = text.match(/((\s*(\n|^))[\t ]*)<(\w+)/);
+		let mt = text.match(/^((\s*(\n|^))[\t ]*)<(\w+)/);
 		// группы mt
 		let groups = {
 			beforeFull: 1,
