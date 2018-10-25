@@ -931,12 +931,9 @@ function autoComplete()
 					if (res)
 					{
 						let ci = new vscode.CompletionItem("Item", vscode.CompletionItemKind.Snippet);
-						let from_pos = tag.OpenTagRange.start;
-						let range = new vscode.Range(from_pos.translate(0, 1), position);
-
 						ci.detail = "Структура Item для " + parent;
 						ci.insertText = res;
-						ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
+						//ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
 						completionItems.push(ci);
 					}
 				}
@@ -945,10 +942,6 @@ function autoComplete()
 				{
 					let ci = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
 					let ciS = new vscode.CompletionItem("AnswerShort", vscode.CompletionItemKind.Snippet);
-					let from_pos = tag.OpenTagRange.start;
-					let range = new vscode.Range(from_pos.translate(0, 1), position);
-					ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
-					ciS.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
 
 					let iterator = "1";
 					let text = "$2";
@@ -967,10 +960,10 @@ function autoComplete()
 						ciS.detail = "Краткая структура Answer";
 					}
 					// полный вариант
-					ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:" + iterator + "}\"><Text>${2:" + text + "}</Text></Answer>");
+					ci.insertText = new vscode.SnippetString("Answer Id=\"${1:" + iterator + "}\"><Text>${2:" + text + "}</Text></Answer>");
 					completionItems.push(ci);
 					// краткий вариант
-					ciS.insertText = new vscode.SnippetString("<Answer Id=\"${1:" + iterator + "}\"/>");
+					ciS.insertText = new vscode.SnippetString("Answer Id=\"${1:" + iterator + "}\"/>");
 					completionItems.push(ciS);
 				}
 			}
