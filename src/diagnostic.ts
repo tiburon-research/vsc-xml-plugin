@@ -180,16 +180,6 @@ async function getWrongIds(document: vscode.TextDocument, prepearedText: string)
 /** слишком длинные Id */
 async function getLongIds(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
 {
-	let lengthForElements = [
-		{
-			Element: 'Page|Answer|Block',
-			Length: 24
-		},
-		{
-			Element: 'Question',
-			Length: 24
-		}
-	];
 	let res = await getDocumentElements(document, new RegExp("<(Page|Answer|Block)(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{25,}('|\"))"), "Слишком много букв", prepearedText);
 	res = res.concat(await getDocumentElements(document, new RegExp("<Question(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{33,}('|\"))"), "Слишком много букв", prepearedText));
 	return res;
