@@ -189,7 +189,7 @@ async function getLongIds(document: vscode.TextDocument, prepearedText: string):
 /** проверка недопустимых символов XML */
 async function getWrongXML(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
 {
-	let res = await getDocumentElements(document, /(&+)|(<(?![\?\/!]?\w+)(.*))/, "Такое надо прикрывать посредством CDATA", prepearedText);
+	let res = await getDocumentElements(document, /((&(?!(lt|gt|amp|quot|apos))(\w*);?)+)|(<(?![\?\/!]?\w+)(.*))/, "Такое надо прикрывать посредством CDATA", prepearedText);
 	return res;
 }
 

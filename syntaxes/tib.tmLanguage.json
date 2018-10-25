@@ -1289,10 +1289,6 @@
 				}
 			]
 		},
-		"bare-ampersand": {
-			"match": "&",
-			"name": "invalid.illegal.bad-ampersand.xml"
-		},
 		"doublequotedString": {
 			"begin": "\"",
 			"beginCaptures": {
