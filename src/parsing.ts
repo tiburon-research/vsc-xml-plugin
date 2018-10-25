@@ -531,7 +531,7 @@ export async function getDuplicatedElementsIds(document: vscode.TextDocument, pr
 	ids.forEach((key, value) =>
 	{
 		// находим Range для дублирующихся
-		let duplicated = value.reduce(function (acc, el, i, arr)
+		let duplicated: string[] = value.reduce(function (acc, el, i, arr)
 		{
 			if (arr.indexOf(el) !== i && acc.indexOf(el) < 0) acc.push(el);
 			return acc;
@@ -552,7 +552,7 @@ export async function getDuplicatedElementsIds(document: vscode.TextDocument, pr
 							let idAttr = mt[mt.length - 3];
 							let from = mt.index + full.length - idAttr.length;
 							let to = mt.index + full.length;
-							let isWarning = value.contains("@");
+							let isWarning = d.contains("@");
 							res.push(new DocumentElement(document, {
 								Value: null,
 								From: from,
