@@ -514,10 +514,9 @@ export async function getDuplicatedElementsIds(document: vscode.TextDocument, pr
 	{
 		$dom = $.XMLDOM(prepearedText);
 	} catch (error)
-	{
-
-	}
-	if (!$dom) return;
+	{ }
+	
+	if (!$dom) return [];
 
 	let ids = new KeyedCollection<string[]>();
 
