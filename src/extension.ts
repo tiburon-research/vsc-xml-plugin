@@ -1039,7 +1039,6 @@ function autoComplete()
 				ci.insertText = new vscode.SnippetString("place(${1|" + getAllQuestions().join(',') + "|})");
 				completionItems.push(ci);
 				// добавляем стандартные константы
-				logString();
 				if (lang == Language.CSharp && !tag.CSSingle()) XMLEmbeddings.forEach(x =>
 				{
 					ci = new vscode.CompletionItem(x.Name, vscode.CompletionItemKind.Constant);
