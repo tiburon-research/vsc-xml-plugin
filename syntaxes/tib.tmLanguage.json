@@ -926,7 +926,7 @@
 					}
 				},
 				{
-					"begin": "(\\$)(today|all)",
+					"begin": "(\\$)(today|all|age|sex)",
 					"end": "",
 					"name": "tib.inline.special",
 					"beginCaptures": {
@@ -1288,10 +1288,6 @@
 					"include": "#cdata"
 				}
 			]
-		},
-		"bare-ampersand": {
-			"match": "&",
-			"name": "invalid.illegal.bad-ampersand.xml"
 		},
 		"doublequotedString": {
 			"begin": "\"",

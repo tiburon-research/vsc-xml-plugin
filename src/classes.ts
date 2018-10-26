@@ -19,7 +19,8 @@ import { machineIdSync } from "node-machine-id"
 var userInfo: UserInfo =
 {
 	Name: null,
-	Id: null
+	Id: null,
+	IP: null
 }
 
 
@@ -41,6 +42,7 @@ interface UserInfo
 {
 	Name: string;
 	Id: string;
+	IP: string;
 }
 
 
@@ -82,7 +84,17 @@ export class TextRange
 }
 
 
-export class KeyValuePair<T>
+
+/** Пара ключ-значение */
+export interface IPair<T>
+{
+	Key: string;
+	Value: T;
+}
+
+
+/** Элемент `KeyedCollection` */
+export class KeyValuePair<T> implements IPair<T>
 {
 	constructor(key: string, value: T)
 	{
@@ -103,6 +115,30 @@ export class KeyedCollection<T>
 	{
 	}
 
+	/** Создаёт коллекцию из массивов ключей и значений */
+	public static FromArrays<T>(keys: string[], values: T[]): KeyedCollection<T>
+	{
+		if (keys.length != values.length) return null;
+		let res = new KeyedCollection<T>();
+		for (let i = 0; i < keys.length; i++)
+		{
+			res.AddPair(keys[i], values[i]);
+		}
+		return res;
+	}
+
+	/** Создаёт коллекцию из массива `IPair` */
+	public static FromPairs<T>(pairs: IPair<T>[]): KeyedCollection<T>
+	{
+		let res = new KeyedCollection<T>();
+		pairs.forEach(pair =>
+		{
+			res.AddPair(pair.Key, pair.Value);
+		});
+		return res;
+	}
+
+	/** Проверяет наличие ключа */
 	public Contains(key: string): boolean
 	{
 		return this.items.hasOwnProperty(key);
@@ -266,8 +302,8 @@ export class KeyedCollection<T>
 export class TibAutoCompleteItem 
 {
 	Name: string;
-	/** тип объекта (vscode.CompletionItemKind) */
-	Kind;
+	/** тип объекта (string из vscode.CompletionItemKind) */
+	Kind: keyof typeof vscode.CompletionItemKind;
 	/** краткое описание (появляется в редакторе в той же строчке) */
 	Detail: string = "";
 	/** подробное описание (появляется при клике на i (зависит от настроек)) */
@@ -726,7 +762,7 @@ export class CurrentTag
 		if (this.OpenTagIsClosed) return this.Attributes.toKeyedCollection(x => new KeyValuePair<string>(x.Name, x.Value));
 		let fromStart = document.getText().slice(this.StartIndex);
 		let tag = new TagInfo(fromStart);
-		if (!tag || !tag.OpenTag) return this.Attributes.toKeyedCollection(x => new KeyValuePair<string>(x.Name, x.Value));
+		if (!tag.Found || !tag.OpenTag) return this.Attributes.toKeyedCollection(x => new KeyValuePair<string>(x.Name, x.Value));
 		return CurrentTag.GetAttributesArray(fromStart.slice(0, tag.OpenTag.Length));
 	}
 
@@ -759,6 +795,8 @@ export class CurrentTag
 					)
 						tagLanguage = Language.XML;
 				}
+				// проверка что для PlainText тег закрыт
+				if (tagLanguage == Language.PlainText && !this.OpenTagIsClosed) tagLanguage = Language.XML;
 				// проверка, что не внутри style/script
 				this.Parents.forEach(x =>
 				{
@@ -858,8 +896,11 @@ export class CurrentTag
 	/** Обновляет только текущий тег */
 	public Update(tag: string | SimpleTag, fields: CurrentTagFields)
 	{
-		this._reset();
-		this._update(tag);
+		if (!!tag)
+		{
+			this._reset();
+			this._update(tag);
+		}
 		this.SetFields(fields);
 	}
 
@@ -1141,15 +1182,21 @@ export class TagInfo
 {
 	constructor(text: string, offset: number = 0)
 	{
-		let mt = text.match(/(\n|^)[\t ]*<(\w+)/);
+		let mt = text.match(/^((\s*(\n|^))[\t ]*)<(\w+)/);
+		// группы mt
+		let groups = {
+			beforeFull: 1,
+			linesBefore: 2,
+			tagName: 4
+		};
 		if (!!mt)
 		{
-			this.Name = mt[2];
-			let lineFrom = text.indexOf(mt[0]) + mt[1].length;
+			this.Name = mt[groups.tagName];
+			let lineFrom = text.indexOf(mt[0]) + mt[groups.linesBefore].length;
 			let lineTo = text.length;
 			this.Language = TagInfo.getTagLanguage(this.Name);
-			let from = text.indexOf("<" + this.Name);
-			let to = text.indexOf(">", from) + 1;
+			let from = mt[groups.beforeFull].length;
+			let to = text.indexOf(">", from) + 1; // TODO: вот это отстойный вариант, но другие очень сложные
 			// выделяем AllowCode fake
 			this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + RegExpPatterns.AllowCodeTags + "$")) && !text.substr(to).match(/^([\s\n]*)*<\w/g);
 			if (this.Language == Language.CSharp && !this.IsAllowCodeTag) this.Language = Language.XML;
@@ -1157,7 +1204,6 @@ export class TagInfo
 			let before = text.substr(0, this.OpenTag.From + 1);
 			let newLine = text.indexOf("\n", to - 1);
 			this.Multiline = newLine > -1;
-			let openTag = text.slice(from, to);
 			let clt = Parse.findCloseTag("<", this.Name, ">", before, text);
 			this.SelfClosed = !!clt && clt.SelfClosed;
 			if (!!clt && !this.SelfClosed)
@@ -1268,13 +1314,19 @@ class ILogData
 {
 	FileName?: string;
 	FullText?: string;
+	Date?: string;
 	Postion?: vscode.Position;
 	CacheEnabled?: boolean;
 	Version?: string;
-	ErrorMessage?: string;
 	SurveyData?: Object;
 	StackTrace?: string;
 	Data?: Object;
+	VSCVerion?: string;
+	ActiveExtensions?: string[];
+	UserData?: {
+		UserIP?: string;
+		UserId?: string;			
+	}
 }
 
 /** Данные для хранения логов */
@@ -1287,8 +1339,17 @@ export class LogData
 			for (let key in data)
 				this.Data[key] = data[key];
 		// дополнительно
+		if (!this.Data) this.Data = {};
 		if (!this.UserName) this.UserName = getUserName();
 		if (!this.Data.Version) this.Data.Version = getTibVersion();
+		this.Data.VSCVerion = vscode.version;
+		this.Data.UserData =
+		{
+			UserId: getUserId(),
+			UserIP: getUserIP()
+		};
+		this.Data.Date = (new Date()).toLocaleString('ru');
+		this.Data.ActiveExtensions = vscode.extensions.all.filter(x => x.isActive && !x.id.startsWith('vscode.')).map(x => x.id);
 	}
 
 	/** добавляет элемент в отчёт */
@@ -1301,7 +1362,7 @@ export class LogData
 	/** преобразует все данные в строку */
 	public toString(): string
 	{
-		let res = "User: " + this.UserName + "\r\n";
+		let res = `Error: ${this.ErrorMessage}\r\nUser: ${this.UserName}\r\n`;
 		for (let key in this.Data)
 		{
 			switch (key)
@@ -1338,6 +1399,7 @@ export class LogData
 	}
 
 	public UserName: string;
+	public ErrorMessage: string;
 	private Data = new ILogData();
 }
 
@@ -1492,35 +1554,6 @@ export class TelegramBot
 	private Data: TelegramBotData;
 }
 
-
-
-export class CacheItem<T>
-{
-	private Value: T;
-
-	public Set(item: T)
-	{
-		this.Value = item;
-	}
-
-	public Get(): T
-	{
-		return this.Value;
-	}
-
-	/** Очистка */
-	public Remove()
-	{
-		this.Value = undefined;
-	}
-
-	/** Проверка на undefined */
-	public IsSet()
-	{
-		return typeof this.Value !== 'undefined';
-	}
-
-}
 
 
 /** Класс для работы с путями */
@@ -1751,6 +1784,28 @@ export function getUserId()
 }
 
 
+/** Возвращает external Ipv4 */
+export function getUserIP()
+{
+	if (!!userInfo.IP) return userInfo.IP;
+	let ifs = os.networkInterfaces();
+	for (const key in ifs)
+	{
+		if (!userInfo.IP && ifs.hasOwnProperty(key))
+		{
+			ifs[key].forEach(n =>
+			{
+				if (!userInfo.IP && 'IPv4' == n.family && !n.internal)
+				{
+					userInfo.IP = n.address;
+				}
+			});
+		}
+	}
+	return userInfo.IP || "not found";
+}
+
+
 /** создаёт папку */
 export function createDir(path: string)
 {
@@ -1778,7 +1833,7 @@ export function saveError(text: string, data: LogData)
 	if (!pathExists(dir)) createDir(dir);
 	let filename = Path.Concat(dir, hash + ".log");
 	if (pathExists(filename)) return;
-	data.add({ ErrorMessage: text });
+	data.ErrorMessage = text;
 	fs.writeFile(filename, data.toString(), (err) =>
 	{
 		if (!!err) sendLogMessage(JSON.stringify(err));
@@ -1899,7 +1954,7 @@ export function getDocumentMethods(document: vscode.TextDocument, Settings: Exte
 			resolve(res);
 			return;
 		}
-		let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/, "g");
+		let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/);
 		let groups = {
 			Full: 0,
 			Modificator: 1,
@@ -1940,7 +1995,7 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
 		let nNames = NodeStoreNames;
 		let txt = document.getText();
 		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
-		let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')", "g");
+		let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')");
 		let idIndex = nNames.length + 3;
 		let nodes = new SurveyNodes();
 		let res = txt.matchAll(reg);
@@ -1953,6 +2008,8 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
 		// дополнительно
 		nodes.Add(new SurveyNode("Page", "pre_data", null, document.fileName));
 		nodes.Add(new SurveyNode("Question", "pre_data", null, document.fileName));
+		nodes.Add(new SurveyNode("Question", "pre_sex", null, document.fileName));
+		nodes.Add(new SurveyNode("Question", "pre_age", null, document.fileName));
 		nodes.Add(new SurveyNode("Page", "debug", null, document.fileName));
 		nodes.Add(new SurveyNode("Question", "debug", null, document.fileName));
 		resolve(nodes);
@@ -2086,6 +2143,23 @@ export function inCDATA(document: vscode.TextDocument, position: vscode.Position
 	return text.lastIndexOf("<![CDATA[") > text.lastIndexOf("]]>");
 }
 
+/** проверяет язык для activeTextEditor */
+function isTib()
+{
+	return vscode.window.activeTextEditor.document.languageId == "tib";
+}
+
+
+/** Создаёт команду только для языка tib */
+export async function registerCommand(name: string, command: Function): Promise<void>
+{
+	await vscode.commands.registerCommand(name, (...args: any[]) => 
+	{
+		if (!isTib()) return;
+		command(...args);
+	});
+}
+
 
 //#endregion
 
@@ -2104,12 +2178,17 @@ declare global
 		find(search: string | RegExp): SearchResult;
 		/** Продвинутый lastIndexOf string=Regexp */
 		//findLast(search: string): SearchResult;
-		/** Поиск с группами по всей строке */
+		/** Поиск с группами по всей строке 
+		 *  
+		 * Нельзя использовать флаг `g`!
+		*/
 		matchAll(search: RegExp): RegExpMatchArray[];
 		/** Замена, начиная с `from` длиной `subsr` символов (если string, то берётся длина строки) */
 		replaceRange(from: number, substr: string | number, newValue: string): string;
 		/** Заменяет все Key (отсортированные) на Value */
 		replaceValues(items: KeyedCollection<string>): string
+		/** Проверяет вхождение */
+		contains(search: string): boolean
 	}
 
 	interface Array<T>
@@ -2155,7 +2234,7 @@ String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
 	while (!!mat)
 	{
 		let textToReplace = " ".repeat(mat[0].length);
-		newText = newText.replace(mat[0], textToReplace);
+		newText = newText.replace(search, textToReplace);
 		res.push(mat);
 		mat = search.exec(newText);
 	}
@@ -2178,9 +2257,15 @@ String.prototype.replaceValues = function (items: KeyedCollection<string>): stri
 	let sorted: KeyValuePair<string>[] = items.OrderBy(x => x.Key.length).ToArray(x => x);
 	sorted.forEach(x =>
 	{
-		res = res.replace(x.Key, x.Value);
+		res = res.replace(new RegExp(safeString(x.Key), "g"), x.Value);
 	});
 	return res;
+}
+
+
+String.prototype.contains = function (search: string): boolean
+{
+	return this.indexOf(search) > -1;
 }
 
 

@@ -2,21 +2,22 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, CacheItem, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair, getMixIds, getContextChanges, inCDATA } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair, getMixIds, getContextChanges, inCDATA, registerCommand, logString, ContextChange } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
-import { getWarnings } from './diagnostic'
-import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes } from './constants'
+import { getDiagnosticElements, registeActionCommands } from './diagnostic'
+import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes, XMLEmbeddings } from './constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
+import { CacheSet } from './cache'
 
 
 
-export { bot, $, CSFormatter, logError, OutChannel, _LogPath };
+export { bot, CSFormatter, logError, OutChannel, _LogPath, Settings };
 
 
 /*---------------------------------------- глобальные переменные ----------------------------------------*/
@@ -27,6 +28,15 @@ export { bot, $, CSFormatter, logError, OutChannel, _LogPath };
 var bot: TelegramBot;
 
 // константы
+
+/** Соответствие {{Elements}} и функции для получения */
+const _ElementFunctions = {
+	Questions: getAllQuestions,
+	QuestionTypes: getQuestionTypes,
+	Pages: getAllPages,
+	Lists: getAllLists,
+	MixIds: getAllMixIds
+};
 
 const $ = initJQuery();
 
@@ -52,7 +62,7 @@ var Methods = new TibMethods();
 /** Список Id */
 var CurrentNodes: SurveyNodes = new SurveyNodes();
 
-/** Список MixId */
+/** Список MixId (подставляется в значениях атрибутов) */
 var MixIds: string[] = [];
 
 /** Настройки расширения */
@@ -82,6 +92,9 @@ var LockedFiles: string[] = [];
 
 var CurrentStatus = new StatusBar();
 
+
+var Diagnostics = vscode.languages.createDiagnosticCollection('tib_diagnostic');
+
 //#endregion
 
 
@@ -108,6 +121,7 @@ export function activate(context: vscode.ExtensionContext)
 		{
 			if (clearCache && Cache.Active()) Cache.Clear();
 			getSurveyData(editor.document);
+			diagnostic(editor.document);
 		} catch (er)
 		{
 			logError("Ошибка при сборе информации", er);
@@ -139,6 +153,7 @@ export function activate(context: vscode.ExtensionContext)
 	helper();
 	definitions();
 	registerCommands();
+	registeActionCommands();
 	higlight();
 
 	// для каждого дукумента свои
@@ -160,9 +175,14 @@ export function activate(context: vscode.ExtensionContext)
 		let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
 		let tag = getCurrentTag(editor.document, originalPosition, text);
 		reload(false);
-		insertAutoCloseTag(event, editor, tag);
-		insertSpecialSnippets(event, editor, text, tag);
-		upcaseFirstLetter(event, editor, tag, text);
+
+		// преобразования текста
+		if (!event || !event.contentChanges.length) return;
+		let changes = getContextChanges(editor.selections, event.contentChanges);
+		if (!changes || changes.length == 0) return;
+		insertAutoCloseTags(changes, editor, tag);
+		insertSpecialSnippets(changes, editor, text, tag);
+		upcaseFirstLetter(changes, editor, tag);
 	});
 
 	vscode.workspace.onWillSaveTextDocument(x =>
@@ -332,7 +352,6 @@ function registerCommands()
 		debug.test();
 	});
 
-
 	// выделение Answer из текста
 	registerCommand('tib.getAnswers', () => 
 	{
@@ -350,42 +369,52 @@ function registerCommands()
 	registerCommand('tib.selectTag.closest', () => 
 	{
 		let editor = vscode.window.activeTextEditor;
-		let tag = getCurrentTag(editor.document, editor.selection.active);
-		if (!tag) return;
-		let from = tag.OpenTagRange.start;
-		let cl = findCloseTag("<", tag.Name, ">", editor.document, from.translate(0, 1));
-		if (!cl) return;
-		let to = cl.end;
-		let range = new vscode.Selection(from, to);
-		editor.selection = range;
+		let newSels: vscode.Selection[] = [];
+		editor.selections.forEach(selection =>
+		{
+			let tag = getCurrentTag(editor.document, selection.active);
+			if (!tag) return;
+			let from = tag.OpenTagRange.start;
+			let cl = findCloseTag("<", tag.Name, ">", editor.document, from.translate(0, 1));
+			if (!cl) return;
+			let to = cl.end;
+			let range = new vscode.Selection(from, to);
+			newSels.push(range);
+		});
+		editor.selections = newSels;
 	});
 
 	// выделение родительского <тега>
 	registerCommand('tib.selectTag.global', () => 
 	{
+		let newSels: vscode.Selection[] = [];
 		let editor = vscode.window.activeTextEditor;
-		let txt = getPreviousText(editor.document, editor.selection.active);
-		let tag = getCurrentTag(editor.document, editor.selection.active, txt);
-		if (!tag || tag.Parents.length < 1) return;
-		// если это первый вложенный тег
-		let par: string;
-		let from: vscode.Position;
-		if (tag.Parents.length == 1)
+		editor.selections.forEach(selection =>
 		{
-			par = tag.Name;
-			from = tag.OpenTagRange.start;
-		}
-		else
-		{
-			par = tag.Parents[1].Name;
-			from = tag.Parents[1].OpenTagRange.start;
-		}
-		let cl = findCloseTag("<", par, ">", editor.document, from.translate(0, 1));
-		if (!cl) return;
-		let to = cl.end;
-		let range = new vscode.Selection(from, to);
-		let res = selectLines(editor.document, range);
-		editor.selection = res;
+			let txt = getPreviousText(editor.document, selection.active);
+			let tag = getCurrentTag(editor.document, selection.active, txt);
+			if (!tag || tag.Parents.length < 1) return;
+			// если это первый вложенный тег
+			let par: string;
+			let from: vscode.Position;
+			if (tag.Parents.length == 1)
+			{
+				par = tag.Name;
+				from = tag.OpenTagRange.start;
+			}
+			else
+			{
+				par = tag.Parents[1].Name;
+				from = tag.Parents[1].OpenTagRange.start;
+			}
+			let cl = findCloseTag("<", par, ">", editor.document, from.translate(0, 1));
+			if (!cl) return;
+			let to = cl.end;
+			let range = new vscode.Selection(from, to);
+			let res = selectLines(editor.document, range);
+			newSels.push(range);
+		});
+		editor.selections = newSels;
 	});
 
 	// оборачивание в [тег]
@@ -427,7 +456,7 @@ function registerCommands()
 		});
 	});
 
-	//Удаление айди вопроса в хидере вопроса
+	//Удаление айди вопроса в заголовках вопроса
 	registerCommand('tib.remove.QuestionIds', () =>
 	{
 		let editor = vscode.window.activeTextEditor;
@@ -441,7 +470,7 @@ function registerCommands()
 			} catch (error)
 			{
 				CurrentStatus.removeCurrentMessage();
-				logError("Произошла ошибка при удалении Id вопроса из заголовка", error);
+				logError("Ошибка при удалении Id вопроса из заголовка", error);
 			}
 			x.dispose();
 		})
@@ -452,10 +481,16 @@ function registerCommands()
 		let editor = vscode.window.activeTextEditor;
 		try
 		{
-			let text = editor.document.getText(editor.selection);
-			let res = TibDocumentEdits.AnswersToItems(text);
-			applyChanges(editor.selection, res, editor);
-		} catch (error)
+			let results: string[] = [];
+			editor.selections.forEach(selection =>
+			{
+				let text = editor.document.getText(selection);
+				let res = TibDocumentEdits.AnswersToItems(text);
+				results.push(res);
+			});
+			multiPaste(editor, editor.selections, results);
+		}
+		catch (error)
 		{
 			logError("Ошибка преобразования AnswersToItems", error);
 		}
@@ -466,14 +501,21 @@ function registerCommands()
 		let editor = vscode.window.activeTextEditor;
 		try
 		{
-			let text = editor.document.getText(editor.selection);
-			let res = TibDocumentEdits.ItemsToAnswers(text);
-			applyChanges(editor.selection, res, editor);
-		} catch (error)
+			let results: string[] = [];
+			editor.selections.forEach(selection =>
+			{
+				let text = editor.document.getText(selection);
+				let res = TibDocumentEdits.ItemsToAnswers(text);
+				results.push(res);
+			});
+			multiPaste(editor, editor.selections, results);
+		}
+		catch (error)
 		{
 			logError("Ошибка преобразования ItemsToAnswers", error);
 		}
 	});
+
 
 	//Отсортировать List
 	registerCommand('tib.transform.SortList', () =>
@@ -551,14 +593,37 @@ function registerCommands()
 		// отсортированные от начала к концу выделения
 		if (selections.length > 1) selections = selections.sort(function (a, b)
 		{
-			return editor.document.offsetAt(b.start) - editor.document.offsetAt(a.start);
+			return editor.document.offsetAt(b.active) - editor.document.offsetAt(a.active);
+		});
+		commentAllBlocks(selections);
+	});
+
+	// комментирование строки
+	registerCommand('editor.action.commentLine', () => 
+	{
+		let editor = vscode.window.activeTextEditor;
+		let selections = editor.selections;
+
+		if (selections.length > 1)
+		{
+			// отсортированные от начала к концу выделения
+			selections = selections.sort(function (a, b)
+			{
+				return editor.document.offsetAt(b.active) - editor.document.offsetAt(a.active);
+			});
+		}
+		// выделяем строки
+		selections = selections.map(x =>
+		{
+			let line = editor.document.lineAt(x.active.line);
+			let from = line.range.start;
+			let spaces = line.text.match(/^(\s+)\S/);
+			if (!!spaces) from = from.translate(0, spaces[1].length);
+			return new vscode.Selection(from, line.range.end);
 		});
 		// для каждого выделения
-		InProcess = true;
-		commentAllBlocks(editor, selections, function (done)
-		{
-			InProcess = false;
-		});
+		//InProcess = true;
+		commentAllBlocks(selections);
 	});
 
 	registerCommand('tib.paste', () => 
@@ -832,19 +897,27 @@ function higlight()
 /** Автозавершения */
 function autoComplete()
 {
-	// Item/Answer Snippets
+	// XML Snippets
 	vscode.languages.registerCompletionItemProvider('tib', {
 		provideCompletionItems(document, position, token, context)
 		{
 			let completionItems = [];
 			let tag = getCurrentTag(document, position);
-			if (tag && tag.GetLaguage() != Language.CSharp)
+			if (tag && tag.GetLaguage() == Language.XML)
 			{
-				let curOpenMatch = getPreviousText(document, position, true).match(/<(\w+)$/);
+				let text = getPreviousText(document, position, true);
+
+				// XML Features
+				if (tag.OpenTagIsClosed && text.match(/\b_\w*$/))
+				{
+					return AutoCompleteArray.XMLFeatures.map(x => snippetToCompletitionItem(x));
+				}
+
+				let curOpenMatch = text.match(/<(\w+)$/);
 				if (!curOpenMatch) return;
 				let opening = curOpenMatch[1].toLocaleLowerCase();
 
-				//Item
+				//Item Snippet
 				if ("item".indexOf(opening) > -1)
 				{
 					let parent;
@@ -855,28 +928,21 @@ function autoComplete()
 							break;
 						}
 					if (!parent || !ItemSnippets[parent]) parent = "List";
-					let res = new vscode.SnippetString(ItemSnippets[parent].replace("Page=\"$1\"", "Page=\"${1|" + getAllPages().join(",") + "|}\""));
+					let res = new vscode.SnippetString(extractElements(ItemSnippets[parent]));
 					if (res)
 					{
 						let ci = new vscode.CompletionItem("Item", vscode.CompletionItemKind.Snippet);
-						let from_pos = tag.OpenTagRange.start;
-						let range = new vscode.Range(from_pos.translate(0, 1), position);
-
 						ci.detail = "Структура Item для " + parent;
 						ci.insertText = res;
-						ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
+						//ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
 						completionItems.push(ci);
 					}
 				}
-				// Answer
+				// Answer Snippet
 				else if ("answer".indexOf(opening) > -1)
 				{
 					let ci = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
-					let ciS = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
-					let from_pos = tag.OpenTagRange.start;
-					let range = new vscode.Range(from_pos.translate(0, 1), position);
-					ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
-					ciS.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
+					let ciS = new vscode.CompletionItem("AnswerShort", vscode.CompletionItemKind.Snippet);
 
 					let iterator = "1";
 					let text = "$2";
@@ -895,10 +961,10 @@ function autoComplete()
 						ciS.detail = "Краткая структура Answer";
 					}
 					// полный вариант
-					ci.insertText = new vscode.SnippetString("<Answer Id=\"${1:" + iterator + "}\"><Text>${2:" + text + "}</Text></Answer>");
+					ci.insertText = new vscode.SnippetString("Answer Id=\"${1:" + iterator + "}\"><Text>${2:" + text + "}</Text></Answer>");
 					completionItems.push(ci);
 					// краткий вариант
-					ciS.insertText = new vscode.SnippetString("<Answer Id=\"${1:" + iterator + "}\"/>");
+					ciS.insertText = new vscode.SnippetString("Answer Id=\"${1:" + iterator + "}\"/>");
 					completionItems.push(ciS);
 				}
 			}
@@ -948,17 +1014,19 @@ function autoComplete()
 		{
 			let completionItems: vscode.CompletionItem[] = [];
 			let tag = getCurrentTag(document, position);
-			if (!tag || tag.GetLaguage() != Language.CSharp) return;
+			if (!tag) return;
 
 			let curLine = getPreviousText(document, position, true);
-			let mt = curLine.match(/(#|\$)?\w+$/);
+			let mt = curLine.match(/(#|\$)?\w*$/);
+			let lang = tag.GetLaguage();
 			if (!mt) return;
+			if (lang != Language.CSharp && mt[1] != "$") return;
 
 			//пропускаем объявления
 			if (Parse.isMethodDefinition(curLine)) return;
 
 			let str = getCurrentLineText(document, position).substr(position.character);
-			if (tag.CSSingle() || !!mt[1] && mt[1] == "$")
+			if (mt[1] == "$")
 			{
 				// добавляем snippet для $repeat
 				let ci = new vscode.CompletionItem("repeat", vscode.CompletionItemKind.Snippet);
@@ -970,11 +1038,30 @@ function autoComplete()
 				ci.detail = "Указатель на вложенный вопрос";
 				ci.insertText = new vscode.SnippetString("place(${1|" + getAllQuestions().join(',') + "|})");
 				completionItems.push(ci);
-				if (!tag.CSSingle()) return completionItems;
+				// добавляем стандартные константы
+				if (lang == Language.CSharp && !tag.CSSingle()) XMLEmbeddings.forEach(x =>
+				{
+					ci = new vscode.CompletionItem(x.Name, vscode.CompletionItemKind.Constant);
+					if (!!x.Type) ci.detail = x.Type;
+					ci.documentation = x.Title;
+					completionItems.push(ci);
+				});
 			}
 
 			let customMethods = Methods.CompletionArray();
 			if (customMethods && !tag.InCSString()) completionItems = completionItems.concat(customMethods); //Custom Methods
+
+			// если начинается с $, то больше ничего не надо
+			if (mt[1] == "$") return completionItems;
+
+			//C# Featrues
+			if (mt[1] == "#")
+			{
+				AutoCompleteArray.CSFeatures.forEach(element =>
+				{
+					completionItems.push(snippetToCompletitionItem(element));
+				});
+			}
 
 			if (!tag.CSSingle() && !curLine.match(/\w+\.\w*$/))
 			{
@@ -1042,7 +1129,7 @@ function autoComplete()
 		{
 			return item;
 		}
-	}, "\"", "");
+	}, "\"", "", "$", "#");
 
 	//Properties, Methods, EnumMembers, Linq
 	vscode.languages.registerCompletionItemProvider('tib', {
@@ -1148,7 +1235,7 @@ function helper()
 			let parent = !!reg ? reg[1] : null;
 			ar.forEach(element =>
 			{
-				if (element.Name == mtch[4] && (element.Kind == vscode.CompletionItemKind.Function || !!parent && element.Parent == parent))
+				if (element.Name == mtch[4] && (element.Kind == vscode.CompletionItemKind[vscode.CompletionItemKind.Function] || !!parent && element.Parent == parent))
 				{
 					if (element.Overloads.length == 0) sign.signatures.push(element.ToSignatureInformation());
 					else element.Overloads.forEach(el =>
@@ -1190,11 +1277,17 @@ function hoverDocs()
 			{
 				parent = reg[1];
 			}
-			// надо проверить родителя!
-			let suit = CodeAutoCompleteArray.filter(x =>
+			// надо проверить родителя: если нашёлся static, то только его, иначе всё подходящее
+			let suit = CodeAutoCompleteArray.filter(x => x.Name == text);
+			let staticParens = CodeAutoCompleteArray.filter(x => x.Kind == vscode.CompletionItemKind[vscode.CompletionItemKind.Class]).map(x => x.Name);
+			if (staticParens.contains(parent))
 			{
-				return x.Name == text && (!x.Parent || x.Parent == parent);
-			});
+				suit = suit.filter(x =>
+				{
+					return x.Name == text && (x.Parent == parent);
+				});
+			}
+
 			for (let i = 0; i < suit.length; i++)
 			{
 				if (suit[i].Documentation && suit[i].Description)
@@ -1218,24 +1311,40 @@ function hoverDocs()
 
 
 /** Делает первую букву тега заглавной */
-function upcaseFirstLetter(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag, text: string)
+function upcaseFirstLetter(changes: ContextChange[], editor: vscode.TextEditor, tag: CurrentTag)
 {
+	// если хоть одна позиция такова, то нафиг
 	if (!tag || !Settings.Item("upcaseFirstLetter") || tag.GetLaguage() != Language.XML || inCDATA(editor.document, editor.selection.active)) return;
-	let lastTag = text.match(/(<\/?)([a-z]\w*)$/);
-	if (!lastTag) return;
+	let tagRegex = /(<\/?)(\w+)$/;
+	let nullPosition = new vscode.Position(0, 0);
 	try
 	{
-		let up = lastTag[2];
-		up = up[0].toLocaleUpperCase() + up.slice(1);
-		let pos = event.document.positionAt(lastTag.index).translate(0, lastTag[1].length);
-		let range = new vscode.Range(
-			pos,
-			pos.translate(0, lastTag[1].length)
-		);
+		let replaces: { Range: vscode.Range, Value: string }[] = [];
+
+		changes.forEach(change =>
+		{
+			let text = editor.document.getText(new vscode.Range(nullPosition, change.Active));
+			let lastTag = text.match(tagRegex);
+			if (!lastTag) return;
+			let up = lastTag[2];
+			up = up[0].toLocaleUpperCase(); // делаем первую заглавной
+			if (lastTag[2].length > 1) up += lastTag[2][1].toLocaleLowerCase(); // убираем вторую заглавную
+			let pos = editor.document.positionAt(lastTag.index).translate(0, lastTag[1].length);
+			let range = new vscode.Range(
+				pos,
+				pos.translate(0, up.length)
+			);
+			replaces.push({ Range: range, Value: up });
+		});
+
 		editor.edit(builder =>
 		{
-			builder.replace(range, up);
+			replaces.forEach(element =>
+			{
+				builder.replace(element.Range, element.Value);
+			});
 		});
+
 	} catch (error)
 	{
 		logError("Ошибка при добавлении заглавной буквы", error);
@@ -1244,13 +1353,12 @@ function upcaseFirstLetter(event: vscode.TextDocumentChangeEvent, editor: vscode
 
 
 /** Подсказки и ошибки */
-function diagnostic(document: vscode.TextDocument)
+async function diagnostic(document: vscode.TextDocument)
 {
-	let warns = vscode.languages.createDiagnosticCollection('tib_warnings');
-	getWarnings(document).then(res =>
-	{
-		warns.set(document.uri, res);
-	})
+	if (document.languageId != 'tib') return;
+	let res = await getDiagnosticElements(document);
+	Diagnostics.delete(document.uri);
+	if (!!res) Diagnostics.set(document.uri, res);
 }
 
 
@@ -1354,10 +1462,9 @@ function makeIndent(): void
 
 
 /** автоматическое закрывание <тегов> */
-function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, tag: CurrentTag): void
+function insertAutoCloseTags(changes: ContextChange[], editor: vscode.TextEditor, tag: CurrentTag): void
 {
-	if (!tag || InProcess || !editor || !event || !event.contentChanges.length) return;
-	let changes = getContextChanges(editor.selections, event.contentChanges);
+	if (!tag || InProcess || !editor) return;
 	let fullText = editor.document.getText();
 
 	// сохраняем начальное положение
@@ -1409,26 +1516,31 @@ function insertAutoCloseTag(event: vscode.TextDocumentChangeEvent, editor: vscod
 }
 
 
-function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vscode.TextEditor, text: string, tag: CurrentTag): void
+function insertSpecialSnippets(changes: ContextChange[], editor: vscode.TextEditor, text: string, tag: CurrentTag): void
 {
-	if (!tag || InProcess || !editor || !event || !event.contentChanges[0]) return;
+	if (!tag || InProcess || !editor) return;
 
-	let change = event.contentChanges[0].text;
-	let originalPosition = editor.selection.start.translate(0, 1);
+	let change = changes[0].Change.text;
 	let positions = editor.selections.map(x => new vscode.Position(x.active.line, x.active.character + 1));
 	let lang = tag.GetLaguage();
-	let nextCharRange = new vscode.Range(originalPosition, originalPosition.translate(0, 1));
-	let nextChar = editor.document.getText(nextCharRange);
+
 
 	// удаление лишней скобки
+	let newPos = changes[0].Active.translate(0, 1);
+	let nextCharRange = new vscode.Range(newPos, newPos.translate(0, 1));
+	let nextChar = editor.document.getText(nextCharRange);
 	if (nextChar == "]" && change[change.length - 1] == "]")
 	{
-		InProcess = true;
-		editor.edit(builder =>
+		let results: string[] = [];
+		let sels: vscode.Selection[] = [];
+		changes.forEach(ch =>
 		{
-			builder.delete(nextCharRange);
-			InProcess = false;
-		})
+			let newPosC = ch.Active.translate(0, 1);
+			let nextCharRangeC = new vscode.Selection(newPosC, newPosC.translate(0, 1));
+			results.push("");
+			sels.push(nextCharRangeC);
+		});
+		multiPaste(editor, sels, results);
 	}
 
 	// закрывание скобок
@@ -1436,7 +1548,7 @@ function insertSpecialSnippets(event: vscode.TextDocumentChangeEvent, editor: vs
 	if (isScriptLanguage(lang) && !tag.InString() && change[change.length - 1] == "[")
 	{
 		InProcess = true;
-		editor.insertSnippet(new vscode.SnippetString("$0]"), originalPosition).then(() =>
+		editor.insertSnippet(new vscode.SnippetString("$0]"), changes.map(x => x.Selection.active.translate(0, 1))).then(() =>
 		{
 			InProcess = false;
 		});
@@ -1535,6 +1647,32 @@ function safeValsEval(query: string): string[]
 }
 
 
+
+// функции для получения элементов
+
+/** Заменяет {{Elements}} на строку для Snippet */
+export function extractElements(input: string): string
+{
+	let res = new KeyedCollection<string[]>();
+	let match = input.matchAll(/{{(\w+)}}/);
+	if (!match || match.length == 0) return input;
+	match.forEach(element =>
+	{
+		if (!!_ElementFunctions[element[1]] && !res.Contains(element[1]))
+		{
+			res.AddPair(element[1], _ElementFunctions[element[1]]());
+		}
+	});
+	let resultStr = input;
+	let i = 1;
+	res.forEach((key, value) =>
+	{
+		resultStr = resultStr.replace(new RegExp("{{" + key + "}}", "g"), "${" + i + "|" + value.join(",") + "|}");
+		i++;
+	});
+	return resultStr;
+}
+
 function getAllPages(): string[]
 {
 	return CurrentNodes.GetIds('Page');
@@ -1554,6 +1692,14 @@ function getQuestionTypes(): string[]
 {
 	return QuestionTypes;
 }
+
+function getAllMixIds(): string[]
+{
+	return MixIds;
+}
+
+
+
 
 /** Возвращает `null`, если тег не закрыт или SelfClosed */
 function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range
@@ -1642,7 +1788,7 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 
 
 /** Самое главное в этом расширении */
-function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
+export function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
 {
 	if (_pack == "debug") return __getCurrentTag(document, position, txt, force);
 
@@ -1679,7 +1825,7 @@ function getCurrentLineText(document: vscode.TextDocument, position: vscode.Posi
 
 
 /** Получает текст от начала документа до `position` */
-function getPreviousText(document: vscode.TextDocument, position: vscode.Position, lineOnly: boolean = false): string
+export function getPreviousText(document: vscode.TextDocument, position: vscode.Position, lineOnly: boolean = false): string
 {
 	try
 	{
@@ -1719,7 +1865,7 @@ function selectLines(document: vscode.TextDocument, selection: vscode.Selection)
 
 
 /** Комментирование выделенного фрагмента */
-function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, callback: (res: boolean) => void): void
+function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection): string
 {
 	let document = editor.document;
 	let text = document.getText(selection);
@@ -1728,15 +1874,14 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
 	if (!tagFrom || !tagTo)
 	{
 		logError("Ошибка получения границ выделения");
-		return;
+		return null;
 	}
 	let langFrom = tagFrom.GetLaguage();
 	let langTo = tagTo.GetLaguage();
 	if (langFrom != langTo)
 	{
 		showWarning("Начало и конец выделенного фрагмента лежат в разных языковых областях. Команда отменена.");
-		callback(false);
-		return;
+		return null;
 	}
 
 	let cStart = "<!--";
@@ -1774,32 +1919,32 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection, ca
 	if (!valid)
 	{
 		showWarning("Внутри выделенной области уже есть комментарии. Команда отменена.");
-		return callback(false);
+		return null;
 	}
 
-	editor.edit((editBuilder) =>
+	return newText;
+
+	/* editor.edit((editBuilder) =>
 	{
 		editBuilder.replace(selection, newText);
 	}, { undoStopAfter: false, undoStopBefore: false }).then(() =>
 	{
 		callback(true);
-	});
+	}); */
 }
 
 
 /** Последовательное комментирование выделенных фрагментов */
-function commentAllBlocks(editor: vscode.TextEditor, selections: vscode.Selection[], callback: Function): void
+function commentAllBlocks(selections: vscode.Selection[]): void
 {
-	// рекурсивный вызов с уменьшением массива выделений
-	commentBlock(editor, selections.pop(), function (res)
+	let results: string[] = [];
+	let editor = vscode.window.activeTextEditor;
+	editor.selections = selections;
+	selections.forEach(selection =>
 	{
-		if (!res || selections.length == 0)
-		{
-			callback();
-			return;
-		}
-		commentAllBlocks(editor, selections, callback);
+		results.push(commentBlock(editor, selection));
 	});
+	multiPaste(editor, editor.selections, results);
 }
 
 
@@ -1829,13 +1974,13 @@ function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text:
 
 
 /** Последовательная замена (вставка) элементов из `lines` в соответствующие выделения `selections` */
-function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[], callback: Function): void
+function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[], callback?: Function): void
 {
 	pasteText(editor, selections.pop(), lines.pop(), function ()
 	{
 		if (selections.length == 0)
 		{
-			callback();
+			if (!!callback) callback();
 			return;
 		}
 		multiPaste(editor, selections, lines, callback);
@@ -1880,7 +2025,9 @@ function getLogData(edt?: vscode.TextEditor): LogData
 		});
 		let survObj = {
 			Methods: Methods.Keys(),
-			NodesLength: CurrentNodes.Keys().map(x => x + ": " + (CurrentNodes.Item(x).length || 0))
+			NodesLength: CurrentNodes.Keys().map(x => x + ": " + (CurrentNodes.Item(x).length || 0)),
+			MixIds: MixIds,
+			Includes: Includes
 		};
 		res.add({ SurveyData: survObj });
 	} catch (error)
@@ -1892,22 +2039,6 @@ function getLogData(edt?: vscode.TextEditor): LogData
 	return res;
 }
 
-
-function isTib()
-{
-	return vscode.window.activeTextEditor.document.languageId == "tib";
-}
-
-
-/** Создаёт команду только для языка tib */
-function registerCommand(name: string, command: Function): void
-{
-	vscode.commands.registerCommand(name, () => 
-	{
-		if (!isTib()) return;
-		command();
-	});
-}
 
 
 /** получаем функцию для форматирования C# */
@@ -2113,160 +2244,6 @@ async function createElements(elementTYpe: SurveyElementType)
 	});
 }
 
-
-class CacheSet 
-{
-	/** От начала документа до position */
-	public PreviousTextSafe = new CacheItem<string>();
-	public PreviousText = new CacheItem<string>();
-	public Tag = new CacheItem<CurrentTag>();
-	public Methods = new CacheItem<TibMethods>();
-	public CurrentNodes = new CacheItem<SurveyNodes>();
-
-	// поля для быстрой обработки
-	private Keys = ["PreviousTextSafe", "PreviousText", "Tag", "Methods", "CurrentNodes"];
-
-	/** Полное обновление */
-	private updateAll(document: vscode.TextDocument, position: vscode.Position, text: string): void
-	{
-		this.Clear();
-		this.PreviousText.Set(text);
-		this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
-		this.Tag.Set(getCurrentTag(document, position, text, true));
-	}
-
-	/** Обновление последнего куска */
-	private updatePart(document: vscode.TextDocument, position: vscode.Position, prevText: string, validParents: SimpleTag[], ind: number, restText: string): boolean
-	{
-		try
-		{
-			let cachedSafe = this.PreviousTextSafe.Get();
-			let cachedTag = this.Tag.Get();
-
-			// обновляем последнюю часть SafeText (один из основных смыслов кэширования) и сам Text
-			let pre = cachedSafe.slice(0, ind);
-			let prep = CurrentTag.PrepareXML(restText);
-			cachedSafe = pre + prep;
-			this.PreviousTextSafe.Set(cachedSafe);
-			this.PreviousText.Set(prevText);
-
-			// обновляем Tag
-			let ranges = Parse.getParentRanges(document, cachedSafe, ind);
-			if (ranges.length > 0)
-				ranges.forEach(range => validParents.push(new SimpleTag(document, range)));
-			if (validParents.length > 0)
-			{
-				let lastParent = validParents.pop();
-				let lastParentRange = new vscode.Range(lastParent.OpenTagRange.start, position);
-				let current = new SimpleTag(document, lastParentRange);
-				let openTagIsclosed = current.isClosed();
-				let body = openTagIsclosed ? document.getText(new vscode.Range(current.OpenTagRange.end, position)) : undefined;
-				cachedTag.Update(current, {
-					PreviousText: prevText,
-					Parents: validParents,
-					Body: body,
-					OpenTagIsClosed: openTagIsclosed,
-					OpenTagRange: lastParentRange,
-					StartIndex: document.offsetAt(lastParentRange.start)
-				});
-				return true;
-			}
-		}
-		catch (error)
-		{
-			logError("Ошибка обновления части закешированного документа", error)
-		}
-		return false;
-	}
-
-
-	/** Обновление всего кеша (если требуется) */
-	public Update(document: vscode.TextDocument, position: vscode.Position, txt?: string): void
-	{
-		try
-		{
-			if (!this.Active()) return;
-
-			let text = txt || getPreviousText(document, position);
-			let cachedText = this.PreviousText.Get();
-			// ничего не поменялось
-			if (!!cachedText && cachedText == text) return;
-
-			let cachedTag = this.Tag.Get();
-			let cachedSafe = this.PreviousTextSafe.Get();
-
-			if (!cachedText || !cachedSafe || !cachedTag || cachedText.length != cachedSafe.length)
-				return this.updateAll(document, position, text); // обновляем всё
-
-			// частичное обновление
-			let foundValidRange = false;
-			// сначала пробуем сравнить весь текст до начала тега
-			let upTo = cachedTag.OpenTagRange.start; // начало закешированного тега
-			if (upTo.compareTo(position) <= 0)
-			{
-				let newText = getPreviousText(document, upTo);
-				let ind = document.offsetAt(upTo); // а document типа не изменился
-				let oldText = cachedText.slice(0, ind);
-				let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после начала тега
-				if (oldText == newText && !restText.match("</" + cachedTag.Name))
-				{
-					foundValidRange = this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
-					// если получилось, то ничего обновлять не надо
-					if (foundValidRange) return;
-				}
-			}
-
-			// если не получилось, то идём породительно снизу вверх
-			let validParents: Array<SimpleTag> = [];
-			foundValidRange = false;
-			for (let i = cachedTag.Parents.length - 1; i >= 0; i--)
-			{
-				let upTo = cachedTag.Parents[i].OpenTagRange.end;
-				let newText = getPreviousText(document, upTo);
-				let ind = document.offsetAt(upTo); // а document типа не изменился
-				let oldText = cachedText.slice(0, ind);
-				let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после последнего родителя
-				// ищем такого, что он выше, текст перед ним сохранился и после него не появилось закрывающего его тега
-				if (upTo.compareTo(position) <= 0 && oldText == newText && !restText.match("</" + cachedTag.Parents[i].Name))
-				{
-					// обновляем только последний кусок
-					validParents = cachedTag.Parents.slice(0, i + 1);
-					foundValidRange = this.updatePart(document, position, text, validParents, ind, restText);
-					break;
-				}
-			}
-			if (!foundValidRange) this.updateAll(document, position, text);
-		}
-		catch (error)
-		{
-			logError("Ошибка обновления закешированного документа", error);
-		}
-
-	}
-
-	/** Можно ли пользоваться кэшем */
-	public Active(): boolean
-	{
-		return !Settings.Contains("enableCache") || !!Settings.Item("enableCache");
-	}
-
-	/** Очистка всех полей */
-	public Clear()
-	{
-		try
-		{
-			this.Keys.forEach(field =>
-			{
-				(this[field] as CacheItem<any>).Remove();
-			});
-		}
-		catch (error)
-		{
-			logError("Ошибка очистки кеша", error)
-		}
-	}
-
-}
 
 
 //#endregion

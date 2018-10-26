@@ -6,7 +6,7 @@
         "lib": [
             "es6"
         ],
-        "sourceMap": false,
+        "sourceMap": true,
         "rootDirs": [
             "src",
             "stuff"

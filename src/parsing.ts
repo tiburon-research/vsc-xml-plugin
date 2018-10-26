@@ -1,12 +1,14 @@
 'use strict'
 
 import { TextRange, safeString, TagInfo, Language, logString } from "./classes";
-import { logError } from "./extension";
+import { logError, Settings } from "./extension";
 import { clearXMLComments } from "./encoding"
 import { positiveMin, KeyedCollection, CurrentTag } from "./classes"
 import { RegExpPatterns } from './constants'
 import * as charDetect from 'charset-detector'
 import * as vscode from 'vscode'
+import { initJQuery } from "./TibJQuery";
+
 
 
 /** Результат поиска тегов */
@@ -331,7 +333,7 @@ export function parseElements(strings: string[]): ParsedElementObject[]
 export function parseQuestion(text: string): ParsedElementObject
 {
 	let res = { Id: "", Text: text, Prefix: "" };
-	let match = text.match(/^([A-Za-z]+\d+)(\.?\s*)(.*)/);
+	let match = text.match(/^([A-Za-z]+\w+)(\.?\s*)(.*)/);
 	if (!match) return res;
 	res.Id = match[1];
 	res.Prefix = match[2];
@@ -418,9 +420,152 @@ function getNextParent(document: vscode.TextDocument, text: string, fullPrevText
 
 
 /** Проверяет нужно ли парсить этот тег */
-function tagNeedToBeParsed(tagName: string): boolean
+export function tagNeedToBeParsed(tagName: string): boolean
 {
 	let lang = TagInfo.getTagLanguage(tagName);
-	let stopLangs = [ Language.PlainText, Language.CSS, Language.JS ];
+	let stopLangs = [Language.PlainText, Language.CSS, Language.JS];
 	return stopLangs.indexOf(lang) < 0;
+}
+
+
+export interface IDocumentElement
+{
+	Value: RegExpMatchArray;
+	From: number;
+	To: number;
+	Message: string;
+	/** Если задан используется для преобразования в `DiagnosticElement` */
+	DiagnosticProperties?:
+	{
+		Type?: vscode.DiagnosticSeverity;
+		Code?: string | number;
+	}
+}
+
+
+/** Хранит информацию о расположении и тексте */
+export class DocumentElement implements IDocumentElement
+{
+	constructor(document: vscode.TextDocument, obj: IDocumentElement)
+	{
+		for (const key in obj)
+		{
+			this[key] = obj[key];
+		}
+		this.Range = new vscode.Range(document.positionAt(this.From), document.positionAt(this.To));
+		this.Location = new vscode.Location(document.uri, this.Range);
+	}
+
+	public Value: RegExpMatchArray;
+	public From: number;
+	public To: number;
+	public Message: string;
+	/** используется, только если задан вручную и не `null` */
+	/** Если задан используется для преобразования в `DiagnosticElement` */
+	DiagnosticProperties?:
+		{
+			Type?: vscode.DiagnosticSeverity;
+			Code?: string | number;
+		} = {};
+
+	public Range: vscode.Range;
+	public Location: vscode.Location;
+}
+
+
+/** 
+ * Возвращает массив найденных `DocumentElement` 
+ * 
+ * Нельзя использовать флаг `g`!
+ * 
+ * Если задан `preparedText`, то используется он (но сначала сравнивается длина)
+ * 
+*/
+export async function getDocumentElements(document: vscode.TextDocument, search: RegExp, errorMessage: string, preparedText: string): Promise<DocumentElement[]>
+{
+	let res: DocumentElement[] = [];
+	let text = preparedText;
+	let matches = text.matchAll(search);
+	if (!!matches && matches.length > 0)
+	{
+		matches.forEach(element =>
+		{
+			let to = element.index + element[0].length;
+			res.push(new DocumentElement(document, {
+				Value: element,
+				From: element.index,
+				To: to,
+				Message: errorMessage
+			}));
+		});
+	}
+	return res;
+}
+
+
+/** Возвращает все повторяющиеся Id, как `DocumentElement` */
+export async function getDuplicatedElementsIds(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
+{
+	let $ = initJQuery();
+	let res: DocumentElement[] = [];
+	let tagNames = ['Page', 'List', 'Question', 'Block'];
+	let $dom;
+	try
+	{
+		$dom = $.XMLDOM(prepearedText);
+	} catch (error)
+	{ }
+	
+	if (!$dom) return [];
+
+	let ids = new KeyedCollection<string[]>();
+
+	// собираем все Id
+	tagNames.forEach(element =>
+	{
+		let ar: string[] = [];
+		$dom.find(element).each((i, e) => ar.push($(e).attr('Id')));
+		ids.AddPair(element, ar);
+	});
+
+	ids.forEach((key, value) =>
+	{
+		// находим Range для дублирующихся
+		let duplicated: string[] = value.reduce(function (acc, el, i, arr)
+		{
+			if (arr.indexOf(el) !== i && acc.indexOf(el) < 0) acc.push(el);
+			return acc;
+		}, []);
+		if (duplicated.length > 0)
+		{
+			duplicated.forEach(d =>
+			{
+				let reg = new RegExp('(<' + key + ")(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")" + d + "('|\"))");
+				let matches = prepearedText.matchAll(reg);
+				if (!!matches)
+				{
+					matches.forEach(mt =>
+					{
+						if (!!mt.index)
+						{
+							let full = mt[0];
+							let idAttr = mt[mt.length - 3];
+							let from = mt.index + full.length - idAttr.length;
+							let to = mt.index + full.length;
+							let isWarning = d.contains("@");
+							res.push(new DocumentElement(document, {
+								Value: null,
+								From: from,
+								To: to,
+								Message: isWarning ? "Возможно Id дублируются" : "Найдены дублирующиеся Id",
+								DiagnosticProperties: { Type: isWarning ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Error }
+							}));
+						}
+					});
+				}
+			});
+		}
+	});
+
+	return res;
 }

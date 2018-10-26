@@ -1,10 +1,11 @@
 'use strict'
 
-import { $ } from './extension'
 import { SurveyElementType, SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage } from './surveyObjects';
 import * as Parse from './parsing'
 import { KeyedCollection } from './classes'
 import * as vscode from 'vscode'
+import { QuestionTypes } from './constants';
+import { initJQuery } from './TibJQuery';
 
 
 export function AnswersToItems(text: string): string
@@ -19,6 +20,7 @@ export function ItemsToAnswers(text: string): string
 
 function TransformElement(text: string, from: string, to: string): string
 {
+	let $ = initJQuery();
 	let $dom = $.XMLDOM(text);
 	let $fromItems = $dom.find(from);
 	if ($fromItems.length == 0) return text;
@@ -48,8 +50,8 @@ function TransformElement(text: string, from: string, to: string): string
 
 export function ToAgeList(text: string): string
 {
+	let $ = initJQuery();
 	let ageLimits = text.match(/\d+/g);
-
 	let $dom = $.XMLDOM("<List></List>");
 	let $list = $dom.find("List");
 	$list.attr('Id', "ageList");
@@ -85,6 +87,7 @@ export function ToAgeList(text: string): string
 
 export function RemoveQuestionIds(text: string): string
 {
+	let $ = initJQuery();
 	let $dom = $.XMLDOM(text);
 	let $question = $dom.find("Question");
 
@@ -106,8 +109,9 @@ export function RemoveQuestionIds(text: string): string
 export function getVarCountFromList(list: string): number
 {
 
-	let res = 99999,
-		varCount = 0;									   //количество Var'ов в List'е
+	let $ = initJQuery();
+	let res = 99999;
+	let varCount = 0;									   //количество Var'ов в List'е
 	let $dom = $.XMLDOM(list);
 	let itemIndex = 0;									  //инедкс первого item'а в List'e
 	let $list = $dom.find("List");						  //ищем List'ы
@@ -146,7 +150,7 @@ export function getVarCountFromList(list: string): number
 
 export function sortListBy(text: string, attrName: string, attrIndex?: number): string
 {
-
+	let $ = initJQuery();
 	let $dom = $.XMLDOM(text);																		  //берём xml текст
 	let $lists = $dom.find("List");																	 //ищем List'ы
 	let $listItems = [];																				//массив Item массивов
@@ -259,15 +263,18 @@ export function createElements(text: string, type: SurveyElementType): vscode.Sn
 		case SurveyElementType.Answer:
 			{
 				let items = new KeyedCollection<SurveyAnswer>();
-				elements.forEach(element => {
+				elements.forEach(element =>
+				{
 					items.AddPair(element.Id, new SurveyAnswer(element.Id, element.Text));
 				});
 				if (insertPage)
 				{
-					let q = new SurveyQuestion(questionResult.Id);
+					let id = "${1:" + questionResult.Id + "}";
+					let q = new SurveyQuestion(questionResult.Id, "${2|" + QuestionTypes.join(',') + "|}");
 					q.Answers = items;
+					q.SetAttr("Id", id);
 					q.Header = questionResult.Text.trim();
-					let p = new SurveyPage(questionResult.Id);
+					let p = new SurveyPage(id);
 					p.AddChild(q);
 					res = p.ToSnippet();
 				}
@@ -278,10 +285,11 @@ export function createElements(text: string, type: SurveyElementType): vscode.Sn
 		case SurveyElementType.ListItem:
 			{
 				let items = new KeyedCollection<SurveyListItem>();
-				elements.forEach(element => {
+				elements.forEach(element =>
+				{
 					items.AddPair(element.Id, new SurveyListItem(element.Id, element.Text));
 				});
-				let q = new SurveyList();
+				let q = new SurveyList("$1");
 				q.Items = items;
 				res = q.ToSnippet();
 				break;

@@ -4,7 +4,6 @@ import { JSDOM } from 'jsdom'
 import * as _JQuery from 'jquery'
 import { logString, KeyedCollection, showWarning } from './classes'
 import * as Encoding from './encoding'
-import * as Formatting from './formatting'
 
 
 /** Класс из XMLencodeResult:
@@ -30,7 +29,6 @@ export class DOMSurveyData implements Encoding.XMLencodeResult
 /** возвращает JQuery, модернизированный под XML */
 export function initJQuery(): any
 {
-    let $dom; // JQuery для работы требуется объект window
     const dom = new JSDOM("<Root></Root>"); // нормальный объект DOM
     let JQuery: any = _JQuery(dom.window);
 
@@ -74,7 +72,6 @@ export function initJQuery(): any
     {
         let el = JQuery(this[0]);
         let res = el.html();
-        let data = (JQuery.SurveyData as DOMSurveyData);
         res = JQuery.decode(res);
         if (this.isRootElement && !!JQuery.SurveyData.XMLDeclaration) res = JQuery.SurveyData.XMLDeclaration + res;
         return res;
