@@ -8,8 +8,8 @@
 
 ### Улучшения
 * Положено начало диагностике (красные и зелёные подчёркивания) и исправлениям (жёлтые лампочки рядом с подчёркиванием).
-![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/diagnostic.gif?raw=true)
 
+![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/diagnostic.gif?raw=true)
 * В автоподстановку добавлены вопросы `pre_sex` и `pre_age`.
 * Преобразование текста в XML теперь работает как snippet.
 * Добавлена подсветка и автозавершение `$all`, `$sex`, `$age`, `$today`.
