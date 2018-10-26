@@ -340,7 +340,7 @@ async function createCommandActionPair(cmdName: string, actionTitle: string, com
 function translate(input: string, allowIterators = true): string
 {
 	let res = "";
-	let reg = allowIterators ? /[A-Za-z_@\-\(\)]/ : /[A-Za-z_]/;
+	let reg = allowIterators ? /[\dA-Za-z_@\-\(\)]/ : /[\dA-Za-z_]/;
 	for (const char of input)
 	{
 		if (!char.match(reg))

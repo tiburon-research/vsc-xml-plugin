@@ -138,6 +138,7 @@ export class KeyedCollection<T>
 		return res;
 	}
 
+	/** Проверяет наличие ключа */
 	public Contains(key: string): boolean
 	{
 		return this.items.hasOwnProperty(key);
