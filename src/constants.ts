@@ -62,8 +62,8 @@ export const translationArray = {
 
 /** Константы, подставляющиеся через $ */
 export const XMLEmbeddings = [
-	{ Name: 'all', Title: "Все вопросы на странице" },
-	{ Name: 'today', Title: "Сегодняшнее число"},
-	{ Name: 'sex', Title: "Пол респондента" },
-	{ Name: 'age', Title: "Возраст респондента" },
+	// { Name: 'all', Title: "Все вопросы на странице" },
+	{ Name: 'today', Title: "Сегодняшнее число", Type: "string" },
+	{ Name: 'sex', Title: "Пол респондента", Type: "string" },
+	{ Name: 'age', Title: "Возраст респондента", Type: "int" },
 ];

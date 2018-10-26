@@ -1018,8 +1018,9 @@ function autoComplete()
 
 			let curLine = getPreviousText(document, position, true);
 			let mt = curLine.match(/(#|\$)?\w*$/);
+			let lang = tag.GetLaguage();
 			if (!mt) return;
-			if (tag.GetLaguage() != Language.CSharp && mt[1] != "$") return;
+			if (lang != Language.CSharp && mt[1] != "$") return;
 
 			//пропускаем объявления
 			if (Parse.isMethodDefinition(curLine)) return;
@@ -1037,14 +1038,15 @@ function autoComplete()
 				ci.detail = "Указатель на вложенный вопрос";
 				ci.insertText = new vscode.SnippetString("place(${1|" + getAllQuestions().join(',') + "|})");
 				completionItems.push(ci);
-				// добавляем тандартные константы
-				XMLEmbeddings.forEach(x =>
+				// добавляем стандартные константы
+				logString();
+				if (lang == Language.CSharp && !tag.CSSingle()) XMLEmbeddings.forEach(x =>
 				{
-					ci = new vscode.CompletionItem(x.Name, vscode.CompletionItemKind.Snippet);
-					ci.detail = x.Title;
+					ci = new vscode.CompletionItem(x.Name, vscode.CompletionItemKind.Constant);
+					if (!!x.Type) ci.detail = x.Type;
+					ci.documentation = x.Title;
 					completionItems.push(ci);
 				});
-				//if (!tag.CSSingle()) return completionItems;
 			}
 
 			let customMethods = Methods.CompletionArray();
