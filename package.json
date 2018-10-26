@@ -288,6 +288,11 @@
           "description": "Автоматически заменять первую букву тегов на заглавную",
           "type": "boolean",
           "default": true
+        },
+        "tib.enableDiagnostic": {
+          "description": "Включить диагностику",
+          "type": "boolean",
+          "default": true
         }
       }
     }

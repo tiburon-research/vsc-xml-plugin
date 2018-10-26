@@ -1355,7 +1355,7 @@ function upcaseFirstLetter(changes: ContextChange[], editor: vscode.TextEditor, 
 /** Подсказки и ошибки */
 async function diagnostic(document: vscode.TextDocument)
 {
-	if (document.languageId != 'tib') return;
+	if (document.languageId != 'tib' || !Settings.Item('enableDiagnostic')) return Diagnostics.delete(document.uri);
 	let res = await getDiagnosticElements(document);
 	Diagnostics.delete(document.uri);
 	if (!!res) Diagnostics.set(document.uri, res);
