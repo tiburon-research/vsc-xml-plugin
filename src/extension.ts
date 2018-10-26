@@ -179,6 +179,7 @@ export function activate(context: vscode.ExtensionContext)
 		// преобразования текста
 		if (!event || !event.contentChanges.length) return;
 		let changes = getContextChanges(editor.selections, event.contentChanges);
+		if (!changes || changes.length == 0) return;
 		insertAutoCloseTags(changes, editor, tag);
 		insertSpecialSnippets(changes, editor, text, tag);
 		upcaseFirstLetter(changes, editor, tag);
@@ -1519,7 +1520,6 @@ function insertSpecialSnippets(changes: ContextChange[], editor: vscode.TextEdit
 	if (!tag || InProcess || !editor) return;
 
 	let change = changes[0].Change.text;
-	let originalPosition = editor.selection.start.translate(0, 1);
 	let positions = editor.selections.map(x => new vscode.Position(x.active.line, x.active.character + 1));
 	let lang = tag.GetLaguage();
 
