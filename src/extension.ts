@@ -1992,7 +1992,7 @@ function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], l
 function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: boolean = false): void
 {
 	if (separate) lines = lines.map(s => { return s.replace(/\t/g, ",") });
-	multiPaste(editor, editor.selections, lines, function ()
+	multiPaste(editor, editor.selections.sort((a, b) => { let ld = a.start.line - b.start.line; return ld == 0 ? a.start.character - b.start.character : ld ; }), lines, function ()
 	{
 		// ставим курсор в конец
 		editor.selections = editor.selections.map(sel => { return new vscode.Selection(sel.end, sel.end) });
