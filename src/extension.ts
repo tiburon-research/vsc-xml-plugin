@@ -2228,11 +2228,11 @@ function applyConstants(input: string): string
 }
 
 
-async function createElements(elementTYpe: SurveyElementType)
+async function createElements(elementType: SurveyElementType)
 {
 	let editor = vscode.window.activeTextEditor;
 	let text = editor.document.getText(editor.selection);
-	let res = TibDocumentEdits.createElements(text, elementTYpe);
+	let res = TibDocumentEdits.createElements(text, elementType);
 
 	InProcess = true;
 	let tag = getCurrentTag(editor.document, editor.selection.active);

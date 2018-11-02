@@ -2,7 +2,7 @@
 
 import { SurveyElementType, SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage } from './surveyObjects';
 import * as Parse from './parsing'
-import { KeyedCollection } from './classes'
+import { KeyedCollection, OrderedCollection } from './classes'
 import * as vscode from 'vscode'
 import { QuestionTypes } from './constants';
 import { initJQuery } from './TibJQuery';
@@ -262,10 +262,10 @@ export function createElements(text: string, type: SurveyElementType): vscode.Sn
 	{
 		case SurveyElementType.Answer:
 			{
-				let items = new KeyedCollection<SurveyAnswer>();
+				let items = new OrderedCollection<SurveyAnswer>();
 				elements.forEach(element =>
 				{
-					items.AddPair(element.Id, new SurveyAnswer(element.Id, element.Text));
+					items.Add(element.Id, new SurveyAnswer(element.Id, element.Text));
 				});
 				if (insertPage)
 				{
@@ -284,10 +284,10 @@ export function createElements(text: string, type: SurveyElementType): vscode.Sn
 
 		case SurveyElementType.ListItem:
 			{
-				let items = new KeyedCollection<SurveyListItem>();
+				let items = new OrderedCollection<SurveyListItem>();
 				elements.forEach(element =>
 				{
-					items.AddPair(element.Id, new SurveyListItem(element.Id, element.Text));
+					items.Add(element.Id, new SurveyListItem(element.Id, element.Text));
 				});
 				let q = new SurveyList("$1");
 				q.Items = items;
