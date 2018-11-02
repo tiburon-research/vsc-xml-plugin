@@ -4,7 +4,7 @@ import { Language, safeString, ExtensionSettings } from "./classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { logError, CSFormatter } from "./extension";
-import { get1LevelNodes } from "./parsing"
+import { get1LevelNodes, ReplaceXMLDeclaration } from "./parsing"
 import { getReplaceDelimiter, encodeCS, getElementsBack, encodeElements, EncodeResult, Encoder } from "./encoding"
 import { _pack, RegExpPatterns } from './constants'
 
@@ -99,7 +99,9 @@ async function formatXML(text: string, tab: string = "\t", indent: number = 0): 
 
 	let ind = tab.repeat(indent);
 
-	let oldText = text;
+	let decl = ReplaceXMLDeclaration(text);
+
+	let oldText = decl.Result;
 	let tags = get1LevelNodes(oldText);
 	let newText = oldText;
 
@@ -158,6 +160,8 @@ async function formatXML(text: string, tab: string = "\t", indent: number = 0): 
 		// форматируем между тегами
 		if (!res.Error) res = await formatBetweenTags(newText, tab, indent);
 	}
+
+	if (!!decl.Declaration) res.Result = decl.Declaration + res.Result;
 
 	return res;
 }

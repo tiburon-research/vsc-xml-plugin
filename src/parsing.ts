@@ -569,3 +569,17 @@ export async function getDuplicatedElementsIds(document: vscode.TextDocument, pr
 
 	return res;
 }
+
+
+export function ReplaceXMLDeclaration(text: string): { Result: string, Declaration: string }
+{
+	let mt = text.match(/^\s*<\?xml[^>]*\?>/i);
+	let res = text;
+	let dec = null;
+	if (!!mt)
+	{
+		res = res.replace(mt[0], "");
+		dec = mt[0];
+	}
+	return { Result: res, Declaration: dec };
+}

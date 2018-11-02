@@ -2,7 +2,7 @@
   "name": "tiburonscripter",
   "displayName": "Tiburon XML Helper",
   "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "publisher": "TiburonResearch",
   "author": {
     "name": "GuRu",

@@ -4,6 +4,7 @@ import { JSDOM } from 'jsdom'
 import * as _JQuery from 'jquery'
 import { logString, KeyedCollection, showWarning } from './classes'
 import * as Encoding from './encoding'
+import { ReplaceXMLDeclaration } from './parsing';
 
 
 /** Класс из XMLencodeResult:
@@ -48,11 +49,11 @@ export function initJQuery(): any
         if (isInitial)
         {
             // сохраняем XMLDeclaration
-            let mt = text.match(/^\s*<\?xml[^>]*\?>/i);
-            if (!!mt)
+            let decl = ReplaceXMLDeclaration(text);
+            if (!!decl.Declaration)
             {
-                text = text.replace(mt[0], "");
-                (JQuery.SurveyData as DOMSurveyData).XMLDeclaration = mt[0];
+                text = decl.Result;
+                (JQuery.SurveyData as DOMSurveyData).XMLDeclaration = decl.Declaration;
             }
         }
         let res = Encoding.safeXML(text, JQuery._delimiter(text));
