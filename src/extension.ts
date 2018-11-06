@@ -145,7 +145,7 @@ export function activate(context: vscode.ExtensionContext)
 		InProcess = false;
 	}
 
-	// общие дествия при старте расширения
+	// общие действия при старте расширения
 	getStaticData();
 	makeIndent();
 	autoComplete();
@@ -156,7 +156,7 @@ export function activate(context: vscode.ExtensionContext)
 	registeActionCommands();
 	higlight();
 
-	// для каждого дукумента свои
+	// для каждого документа свои
 	reload(false);
 	anotherDocument(false, editor);
 
