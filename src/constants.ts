@@ -10,14 +10,14 @@ export const _NodeStoreNames = ["Page", "Question", "Quota", "List"];
 
 /** Snippets для разных типов Item */
 export const ItemSnippets = {
-	List: "<Item Id=\"$1\"><Text>$2</Text></Item>",
-	Quota: "<Item Page=\"{{Pages}}\" Question=\"{{Questions}}\" Answer=\"$3\"/>",
-	Validate: "<Item Page=\"{{Pages}}\" Question=\"{{Questions}}\" Answer=\"$3\"/>",
-	Redirect: "<Item Page=\"{{Pages}}\" Question=\"{{Questions}}\" Answer=\"$3\"/>",
-	Filter: "<Item Page=\"{{Pages}}\" Question=\"{{Questions}}\" Answer=\"$3\"/>",
-	Constants: "<Item Id=\"$1\"><Value>$2</Value></Item>",
-	Split: "<Item Id=\"$1\" Text=\"http://storage.internetopros.ru/Content/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2.jpg,${3:Описание}\"/>",
-	Stat: "<Item Id=\"$1\" Name=\"${2:Total}\" Source=\"1_X,2_X,3_X\"/>"
+	List: "Item Id=\"$1\"><Text>$2</Text></Item>",
+	Quota: "Item Page=\"{{Pages}}\" Question=\"{{Questions}}\" Answer=\"$3\"/>",
+	Validate: "Item Page=\"{{Pages}}\" Question=\"{{Questions}}\" Answer=\"$3\"/>",
+	Redirect: "Item Page=\"{{Pages}}\" Question=\"{{Questions}}\" Answer=\"$3\"/>",
+	Filter: "Item Page=\"{{Pages}}\" Question=\"{{Questions}}\" Answer=\"$3\"/>",
+	Constants: "Item Id=\"$1\"><Value>$2</Value></Item>",
+	Split: "Item Id=\"$1\" Text=\"http://storage.internetopros.ru/Content/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2.jpg,${3:Описание}\"/>",
+	Stat: "Item Id=\"$1\" Name=\"${2:Total}\" Source=\"1_X,2_X,3_X\"/>"
 }
 
 /** Работают правильно, но медленно */

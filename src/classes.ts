@@ -283,19 +283,108 @@ export class KeyedCollection<T>
 	}
 
 
-	/** Возвращает отсортированную коллекцию */
-	public OrderBy(func: (x: KeyValuePair<T>) => number): KeyedCollection<T>
+	/** Возвращает отсортированную массив пар */
+	public OrderBy(func: (x: KeyValuePair<T>) => number): KeyValuePair<T>[]
 	{
-		let res = new KeyedCollection<T>();
+		let res: KeyValuePair<T>[] = [];
 		let sortedAr: KeyValuePair<T>[] = this.ToArray(x => x);
 		sortedAr = sortedAr.sort(x => func(x));
 		sortedAr.forEach(element =>
 		{
-			res.AddElement(element);
+			res.push(element);
 		});
 		return res;
 	}
 
+}
+
+
+export class OrderedCollection<T>
+{
+	private items: KeyValuePair<T>[] = [];
+	private keys: string[] = [];
+
+
+	constructor()
+	{ }
+
+	private _addKey(key: string)
+	{
+		this.keys.push(key);
+	}
+
+	protected _getIndex(key: string)
+	{
+		return this.keys.indexOf(key);
+	}
+
+
+
+	public Get(key: string): T
+	{
+		let ind = this._getIndex(key);
+		if (ind < 0) throw `Ключ "${key}" отсутствует в коллекции`;
+		return this.items[ind].Value;
+	}
+
+
+	public Add(key: string, item: T)
+	{
+		let ind = this._getIndex(key);
+		if (ind > -1) throw `Ключ ${key} уже присутствует в коллекции`;
+		this._addKey(key)
+		this.items.push(new KeyValuePair(key, item));
+	}
+
+	public get Count(): number
+	{
+		return this.items.length;
+	}
+
+	public Clear()
+	{
+		this.items = [];
+		this.keys = [];
+	}
+
+	public ForEach(callbackfn: (value: KeyValuePair<T>, index: number, array: KeyValuePair<T>[]) => void, thisArg?: any)
+	{
+		this.items.forEach(callbackfn, thisArg);
+	}
+
+	public Contains(key: string): boolean
+	{
+		return this._getIndex(key) > -1;
+	}
+
+	public UpdateValue(key: string, func: (val: T) => T)
+	{
+		let ind = this._getIndex(key);
+		if (ind < 0) throw `Ключ "${key}" не найден в коллекции`;
+		this.items[ind].Value = func(this.items[ind].Value);
+	}
+
+	public Remove(key: string): T
+	{
+		let ind = this._getIndex(key);
+		if (ind < 0) return undefined;
+		this.keys.remove(key);
+		let val = this.items[ind].Value;
+		this.items = this.items.splice(ind, 1);
+		return val;
+	}
+
+
+	public Keys(): string[]
+	{
+		return this.keys;
+	}
+
+
+	public ToArray(func: (T) => any): any[]
+	{
+		return this.items.map(x => func(x));
+	}
 }
 
 
@@ -1325,7 +1414,7 @@ class ILogData
 	ActiveExtensions?: string[];
 	UserData?: {
 		UserIP?: string;
-		UserId?: string;			
+		UserId?: string;
 	}
 }
 
@@ -1344,10 +1433,10 @@ export class LogData
 		if (!this.Data.Version) this.Data.Version = getTibVersion();
 		this.Data.VSCVerion = vscode.version;
 		this.Data.UserData =
-		{
-			UserId: getUserId(),
-			UserIP: getUserIP()
-		};
+			{
+				UserId: getUserId(),
+				UserIP: getUserIP()
+			};
 		this.Data.Date = (new Date()).toLocaleString('ru');
 		this.Data.ActiveExtensions = vscode.extensions.all.filter(x => x.isActive && !x.id.startsWith('vscode.')).map(x => x.id);
 	}
@@ -2254,7 +2343,7 @@ String.prototype.replaceRange = function (from: number, substr: string | number,
 String.prototype.replaceValues = function (items: KeyedCollection<string>): string
 {
 	let res = this as string;
-	let sorted: KeyValuePair<string>[] = items.OrderBy(x => x.Key.length).ToArray(x => x);
+	let sorted: KeyValuePair<string>[] = items.OrderBy(x => x.Key.length);
 	sorted.forEach(x =>
 	{
 		res = res.replace(new RegExp(safeString(x.Key), "g"), x.Value);

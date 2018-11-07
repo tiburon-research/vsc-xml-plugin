@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 
 
 
-import { KeyedCollection, InlineAttribute } from './classes';
+import { KeyedCollection, InlineAttribute, KeyValuePair, OrderedCollection } from './classes';
 
 
 export enum SurveyElementType { Item, ListItem, Answer, List, Question, Page };
@@ -19,7 +19,7 @@ export class SurveyElement
     /** Список атрибутов */
     protected Attributes = new KeyedCollection<InlineAttribute>();
     /** Дети поимённо */
-    protected Children = new KeyedCollection<SurveyElement[]>();
+    protected Children = new OrderedCollection<SurveyElement[]>();
     /** текст элемента */
     public Text: string;
     /** Оставить однострочные дочерние теги на той же строке */
@@ -43,9 +43,9 @@ export class SurveyElement
         res = Object.assign(res, this);
         
         res.Children.Clear();
-        this.Children.forEach((key, value) =>
+        this.Children.ForEach((value) =>
         {
-            value.forEach(element => {
+            value.Value.forEach(element => {
                 res.AddChild(element.Clone());
             });
         });
@@ -59,7 +59,7 @@ export class SurveyElement
         let res = "<" + this.TagName;
         res += this.GetAttributes() + ">";
         // получаем всё внутри рекурсивно
-        if (this.Children.Count() > 0)
+        if (this.Children.Count > 0)
         {
             res += this.XMLbodyFormatter();
         }
@@ -84,9 +84,9 @@ export class SurveyElement
     public GetAttributes(): string
     {
         let res = "";
-        this.Attributes.OrderBy(x => x.Key == "Id" ? 0 : 1).forEach((key, value) =>
+        this.Attributes.OrderBy(x => x.Key == "Id" ? 0 : 1).forEach(pair =>
         {
-            res += " " + value.Text;
+            res += " " + pair.Value.Text;
         })
         return res;
     }
@@ -127,9 +127,9 @@ export class SurveyElement
     private XMLbodyFormatterExpand(): string
     {
         let body = "";
-        this.Children.forEach((name, element) =>
+        this.Children.ForEach((element) =>
         {
-            element.forEach(cildNode =>
+            element.Value.forEach(cildNode =>
             {
                 body += "\n" + cildNode.ToXML();
             });
@@ -146,9 +146,9 @@ export class SurveyElement
         let body = "";
         let childXml: string[] = []; // массив XML детей
         let separated = false;
-        this.Children.forEach((name, element) =>
+        this.Children.ForEach((element) =>
         {
-            element.forEach(cildNode =>
+            element.Value.forEach(cildNode =>
             {
                 let child = cildNode.ToXML();
                 if (child.indexOf('\n') > -1) separated = true;
@@ -175,19 +175,8 @@ export class SurveyElement
         let value = typeof child == "string" ? new SurveyElement(child) : child;
 
         if (!this.Children.Contains(name))
-            this.Children.AddPair(name, [value]);
+            this.Children.Add(name, [value]);
         else this.Children.UpdateValue(name, (val) => { return val.concat([value]) });
-    }
-
-    /** возвращает полный массив детей */
-    public GetChildren(): SurveyElement[]
-    {
-        let res = [];
-        this.Children.forEach((key, value) =>
-        {
-            res = res.concat(value);
-        })
-        return res;
     }
 
     public ToListItem(): SurveyListItem
@@ -310,7 +299,7 @@ export class SurveyList extends SurveyElement
     /** Каждый Var - отдельный тег */
     public VarsAsTags = true;
     /** Элементы Item */
-    public Items = new KeyedCollection<SurveyListItem>();
+    public Items = new OrderedCollection<SurveyListItem>();
 
 
     constructor(id?: string)
@@ -345,7 +334,7 @@ export class SurveyList extends SurveyElement
         if (!!item.Text) res.Text = item.Text;
         // предупреждаем о перезаписи
         if (this.Items.Contains(id)) console.warn("Элемент '" + id + "' уже существует в листе '" + this.AttrValue("Id") + "', он будет заменён.");
-        this.Items.AddPair(id, res);
+        this.Items.Add(id, res);
         return id;
     }
 
@@ -353,9 +342,9 @@ export class SurveyList extends SurveyElement
     public ToXML(): string
     {
         // Items не числятся в Children
-        this.Items.forEach((id, item) =>
+        this.Items.ForEach((item) =>
         {
-            this.AddChild(item.ToSurveyItem(this.VarsAsTags));
+            this.AddChild(item.Value.ToSurveyItem(this.VarsAsTags));
         })
         return super.ToXML();
     }
@@ -389,7 +378,7 @@ export class SurveyAnswer extends SurveyElement
 export class SurveyQuestion extends SurveyElement
 {
     /** Элементы Item */
-    public Answers = new KeyedCollection<SurveyAnswer>();
+    public Answers = new OrderedCollection<SurveyAnswer>();
     
     /** Заголовок вопроса */
     public Header: string;
@@ -425,7 +414,7 @@ export class SurveyQuestion extends SurveyElement
         if (!!answer.Text) res.Text = answer.Text;
         // предупреждаем о перезаписи
         if (this.Answers.Contains(id)) console.warn("Ответ '" + id + "' уже существует в вопросе '" + this.AttrValue("Id") + "', он будет заменён.");
-        this.Answers.AddPair(id, res);
+        this.Answers.Add(id, res);
         return id;
     }
 
@@ -436,9 +425,9 @@ export class SurveyQuestion extends SurveyElement
         headerTag.Text = this.Header;
         this.AddChild(headerTag);
         // Answers не числятся в Children
-        this.Answers.forEach((id, item) =>
+        this.Answers.ForEach((item) =>
         {
-            this.AddChild(item.ToSurveyItem());
+            this.AddChild(item.Value.ToSurveyItem());
         })
         return super.ToXML();
     }
