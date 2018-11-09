@@ -681,6 +681,18 @@ var KnownCode = [
 		"Documentation": "int QuotaLimit(int surveyId, string quotaId)"
 	},
 	{
+		"Name": "QuotaIsOpen",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool QuotaIsOpen(string quotaId)"
+	},
+	{
+		"Name": "QuotaIsOpen",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool QuotaIsOpen(int surveyId, string quotaId)"
+	},
+	{
 		"Name": "IsEmailCorrect",
 		"Detail": "bool",
 		"Kind": "Function",

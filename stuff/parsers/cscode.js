@@ -873,6 +873,16 @@ public int QuotaLimit(int surveyId, string quotaId)
     return _db.DataQuotaGetLimit(surveyId, quotaId);
 }
 
+public bool QuotaIsOpen(string quotaId)
+{
+    return QuotaLimit(quotaId) > QuotaCount(quotaId);
+}
+
+public bool QuotaIsOpen(int surveyId, string quotaId)
+{
+    return QuotaLimit(surveyId, quotaId) > QuotaCount(surveyId, quotaId);
+}
+
 public bool IsEmailCorrect(string email)
 {
     Regex RegEmail = new Regex(@"\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*", RegexOptions.None);
