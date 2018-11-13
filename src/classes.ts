@@ -369,9 +369,7 @@ export class OrderedCollection<T>
 		let ind = this._getIndex(key);
 		if (ind < 0) return undefined;
 		this.keys.remove(key);
-		let val = this.items[ind].Value;
-		this.items = this.items.splice(ind, 1);
-		return val;
+		return this.items.removeIndex(ind).Value;
 	}
 
 
@@ -381,7 +379,7 @@ export class OrderedCollection<T>
 	}
 
 
-	public ToArray(func: (T) => any): any[]
+	public ToArray(func: (x: KeyValuePair<T>) => any): any[]
 	{
 		return this.items.map(x => func(x));
 	}
@@ -2292,6 +2290,8 @@ declare global
 		contains(element: T): boolean;
 		/** Удаляет элемент из массива и возвращает этот элемент */
 		remove(element: T): T;
+		/** Удаляет элемент из массива по индексу и возвращает этот элемент */
+		removeIndex(index: number): T;
 		/** Преобразует массив в коллекцию */
 		toKeyedCollection(func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
 		/** Преjбразует массив в коллекцию T */
@@ -2399,6 +2399,13 @@ Array.prototype.remove = function <T>(element: T): T
 	let res: T;
 	if (index > -1)
 		res = this.splice(index, 1);
+	return res;
+}
+
+Array.prototype.removeIndex = function <T>(index: number): T
+{
+	let res = this[index];
+	this.splice(index, 1);
 	return res;
 }
 
