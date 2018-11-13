@@ -183,49 +183,17 @@ export function activate(context: vscode.ExtensionContext)
 		TaskQueue.Add(insertSpecialSnippets(changes, editor, text, tag));
 		TaskQueue.Add(upcaseFirstLetter(changes, editor, tag));
 	});
-
+	
 	vscode.workspace.onWillSaveTextDocument(x =>
 	{
-		console.log('onWillSaveTextDocument');
 		if (x.document.isDirty) // сохранение изменённого документа
 		{
 			unlockDocument(x.document);
 		}
-
-		TaskQueue.OnEnd = function () { console.log("all resolved"); };
-		
-
-		/* let nt = new TaskList();
-		nt.ShowInfo = true;
-		nt.Add(new Promise<void>((resolve, reject) => {
-			setTimeout(() => {
-				editor.edit(builder => 
-				{
-					//builder.insert(new vscode.Position(0, 0), "test");
-				}).then(() => { resolve(); })
-			}, 1500);
-		}));
-		nt.OnEnd = function () { console.log("NT resolved"); };
-		x.waitUntil(nt.ResultPromise()); */
-
-		/* x.waitUntil(new Promise<void>((resolve, reject) =>
-		{
-			setTimeout(() =>
-			{
-				editor.edit(builder => 
-				{
-					builder.setEndOfLine(vscode.EndOfLine.LF);
-					builder.insert(new vscode.Position(0, 0), "test");
-				}).then(() => { resolve(); })
-			}, 7000);
-		})); */
-		
-		x.waitUntil(TaskQueue.ResultPromise());
 	})
 
 	vscode.workspace.onDidSaveTextDocument(x =>
 	{
-		console.log('onDidSaveTextDocument');
 		lockDocument(x);
 	});
 
@@ -381,6 +349,18 @@ function registerCommands()
 
 		// выполняем дебажный тест
 		debug.test();
+	});
+
+	// стандартное сохранение файла
+	registerCommand('workbench.action.files.save', () => 
+	{
+		CurrentStatus.setProcessMessage("Ожидание завершения выполнения операций...").then(x =>
+		{
+			TaskQueue.ResultPromise().then(() =>
+			{
+				vscode.window.activeTextEditor.document.save().then(x.dispose());
+			});	
+		})
 	});
 
 	// выделение Answer из текста
