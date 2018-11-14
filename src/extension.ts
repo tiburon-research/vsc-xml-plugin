@@ -186,10 +186,7 @@ export function activate(context: vscode.ExtensionContext)
 				Promise.all([tagPromise, reloadPromise]).then(([tag, x]) =>
 				{
 					// преобразования текста
-					console.log(1);
 					if (!event || !event.contentChanges.length) return resolve();
-					console.log(event.contentChanges);
-					console.log(editor.selections);
 					let changes = getContextChanges(event.document, editor.selections, event.contentChanges);
 					if (!changes || changes.length == 0) return resolve();
 					TaskQueue.Add(insertAutoCloseTags(changes, editor, tag));
@@ -1645,7 +1642,8 @@ function getSurveyData(document: vscode.TextDocument): Promise<void>
 
 		try
 		{
-			for (let i = 0; i < docs.length; i++) 
+			let promises: Promise<any>[] = [];
+			for (let i = 0; i < docs.length; i++)
 			{
 				// либо этот, либо надо открыть
 				new Promise<vscode.TextDocument>((resolveDoc, rejectDoc) =>
@@ -1654,28 +1652,30 @@ function getSurveyData(document: vscode.TextDocument): Promise<void>
 					vscode.workspace.openTextDocument(docs[i]).then(doc => { resolveDoc(doc) });
 				}).then(doc =>
 				{
-					getDocumentMethods(doc, Settings).then(mets => 
+					promises.push(getDocumentMethods(doc, Settings).then(mets => 
 					{
 						methods.AddRange(mets);
 						Methods = methods;
-					});
+					}));
 
-					getDocumentNodeIds(doc, Settings).then(nods =>
+					promises.push(getDocumentNodeIds(doc, Settings).then(nods =>
 					{
 						nodes.AddRange(nods);
 						CurrentNodes = nodes;
-					});
+					}));
 
-					getMixIds(doc, Settings).then(mixs =>
+					promises.push(getMixIds(doc, Settings).then(mixs =>
 					{
 						mixIds = mixIds.concat(mixs);
 						MixIds = mixIds;
-					});
-				})
+					}));
+				});
 			}
+			Promise.all(promises).then(() => { resolve(); });
 		} catch (error)
 		{
 			logError("Ошибка при сборе сведений о документе", error);
+			resolve();
 		}
 	});
 }
