@@ -171,7 +171,7 @@ export function activate(context: vscode.ExtensionContext)
 		{
 			let prom = new Promise<void>((resolve, reject) =>
 			{
-				if (!editor || event.document.languageId != "tib") resolve();
+				if (!editor || event.document.languageId != "tib") return resolve();
 				let originalPosition = editor.selection.start.translate(0, 1);
 				let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
 				//let tag = getCurrentTag(editor.document, originalPosition, text);
@@ -181,9 +181,9 @@ export function activate(context: vscode.ExtensionContext)
 				tagPromise.then(tag =>
 				{
 					// преобразования текста
-					if (!event || !event.contentChanges.length) resolve();
+					if (!event || !event.contentChanges.length) return resolve();
 					let changes = getContextChanges(editor.selections, event.contentChanges);
-					if (!changes || changes.length == 0) resolve();
+					if (!changes || changes.length == 0) return resolve();
 					TaskQueue.Add(insertAutoCloseTags(changes, editor, tag));
 					TaskQueue.Add(insertSpecialSnippets(changes, editor, text, tag));
 					TaskQueue.Add(upcaseFirstLetter(changes, editor, tag));
@@ -1339,7 +1339,7 @@ function upcaseFirstLetter(changes: ContextChange[], editor: vscode.TextEditor, 
 	return new Promise<void>((resolve, reject) =>
 	{
 		// если хоть одна позиция такова, то нафиг
-		if (!tag || !Settings.Item("upcaseFirstLetter") || tag.GetLaguage() != Language.XML || inCDATA(editor.document, editor.selection.active)) resolve();
+		if (!tag || !Settings.Item("upcaseFirstLetter") || tag.GetLaguage() != Language.XML || inCDATA(editor.document, editor.selection.active)) return resolve();
 		let tagRegex = /(<\/?)(\w+)$/;
 		let nullPosition = new vscode.Position(0, 0);
 		try
@@ -1493,7 +1493,7 @@ function insertAutoCloseTags(changes: ContextChange[], editor: vscode.TextEditor
 {
 	return new Promise<void>((resolve, reject) =>
 	{
-		if (!tag || !editor) resolve();
+		if (!tag || !editor) return resolve();
 		let fullText = editor.document.getText();
 
 		// сохраняем начальное положение
@@ -1552,7 +1552,7 @@ function insertSpecialSnippets(changes: ContextChange[], editor: vscode.TextEdit
 	{
 		let promises: Thenable<any>[] = [];
 
-		if (!tag || !editor || !changes || changes.length == 0) resolve();
+		if (!tag || !editor || !changes || changes.length == 0) return resolve();
 
 		let change = changes[0].Change.text;
 		let positions = editor.selections.map(x => new vscode.Position(x.active.line, x.active.character + 1));
@@ -1817,6 +1817,7 @@ async function __getCurrentTag(document: vscode.TextDocument, position: vscode.P
 /** Самое главное в этом расширении */
 export async function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): Promise<CurrentTag>
 {
+	//return null;
 	if (_pack == "debug") return __getCurrentTag(document, position, txt, force);
 
 	let tag: CurrentTag;

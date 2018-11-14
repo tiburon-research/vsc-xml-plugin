@@ -195,9 +195,11 @@ async function getWrongXML(document: vscode.TextDocument, prepearedText: string)
 
 
 /** проверка уникальности Id */
-async function getDuplicatedIds(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
+function getDuplicatedIds(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
 {
-	return await getDuplicatedElementsIds(document, prepearedText);
+	return new Promise<DocumentElement[]>((resolve, reject) => {
+		getDuplicatedElementsIds(document, prepearedText).then(res => { resolve(res) }).catch(() => resolve([]));
+	});
 }
 
 

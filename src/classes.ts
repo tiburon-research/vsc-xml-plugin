@@ -2067,11 +2067,7 @@ export function getDocumentMethods(document: vscode.TextDocument, Settings: Exte
 		let text = document.getText();
 		if (Settings.Item("ignoreComments")) text = Encoding.clearXMLComments(text);
 		let mtd = text.matchAll(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
-		if (mtd.length == 0)
-		{
-			resolve(res);
-			return;
-		}
+		if (mtd.length == 0) return resolve();
 		let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/);
 		let groups = {
 			Full: 0,

@@ -504,70 +504,75 @@ export async function getDocumentElements(document: vscode.TextDocument, search:
 
 
 /** Возвращает все повторяющиеся Id, как `DocumentElement` */
-export async function getDuplicatedElementsIds(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
+export function getDuplicatedElementsIds(document: vscode.TextDocument, prepearedText: string): Promise<DocumentElement[]>
 {
-	let $ = initJQuery();
-	let res: DocumentElement[] = [];
-	let tagNames = ['Page', 'List', 'Question', 'Block'];
-	let $dom;
-	try
+	return new Promise<DocumentElement[]>((resolve, reject) =>
 	{
-		$dom = $.XMLDOM(prepearedText);
-	} catch (error)
-	{ }
-	
-	if (!$dom) return [];
-
-	let ids = new KeyedCollection<string[]>();
-
-	// собираем все Id
-	tagNames.forEach(element =>
-	{
-		let ar: string[] = [];
-		$dom.find(element).each((i, e) => ar.push($(e).attr('Id')));
-		ids.AddPair(element, ar);
-	});
-
-	ids.forEach((key, value) =>
-	{
-		// находим Range для дублирующихся
-		let duplicated: string[] = value.reduce(function (acc, el, i, arr)
+		let $ = initJQuery();
+		let res: DocumentElement[] = [];
+		let tagNames = ['Page', 'List', 'Question', 'Block'];
+		let $dom;
+		try
 		{
-			if (arr.indexOf(el) !== i && acc.indexOf(el) < 0) acc.push(el);
-			return acc;
-		}, []);
-		if (duplicated.length > 0)
+			$dom = $.XMLDOM(prepearedText);
+		} catch (error)
 		{
-			duplicated.forEach(d =>
-			{
-				let reg = new RegExp('(<' + key + ")(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")" + d + "('|\"))");
-				let matches = prepearedText.matchAll(reg);
-				if (!!matches)
-				{
-					matches.forEach(mt =>
-					{
-						if (!!mt.index)
-						{
-							let full = mt[0];
-							let idAttr = mt[mt.length - 3];
-							let from = mt.index + full.length - idAttr.length;
-							let to = mt.index + full.length;
-							let isWarning = d.contains("@");
-							res.push(new DocumentElement(document, {
-								Value: null,
-								From: from,
-								To: to,
-								Message: isWarning ? "Возможно Id дублируются" : "Найдены дублирующиеся Id",
-								DiagnosticProperties: { Type: isWarning ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Error }
-							}));
-						}
-					});
-				}
-			});
+			return resolve(null);
 		}
-	});
 
-	return res;
+		if (!$dom) return resolve(res);
+
+		let ids = new KeyedCollection<string[]>();
+
+		// собираем все Id
+		tagNames.forEach(element =>
+		{
+			let ar: string[] = [];
+			$dom.find(element).each((i, e) => ar.push($(e).attr('Id')));
+			ids.AddPair(element, ar);
+		});
+
+		ids.forEach((key, value) =>
+		{
+			// находим Range для дублирующихся
+			let duplicated: string[] = value.reduce(function (acc, el, i, arr)
+			{
+				if (arr.indexOf(el) !== i && acc.indexOf(el) < 0) acc.push(el);
+				return acc;
+			}, []);
+			if (duplicated.length > 0)
+			{
+				duplicated.forEach(d =>
+				{
+					let reg = new RegExp('(<' + key + ")(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")" + d + "('|\"))");
+					let matches = prepearedText.matchAll(reg);
+					if (!!matches)
+					{
+						matches.forEach(mt =>
+						{
+							if (!!mt.index)
+							{
+								let full = mt[0];
+								let idAttr = mt[mt.length - 3];
+								let from = mt.index + full.length - idAttr.length;
+								let to = mt.index + full.length;
+								let isWarning = d.contains("@");
+								res.push(new DocumentElement(document, {
+									Value: null,
+									From: from,
+									To: to,
+									Message: isWarning ? "Возможно Id дублируются" : "Найдены дублирующиеся Id",
+									DiagnosticProperties: { Type: isWarning ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Error }
+								}));
+							}
+						});
+					}
+				});
+			}
+		});
+
+		resolve(res);
+	});
 }
 
 
