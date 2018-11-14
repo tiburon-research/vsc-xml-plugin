@@ -1239,7 +1239,7 @@ export class ContextChange
 
 
 /** Возвращает совмещённую структуру из изменений и соответствующих выделений */
-export function getContextChanges(selections: vscode.Selection[], changes: vscode.TextDocumentContentChangeEvent[]): ContextChange[]
+export function getContextChanges(document: vscode.TextDocument, selections: vscode.Selection[], changes: vscode.TextDocumentContentChangeEvent[]): ContextChange[]
 {
 	let res: ContextChange[] = [];
 	try
@@ -1248,8 +1248,10 @@ export function getContextChanges(selections: vscode.Selection[], changes: vscod
 		{
 			for (let i = 0; i < changes.length; i++)
 			{
-				if (selection.start.character == changes[i].range.start.character &&
-					selection.start.line == changes[i].range.start.line)
+				// позиция на которой должен стоянть курсор, если selection совпадает с change
+				let changeEnd = document.positionAt(document.offsetAt(changes[i].range.start) + changes[i].text.length);
+				if (selection.start.character == changeEnd.character &&
+					selection.start.line == changeEnd.line)
 				{
 					res.push(new ContextChange(changes[i], selection));
 					continue;

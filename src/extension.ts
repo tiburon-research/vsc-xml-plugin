@@ -172,22 +172,20 @@ export function activate(context: vscode.ExtensionContext)
 			let prom = new Promise<void>((resolve, reject) =>
 			{
 				if (!editor || event.document.languageId != "tib") return resolve();
-				let originalPosition = editor.selection.start.translate(0, 1);
+				let originalPosition = editor.selection.start;
 				let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
-				//let tag = getCurrentTag(editor.document, originalPosition, text);
-				TaskQueue.Add(reload(false));
 				let tagPromise = getCurrentTag(editor.document, originalPosition, text);
 				TaskQueue.Add(tagPromise);
 				tagPromise.then(tag =>
 				{
 					// преобразования текста
 					if (!event || !event.contentChanges.length) return resolve();
-					let changes = getContextChanges(editor.selections, event.contentChanges);
+					let changes = getContextChanges(event.document, editor.selections, event.contentChanges);
 					if (!changes || changes.length == 0) return resolve();
 					TaskQueue.Add(insertAutoCloseTags(changes, editor, tag));
 					TaskQueue.Add(insertSpecialSnippets(changes, editor, text, tag));
 					TaskQueue.Add(upcaseFirstLetter(changes, editor, tag));
-					TaskQueue.ResultPromise().then(() => { resolve(); })
+					TaskQueue.ResultPromise().then(() => { reload(false); resolve(); });
 				});
 			});
 			prom.then(() => { CurrentStatus.removeStatusItem(); });
