@@ -183,7 +183,7 @@ export class CacheSet
 	}
 
 	/** Очистка всех полей */
-	public Clear()
+	public async Clear()
 	{
 		try
 		{

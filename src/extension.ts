@@ -117,16 +117,18 @@ export function activate(context: vscode.ExtensionContext)
 		return new Promise<void>((resolve, reject) =>
 		{
 			if (!editor || editor.document.languageId != "tib") return resolve();
+			let promises: Promise<any>[] = [];
 			try
 			{
 				if (clearCache && Cache.Active()) Cache.Clear();
-				getSurveyData(editor.document);
-				diagnostic(editor.document);
+				promises.push(getSurveyData(editor.document)); // этого надо дождаться
+				diagnostic(editor.document); // а с этим хрен
 			} catch (er)
 			{
 				logError("Ошибка при сборе информации", er);
+				resolve();
 			}
-			resolve();
+			Promise.all(promises).then(() => { resolve(); });
 		});
 	}
 
@@ -179,17 +181,21 @@ export function activate(context: vscode.ExtensionContext)
 				let originalPosition = editor.selection.start;
 				let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
 				let tagPromise = getCurrentTag(editor.document, originalPosition, text);
+				let reloadPromise = reload(false);
 				TaskQueue.Add(tagPromise);
-				tagPromise.then(tag =>
+				Promise.all([tagPromise, reloadPromise]).then(([tag, x]) =>
 				{
 					// преобразования текста
+					console.log(1);
 					if (!event || !event.contentChanges.length) return resolve();
+					console.log(event.contentChanges);
+					console.log(editor.selections);
 					let changes = getContextChanges(event.document, editor.selections, event.contentChanges);
 					if (!changes || changes.length == 0) return resolve();
 					TaskQueue.Add(insertAutoCloseTags(changes, editor, tag));
 					TaskQueue.Add(insertSpecialSnippets(changes, editor, text, tag));
 					TaskQueue.Add(upcaseFirstLetter(changes, editor, tag));
-					TaskQueue.ResultPromise().then(() => { reload(false); resolve(); });
+					TaskQueue.ResultPromise().then(() => { resolve(); });
 				});
 			});
 			prom.then(() => { CurrentStatus.removeStatusItem(); });
@@ -1642,10 +1648,10 @@ function getSurveyData(document: vscode.TextDocument): Promise<void>
 			for (let i = 0; i < docs.length; i++) 
 			{
 				// либо этот, либо надо открыть
-				new Promise<vscode.TextDocument>((resolve, reject) =>
+				new Promise<vscode.TextDocument>((resolveDoc, rejectDoc) =>
 				{
-					if (docs[i] == document.fileName) return resolve(document);
-					vscode.workspace.openTextDocument(docs[i]).then(doc => { resolve(doc) });
+					if (docs[i] == document.fileName) return resolveDoc(document);
+					vscode.workspace.openTextDocument(docs[i]).then(doc => { resolveDoc(doc) });
 				}).then(doc =>
 				{
 					getDocumentMethods(doc, Settings).then(mets => 
