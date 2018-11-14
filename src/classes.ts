@@ -1717,12 +1717,32 @@ export interface LockData
 export class StatusBar
 {
 	private currentStatus: vscode.Disposable;
+	private currentItem: vscode.StatusBarItem;
 
-	/** Устанавливает сообщение на время */
-	public setInfoMessage(text: string, after: number): Promise<vscode.Disposable>
+	/** Устанавливает сообщение на время `timeout` */
+	public setInfoMessage(text: string, timeout: number): Promise<vscode.Disposable>
 	{
-		return this.statusMessage(text, after);
+		return this.statusMessage(text, timeout);
 	}
+
+	/** Добавляет элемент слева */
+	public setStatusItem(text: string): Promise<void>
+	{
+		return new Promise<void>((resolve, reject) => {
+			this.createStatusBarItem(text).then(x =>
+			{
+				this.currentItem = x;
+				resolve();
+			})
+		});
+	}
+
+	/** очищает элемент слева*/
+	public removeStatusItem()
+	{
+		if (!!this.currentItem) this.currentItem.hide();
+	}
+
 
 	/** выводит в строку состояния информацию о текущем теге */
 	public setTagInfo(tag: CurrentTag): Promise<vscode.Disposable>
@@ -1764,7 +1784,18 @@ export class StatusBar
 			let res: vscode.Disposable;
 			if (!!after) res = vscode.window.setStatusBarMessage(text, after);
 			else res = vscode.window.setStatusBarMessage(text);
-			setTimeout(x => { resolve(res) }, 100);
+			setTimeout(() => { resolve(res) }, 100);
+		});
+	}
+
+	private createStatusBarItem(text: string): Promise<vscode.StatusBarItem>
+	{
+		return new Promise<vscode.StatusBarItem>((resolve, reject) =>
+		{
+			if (!this.currentItem) this.currentItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 900);
+			this.currentItem.text = text;
+			this.currentItem.show();
+			setTimeout(() => { resolve(this.currentItem) }, 100);
 		});
 	}
 }
@@ -2079,27 +2110,35 @@ export function getDocumentNodeIds(document: vscode.TextDocument, Settings: Exte
 {
 	return new Promise<SurveyNodes>((resolve, reject) =>
 	{
-		let nNames = NodeStoreNames;
-		let txt = document.getText();
-		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
-		let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')");
-		let idIndex = nNames.length + 3;
-		let nodes = new SurveyNodes();
-		let res = txt.matchAll(reg);
-		res.forEach(element => 
+		try
 		{
-			let pos = document.positionAt(txt.indexOf(element[0]));
-			let item = new SurveyNode(element[1], element[idIndex], pos, document.fileName);
-			nodes.Add(item);
-		});
-		// дополнительно
-		nodes.Add(new SurveyNode("Page", "pre_data", null, document.fileName));
-		nodes.Add(new SurveyNode("Question", "pre_data", null, document.fileName));
-		nodes.Add(new SurveyNode("Question", "pre_sex", null, document.fileName));
-		nodes.Add(new SurveyNode("Question", "pre_age", null, document.fileName));
-		nodes.Add(new SurveyNode("Page", "debug", null, document.fileName));
-		nodes.Add(new SurveyNode("Question", "debug", null, document.fileName));
-		resolve(nodes);
+			let nNames = NodeStoreNames;
+			let txt = document.getText();
+			if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
+			let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')");
+			let idIndex = nNames.length + 3;
+			let nodes = new SurveyNodes();
+			let res = txt.matchAll(reg);
+			res.forEach(element => 
+			{
+				let pos = document.positionAt(txt.indexOf(element[0]));
+				let item = new SurveyNode(element[1], element[idIndex], pos, document.fileName);
+				nodes.Add(item);
+			});
+			// дополнительно
+			nodes.Add(new SurveyNode("Page", "pre_data", null, document.fileName));
+			nodes.Add(new SurveyNode("Question", "pre_data", null, document.fileName));
+			nodes.Add(new SurveyNode("Question", "pre_sex", null, document.fileName));
+			nodes.Add(new SurveyNode("Question", "pre_age", null, document.fileName));
+			nodes.Add(new SurveyNode("Page", "debug", null, document.fileName));
+			nodes.Add(new SurveyNode("Question", "debug", null, document.fileName));
+			resolve(nodes);
+		} catch (error)
+		{
+			logError("Ошибка разбора элементов", error);
+			reject(error);
+		}
+
 	});
 }
 

@@ -93,7 +93,7 @@ export async function getDiagnosticElements(document: vscode.TextDocument): Prom
 
 
 /** Создаёт команды + CodeActions */
-export async function registeActionCommands()
+export async function registerActionCommands()
 {
 	
 	// транслитерация

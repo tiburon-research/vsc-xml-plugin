@@ -9,7 +9,7 @@ import * as Formatting from './formatting'
 import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
-import { getDiagnosticElements, registeActionCommands } from './diagnostic'
+import { getDiagnosticElements, registerActionCommands } from './diagnostic'
 import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes, XMLEmbeddings } from './constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
@@ -38,8 +38,6 @@ const _ElementFunctions = {
 	Lists: getAllLists,
 	MixIds: getAllMixIds
 };
-
-const $ = initJQuery();
 
 /** Путь для сохранения логов */
 var _LogPath: string;
@@ -114,7 +112,7 @@ export function activate(context: vscode.ExtensionContext)
 	})
 
 	/** Обновление документа */
-	function reload(clearCache = true)
+	async function reload(clearCache = true)
 	{
 		if (!editor || editor.document.languageId != "tib") return;
 		try
@@ -152,7 +150,7 @@ export function activate(context: vscode.ExtensionContext)
 	helper();
 	definitions();
 	registerCommands();
-	registeActionCommands();
+	registerActionCommands();
 	higlight();
 
 	// для каждого документа свои
@@ -169,21 +167,29 @@ export function activate(context: vscode.ExtensionContext)
 	// редактирование документа
 	vscode.workspace.onDidChangeTextDocument(event =>
 	{
-		if (!editor || event.document.languageId != "tib") return;
-		let originalPosition = editor.selection.start.translate(0, 1);
-		let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
-		let tag = getCurrentTag(editor.document, originalPosition, text);
-		reload(false);
+		CurrentStatus.setStatusItem("[tib busy]").then(() =>
+		{
+			let prom = new Promise<void>((resolve, reject) =>
+			{
+				if (!editor || event.document.languageId != "tib") resolve();
+				let originalPosition = editor.selection.start.translate(0, 1);
+				let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
+				let tag = getCurrentTag(editor.document, originalPosition, text);
+				TaskQueue.Add(reload(false));
 
-		// преобразования текста
-		if (!event || !event.contentChanges.length) return;
-		let changes = getContextChanges(editor.selections, event.contentChanges);
-		if (!changes || changes.length == 0) return;
-		TaskQueue.Add(insertAutoCloseTags(changes, editor, tag));
-		TaskQueue.Add(insertSpecialSnippets(changes, editor, text, tag));
-		TaskQueue.Add(upcaseFirstLetter(changes, editor, tag));
+				// преобразования текста
+				if (!event || !event.contentChanges.length) resolve();
+				let changes = getContextChanges(editor.selections, event.contentChanges);
+				if (!changes || changes.length == 0) resolve();
+				TaskQueue.Add(insertAutoCloseTags(changes, editor, tag));
+				TaskQueue.Add(insertSpecialSnippets(changes, editor, text, tag));
+				TaskQueue.Add(upcaseFirstLetter(changes, editor, tag));
+				TaskQueue.ResultPromise().then(() => { resolve(); })
+			});
+			prom.then(() => { CurrentStatus.removeStatusItem(); });
+		});
 	});
-	
+
 	vscode.workspace.onWillSaveTextDocument(x =>
 	{
 		if (x.document.isDirty) // сохранение изменённого документа
@@ -358,9 +364,12 @@ function registerCommands()
 		{
 			TaskQueue.ResultPromise().then(() =>
 			{
-				vscode.window.activeTextEditor.document.save().then(x.dispose());
-			});	
-		})
+				vscode.window.activeTextEditor.document.save().then(() =>
+				{
+					x.dispose();
+				});
+			});
+		});
 	});
 
 	// выделение Answer из текста
@@ -1527,7 +1536,7 @@ function insertSpecialSnippets(changes: ContextChange[], editor: vscode.TextEdit
 	{
 		let promises: Thenable<any>[] = [];
 
-		if (!tag || !editor) resolve();
+		if (!tag || !editor || !changes || changes.length == 0) resolve();
 
 		let change = changes[0].Change.text;
 		let positions = editor.selections.map(x => new vscode.Position(x.active.line, x.active.character + 1));

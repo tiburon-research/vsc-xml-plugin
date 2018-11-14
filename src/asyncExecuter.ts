@@ -10,11 +10,7 @@ export class TaskList
     {
         this.queue.Remove(ind.toString());
         if (this.queue.Count == 0 && !!this.OnEnd) this.OnEnd();
-        if (this.ShowInfo) console.log('event ends ' + this.Count);
     }
-
-
-    public ShowInfo = false;
 
     constructor()
     {}
@@ -26,7 +22,6 @@ export class TaskList
         let newInd = this.totalCounter;
         prom.then(() => this.remove(newInd));
         this.queue.Add(newInd.toString(), prom);
-        if (this.ShowInfo) console.log('added: ' + this.totalCounter);
     }
 
     /** Количество неоконченных */
@@ -35,7 +30,7 @@ export class TaskList
         return this.queue.Count;
     }
 
-    /** Функция вызываемая при освобождении списка */
+    /** Функция вызываемая при освобождении всего списка */
     public OnEnd = function () { };
 
     /** Promise окончания текущих событий */
@@ -46,7 +41,6 @@ export class TaskList
         {
             Promise.all(this.queue.ToArray(x => x.Value)).then(() =>
             {
-                if (this.ShowInfo) console.log("Count: " + this.Count);
                 if (this.Count == 0) resolve();
                 else this.ResultPromise().then(() => resolve());
             }); 
