@@ -8,7 +8,7 @@ import * as fs from 'fs'
 import * as os from 'os'
 import { bot, OutChannel, _LogPath, logError } from './extension'
 import * as shortHash from "short-hash"
-import { RegExpPatterns, _LockInfoFilePrefix } from './constants'
+import { RegExpPatterns, _LockInfoFilePrefix, _NodeStoreNames } from './constants'
 import * as iconv from 'iconv-lite'
 import * as dateFormat from 'dateformat'
 import * as winattr from "winattr"
@@ -2104,13 +2104,13 @@ export function getDocumentMethods(document: vscode.TextDocument, Settings: Exte
 }
 
 
-export function getDocumentNodeIds(document: vscode.TextDocument, Settings: ExtensionSettings, NodeStoreNames: string[]): Promise<SurveyNodes>
+export function getDocumentNodeIds(document: vscode.TextDocument, Settings: ExtensionSettings): Promise<SurveyNodes>
 {
 	return new Promise<SurveyNodes>((resolve, reject) =>
 	{
 		try
 		{
-			let nNames = NodeStoreNames;
+			let nNames = _NodeStoreNames;
 			let txt = document.getText();
 			if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
 			let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')");

@@ -112,18 +112,22 @@ export function activate(context: vscode.ExtensionContext)
 	})
 
 	/** Обновление документа */
-	async function reload(clearCache = true)
+	function reload(clearCache = true): Promise<void>
 	{
-		if (!editor || editor.document.languageId != "tib") return;
-		try
+		return new Promise<void>((resolve, reject) =>
 		{
-			if (clearCache && Cache.Active()) Cache.Clear();
-			getSurveyData(editor.document);
-			diagnostic(editor.document);
-		} catch (er)
-		{
-			logError("Ошибка при сборе информации", er);
-		}
+			if (!editor || editor.document.languageId != "tib") return resolve();
+			try
+			{
+				if (clearCache && Cache.Active()) Cache.Clear();
+				getSurveyData(editor.document);
+				diagnostic(editor.document);
+			} catch (er)
+			{
+				logError("Ошибка при сборе информации", er);
+			}
+			resolve();
+		});
 	}
 
 	/** Документ сменился */
@@ -765,7 +769,7 @@ function registerCommands()
 					)
 				});
 
-				
+
 			});
 			// provideDocumentFormattingEdits по ходу не умеет быть async, поэтому выкручиваемся так
 			return [];
@@ -1612,45 +1616,62 @@ function insertSpecialSnippets(changes: ContextChange[], editor: vscode.TextEdit
 
 
 /** Собирает данные из текущего документа и Includ'ов */
-async function getSurveyData(document: vscode.TextDocument): Promise<void>
+function getSurveyData(document: vscode.TextDocument): Promise<void>
 {
-	let docs = [document.fileName];
-	let includes = getIncludePaths(document.getText());
-	let methods = new TibMethods();
-	let nodes = new SurveyNodes();
-	let mixIds: string[] = [];
-	// если Include поменялись, то обновляем все
-	if (!Includes || !Includes.equalsTo(includes))
+	return new Promise<void>((resolve, reject) =>
 	{
-		docs = docs.concat(includes);
-		Includes = includes;
-	}
-	else // иначе обновляем только текущий документ
-	{
-		methods = Methods.Filter((name, element) => element.FileName != document.fileName);
-		nodes = CurrentNodes.FilterNodes((node) => node.FileName != document.fileName);
-	}
-
-	try
-	{
-		for (let i = 0; i < docs.length; i++) 
+		let docs = [document.fileName];
+		let includes = getIncludePaths(document.getText());
+		let methods = new TibMethods();
+		let nodes = new SurveyNodes();
+		let mixIds: string[] = [];
+		// если Include поменялись, то обновляем все
+		if (!Includes || !Includes.equalsTo(includes))
 		{
-			// либо этот, либо надо открыть
-			let doc = docs[i] == document.fileName ? document : await vscode.workspace.openTextDocument(docs[i])
-			let mets = await getDocumentMethods(doc, Settings);
-			let nods = await getDocumentNodeIds(doc, Settings, _NodeStoreNames);
-			let mixs = await getMixIds(doc, Settings);
-			methods.AddRange(mets);
-			nodes.AddRange(nods);
-			mixIds = mixIds.concat(mixs);
+			docs = docs.concat(includes);
+			Includes = includes;
 		}
-		Methods = methods;
-		CurrentNodes = nodes;
-		MixIds = mixIds;
-	} catch (error)
-	{
-		logError("Ошибка при сборе сведений о документе", error);
-	}
+		else // иначе обновляем только текущий документ
+		{
+			methods = Methods.Filter((name, element) => element.FileName != document.fileName);
+			nodes = CurrentNodes.FilterNodes((node) => node.FileName != document.fileName);
+		}
+
+		try
+		{
+			for (let i = 0; i < docs.length; i++) 
+			{
+				// либо этот, либо надо открыть
+				new Promise<vscode.TextDocument>((resolve, reject) =>
+				{
+					if (docs[i] == document.fileName) return resolve(document);
+					vscode.workspace.openTextDocument(docs[i]).then(doc => { resolve(doc) });
+				}).then(doc =>
+				{
+					getDocumentMethods(doc, Settings).then(mets => 
+					{
+						methods.AddRange(mets);
+						Methods = methods;
+					});
+
+					getDocumentNodeIds(doc, Settings).then(nods =>
+					{
+						nodes.AddRange(nods);
+						CurrentNodes = nodes;
+					});
+
+					getMixIds(doc, Settings).then(mixs =>
+					{
+						mixIds = mixIds.concat(mixs);
+						MixIds = mixIds;
+					});
+				})
+			}
+		} catch (error)
+		{
+			logError("Ошибка при сборе сведений о документе", error);
+		}
+	});
 }
 
 
@@ -1958,7 +1979,7 @@ async function commentAllBlocks(selections: vscode.Selection[]): Promise<void>
 	let results: string[] = [];
 	let editor = vscode.window.activeTextEditor;
 	editor.selections = selections;
-	for(let selection of selections)
+	for (let selection of selections)
 	{
 		results.push(await commentBlock(editor, selection));
 	};
