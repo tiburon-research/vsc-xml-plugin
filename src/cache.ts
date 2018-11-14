@@ -48,16 +48,16 @@ export class CacheSet
 	private Keys = ["PreviousTextSafe", "PreviousText", "Tag", "Methods", "CurrentNodes"];
 
 	/** Полное обновление */
-	private updateAll(document: vscode.TextDocument, position: vscode.Position, text: string): void
+	private async updateAll(document: vscode.TextDocument, position: vscode.Position, text: string): Promise<void>
 	{
 		this.Clear();
 		this.PreviousText.Set(text);
 		this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
-		this.Tag.Set(getCurrentTag(document, position, text, true));
+		this.Tag.Set(await getCurrentTag(document, position, text, true));
 	}
 
 	/** Обновление последнего куска */
-	private updatePart(document: vscode.TextDocument, position: vscode.Position, prevText: string, validParents: SimpleTag[], ind: number, restText: string): boolean
+	private async updatePart(document: vscode.TextDocument, position: vscode.Position, prevText: string, validParents: SimpleTag[], ind: number, restText: string): Promise<boolean>
 	{
 		try
 		{
@@ -74,7 +74,7 @@ export class CacheSet
 			// обновляем Tag
 			if (Parse.tagNeedToBeParsed(cachedTag.Name)) // если внутри могут быть теги
 			{
-				let ranges = Parse.getParentRanges(document, cachedSafe, ind);
+				let ranges = await Parse.getParentRanges(document, cachedSafe, ind);
 				if (ranges.length > 0)
 					ranges.forEach(range => validParents.push(new SimpleTag(document, range)));
 				if (validParents.length > 0)
@@ -113,7 +113,7 @@ export class CacheSet
 
 
 	/** Обновление всего кеша (если требуется) */
-	public Update(document: vscode.TextDocument, position: vscode.Position, txt?: string): void
+	public async Update(document: vscode.TextDocument, position: vscode.Position, txt?: string): Promise<void>
 	{
 		try
 		{
@@ -128,7 +128,7 @@ export class CacheSet
 			let cachedSafe = this.PreviousTextSafe.Get();
 
 			if (!cachedText || !cachedSafe || !cachedTag || cachedText.length != cachedSafe.length)
-				return this.updateAll(document, position, text); // обновляем всё
+				return await this.updateAll(document, position, text); // обновляем всё
 
 			// частичное обновление
 			let foundValidRange = false;
@@ -142,7 +142,7 @@ export class CacheSet
 				let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после начала тега
 				if (oldText == newText && !restText.match("</" + cachedTag.Name))
 				{
-					foundValidRange = this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
+					foundValidRange = await this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
 					// если получилось, то ничего обновлять не надо
 					if (foundValidRange) return;
 				}
@@ -163,11 +163,11 @@ export class CacheSet
 				{
 					// обновляем только последний кусок
 					validParents = cachedTag.Parents.slice(0, i + 1);
-					foundValidRange = this.updatePart(document, position, text, validParents, ind, restText);
+					foundValidRange = await this.updatePart(document, position, text, validParents, ind, restText);
 					break;
 				}
 			}
-			if (!foundValidRange) this.updateAll(document, position, text);
+			if (!foundValidRange) await this.updateAll(document, position, text);
 		}
 		catch (error)
 		{

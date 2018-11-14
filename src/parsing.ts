@@ -354,17 +354,17 @@ interface ParentSearchResult
  * 
  * Теги JS, CSS и PlainText не парсятся
 */
-export function getParentRanges(document: vscode.TextDocument, prevText: string, startFrom: number = 0): vscode.Range[]
+export async function getParentRanges(document: vscode.TextDocument, prevText: string, startFrom: number = 0): Promise<vscode.Range[]>
 {
 	let res: vscode.Range[] = [];
 	let rest = prevText.slice(startFrom);
-	let next = getNextParent(document, rest, prevText);
+	let next = await getNextParent(document, rest, prevText);
 	let i = 0;
 	while (!!next && i < 50)
 	{
 		res.push(next.Range);
 		rest = prevText.slice(document.offsetAt(next.Range.end));
-		next = getNextParent(document, rest, prevText);
+		next = await getNextParent(document, rest, prevText);
 		if (!!next && !tagNeedToBeParsed(next.TagName))
 		{
 			res.push(next.Range);
@@ -382,7 +382,7 @@ export function getParentRanges(document: vscode.TextDocument, prevText: string,
  * 
  * теги JS, CSS и PlainText не парсятся
 */
-function getNextParent(document: vscode.TextDocument, text: string, fullPrevText?: string): ParentSearchResult
+async function getNextParent(document: vscode.TextDocument, text: string, fullPrevText?: string): Promise<ParentSearchResult>
 {
 	let res = text.find(/<((?!xml)(\w+))/); // находим открывающийся
 	if (res.Index < 0) return null;// открытых больше нет

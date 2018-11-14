@@ -174,17 +174,21 @@ export function activate(context: vscode.ExtensionContext)
 				if (!editor || event.document.languageId != "tib") resolve();
 				let originalPosition = editor.selection.start.translate(0, 1);
 				let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
-				let tag = getCurrentTag(editor.document, originalPosition, text);
+				//let tag = getCurrentTag(editor.document, originalPosition, text);
 				TaskQueue.Add(reload(false));
-
-				// преобразования текста
-				if (!event || !event.contentChanges.length) resolve();
-				let changes = getContextChanges(editor.selections, event.contentChanges);
-				if (!changes || changes.length == 0) resolve();
-				TaskQueue.Add(insertAutoCloseTags(changes, editor, tag));
-				TaskQueue.Add(insertSpecialSnippets(changes, editor, text, tag));
-				TaskQueue.Add(upcaseFirstLetter(changes, editor, tag));
-				TaskQueue.ResultPromise().then(() => { resolve(); })
+				let tagPromise = getCurrentTag(editor.document, originalPosition, text);
+				TaskQueue.Add(tagPromise);
+				tagPromise.then(tag =>
+				{
+					// преобразования текста
+					if (!event || !event.contentChanges.length) resolve();
+					let changes = getContextChanges(editor.selections, event.contentChanges);
+					if (!changes || changes.length == 0) resolve();
+					TaskQueue.Add(insertAutoCloseTags(changes, editor, tag));
+					TaskQueue.Add(insertSpecialSnippets(changes, editor, text, tag));
+					TaskQueue.Add(upcaseFirstLetter(changes, editor, tag));
+					TaskQueue.ResultPromise().then(() => { resolve(); })
+				});
 			});
 			prom.then(() => { CurrentStatus.removeStatusItem(); });
 		});
@@ -386,13 +390,13 @@ function registerCommands()
 
 
 	// выделение ближайшего <тега>
-	registerCommand('tib.selectTag.closest', () => 
+	registerCommand('tib.selectTag.closest', async function ()
 	{
 		let editor = vscode.window.activeTextEditor;
 		let newSels: vscode.Selection[] = [];
-		editor.selections.forEach(selection =>
+		for (const selection of editor.selections)
 		{
-			let tag = getCurrentTag(editor.document, selection.active);
+			let tag = await getCurrentTag(editor.document, selection.active);
 			if (!tag) return;
 			let from = tag.OpenTagRange.start;
 			let cl = findCloseTag("<", tag.Name, ">", editor.document, from.translate(0, 1));
@@ -400,19 +404,19 @@ function registerCommands()
 			let to = cl.end;
 			let range = new vscode.Selection(from, to);
 			newSels.push(range);
-		});
+		};
 		editor.selections = newSels;
 	});
 
 	// выделение родительского <тега>
-	registerCommand('tib.selectTag.global', () => 
+	registerCommand('tib.selectTag.global', async function ()
 	{
 		let newSels: vscode.Selection[] = [];
 		let editor = vscode.window.activeTextEditor;
-		editor.selections.forEach(selection =>
+		for (const selection of editor.selections)
 		{
 			let txt = getPreviousText(editor.document, selection.active);
-			let tag = getCurrentTag(editor.document, selection.active, txt);
+			let tag = await getCurrentTag(editor.document, selection.active, txt);
 			if (!tag || tag.Parents.length < 1) return;
 			// если это первый вложенный тег
 			let par: string;
@@ -431,9 +435,8 @@ function registerCommands()
 			if (!cl) return;
 			let to = cl.end;
 			let range = new vscode.Selection(from, to);
-			let res = selectLines(editor.document, range);
 			newSels.push(range);
-		});
+		};
 		editor.selections = newSels;
 	});
 
@@ -719,39 +722,52 @@ function registerCommands()
 				let editor = vscode.window.activeTextEditor;
 				let range;
 				let indent;
-				// либо весь документ
-				if (editor.selection.start.isEqual(editor.selection.end))
-				{
-					range = getFullRange(document);
-					indent = 0;
-				}
-				else
-				{
-					// либо выделяем строки целиком
-					let sel = selectLines(document, editor.selection);
-					editor.selection = sel;
-					range = sel;
-					let tag = getCurrentTag(document, sel.start);
-					if (!tag) indent = 0;
-					else indent = tag.GetIndent();
-				}
-				let text = document.getText(range);
 
-				Formatting.format(text, Language.XML, Settings, "\t", indent).then(
-					(res) => 
+				let allDone = new Promise<void>((resolve, reject) =>
+				{
+					// либо весь документ
+					if (editor.selection.start.isEqual(editor.selection.end))
 					{
-						vscode.window.activeTextEditor.edit(builder =>
-						{
-							builder.replace(range, res);
-							x.dispose();
-						})
-					},
-					(er) =>
-					{
-						logError(er);
-						x.dispose();
+						range = getFullRange(document);
+						indent = 0;
+						resolve();
 					}
-				)
+					else
+					{
+						// либо выделяем строки целиком
+						let sel = selectLines(document, editor.selection);
+						editor.selection = sel;
+						range = sel;
+						getCurrentTag(document, sel.start).then(tag =>
+						{
+							if (!tag) indent = 0;
+							else indent = tag.GetIndent();
+							resolve();
+						})
+					}
+				});
+
+				allDone.then(() =>
+				{
+					let text = document.getText(range);
+					Formatting.format(text, Language.XML, Settings, "\t", indent).then(
+						(res) => 
+						{
+							vscode.window.activeTextEditor.edit(builder =>
+							{
+								builder.replace(range, res);
+								x.dispose();
+							})
+						},
+						(er) =>
+						{
+							logError(er);
+							x.dispose();
+						}
+					)
+				});
+
+				
 			});
 			// provideDocumentFormattingEdits по ходу не умеет быть async, поэтому выкручиваемся так
 			return [];
@@ -767,10 +783,10 @@ function higlight()
 {
 	// теги
 	vscode.languages.registerDocumentHighlightProvider('tib', {
-		provideDocumentHighlights(document, position)
+		async provideDocumentHighlights(document, position)
 		{
 			let text = getPreviousText(document, position);
-			let tag = getCurrentTag(document, position, text);
+			let tag = await getCurrentTag(document, position, text);
 			if (!tag) return;
 			let curRange = document.getWordRangeAtPosition(position);
 			let word = document.getText(curRange);
@@ -906,10 +922,10 @@ function autoComplete()
 {
 	// XML Snippets
 	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
+		async provideCompletionItems(document, position, token, context)
 		{
 			let completionItems = [];
-			let tag = getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position);
 			if (tag && tag.GetLaguage() == Language.XML)
 			{
 				let text = getPreviousText(document, position, true);
@@ -985,10 +1001,10 @@ function autoComplete()
 
 	//Attributes
 	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
+		async provideCompletionItems(document, position, token, context)
 		{
 			let completionItems = [];
-			let tag = getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position);
 			if (!!tag && tag.GetLaguage() == Language.XML && !tag.OpenTagIsClosed && !tag.InString() && AutoCompleteArray.Attributes[tag.Id])
 			{
 				let existAttrs = tag.AttributeNames();
@@ -1017,10 +1033,10 @@ function autoComplete()
 
 	//Functions, Variables, Enums, Classes, Custom Methods, C# Snippets, Types, node Ids
 	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
+		async provideCompletionItems(document, position, token, context)
 		{
 			let completionItems: vscode.CompletionItem[] = [];
-			let tag = getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position);
 			if (!tag) return;
 
 			let curLine = getPreviousText(document, position, true);
@@ -1140,10 +1156,10 @@ function autoComplete()
 
 	//Properties, Methods, EnumMembers, Linq
 	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
+		async provideCompletionItems(document, position, token, context)
 		{
 			let completionItems = [];
-			let tag = getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position);
 			if (!!tag && tag.GetLaguage() == Language.CSharp && !tag.InCSString() && !tag.CSSingle())
 			{
 				let lastLine = getPreviousText(document, position, true);
@@ -1180,10 +1196,10 @@ function autoComplete()
 
 	//Значения атрибутов
 	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
+		async provideCompletionItems(document, position, token, context)
 		{
 			let completionItems = [];
-			let tag = getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position);
 			if (!tag || tag.OpenTagIsClosed) return;
 			let text = getPreviousText(document, position, true);
 			//let needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
@@ -1227,9 +1243,9 @@ function autoComplete()
 function helper()
 {
 	vscode.languages.registerSignatureHelpProvider('tib', {
-		provideSignatureHelp(document, position, token)
+		async provideSignatureHelp(document, position, token)
 		{
-			let tag = getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position);
 			if (!tag || tag.GetLaguage() != Language.CSharp) return;
 			let sign = new vscode.SignatureHelp();
 			let lastLine = getPreviousText(document, position, true);
@@ -1268,12 +1284,12 @@ function helper()
 function hoverDocs()
 {
 	vscode.languages.registerHoverProvider('tib', {
-		provideHover(document, position, token)
+		async provideHover(document, position, token)
 		{
 			let res = [];
 			let range = document.getWordRangeAtPosition(position);
 			if (!range) return;
-			let tag = getCurrentTag(document, range.end);
+			let tag = await getCurrentTag(document, range.end);
 			if (!tag) return;
 			if (tag.GetLaguage() != Language.CSharp) return;
 			let text = document.getText(range);
@@ -1378,9 +1394,9 @@ function definitions()
 {
 	// C#
 	vscode.languages.registerDefinitionProvider('tib', {
-		provideDefinition(document, position, token)
+		async provideDefinition(document, position, token)
 		{
-			let tag = getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position);
 			if (!tag || tag.GetLaguage() != Language.CSharp || tag.InCSString()) return;
 			let res: vscode.Location;
 			try
@@ -1423,9 +1439,9 @@ function definitions()
 
 	// include
 	vscode.languages.registerDefinitionProvider('tib', {
-		provideDefinition(document, position, token)
+		async provideDefinition(document, position, token)
 		{
-			let tag = getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position);
 			if (!tag || tag.Name != "Include") return;
 			let attrs = tag.GetAllAttributes(document);
 			let fileName = attrs.Item("FileName");
@@ -1751,7 +1767,7 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 
 
 /** getCurrentTag для debug (без try-catch) */
-function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
+async function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): Promise<CurrentTag>
 {
 	let tag: CurrentTag;
 	let text = txt || getPreviousText(document, position);
@@ -1771,7 +1787,7 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 		// собираем тег заново
 		let pure: string;
 		if (!pure) pure = CurrentTag.PrepareXML(text);
-		let ranges = Parse.getParentRanges(document, pure);
+		let ranges = await Parse.getParentRanges(document, pure);
 		// где-то вне
 		if (ranges.length == 0) tag = null;//new CurrentTag("XML");
 		else
@@ -1799,14 +1815,14 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 
 
 /** Самое главное в этом расширении */
-export function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
+export async function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): Promise<CurrentTag>
 {
 	if (_pack == "debug") return __getCurrentTag(document, position, txt, force);
 
 	let tag: CurrentTag;
 	try
 	{
-		tag = __getCurrentTag(document, position, txt, force);
+		tag = await __getCurrentTag(document, position, txt, force);
 	}
 	catch (error)
 	{
@@ -1876,12 +1892,12 @@ function selectLines(document: vscode.TextDocument, selection: vscode.Selection)
 
 
 /** Комментирование выделенного фрагмента */
-function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection): string
+async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection): Promise<string>
 {
 	let document = editor.document;
 	let text = document.getText(selection);
-	let tagFrom = getCurrentTag(document, selection.start);
-	let tagTo = getCurrentTag(document, selection.end);
+	let tagFrom = await getCurrentTag(document, selection.start);
+	let tagTo = await getCurrentTag(document, selection.end);
 	if (!tagFrom || !tagTo)
 	{
 		logError("Ошибка получения границ выделения");
@@ -1934,27 +1950,19 @@ function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection): s
 	}
 
 	return newText;
-
-	/* editor.edit((editBuilder) =>
-	{
-		editBuilder.replace(selection, newText);
-	}, { undoStopAfter: false, undoStopBefore: false }).then(() =>
-	{
-		callback(true);
-	}); */
 }
 
 
 /** Последовательное комментирование выделенных фрагментов */
-function commentAllBlocks(selections: vscode.Selection[]): void
+async function commentAllBlocks(selections: vscode.Selection[]): Promise<void>
 {
 	let results: string[] = [];
 	let editor = vscode.window.activeTextEditor;
 	editor.selections = selections;
-	selections.forEach(selection =>
+	for(let selection of selections)
 	{
-		results.push(commentBlock(editor, selection));
-	});
+		results.push(await commentBlock(editor, selection));
+	};
 	multiPaste(editor, editor.selections, results);
 }
 
@@ -2092,7 +2100,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 		{
 			let sel = selectLines(editor.document, editor.selection);
 			editor.selection = sel;
-			let tag = getCurrentTag(editor.document, sel.start);
+			let tag = await getCurrentTag(editor.document, sel.start);
 			let ind = !!tag ? tag.GetIndent() : 0;
 			res = await Formatting.format(res, Language.XML, Settings, "\t", ind);
 			return applyChanges(sel, res, editor, false);
@@ -2248,7 +2256,7 @@ async function createElements(elementType: SurveyElementType)
 	let editor = vscode.window.activeTextEditor;
 	let text = editor.document.getText(editor.selection);
 	let res = TibDocumentEdits.createElements(text, elementType);
-	let tag = getCurrentTag(editor.document, editor.selection.active);
+	let tag = await getCurrentTag(editor.document, editor.selection.active);
 	let indent = !!tag ? tag.GetIndent() : 1;
 	Formatting.format(res.value, Language.XML, Settings, "\t", indent).then(x =>
 	{
