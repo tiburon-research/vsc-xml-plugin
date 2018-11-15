@@ -1,7 +1,7 @@
 'use  strict'
 
 import * as vscode from 'vscode'
-import { CurrentTag, TibMethods, SurveyNodes, SimpleTag } from './classes'
+import { CurrentTag, TibMethods, SurveyNodes, SimpleTag, KeyedCollection } from './classes'
 import * as Parse from './parsing'
 import { logError, Settings, getPreviousText, getCurrentTag } from './extension'
 
@@ -41,11 +41,10 @@ export class CacheSet
 	public PreviousTextSafe = new CacheItem<string>();
 	public PreviousText = new CacheItem<string>();
 	public Tag = new CacheItem<CurrentTag>();
-	public Methods = new CacheItem<TibMethods>();
-	public CurrentNodes = new CacheItem<SurveyNodes>();
+	public OldTag = new CacheItem<CurrentTag>();
 
 	// поля для быстрой обработки
-	private Keys = ["PreviousTextSafe", "PreviousText", "Tag", "Methods", "CurrentNodes"];
+	private Keys = ["PreviousTextSafe", "PreviousText", "Tag"];
 
 	/** Полное обновление */
 	private async updateAll(document: vscode.TextDocument, position: vscode.Position, text: string): Promise<void>
@@ -54,6 +53,12 @@ export class CacheSet
 		this.PreviousText.Set(text);
 		this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
 		this.Tag.Set(await getCurrentTag(document, position, text, true));
+		this.saveTagDraft();
+	}
+
+	private saveTagDraft()
+	{
+		this.OldTag.Set(this.Tag.Get());
 	}
 
 	/** Обновление последнего куска */
@@ -92,6 +97,7 @@ export class CacheSet
 						OpenTagRange: lastParentRange,
 						StartIndex: document.offsetAt(lastParentRange.start)
 					});
+					this.saveTagDraft();
 					return true;
 				}
 			}
@@ -101,6 +107,7 @@ export class CacheSet
 					PreviousText: prevText,
 					Body: document.getText(new vscode.Range(cachedTag.OpenTagRange.end, position))
 				});
+				this.saveTagDraft();
 			}
 
 		}

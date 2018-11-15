@@ -7,7 +7,6 @@ import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
 import * as fs from 'fs';
-import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
 import { getDiagnosticElements, registerActionCommands } from './diagnostic'
 import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes, XMLEmbeddings } from './constants'
@@ -31,13 +30,10 @@ var bot: TelegramBot;
 // константы
 
 /** Соответствие {{Elements}} и функции для получения */
-const _ElementFunctions = {
-	Questions: getAllQuestions,
-	QuestionTypes: getQuestionTypes,
-	Pages: getAllPages,
-	Lists: getAllLists,
-	MixIds: getAllMixIds
-};
+const _ElementFunctions = KeyedCollection.FromArrays(
+	[ "Questions", "QuestionTypes", "Pages", "Lists", "MixIds"],
+	[getAllQuestions, getQuestionTypes, getAllPages, getAllLists, getAllMixIds]
+);
 
 /** Путь для сохранения логов */
 var _LogPath: string;
@@ -930,7 +926,7 @@ function autoComplete()
 		async provideCompletionItems(document, position, token, context)
 		{
 			let completionItems = [];
-			let tag = await getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position, null, false, false);
 			if (tag && tag.GetLaguage() == Language.XML)
 			{
 				let text = getPreviousText(document, position, true);
@@ -955,6 +951,7 @@ function autoComplete()
 							parent = key;
 							break;
 						}
+					//console.log(tag.Parents);
 					if (!parent || !ItemSnippets[parent]) parent = "List";
 					let res = new vscode.SnippetString(extractElements(ItemSnippets[parent]));
 					if (res)
@@ -1009,7 +1006,7 @@ function autoComplete()
 		async provideCompletionItems(document, position, token, context)
 		{
 			let completionItems = [];
-			let tag = await getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position, null, false, true);
 			if (!!tag && tag.GetLaguage() == Language.XML && !tag.OpenTagIsClosed && !tag.InString() && AutoCompleteArray.Attributes[tag.Id])
 			{
 				let existAttrs = tag.AttributeNames();
@@ -1041,7 +1038,7 @@ function autoComplete()
 		async provideCompletionItems(document, position, token, context)
 		{
 			let completionItems: vscode.CompletionItem[] = [];
-			let tag = await getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position, null, false, true);
 			if (!tag) return;
 
 			let curLine = getPreviousText(document, position, true);
@@ -1164,7 +1161,7 @@ function autoComplete()
 		async provideCompletionItems(document, position, token, context)
 		{
 			let completionItems = [];
-			let tag = await getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position, null, false, true);
 			if (!!tag && tag.GetLaguage() == Language.CSharp && !tag.InCSString() && !tag.CSSingle())
 			{
 				let lastLine = getPreviousText(document, position, true);
@@ -1204,7 +1201,7 @@ function autoComplete()
 		async provideCompletionItems(document, position, token, context)
 		{
 			let completionItems = [];
-			let tag = await getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position, null, false, true);
 			if (!tag || tag.OpenTagIsClosed) return;
 			let text = getPreviousText(document, position, true);
 			//let needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
@@ -1250,7 +1247,7 @@ function helper()
 	vscode.languages.registerSignatureHelpProvider('tib', {
 		async provideSignatureHelp(document, position, token)
 		{
-			let tag = await getCurrentTag(document, position);
+			let tag = await getCurrentTag(document, position, null, false, true);
 			if (!tag || tag.GetLaguage() != Language.CSharp) return;
 			let sign = new vscode.SignatureHelp();
 			let lastLine = getPreviousText(document, position, true);
@@ -1792,20 +1789,29 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 
 
 /** getCurrentTag для debug (без try-catch) */
-async function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): Promise<CurrentTag>
+async function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false, cahedOnly = false): Promise<CurrentTag>
 {
 	let tag: CurrentTag;
 	let text = txt || getPreviousText(document, position);
+	let caheEnabled = Cache.Active();
 
-	// сначала пытаемся вытащить из кэша (сначала обновить, если позиция изменилась)
-	if (!force)
+	// пробуем достать из кэша
+	if (caheEnabled)
 	{
-		if (Cache.Active())
+		// для вызываемых одновременно нет смысла каждый раз брать тег
+		/* if (cahedOnly && Cache.OldTag.IsSet())
+		{
+			tag = Cache.OldTag.Get();
+			console.log('---- found!');
+		}
+		// пытаемся вытащить из кэша (сначала обновить, если позиция изменилась)
+		else  */if (!force)
 		{
 			Cache.Update(document, position, text);
 			tag = Cache.Tag.Get();
 		}
 	}
+	
 
 	if (!tag)
 	{
@@ -1840,21 +1846,23 @@ async function __getCurrentTag(document: vscode.TextDocument, position: vscode.P
 
 
 /** Самое главное в этом расширении */
-export async function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): Promise<CurrentTag>
+export async function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false, cahedOnly = false): Promise<CurrentTag>
 {
-	//return null;
-	if (_pack == "debug") return __getCurrentTag(document, position, txt, force);
+	//console.log('getting tag...');
+	//if (_pack == "debug") return __getCurrentTag(document, position, txt, force, cahedOnly);
 
 	let tag: CurrentTag;
 	try
 	{
-		tag = await __getCurrentTag(document, position, txt, force);
+		tag = await __getCurrentTag(document, position, txt, force, cahedOnly);
 	}
 	catch (error)
 	{
 		logError("Ошибка определения положения в XML", error);
 		return null;
 	}
+	
+	//console.log('got it');
 	return tag;
 }
 
