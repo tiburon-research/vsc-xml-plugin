@@ -2317,15 +2317,13 @@ String.prototype.findLast = function (search: string): SearchResult
 
 String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
 {
-	let newText: string = this;
 	let res: RegExpMatchArray[] = [];
-	let mat = search.exec(this);
-	while (!!mat)
+	let mat: RegExpExecArray;
+    let text = this;
+    let reg = new RegExp(search, "g");
+	while ((mat = reg.exec(text)) !== null)
 	{
-		let textToReplace = " ".repeat(mat[0].length);
-		newText = newText.replace(search, textToReplace);
 		res.push(mat);
-		mat = search.exec(newText);
 	}
 	return res;
 }
