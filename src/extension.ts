@@ -1345,7 +1345,7 @@ function upcaseFirstLetter(changes: ContextChange[], editor: vscode.TextEditor, 
 	{
 		// если хоть одна позиция такова, то нафиг
 		if (!tag || !Settings.Item("upcaseFirstLetter") || tag.GetLaguage() != Language.XML || inCDATA(editor.document, editor.selection.active)) return resolve();
-		let tagRegex = /(<\/?)(\w+)$/;
+		let tagRegex = /(<\/?)([a-z]\w*)$/;
 		let nullPosition = new vscode.Position(0, 0);
 		try
 		{
