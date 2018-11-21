@@ -2131,6 +2131,7 @@ function yesNoHelper(text: string): Promise<boolean>
 /** Запрещает редактирование */
 function lockDocument(document: vscode.TextDocument, log = false, force = false)
 {
+	if (!Settings.Item("enableFileLock")) return;
 	let noLock = (Settings.Item("doNotLockFiles") as string[]);
 	let path = new Path(document.fileName);
 	let docPath = path.FullPath;
