@@ -2275,9 +2275,9 @@ function isTib()
 
 
 /** Создаёт команду только для языка tib */
-export async function registerCommand(name: string, command: Function): Promise<void>
+export async function registerCommand(name: string, command: Function): Promise<vscode.Disposable>
 {
-	await vscode.commands.registerCommand(name, (...args: any[]) => 
+	return vscode.commands.registerCommand(name, (...args: any[]) => 
 	{
 		if (!isTib()) return;
 		command(...args);

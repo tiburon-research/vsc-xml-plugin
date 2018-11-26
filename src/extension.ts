@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair, getMixIds, getContextChanges, inCDATA, registerCommand, logString, ContextChange } from "./classes";
+import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair, getMixIds, getContextChanges, inCDATA, logString, ContextChange, registerCommand } from "./classes";
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as Formatting from './formatting'
@@ -81,6 +81,7 @@ var Refused = {
 /** Пути к заблокированным файлам */
 var LockedFiles: string[] = [];
 
+var DisposeOnNotTib = new KeyedCollection<vscode.Disposable>();
 
 var CurrentStatus = new StatusBar();
 
@@ -134,7 +135,13 @@ export function activate(context: vscode.ExtensionContext)
 		Includes = [];
 		Methods.Clear();
 		CurrentNodes.Clear();
-		if (!editor || editor.document.languageId != 'tib') return;
+		if (!editor || editor.document.languageId != 'tib') // инициализируем или убиваем комманды для tib
+		{
+			disposeAll();
+			return;
+		}
+		if (DisposeOnNotTib.Count() == 0) registerCommands();
+
 		if (!editor.document.isUntitled)
 		{
 			if (isLocked(editor.document)) showLockInfo(editor.document);
@@ -151,7 +158,7 @@ export function activate(context: vscode.ExtensionContext)
 	hoverDocs();
 	helper();
 	definitions();
-	registerCommands();
+	//registerCommands();
 	registerActionCommands();
 	higlight();
 
@@ -354,7 +361,7 @@ function registerCommands()
 
 
 	// команда для тестирования на отладке
-	registerCommand('tib.debugTestCommand', () => 
+	registerTibCommand('tib.debugTestCommand', () => 
 	{
 		if (_pack != "debug") return;
 
@@ -363,7 +370,7 @@ function registerCommands()
 	});
 
 	// стандартное сохранение файла
-	registerCommand('workbench.action.files.save', () => 
+	registerTibCommand('workbench.action.files.save', () => 
 	{
 		CurrentStatus.setProcessMessage("Ожидание завершения выполнения операций...").then(x =>
 		{
@@ -378,20 +385,20 @@ function registerCommands()
 	});
 
 	// выделение Answer из текста
-	registerCommand('tib.getAnswers', () => 
+	registerTibCommand('tib.getAnswers', () => 
 	{
 		createElements(SurveyElementType.Answer);
 	});
 
 	// выделение Item из текста
-	registerCommand('tib.getItems', () => 
+	registerTibCommand('tib.getItems', () => 
 	{
 		createElements(SurveyElementType.ListItem);
 	});
 
 
 	// выделение ближайшего <тега>
-	registerCommand('tib.selectTag.closest', async function ()
+	registerTibCommand('tib.selectTag.closest', async function ()
 	{
 		let editor = vscode.window.activeTextEditor;
 		let newSels: vscode.Selection[] = [];
@@ -410,7 +417,7 @@ function registerCommands()
 	});
 
 	// выделение родительского <тега>
-	registerCommand('tib.selectTag.global', async function ()
+	registerTibCommand('tib.selectTag.global', async function ()
 	{
 		let newSels: vscode.Selection[] = [];
 		let editor = vscode.window.activeTextEditor;
@@ -442,12 +449,12 @@ function registerCommands()
 	});
 
 	// оборачивание в [тег]
-	registerCommand('tib.insertTag', () => 
+	registerTibCommand('tib.insertTag', () => 
 	{
 		vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]"));
 	});
 
-	registerCommand('tib.cdata', () => 
+	registerTibCommand('tib.cdata', () => 
 	{
 		try
 		{
@@ -461,7 +468,7 @@ function registerCommands()
 		}
 	});
 
-	registerCommand('tib.commentBlock', () => 
+	registerTibCommand('tib.commentBlock', () => 
 	{
 		let newSel = selectLines(vscode.window.activeTextEditor.document, vscode.window.activeTextEditor.selection);
 		if (!!newSel) vscode.window.activeTextEditor.selection = newSel;
@@ -469,7 +476,7 @@ function registerCommands()
 	});
 
 	//Удаление айди вопроса в заголовках вопроса
-	registerCommand('tib.remove.QuestionIds', () =>
+	registerTibCommand('tib.remove.QuestionIds', () =>
 	{
 		let editor = vscode.window.activeTextEditor;
 		CurrentStatus.setProcessMessage("Удаление Id из заголовков...").then(x =>
@@ -488,7 +495,7 @@ function registerCommands()
 		})
 	});
 
-	registerCommand('tib.transform.AnswersToItems', () => 
+	registerTibCommand('tib.transform.AnswersToItems', () => 
 	{
 		let editor = vscode.window.activeTextEditor;
 		try
@@ -508,7 +515,7 @@ function registerCommands()
 		}
 	});
 
-	registerCommand('tib.transform.ItemsToAnswers', () => 
+	registerTibCommand('tib.transform.ItemsToAnswers', () => 
 	{
 		let editor = vscode.window.activeTextEditor;
 		try
@@ -530,7 +537,7 @@ function registerCommands()
 
 
 	//Отсортировать List
-	registerCommand('tib.transform.SortList', () =>
+	registerTibCommand('tib.transform.SortList', () =>
 	{
 		let editor = vscode.window.activeTextEditor;
 		CurrentStatus.setProcessMessage("Сортировка списка...").then(x =>
@@ -580,7 +587,7 @@ function registerCommands()
 	});
 
 	//преобразовать в список c возрастом
-	registerCommand('tib.transform.ToAgeList', () =>
+	registerTibCommand('tib.transform.ToAgeList', () =>
 	{
 		let editor = vscode.window.activeTextEditor;
 
@@ -598,7 +605,7 @@ function registerCommands()
 	});
 
 	// комментирование блока
-	registerCommand('editor.action.blockComment', () => 
+	registerTibCommand('editor.action.blockComment', () => 
 	{
 		let editor = vscode.window.activeTextEditor;
 		let selections = editor.selections;
@@ -611,7 +618,7 @@ function registerCommands()
 	});
 
 	// комментирование строки
-	registerCommand('editor.action.commentLine', () => 
+	registerTibCommand('editor.action.commentLine', () => 
 	{
 		let editor = vscode.window.activeTextEditor;
 		let selections = editor.selections;
@@ -638,7 +645,7 @@ function registerCommands()
 		commentAllBlocks(selections);
 	});
 
-	registerCommand('tib.paste', () => 
+	registerTibCommand('tib.paste', () => 
 	{
 		let txt = getFromClioboard();
 		if (txt.match(/[\s\S]*\n$/)) txt = txt.replace(/\n$/, '');
@@ -668,7 +675,7 @@ function registerCommands()
 		}
 	});
 
-	registerCommand('tib.demo', () => 
+	registerTibCommand('tib.demo', () => 
 	{
 		//vscode.commands.executeCommand("vscode.open", vscode.Uri.file(_DemoPath));
 		let path = Settings.Item("demoPath");
@@ -687,7 +694,7 @@ function registerCommands()
 	});
 
 	//Создание tibXML шаблона
-	registerCommand('tib.template', () =>
+	registerTibCommand('tib.template', () =>
 	{
 		let templatePathFolder = Settings.Item("templatePathFolder") + '\\';
 		if (!templatePathFolder)
@@ -709,7 +716,7 @@ function registerCommands()
 	});
 
 	// переключение Linq
-	registerCommand('tib.linqToggle', () => 
+	registerTibCommand('tib.linqToggle', () => 
 	{
 		_useLinq = !_useLinq;
 		vscode.window.showInformationMessage("Подстановка Linq " + (_useLinq ? "включена" : "отключена"))
@@ -2299,6 +2306,40 @@ async function createElements(elementType: SurveyElementType)
 	});
 }
 
+
+/** Создаёт команду только для языка tib */
+async function registerTibCommand(name: string, command: Function): Promise<void>
+{
+	let cmd = await registerCommand(name, command);
+	DisposeOnNotTib.AddPair(name, cmd);
+}
+
+
+/** Очищает всё, что должно быть только в tib */
+function disposeAll()
+{
+	return new Promise<void>((resolve, reject) =>
+	{
+		if (DisposeOnNotTib.Count() == 0) return resolve();
+		logToOutput("Очистка всех команд tib.*");
+		let proms: Promise<void>[] = [];
+		DisposeOnNotTib.Keys().forEach(x =>
+		{
+			proms.push(disposeElement(x));
+		});
+		Promise.all(proms).then(() => resolve()).catch(() => reject());
+	});
+}
+
+function disposeElement(disposeKey: string)
+{
+	return new Promise<void>((resolve, reject) =>
+	{
+		DisposeOnNotTib.Item(disposeKey).dispose();
+		DisposeOnNotTib.Remove(disposeKey);
+		resolve;
+	});
+}
 
 
 //#endregion
