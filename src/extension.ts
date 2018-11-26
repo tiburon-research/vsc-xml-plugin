@@ -31,7 +31,7 @@ var bot: TelegramBot;
 
 /** Соответствие {{Elements}} и функции для получения */
 const _ElementFunctions = KeyedCollection.FromArrays(
-	[ "Questions", "QuestionTypes", "Pages", "Lists", "MixIds"],
+	["Questions", "QuestionTypes", "Pages", "Lists", "MixIds"],
 	[getAllQuestions, getQuestionTypes, getAllPages, getAllLists, getAllMixIds]
 );
 
@@ -354,6 +354,8 @@ function getStaticData()
 
 function registerCommands()
 {
+	logToOutput("Добавление команд tib.*");
+
 	/*vscode.commands.registerCommand('tib.debug', () => 
 	{
 		execute("http://debug.survstat.ru/Survey/Adaptive/?fileName=" + editor.document.fileName);
@@ -1818,7 +1820,7 @@ async function __getCurrentTag(document: vscode.TextDocument, position: vscode.P
 			tag = Cache.Tag.Get();
 		}
 	}
-	
+
 
 	if (!tag)
 	{
@@ -1868,7 +1870,7 @@ export async function getCurrentTag(document: vscode.TextDocument, position: vsc
 		logError("Ошибка определения положения в XML", error);
 		return null;
 	}
-	
+
 	//console.log('got it');
 	return tag;
 }
@@ -2255,9 +2257,14 @@ function showLockInfo(document: vscode.TextDocument)
 		if (!!data && !!data.User)
 		{
 			user = data.User;
+			logToOutput(`Файл ${strPath} занят пользователем ${user}`);
 			if (data.User == getUserName())
 			{
-				if (data.Id == getUserId()) return lockDocument(document, true, true);
+				if (data.Id == getUserId())
+				{
+					logToOutput(`Файл ${strPath} повторно заблокирован за тем же пользователем`);
+					return lockDocument(document, true, true);
+				}
 				yesNoHelper(`Файл ${strPath} занят пользователем ${user}. Возможно, он остался заблокированным после прерывания работы расширения. Разблокировать?`).then(res => { if (res) lockDocument(document, true, true) });
 				return;
 			}
@@ -2267,6 +2274,7 @@ function showLockInfo(document: vscode.TextDocument)
 	}
 	else
 	{
+		logToOutput(`Файл ${strPath} защищён от записи, но информации о пользователе нет`);
 		yesNoHelper(`Файл ${strPath} защищён от записи. Разрешить запись?`).then(res =>
 		{
 			if (res) unlockFile(document.fileName, true);
