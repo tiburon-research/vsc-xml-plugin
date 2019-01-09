@@ -14,6 +14,8 @@ import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
 import { CacheSet } from './cache'
+import * as client from 'vscode-languageclient';
+import * as path from 'path';
 
 
 
@@ -23,6 +25,8 @@ export { bot, CSFormatter, logError, OutChannel, _LogPath, Settings };
 /*---------------------------------------- глобальные переменные ----------------------------------------*/
 //#region
 
+	
+var _client: client.LanguageClient;
 
 /** объект для управления ботом */
 var bot: TelegramBot;
@@ -105,6 +109,7 @@ var Diagnostics = vscode.languages.createDiagnosticCollection('tib_diagnostic');
 export function activate(context: vscode.ExtensionContext)
 {
 	logToOutput("Начало активации");
+	createClientConnection(context);
 	let editor = vscode.window.activeTextEditor;
 
 	// обновляем настройки при сохранении
@@ -2242,6 +2247,50 @@ async function createElements(elementType: SurveyElementType)
 	{
 		res.value = x;
 		vscode.window.activeTextEditor.insertSnippet(res).then(x => { InProcess = false });
+	});
+}
+
+
+async function createClientConnection(context: vscode.ExtensionContext)
+{
+	let serverModule = context.asAbsolutePath(
+		path.join('out', 'server', 'server.js')
+	);
+	let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
+
+	let serverOptions: client.ServerOptions = {
+		run: { module: serverModule, transport: client.TransportKind.ipc },
+		debug: {
+			module: serverModule,
+			transport: client.TransportKind.ipc,
+			options: debugOptions
+		}
+	};
+
+	let clientOptions: client.LanguageClientOptions = {
+		documentSelector: [{ scheme: 'file', language: 'tib' }, { scheme: 'untitled', language: 'tib' }]
+	};
+
+	// Create the language client and start the client.
+	_client = new client.LanguageClient(
+		'tib server',
+		serverOptions,
+		clientOptions
+	);
+
+	_client.start();
+	_client.onReady().then(() =>
+	{
+		_client.onNotification("server.out", data =>
+		{
+			if (typeof data != 'string') logToOutput('Неправильный тип данных для логов с сервера', _WarningLogPrefix);
+			logToOutput(data);
+		})
+
+		_client.onNotification("server.log", data =>
+		{
+			console.log(data);
+		})
 	});
 }
 
