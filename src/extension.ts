@@ -2253,9 +2253,7 @@ async function createElements(elementType: SurveyElementType)
 
 async function createClientConnection(context: vscode.ExtensionContext)
 {
-	let serverModule = context.asAbsolutePath(
-		path.join('out', 'server', 'server.js')
-	);
+	let serverModule = context.asAbsolutePath(path.join('out', 'src', 'server.js'));
 	let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
 
 	let serverOptions: client.ServerOptions = {

@@ -9,8 +9,7 @@
         "sourceMap": true,
         "rootDirs": [
             "src",
-            "stuff",
-            "server"
+            "stuff"
         ]
     },
     "exclude": [
