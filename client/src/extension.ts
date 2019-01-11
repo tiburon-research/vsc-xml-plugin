@@ -9,7 +9,7 @@ import * as Formatting from './formatting'
 import * as fs from 'fs';
 import { initJQuery } from './TibJQuery'
 import * as debug from './debug'
-import { getDiagnosticElements, registeActionCommands } from './diagnostic'
+import { registerActionCommands } from './diagnostic'
 import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes, XMLEmbeddings } from './constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
@@ -27,6 +27,8 @@ export { bot, CSFormatter, logError, OutChannel, _LogPath, Settings };
 
 	
 var _client: client.LanguageClient;
+
+var clientIsReady: boolean = false;
 
 /** объект для управления ботом */
 var bot: TelegramBot;
@@ -96,9 +98,6 @@ var LockedFiles: string[] = [];
 
 var CurrentStatus = new StatusBar();
 
-
-var Diagnostics = vscode.languages.createDiagnosticCollection('tib_diagnostic');
-
 //#endregion
 
 
@@ -158,7 +157,7 @@ export function activate(context: vscode.ExtensionContext)
 	helper();
 	definitions();
 	registerCommands();
-	registeActionCommands();
+	registerActionCommands();
 	higlight();
 
 	// для каждого дукумента свои
@@ -1360,10 +1359,8 @@ function upcaseFirstLetter(changes: ContextChange[], editor: vscode.TextEditor, 
 /** Подсказки и ошибки */
 async function diagnostic(document: vscode.TextDocument)
 {
-	if (document.languageId != 'tib' || !Settings.Item('enableDiagnostic')) return Diagnostics.delete(document.uri);
-	let res = await getDiagnosticElements(document);
-	Diagnostics.delete(document.uri);
-	if (!!res) Diagnostics.set(document.uri, res);
+	// if (document.languageId != 'tib' || !Settings.Item('enableDiagnostic')) return Diagnostics.delete(document.uri);
+	getServerData('client/getDiagnostic', document);
 }
 
 
@@ -2279,17 +2276,20 @@ async function createClientConnection(context: vscode.ExtensionContext)
 	_client.start();
 	_client.onReady().then(() =>
 	{
-		_client.onNotification("server.out", data =>
+		_client.onNotification("server.log", data =>
 		{
 			if (typeof data != 'string') logToOutput('Неправильный тип данных для логов с сервера', _WarningLogPrefix);
 			logToOutput(data);
-		})
+		});
 
-		_client.onNotification("server.log", data =>
-		{
-			console.log(data);
-		})
+		clientIsReady = true;
 	});
+}
+
+
+function getServerData(requestName: string, data: any)
+{
+	if (clientIsReady)	_client.sendNotification(requestName, data);
 }
 
 

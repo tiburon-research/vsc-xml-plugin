@@ -12,4 +12,3 @@ npm-debug.log
 stuff/deleted.json
 ignore/*
 src/debug.ts
-package-lock.json

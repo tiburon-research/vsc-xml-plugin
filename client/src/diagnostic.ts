@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { DocumentElement, getDocumentElements, getDuplicatedElementsIds } from './parsing';
 import { clearCDATA, clearXMLComments } from './encoding';
-import { registerCommand, KeyedCollection, logString, IPair } from './classes';
+import { registerCommand, KeyedCollection, logString } from './classes';
 import { Settings } from './extension';
 import { translationArray, RegExpPatterns } from './constants';
 
@@ -93,7 +93,7 @@ export async function getDiagnosticElements(document: vscode.TextDocument): Prom
 
 
 /** Создаёт команды + CodeActions */
-export async function registeActionCommands()
+export async function registerActionCommands()
 {
 	
 	// транслитерация

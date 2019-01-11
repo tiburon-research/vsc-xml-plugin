@@ -1,6 +1,6 @@
 import * as server from 'vscode-languageserver';
-import { TextDocument } from 'vscode';
-import { getDiagnosticElements } from './diagnostic';
+import * as vscode from 'vscode';
+import { getDiagnosticElements } from 'diagnostic';
 
 
 var connection = server.createConnection(server.ProposedFeatures.all);
@@ -21,8 +21,15 @@ connection.onInitialize((params: server.InitializeParams) =>
 
 connection.onInitialized(() =>
 {
-	console.log('initialized');
-	connection.sendNotification("server.out", "Сервер запущен");
+	connection.sendNotification("server.log", "Сервер запущен");
+	connection.onNotification('client/getDiagnostic', (document: vscode.TextDocument) =>
+	{
+		getDiagnosticElements(document).then(diagnostics =>
+		{
+			console.log(diagnostics.length);
+			connection.sendNotification('textDocument/publishDiagnostics', diagnostics);
+		})
+	})
 });
 
 

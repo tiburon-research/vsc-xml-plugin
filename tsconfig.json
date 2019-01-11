@@ -8,13 +8,13 @@
         ],
         "sourceMap": true,
         "rootDirs": [
-            "src",
-            "stuff"
+            "src"
         ]
     },
     "exclude": [
         "node_modules",
         ".vscode-test",
-        "ignore"
+        "ignore",
+        "stuff"
     ]
 }
