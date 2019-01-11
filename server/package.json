@@ -1,8 +1,13 @@
 {
 	"engines": {
+		"vscode": "^1.30.0",
 		"node": "*"
 	},
 	"dependencies": {
 		"vscode-languageserver": "^5.2.1"
+	},
+	"devDependencies": {
+		"@types/node": "10.12.0",
+		"vscode": "^1.1.26"
 	}
 }

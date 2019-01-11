@@ -292,7 +292,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "install-vsc": "node ./client/node_modules/vscode/bin/install",
+    "install-vsc": "node client/node_modules/vscode/bin/install && node server/node_modules/vscode/bin/install",
     "postinstall": "cd client && npm install && cd ../server && npm install && cd .. && npm run install-vsc && npm i -g typescript"
   }
 }
