@@ -1,7 +1,7 @@
 'use strict'
 
 import { SurveyElementType, SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage } from './surveyObjects';
-import * as Parse from './parsing'
+import * as Parse from '../../modules/TibClasses/lib/parsing'
 import { KeyedCollection, OrderedCollection } from './classes'
 import * as vscode from 'vscode'
 import { QuestionTypes } from './constants';

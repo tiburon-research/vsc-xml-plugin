@@ -15,7 +15,9 @@
 		"node-machine-id": "^1.1.10",
 		"short-hash": "^1.0.0",
 		"winattr": "^2.0.0",
-		"vscode-languageclient": "^5.2.1"
+		"vscode-languageclient": "^5.2.1",
+		"tib-constants": "file:../modules/TibConstants",
+		"tib-classes": "file:../modules/TibClasses"
 	},
 	"devDependencies": {
 		"@types/mocha": "^2.2.42",

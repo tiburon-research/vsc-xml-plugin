@@ -1,0 +1,16 @@
+{
+  "name": "tib-constants",
+  "version": "1.0.0",
+  "description": "Default values",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "TiburonResearch",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^2.5.3",
+    "@types/node": "^10.12.18"
+  },
+  "scripts": {
+    "build": "tsc"
+  }
+}

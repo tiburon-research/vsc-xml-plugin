@@ -1,6 +1,6 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
-import { getDiagnosticElements } from 'diagnostic';
+import { getDiagnosticElements } from './diagnostic';
 
 
 var connection = server.createConnection(server.ProposedFeatures.all);

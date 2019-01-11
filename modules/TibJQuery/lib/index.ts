@@ -2,9 +2,8 @@
 
 import { JSDOM } from 'jsdom'
 import * as _JQuery from 'jquery'
-import { logString, KeyedCollection, showWarning } from 'tib-classes'
-import * as Encoding from '../../modules/TibClasses/lib/encoding'
-import { ReplaceXMLDeclaration } from '../../modules/TibClasses/lib/parsing';
+import { KeyedCollection, Encoding } from 'tib-classes'
+//import { ReplaceXMLDeclaration } from './parsing';
 
 
 /** Класс из XMLencodeResult:
@@ -49,12 +48,12 @@ export function initJQuery(): any
         if (isInitial)
         {
             // сохраняем XMLDeclaration
-            let decl = ReplaceXMLDeclaration(text);
+            /*let decl = ReplaceXMLDeclaration(text);
             if (!!decl.Declaration)
             {
                 text = decl.Result;
                 (JQuery.SurveyData as DOMSurveyData).XMLDeclaration = decl.Declaration;
-            }
+            }*/
         }
         let res = Encoding.safeXML(text, JQuery._delimiter(text));
         JQuery._saveData(res.toXMLencodeResult(), isInitial);
@@ -172,8 +171,7 @@ export function initJQuery(): any
         if (!text) return text;
         if (!JQuery.SurveyData || !JQuery.SurveyData.Delimiter)
         {
-            showWarning("JQuery инициализирована неправильно");
-            return text;
+            throw "JQuery инициализирована неправильно";
         }       
         return Encoding.originalXML(text, JQuery.SurveyData.toXMLencodeResult())
     }

@@ -1,9 +1,9 @@
 'use strict'
 
 import * as shortHash from "short-hash"
-import { KeyedCollection, safeString, logString, } from "./classes"
-import { logError } from "./extension";
-import { RegExpPatterns } from './constants'
+import { KeyedCollection, safeString } from "./index"
+import { logError } from "../../../client/src/extension";
+import { RegExpPatterns } from 'tib-constants'
 
 
 /* ---------------------------------------- КОДИРОВАНИЕ ---------------------------------------- */

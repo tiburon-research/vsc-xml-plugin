@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+      "target": "es6",
+      "module": "commonjs",
+      "declaration": true,
+      "outDir": "dist",
+      "sourceMap": true
+    },
+   "files": [
+     "lib/index.ts",
+     "lib/encoding.ts",
+     "lib/parsing.ts"
+   ]
+}

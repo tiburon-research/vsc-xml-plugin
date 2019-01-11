@@ -4,8 +4,8 @@ import { Language, safeString, ExtensionSettings } from "./classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { logError, CSFormatter } from "./extension";
-import { get1LevelNodes, ReplaceXMLDeclaration } from "./parsing"
-import { getReplaceDelimiter, encodeCS, getElementsBack, encodeElements, EncodeResult, Encoder } from "./encoding"
+import { get1LevelNodes, ReplaceXMLDeclaration } from "../../modules/TibClasses/lib/parsing"
+import { getReplaceDelimiter, encodeCS, getElementsBack, encodeElements, EncodeResult, Encoder } from "../../modules/TibClasses/lib/encoding"
 import { _pack, RegExpPatterns } from './constants'
 
 

@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode'
 import { CurrentTag, TibMethods, SurveyNodes, SimpleTag } from './classes'
-import * as Parse from './parsing'
+import * as Parse from '../../modules/TibClasses/lib/parsing'
 import { logError, Settings, getPreviousText, getCurrentTag } from './extension'
 
 

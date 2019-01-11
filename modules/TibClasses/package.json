@@ -1,0 +1,34 @@
+{
+  "name": "tib-classes",
+  "version": "1.0.0",
+  "description": "Custom classes, used in both in client and server side of tib app",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "TiburonResearch",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.30.2",
+    "node": "*"
+  },
+  "dependencies": {
+    "@types/node": "^10.12.18",
+    "clipboardy": "^1.2.3",
+    "dateformat": "^3.0.3",
+    "iconv-lite": "^0.4.24",
+    "node-machine-id": "^1.1.10",
+    "short-hash": "^1.0.0",
+    "vscode": "^1.1.26",
+    "winattr": "^2.0.0",
+    "charset-detector": "^0.0.2",
+    "tib-constants": "file:../TibConstants"
+  },
+  "devDependencies": {
+    "typescript": "^2.5.3",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^10.12.18"
+  },
+  "scripts": {
+    "postinstall": "node node_modules/vscode/bin/install",
+    "build": "tsc"
+  }
+}

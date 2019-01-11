@@ -1,0 +1,23 @@
+{
+  "name": "tib-jquery",
+  "version": "1.0.0",
+  "description": "JQuery module for Tiburon XML script",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "TiburonResearch",
+  "license": "MIT",
+  "dependencies": {
+    "jsdom": "^13.1.0",
+    "@types/jsdom": "^12.2.1",
+    "jquery": "^3.3.1",
+    "@types/jquery": "^3.3.29",
+    "tib-classes": "file:../modules/TibClasses"
+  },
+  "devDependencies": {
+    "typescript": "^2.5.3",
+    "@types/node": "^10.12.18"
+  },
+  "scripts": {
+    "build": "tsc p ./"
+  }
+}
