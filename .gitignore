@@ -1,5 +1,5 @@
 out
-lib
+api/lib
 node_modules
 .vscode-test/
 .vsix
