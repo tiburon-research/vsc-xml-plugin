@@ -6,11 +6,11 @@ import * as Parse from './parsing'
 import * as clipboard from "clipboardy"
 import * as fs from 'fs'
 import * as Constants from './constants'
-import * as JQUery from './tibJQuery'
+import * as JQuery from './tibJQuery'
 import * as iconv from 'iconv-lite'
 
 
-export { Encoding, Parse, Constants, JQUery };
+export { Encoding, Parse, Constants, JQuery };
 	
 	
 
