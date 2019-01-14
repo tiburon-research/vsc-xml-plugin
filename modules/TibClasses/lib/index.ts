@@ -29,7 +29,7 @@ interface SearchResult
  * @param From Включаемая граница
  * @param To Не влючамая граница
 */
-class ITextRange
+export class ITextRange
 {
 	From: number;
 	To: number;
@@ -1698,10 +1698,10 @@ String.prototype.replaceRange = function (from: number, substr: string | number,
 }
 
 
-String.prototype.replaceValues = function (items: KeyedCollection<string>): string
+String.prototype.replaceValues = function (elements: KeyedCollection<string>): string
 {
 	let res = this as string;
-	let sorted: KeyValuePair<string>[] = items.OrderBy(x => x.Key.length);
+	let sorted: KeyValuePair<string>[] = elements.OrderBy(x => x.Key.length);
 	sorted.forEach(x =>
 	{
 		res = res.replace(new RegExp(safeString(x.Key), "g"), x.Value);

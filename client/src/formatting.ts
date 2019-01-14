@@ -1,12 +1,10 @@
 'use strict';
 
-import { Language, safeString, ExtensionSettings } from "./classes";
+import { Language, safeString, ExtensionSettings, Parse, Encoding } from "tib-classes";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { logError, CSFormatter } from "./extension";
-import { get1LevelNodes, ReplaceXMLDeclaration } from "../../modules/TibClasses/lib/parsing"
-import { getReplaceDelimiter, encodeCS, getElementsBack, encodeElements, EncodeResult, Encoder } from "../../modules/TibClasses/lib/encoding"
-import { _pack, RegExpPatterns } from './constants'
+import { _pack, RegExpPatterns } from 'tib-constants'
 
 
 
@@ -99,10 +97,10 @@ async function formatXML(text: string, tab: string = "\t", indent: number = 0): 
 
 	let ind = tab.repeat(indent);
 
-	let decl = ReplaceXMLDeclaration(text);
+	let decl = Parse.ReplaceXMLDeclaration(text);
 
 	let oldText = decl.Result;
-	let tags = get1LevelNodes(oldText);
+	let tags = Parse.get1LevelNodes(oldText);
 	let newText = oldText;
 
 	// если внутри тегов нет, то возвращаем внутренность с отступом
@@ -172,18 +170,18 @@ async function formatBody(text: string, tab: string, indent: number = 0, lang: L
 {
 	let res = new FormatResult();
 	let newText = text;
-	let cs: EncodeResult;
+	let cs: Encoding.EncodeResult;
 	// кроме XML и C# заменяем вставки
-	let del = getReplaceDelimiter(text);
+	let del = Encoding.getReplaceDelimiter(text);
 	if (lang != Language.CSharp && lang != Language.XML)
 	{
-		cs = encodeCS(newText, del);
+		cs = Encoding.encodeCS(newText, del);
 		newText = cs.Result;
 	}
 	let ind = tab.repeat(indent);
 	newText = newText.replace(/(\n|^)[\t ]+$/g, '$1');
 	res = await LanguageFunction(lang)(newText, tab, indent);
-	if (!!cs && !res.Error) res.Result = getElementsBack(res.Result, { Delimiter: cs.Delimiter, EncodedCollection: cs.EncodedCollection });
+	if (!!cs && !res.Error) res.Result = Encoding.getElementsBack(res.Result, { Delimiter: cs.Delimiter, EncodedCollection: cs.EncodedCollection });
 	// для случаев <Text>текст\n.*
 	if (res.Result.match(/^\n*\S/))
 	{
@@ -328,11 +326,11 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
 			if (hasCDATA) res = reg[1];
 			let multiline = res.indexOf("\n") > -1;
 			// убираем собак и $repeat
-			let encoder = new Encoder(res);
-			encoder.Encode((txt, delimiter) => encodeElements(txt, /\$repeat\([\w@]+\)({.*\[.*\]\s*})?/, delimiter));
-			encoder.Encode((txt, delimiter) => encodeElements(txt, RegExpPatterns.XMLIterators.Var, delimiter));
-			encoder.Encode((txt, delimiter) => encodeElements(txt, RegExpPatterns.XMLIterators.Singele, delimiter));
-			encoder.Encode((txt, delimiter) => encodeElements(txt, /@(?!")(\w+)/, delimiter)); // для констант
+			let encoder = new Encoding.Encoder(res);
+			encoder.Encode((txt, delimiter) => Encoding.encodeElements(txt, /\$repeat\([\w@]+\)({.*\[.*\]\s*})?/, delimiter));
+			encoder.Encode((txt, delimiter) => Encoding.encodeElements(txt, RegExpPatterns.XMLIterators.Var, delimiter));
+			encoder.Encode((txt, delimiter) => Encoding.encodeElements(txt, RegExpPatterns.XMLIterators.Singele, delimiter));
+			encoder.Encode((txt, delimiter) => Encoding.encodeElements(txt, /@(?!")(\w+)/, delimiter)); // для констант
 			res = encoder.Result;
 			// форматируем
 			res = clearIndents(res);
@@ -342,7 +340,7 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
 			let ind = tab.repeat(indent);
 			res = res.replace(/\n([\t ]*\S)/g, "\n" + ind + "$1");
 			// возвращаем собак и $repeat
-			res = getElementsBack(res, encoder.ToEncodeResult());
+			res = Encoding.getElementsBack(res, encoder.ToEncodeResult());
 		}
 		else
 		{
@@ -364,7 +362,7 @@ async function formatBetweenTags(text: string, tab: string = "\t", indent: numbe
 {
 	let res = new FormatResult();
 	let newText = text;
-	let spaces = get1LevelNodes(text);
+	let spaces = Parse.get1LevelNodes(text);
 
 	try
 	{

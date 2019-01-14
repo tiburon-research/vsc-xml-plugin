@@ -1,8 +1,7 @@
 'use  strict'
 
 import * as vscode from 'vscode'
-import { CurrentTag, TibMethods, SurveyNodes, SimpleTag } from './classes'
-import * as Parse from '../../modules/TibClasses/lib/parsing'
+import { CurrentTag, TibMethods, SurveyNodes, SimpleTag, Parse } from 'tib-classes'
 import { logError, Settings, getPreviousText, getCurrentTag } from './extension'
 
 

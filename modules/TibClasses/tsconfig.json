@@ -6,9 +6,9 @@
       "outDir": "dist",
       "sourceMap": true
     },
-   "files": [
-     "lib/index.ts",
-     "lib/encoding.ts",
-     "lib/parsing.ts"
-   ]
+    "files": [
+      "lib/index.ts",
+      "lib/encoding.ts",
+      "lib/parsing.ts"
+    ]
 }

@@ -2,12 +2,14 @@
 
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
-import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, pathExists, LogData, saveError, safeString, showWarning, TelegramBot, SimpleTag, openFileText, getDocumentMethods, getDocumentNodeIds, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, KeyValuePair, getMixIds, getContextChanges, inCDATA, registerCommand, logString, ContextChange } from "tib-classes";
-import * as Encoding from '../../modules/TibClasses/lib/encoding'
-import * as Parse from '../../modules/TibClasses/lib/parsing'
+
+import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, safeString, SimpleTag, openFileText, getDocumentMethods, getDocumentNodeIds, KeyValuePair, getMixIds, getContextChanges, inCDATA, registerCommand, ContextChange, Encoding, Parse } from "tib-classes";
+
+import { pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId } from "./classes";
+
 import * as Formatting from './formatting'
 import * as fs from 'fs';
-import { initJQuery } from './TibJQuery'
+import { initJQuery } from 'tib-jquery'
 import * as debug from './debug'
 //import { registerActionCommands } from './diagnostic'
 import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes, XMLEmbeddings } from 'tib-constants'

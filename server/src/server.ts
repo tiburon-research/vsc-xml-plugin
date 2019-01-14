@@ -24,11 +24,11 @@ connection.onInitialized(() =>
 	connection.sendNotification("server.log", "Сервер запущен");
 	connection.onNotification('client/getDiagnostic', (document: vscode.TextDocument) =>
 	{
-		getDiagnosticElements(document).then(diagnostics =>
+		/* getDiagnosticElements(document).then(diagnostics =>
 		{
 			console.log(diagnostics.length);
 			connection.sendNotification('textDocument/publishDiagnostics', diagnostics);
-		})
+		}) */
 	})
 });
 

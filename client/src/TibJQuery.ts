@@ -2,9 +2,8 @@
 
 import { JSDOM } from 'jsdom'
 import * as _JQuery from 'jquery'
-import { logString, KeyedCollection, showWarning } from 'tib-classes'
-import * as Encoding from '../../modules/TibClasses/lib/encoding'
-import { ReplaceXMLDeclaration } from '../../modules/TibClasses/lib/parsing';
+import { KeyedCollection, Encoding, Parse } from 'tib-classes'
+import { showWarning } from './classes'
 
 
 /** Класс из XMLencodeResult:
@@ -49,7 +48,7 @@ export function initJQuery(): any
         if (isInitial)
         {
             // сохраняем XMLDeclaration
-            let decl = ReplaceXMLDeclaration(text);
+            let decl = Parse.ReplaceXMLDeclaration(text);
             if (!!decl.Declaration)
             {
                 text = decl.Result;

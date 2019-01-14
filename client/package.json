@@ -3,7 +3,6 @@
 		"vscode": "^1.30.0"
 	},
 	"dependencies": {
-		"@types/dateformat": "^1.0.1",
 		"charset-detector": "0.0.2",
 		"clipboardy": "^1.2.2",
 		"cssbeautify": "^0.3.1",
@@ -14,14 +13,25 @@
 		"jsdom": "^11.6.2",
 		"node-machine-id": "^1.1.10",
 		"short-hash": "^1.0.0",
-		"winattr": "^2.0.0",
 		"vscode-languageclient": "^5.2.1",
+		"winattr": "^2.0.0",
 		"tib-constants": "file:../modules/TibConstants",
-		"tib-classes": "file:../modules/TibClasses"
+		"tib-classes": "file:../modules/TibClasses",
+		"tib-jquery": "file:../modules/TibJQuery",
+		"install-local": "^0.6.2"
+	},
+	"localDependencies": {
+		"tib-constants": "node_modules/tib-constants",
+		"tib-classes": "node_modules/tib-classes",
+		"tib-jquery": "node_modules/tib-jquery"
 	},
 	"devDependencies": {
-		"@types/mocha": "^2.2.42",
-		"@types/node": "10.12.0",
+		"@types/dateformat": "^1.0.1",
+		"@types/mocha": "^5.2.5",
+		"@types/node": "^10.12.18",
 		"vscode": "^1.1.26"
+	},
+	"scripts": {
+		"postinstall": "node node_modules/vscode/bin/install && node node_modules/install-local/bin/install-local"
 	}
 }

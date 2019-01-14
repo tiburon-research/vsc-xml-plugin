@@ -2,7 +2,6 @@
 
 import * as shortHash from "short-hash"
 import { KeyedCollection, safeString } from "./index"
-import { logError } from "../../../client/src/extension";
 import { RegExpPatterns } from 'tib-constants'
 
 
@@ -117,7 +116,7 @@ export function encodeElements(text: string, elem: RegExp, delimiter: string): E
 		res.Result = result;
 	} catch (error)
 	{
-		logError("Ошибка кодирования элементов", error);
+		throw "Ошибка кодирования элементов";
 	}
 	return res;
 }

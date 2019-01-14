@@ -7,6 +7,7 @@ import * as winattr from 'winattr'
 import { machineIdSync } from "node-machine-id"
 import { bot, _LogPath, OutChannel, } from './extension'
 import { _LockInfoFilePrefix } from 'tib-constants'
+import { CurrentTag, Language, KeyedCollection } from 'tib-classes';
 
 
 

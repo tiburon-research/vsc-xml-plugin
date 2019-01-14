@@ -1,8 +1,6 @@
 import * as vscode from 'vscode';
-import { clearCDATA, clearXMLComments } from '../../client/src/encoding';
-import { registerCommand, KeyedCollection, logString } from '../../client/src/classes';
-import { Settings } from '../../client/src/extension';
-import { translationArray, RegExpPatterns } from '../../client/src/constants';
+import { registerCommand, KeyedCollection, ExtensionSettings, Encoding } from 'tib-classes';
+import { translationArray, RegExpPatterns } from 'tib-constants';
 
 
 //#region --------------------------- const type interface
@@ -70,13 +68,13 @@ interface IDiagnosticType
 
 
 /** Возвращает все найденные предупреждения/ошибки */
-export async function getDiagnosticElements(document: vscode.TextDocument): Promise<vscode.Diagnostic[]>
+export async function getDiagnosticElements(document: vscode.TextDocument, settings: ExtensionSettings): Promise<vscode.Diagnostic[]>
 {
 	let res: vscode.Diagnostic[] = [];
 	let stack = [];
 	let text = document.getText();
-	if (!!Settings.Item("ignoreComments")) text = clearXMLComments(text);
-	text = clearCDATA(text);
+	if (!!settings.Item("ignoreComments")) text = Encoding.clearXMLComments(text);
+	text = Encoding.clearCDATA(text);
 
 	for (const diagnosticType of _AllDiagnostics) 
 	{

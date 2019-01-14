@@ -1,7 +1,6 @@
 'use strict'
 
 import { TextRange, safeString, TagInfo, Language, positiveMin, KeyedCollection, CurrentTag } from "./index";
-import { logError, Settings } from "../../../client/src/extension";
 import { clearXMLComments } from "./encoding"
 import { RegExpPatterns } from 'tib-constants'
 import * as charDetect from 'charset-detector'
@@ -102,7 +101,7 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
 	}
 	catch (err)
 	{
-		logError("Ошибка при поиске закрывающегося тега", err);
+		throw "Ошибка при поиске закрывающегося тега";
 	}
 	return null;
 }
@@ -170,7 +169,7 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 	}
 	catch (err)
 	{
-		logError("Ошибка при поиске открывающегося тега", err);
+		throw "Ошибка при поиске открывающегося тега";
 	}
 	return null;
 }
@@ -205,7 +204,7 @@ export function get1LevelNodes(text: string): TagInfo[]
 	}
 	catch (err)
 	{
-		logError("Ошибка при поиске вложенных тегов", err);
+		throw "Ошибка при поиске вложенных тегов";
 	}
 	return tags;
 }
@@ -232,7 +231,7 @@ export function inString(text: string): boolean
 		}
 	} catch (error)
 	{
-		logError("Ошибка выделения строки", error);
+		throw "Ошибка выделения строки";
 	}
 	return false;
 }
@@ -370,7 +369,7 @@ export function getParentRanges(document: vscode.TextDocument, prevText: string,
 			break;
 		}
 	}
-	if (i >= 50) logError("Найдено слишком много вложенных тегов");
+	if (i >= 50) throw "Найдено слишком много вложенных тегов";
 	return res;
 }
 
