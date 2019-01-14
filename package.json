@@ -27,7 +27,7 @@
   "activationEvents": [
     "onLanguage:tib"
   ],
-  "main": "./out/client/src/extension",
+  "main": "./client/out/extension",
   "contributes": {
     "languages": [
       {
@@ -290,12 +290,10 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "tsc -b",
     "watch": "tsc -watch -p ./",
+    "compile-api": "cd api && npm i && node node_modules/vscode/bin/install && npm run compile && cd ../",
     "install-vsc": "node client/node_modules/vscode/bin/install && node server/node_modules/vscode/bin/install",
-    "preinstall": "cd server && npm i && cd ../client && npm i && cd .. && npm run install-vsc && npm i -g typescript"
-  },
-  "dependencies": {
-    "npm": "^6.5.0"
+    "preinstall": "npm run compile-api && cd server && npm i && cd ../client && npm i && cd .. && npm run install-vsc"
   }
 }

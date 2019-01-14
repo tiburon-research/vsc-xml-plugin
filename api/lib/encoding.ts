@@ -2,7 +2,7 @@
 
 import * as shortHash from "short-hash"
 import { KeyedCollection, safeString } from "./index"
-import { RegExpPatterns } from 'tib-constants'
+import { RegExpPatterns } from './constants'
 
 
 /* ---------------------------------------- КОДИРОВАНИЕ ---------------------------------------- */

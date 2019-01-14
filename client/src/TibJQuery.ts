@@ -2,7 +2,7 @@
 
 import { JSDOM } from 'jsdom'
 import * as _JQuery from 'jquery'
-import { KeyedCollection, Encoding, Parse } from 'tib-classes'
+import { KeyedCollection, Encoding, Parse } from 'tib-api'
 import { showWarning } from './classes'
 
 

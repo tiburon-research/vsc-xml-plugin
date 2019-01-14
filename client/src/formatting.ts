@@ -1,10 +1,10 @@
 'use strict';
 
-import { Language, safeString, ExtensionSettings, Parse, Encoding } from "tib-classes";
+import { Language, safeString, ExtensionSettings, Parse, Encoding } from "tib-api";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { logError, CSFormatter } from "./extension";
-import { _pack, RegExpPatterns } from 'tib-constants'
+import { _pack, RegExpPatterns } from 'tib-api/dist/constants'
 
 
 

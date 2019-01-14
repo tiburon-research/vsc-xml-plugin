@@ -2,7 +2,7 @@
 
 import { TextRange, safeString, TagInfo, Language, positiveMin, KeyedCollection, CurrentTag } from "./index";
 import { clearXMLComments } from "./encoding"
-import { RegExpPatterns } from 'tib-constants'
+import { RegExpPatterns } from './constants'
 import * as charDetect from 'charset-detector'
 import * as vscode from 'vscode'
 //import { initJQuery } from "tib-jquery";

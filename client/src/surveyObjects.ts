@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 
 
 
-import { KeyedCollection, InlineAttribute, OrderedCollection } from 'tib-classes';
+import { KeyedCollection, InlineAttribute, OrderedCollection } from 'tib-api';
 
 
 export enum SurveyElementType { Item, ListItem, Answer, List, Question, Page };

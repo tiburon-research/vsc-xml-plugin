@@ -1,11 +1,15 @@
 {
-  "name": "tib-classes",
-  "version": "1.0.0",
   "description": "Custom classes, used in both client and server side of tib app",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tiburon-research/vsc-xml-plugin"
+  },
+  "name": "tib-api",
+  "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "author": "TiburonResearch",
-  "license": "MIT",
   "engines": {
     "vscode": "^1.30.2",
     "node": "*"
@@ -17,21 +21,19 @@
     "dateformat": "^3.0.3",
     "iconv-lite": "^0.4.24",
     "install-local": "^0.6.2",
+    "jquery": "^3.3.1",
+    "jsdom": "^13.1.0",
     "node-machine-id": "^1.1.10",
     "short-hash": "^1.0.0",
     "vscode": "^1.1.26",
-    "winattr": "^2.0.0",
-    "tib-constants": "file:../TibConstants"
-  },
-  "localDependencies": {
-    "tib-constants": "node_modules/tib-constants"
+    "winattr": "^2.0.0"
   },
   "devDependencies": {
-    "typescript": "^2.5.3",
+    "typescript": "^3.2.2",
+    "@types/jsdom": "^12.2.1",
     "@types/mocha": "^5.2.5"
   },
   "scripts": {
-    "postinstall": "node node_modules/vscode/bin/install && node node_modules/install-local/bin/install-local",
-    "build": "tsc"
+    "compile": "tsc -p ./"
   }
 }

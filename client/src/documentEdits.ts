@@ -1,10 +1,10 @@
 'use strict'
 
 import { SurveyElementType, SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage } from './surveyObjects';
-import { OrderedCollection, Parse } from 'tib-classes'
+import { OrderedCollection, Parse } from 'tib-api'
 import * as vscode from 'vscode'
-import { QuestionTypes } from 'tib-constants';
-import { initJQuery } from 'tib-jquery';
+import { QuestionTypes } from 'tib-api/dist/constants';
+import { initJQuery } from 'tib-api/dist/tibJQuery';
 
 
 export function AnswersToItems(text: string): string

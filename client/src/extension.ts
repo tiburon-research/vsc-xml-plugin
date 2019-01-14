@@ -3,16 +3,16 @@
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
 
-import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, safeString, SimpleTag, openFileText, getDocumentMethods, getDocumentNodeIds, KeyValuePair, getMixIds, getContextChanges, inCDATA, registerCommand, ContextChange, Encoding, Parse } from "tib-classes";
+import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, safeString, SimpleTag, openFileText, getDocumentMethods, getDocumentNodeIds, KeyValuePair, getMixIds, getContextChanges, inCDATA, registerCommand, ContextChange, Encoding, Parse } from "tib-api";
 
 import { pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId } from "./classes";
 
 import * as Formatting from './formatting'
 import * as fs from 'fs';
-import { initJQuery } from 'tib-jquery'
+import { initJQuery } from 'tib-api/dist/tibJQuery'
 import * as debug from './debug'
 //import { registerActionCommands } from './diagnostic'
-import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes, XMLEmbeddings } from 'tib-constants'
+import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes, XMLEmbeddings } from 'tib-api/dist/constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
 import { CacheSet } from './cache'
@@ -2257,7 +2257,7 @@ async function createElements(elementType: SurveyElementType)
 
 async function createClientConnection(context: vscode.ExtensionContext)
 {
-	let serverModule = context.asAbsolutePath(path.join('out', 'src', 'server.js'));
+	let serverModule = context.asAbsolutePath(path.join('server', 'out', 'server.js'));
 	let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
 
 	let serverOptions: client.ServerOptions = {

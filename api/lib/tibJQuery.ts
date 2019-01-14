@@ -2,7 +2,7 @@
 
 import { JSDOM } from 'jsdom'
 import * as _JQuery from 'jquery'
-import { KeyedCollection, Encoding } from 'tib-classes'
+import { KeyedCollection, Encoding } from './index'
 //import { ReplaceXMLDeclaration } from './parsing';
 
 

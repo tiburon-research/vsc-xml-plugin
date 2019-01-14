@@ -5,11 +5,14 @@ import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as clipboard from "clipboardy"
 import * as fs from 'fs'
-import { RegExpPatterns } from 'tib-constants'
+import * as Constants from './constants'
+import * as JQUery from './tibJQuery'
 import * as iconv from 'iconv-lite'
 
 
-export { Encoding, Parse };
+export { Encoding, Parse, Constants, JQUery };
+	
+	
 
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
 //#region
@@ -614,7 +617,7 @@ export class SimpleTag
 		let raw = document.getText(range);
 		let StartPosition = range.start.translate(0, raw.indexOf("<"));
 		this.Raw = raw;
-		let cl = this.Raw.trim().find(RegExpPatterns.OpenTagFull);
+		let cl = this.Raw.trim().find(Constants.RegExpPatterns.OpenTagFull);
 		let from = document.offsetAt(range.start);
 		if (cl.Index > -1)
 			this.OpenTagRange = new vscode.Range(StartPosition, document.positionAt(from + cl.Result[0].length));
@@ -645,7 +648,7 @@ export class SimpleTag
 	/** Закрыт ли открывающий тег */
 	public isClosed(): boolean
 	{
-		return !!this.Raw.trim().match(RegExpPatterns.OpenTagFull);
+		return !!this.Raw.trim().match(Constants.RegExpPatterns.OpenTagFull);
 	}
 
 	public readonly Name: string;
@@ -810,11 +813,11 @@ export class CurrentTag
 	/** возвращает коллекцию атрибутов из переданной строки */
 	public static GetAttributesArray(str: string): KeyedCollection<string>
 	{
-		let mt = str.match(RegExpPatterns.Attributes);
+		let mt = str.match(Constants.RegExpPatterns.Attributes);
 		let res: KeyedCollection<string> = new KeyedCollection<string>();
 		if (mt)
 		{
-			let reg = new RegExp(RegExpPatterns.SingleAttribute);
+			let reg = new RegExp(Constants.RegExpPatterns.SingleAttribute);
 			mt.forEach(element =>
 			{
 				let parse = element.match(reg);
@@ -897,7 +900,7 @@ export class CurrentTag
 	/** $Method */
 	public CSSingle()
 	{
-		return !!this.PreviousText && !!this.PreviousText.match("\\$((?!" + RegExpPatterns.InlineSpecial + ")(\\w+))$");
+		return !!this.PreviousText && !!this.PreviousText.match("\\$((?!" + Constants.RegExpPatterns.InlineSpecial + ")(\\w+))$");
 	}
 
 
@@ -907,7 +910,7 @@ export class CurrentTag
 		if (!this.OpenTagIsClosed)
 		{
 			let rest = this.PreviousText.slice(this.StartIndex);
-			rest = rest.replace(RegExpPatterns.Attributes, "");
+			rest = rest.replace(Constants.RegExpPatterns.Attributes, "");
 			return !!rest.match(/(("[^"]*)|('[^']*))$/);
 		}
 		return !!this.Body && Parse.inString(this.Body);
@@ -916,7 +919,7 @@ export class CurrentTag
 	/** == Language.Inline. Но это только когда написано полностью */
 	public IsSpecial()
 	{
-		return !!this.PreviousText && !!this.PreviousText.match("\\$(" + RegExpPatterns.InlineSpecial + ")$");
+		return !!this.PreviousText && !!this.PreviousText.match("\\$(" + Constants.RegExpPatterns.InlineSpecial + ")$");
 	}
 
 
@@ -1265,7 +1268,7 @@ export class TagInfo
 			let from = mt[groups.beforeFull].length;
 			let to = text.indexOf(">", from) + 1; // TODO: вот это отстойный вариант, но другие очень сложные
 			// выделяем AllowCode fake
-			this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + RegExpPatterns.AllowCodeTags + "$")) && !text.substr(to).match(/^([\s\n]*)*<\w/g);
+			this.IsAllowCodeTag = !!this.Name.match(new RegExp("^" + Constants.RegExpPatterns.AllowCodeTags + "$")) && !text.substr(to).match(/^([\s\n]*)*<\w/g);
 			if (this.Language == Language.CSharp && !this.IsAllowCodeTag) this.Language = Language.XML;
 			this.OpenTag = new TextRange({ From: from, To: to });
 			let before = text.substr(0, this.OpenTag.From + 1);
@@ -1311,7 +1314,7 @@ export class TagInfo
 
 		if (!tagName) return res;
 
-		if (tagName.match(new RegExp("^(" + RegExpPatterns.AllowCodeTags + ")$"))) return Language.CSharp;
+		if (tagName.match(new RegExp("^(" + Constants.RegExpPatterns.AllowCodeTags + ")$"))) return Language.CSharp;
 
 		switch (tagName.toLocaleLowerCase())
 		{

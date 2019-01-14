@@ -1,24 +1,31 @@
 {
+	"description": "Server side of Tiburon XML helper",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/tiburon-research/vsc-xml-plugin"
+	},
+	"author": "TiburonResearch",
 	"engines": {
 		"vscode": "^1.30.0",
 		"node": "*"
 	},
 	"dependencies": {
 		"install-local": "^0.6.2",
-		"vscode-languageserver": "^5.2.1",
-		"tib-constants": "file:../modules/TibConstants",
-		"tib-classes": "file:../modules/TibClasses"
+		"tib-api": "file:../api",
+		"vscode": "^1.1.26",
+		"vscode-languageserver": "^5.2.1"
 	},
 	"localDependencies": {
-		"tib-constants": "node_modules/tib-constants",
-		"tib-classes": "node_modules/tib-classes"
+		"tib-api": "./node_modules/tib-api"
 	},
 	"devDependencies": {
+		"typescript": "^3.2.2",
 		"@types/node": "^10.12.18",
-		"@types/mocha": "^5.2.5",
-		"vscode": "^1.1.26"
+		"@types/mocha": "^5.2.5"
 	},
 	"scripts": {
+		"compile": "tsc -p ./",
 		"postinstall": "node node_modules/vscode/bin/install"
 	}
 }

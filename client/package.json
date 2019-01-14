@@ -1,6 +1,14 @@
 {
+	"description": "Client side of Tiburon XML helper",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/tiburon-research/vsc-xml-plugin"
+	},
+	"author": "TiburonResearch",
 	"engines": {
-		"vscode": "^1.30.0"
+		"vscode": "^1.30.0",
+		"node": "*"
 	},
 	"dependencies": {
 		"charset-detector": "0.0.2",
@@ -8,30 +16,28 @@
 		"cssbeautify": "^0.3.1",
 		"dateformat": "^3.0.3",
 		"iconv-lite": "^0.4.23",
+		"install-local": "^0.6.2",
 		"jquery": "^3.3.1",
 		"js-beautify": "^1.7.5",
 		"jsdom": "^11.6.2",
 		"node-machine-id": "^1.1.10",
 		"short-hash": "^1.0.0",
+		"tib-api": "file:../api",
 		"vscode-languageclient": "^5.2.1",
-		"winattr": "^2.0.0",
-		"tib-constants": "file:../modules/TibConstants",
-		"tib-classes": "file:../modules/TibClasses",
-		"tib-jquery": "file:../modules/TibJQuery",
-		"install-local": "^0.6.2"
+		"winattr": "^2.0.0"
 	},
 	"localDependencies": {
-		"tib-constants": "node_modules/tib-constants",
-		"tib-classes": "node_modules/tib-classes",
-		"tib-jquery": "node_modules/tib-jquery"
+		"tib-api": "./node_modules/tib-api"
 	},
 	"devDependencies": {
+		"typescript": "^3.2.2",
 		"@types/dateformat": "^1.0.1",
 		"@types/mocha": "^5.2.5",
 		"@types/node": "^10.12.18",
 		"vscode": "^1.1.26"
 	},
 	"scripts": {
+		"compile": "tsc -p ./",
 		"postinstall": "node node_modules/vscode/bin/install && node node_modules/install-local/bin/install-local"
 	}
 }

@@ -3,16 +3,25 @@
         "module": "commonjs",
         "target": "es6",
         "outDir": "out",
+        "rootDir": "src",
         "lib": [
             "es6"
         ],
         "sourceMap": true,
     },
+    "include": [ "src" ],
     "exclude": [
         "node_modules",
         "modules",
         ".vscode-test",
         "ignore",
-        "stuff"
-    ]
+        "stuff",
+        "out",
+        "dist"
+    ],
+    "references": [
+        { "path": "./api" },
+		{ "path": "./client" },
+		{ "path": "./server" }
+	]
 }
