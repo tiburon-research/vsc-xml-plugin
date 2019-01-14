@@ -1,6 +1,5 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
-//import { getDiagnosticElements } from 'tib-api/lib/diagnostic';
 
 
 var connection = server.createConnection(server.ProposedFeatures.all);
@@ -22,14 +21,6 @@ connection.onInitialize((params: server.InitializeParams) =>
 connection.onInitialized(() =>
 {
 	connection.sendNotification("server.log", "Сервер запущен");
-	connection.onNotification('client/getDiagnostic', (document: vscode.TextDocument) =>
-	{
-		/* getDiagnosticElements(document).then(diagnostics =>
-		{
-			console.log(diagnostics.length);
-			connection.sendNotification('textDocument/publishDiagnostics', diagnostics);
-		}) */
-	})
 });
 
 

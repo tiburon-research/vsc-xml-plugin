@@ -3,8 +3,8 @@
 import { SurveyElementType, SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage } from './surveyObjects';
 import { OrderedCollection, Parse } from 'tib-api'
 import * as vscode from 'vscode'
-import { QuestionTypes } from 'tib-api/dist/constants';
-import { initJQuery } from 'tib-api/dist/tibJQuery';
+import { QuestionTypes } from 'tib-api/lib/constants';
+import { initJQuery } from 'tib-api/lib/tibJQuery';
 
 
 export function AnswersToItems(text: string): string

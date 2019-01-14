@@ -3,16 +3,16 @@
       "target": "es6",
       "module": "commonjs",
       "declaration": true,
-      "outDir": "dist",
-      "rootDir": "lib",
+      "outDir": "lib",
+      "rootDir": "src",
       "sourceMap": true,
       "composite": true
     },
-    "files": [
-      "lib/index.ts",
-      "lib/constants.ts",
-      "lib/encoding.ts",
-      "lib/parsing.ts",
-      "lib/tibJQuery.ts"
-    ]
+    "include": [ "src" ],
+    "exclude": [
+      "node_modules", 
+      ".vscode-test",
+      "ignore"
+    ],
+    "compileOnSave": true
 }

@@ -3,8 +3,8 @@
 import { Language, safeString, ExtensionSettings, Parse, Encoding } from "tib-api";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
-import { logError, CSFormatter } from "./extension";
-import { _pack, RegExpPatterns } from 'tib-api/dist/constants'
+import { CSFormatter } from "./extension";
+import { _pack, RegExpPatterns } from 'tib-api/lib/constants'
 
 
 
@@ -489,7 +489,7 @@ function formatTag(tag: string): string
 	}
 	catch (error)
 	{
-		logError("Ошибка при форматировании атрибутов тега", error);
+		throw "Ошибка при форматировании атрибутов тега";
 	}
 
 	return res;

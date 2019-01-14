@@ -7,7 +7,7 @@
         "lib": [
             "es6"
         ],
-        "sourceMap": true,
+        "sourceMap": true
     },
     "include": [ "src" ],
     "exclude": [
@@ -17,7 +17,7 @@
         "ignore",
         "stuff",
         "out",
-        "dist"
+        "lib"
     ],
     "references": [
         { "path": "./api" },

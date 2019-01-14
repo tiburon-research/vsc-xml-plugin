@@ -9,10 +9,10 @@ import { pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, 
 
 import * as Formatting from './formatting'
 import * as fs from 'fs';
-import { initJQuery } from 'tib-api/dist/tibJQuery'
+import { initJQuery } from 'tib-api/lib/tibJQuery'
 import * as debug from './debug'
 //import { registerActionCommands } from './diagnostic'
-import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes, XMLEmbeddings } from 'tib-api/dist/constants'
+import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes, XMLEmbeddings } from 'tib-api/lib/constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
 import { CacheSet } from './cache'
