@@ -2,7 +2,10 @@
 .vscode-test/**
 out/test/**
 out/**/*.map
-src/**
-.gitignore
+*/src
+**/.gitignore
 tsconfig.json
 vsc-extension-quickstart.md
+**/package-lock.json
+api
+**/tib-api/src

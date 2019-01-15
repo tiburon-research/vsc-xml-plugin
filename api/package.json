@@ -10,29 +10,6 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "author": "TiburonResearch",
-  "engines": {
-    "vscode": "^1.30.2",
-    "node": "*"
-  },
-  "dependencies": {
-    "@types/node": "^10.12.18",
-    "charset-detector": "^0.0.2",
-    "clipboardy": "^1.2.3",
-    "dateformat": "^3.0.3",
-    "iconv-lite": "^0.4.24",
-    "jquery": "^3.3.1",
-    "jsdom": "^13.1.0",
-    "node-machine-id": "^1.1.10",
-    "short-hash": "^1.0.0",
-    "vscode": "^1.1.26",
-    "winattr": "^2.0.0"
-  },
-  "devDependencies": {
-    "typescript": "^3.2.2",
-    "@types/jsdom": "^12.2.1",
-    "@types/jquery": "^3.3.29",
-    "@types/mocha": "^5.2.5"
-  },
   "scripts": {
     "compile": "tsc -p ./"
   }

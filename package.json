@@ -2,7 +2,7 @@
   "name": "tiburonscripter",
   "displayName": "Tiburon XML Helper",
   "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-  "version": "0.3.6",
+  "version": "1.1.0",
   "publisher": "TiburonResearch",
   "author": {
     "name": "GuRu",
@@ -19,7 +19,8 @@
   "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/blob/master/README.md",
   "license": "MIT",
   "engines": {
-    "vscode": "^1.30.0"
+    "vscode": "^1.30.0",
+    "node": "*"
   },
   "categories": [
     "Other"
@@ -288,13 +289,38 @@
       }
     }
   },
+  "dependencies": {
+    "@types/dateformat": "^1.0.1",
+    "charset-detector": "^0.0.2",
+    "clipboardy": "^1.2.3",
+    "cssbeautify": "^0.3.1",
+    "dateformat": "^3.0.3",
+    "iconv-lite": "^0.4.24",
+    "install-local": "^0.6.2",
+    "jquery": "^3.3.1",
+    "js-beautify": "^1.7.5",
+    "jsdom": "^13.1.0",
+    "node-machine-id": "^1.1.10",
+    "short-hash": "^1.0.0",
+    "tib-api": "file:api",
+    "vscode": "^1.1.26",
+    "vscode-languageclient": "^5.2.1",
+    "vscode-languageserver": "^5.2.1",
+    "winattr": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^3.2.2",
+    "@types/jsdom": "^12.2.1",
+    "@types/jquery": "^3.3.29",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^10.12.18"
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -b",
     "watch": "tsc -watch -p ./",
-    "api": "cd api && npm run compile && cd ../ && node client/node_modules/install-local/bin/install-local && node seerver/node_modules/install-local/bin/install-local",
-    "compile-api": "cd api && npm i && node node_modules/vscode/bin/install && npm run compile && cd ../",
-    "install-vsc": "node client/node_modules/vscode/bin/install && node server/node_modules/vscode/bin/install",
-    "preinstall": "npm run compile-api && cd server && npm i && cd ../client && npm i && cd .. && npm run install-vsc"
+    "compile-api": "cd api && npm run compile && cd ../",
+    "install-vsc": "node node_modules/vscode/bin/install",
+    "postinstall": "npm run install-vsc && npm run compile-api && cd server && npm i && cd ../client && npm i && cd .."
   }
 }

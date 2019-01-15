@@ -10,16 +10,6 @@
 		"vscode": "^1.30.0",
 		"node": "*"
 	},
-	"dependencies": {
-		"tib-api": "file:../api",
-		"vscode": "^1.1.26",
-		"vscode-languageserver": "^5.2.1"
-	},
-	"devDependencies": {
-		"typescript": "^3.2.2",
-		"@types/node": "^10.12.18",
-		"@types/mocha": "^5.2.5"
-	},
 	"scripts": {
 		"compile": "tsc -p ./"
 	}
