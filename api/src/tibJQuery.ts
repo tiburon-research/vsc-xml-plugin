@@ -27,7 +27,7 @@ export class DOMSurveyData implements Encoding.XMLencodeResult
 
 
 /** возвращает JQuery, модернизированный под XML */
-export function initJQuery(): any
+export function init(): any
 {
     const dom = new JSDOM("<Root></Root>"); // нормальный объект DOM
     let JQuery: any = _JQuery(dom.window);

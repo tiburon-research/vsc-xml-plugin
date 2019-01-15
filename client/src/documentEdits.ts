@@ -4,7 +4,7 @@ import { SurveyElementType, SurveyListItem, SurveyQuestion, SurveyAnswer, Survey
 import { OrderedCollection, Parse } from 'tib-api'
 import * as vscode from 'vscode'
 import { QuestionTypes } from 'tib-api/lib/constants';
-import { initJQuery } from 'tib-api/lib/tibJQuery';
+import { init as initJQuery } from 'tib-api/lib/tibJQuery';
 
 
 export function AnswersToItems(text: string): string

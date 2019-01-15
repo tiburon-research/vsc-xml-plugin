@@ -292,6 +292,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -b",
     "watch": "tsc -watch -p ./",
+    "api": "cd api && npm run compile && cd ../ && node client/node_modules/install-local/bin/install-local && node seerver/node_modules/install-local/bin/install-local",
     "compile-api": "cd api && npm i && node node_modules/vscode/bin/install && npm run compile && cd ../",
     "install-vsc": "node client/node_modules/vscode/bin/install && node server/node_modules/vscode/bin/install",
     "preinstall": "npm run compile-api && cd server && npm i && cd ../client && npm i && cd .. && npm run install-vsc"

@@ -11,13 +11,9 @@
 		"node": "*"
 	},
 	"dependencies": {
-		"install-local": "^0.6.2",
 		"tib-api": "file:../api",
 		"vscode": "^1.1.26",
 		"vscode-languageserver": "^5.2.1"
-	},
-	"localDependencies": {
-		"tib-api": "./node_modules/tib-api"
 	},
 	"devDependencies": {
 		"typescript": "^3.2.2",
@@ -25,7 +21,6 @@
 		"@types/mocha": "^5.2.5"
 	},
 	"scripts": {
-		"compile": "tsc -p ./",
-		"postinstall": "node node_modules/vscode/bin/install"
+		"compile": "tsc -p ./"
 	}
 }
