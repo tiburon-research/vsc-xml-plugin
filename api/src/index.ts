@@ -1,18 +1,16 @@
 'use strict';
 
-import * as vscode from 'vscode';
+import * as server from 'vscode-languageserver';
 import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as clipboard from "clipboardy"
-import * as fs from 'fs'
 import * as Constants from './constants'
 import * as JQuery from './tibJQuery'
-import * as iconv from 'iconv-lite'
 
 
 export { Encoding, Parse, Constants, JQuery };
-	
-	
+
+
 
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
 //#region
@@ -59,9 +57,9 @@ export class TextRange
 		}
 	}
 
-	ToRange(document: vscode.TextDocument): vscode.Range
+	ToRange(document: server.TextDocument): server.Range
 	{
-		return new vscode.Range(document.positionAt(this.From), document.positionAt(this.To));
+		return server.Range.create(document.positionAt(this.From), document.positionAt(this.To));
 	}
 }
 
@@ -370,52 +368,8 @@ export class OrderedCollection<T>
 }
 
 
-export class TibAutoCompleteItem 
-{
-	Name: string;
-	/** тип объекта (string из vscode.CompletionItemKind) */
-	Kind: keyof typeof vscode.CompletionItemKind;
-	/** краткое описание (появляется в редакторе в той же строчке) */
-	Detail: string = "";
-	/** подробное описание (появляется при клике на i (зависит от настроек)) */
-	Description: string = "";
-	/** кусок кода, сигнатура (показывается при наведении) */
-	Documentation: string = "";
-	/** Родитель (объект) */
-	Parent: string = "";
-	Overloads: TibAutoCompleteItem[] = []; // массив перегрузок
-	/** Тег, в котором должно работать */
-	ParentTag: string = "";
 
-	constructor(obj: Object)
-	{
-		for (let key in obj)
-			this[key] = obj[key];
-	}
-
-	ToCompletionItem(addBracket: boolean = false, sortString?: string)
-	{
-		let kind: keyof typeof vscode.CompletionItemKind = this.Kind;
-		let item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind[kind]);
-		if (addBracket && (this.Kind == "Function" || this.Kind == "Method")) item.insertText = new vscode.SnippetString(this.Name + "($0)");
-		let mds = new vscode.MarkdownString();
-		if (this.Description) mds.value = this.Description;
-		else if (this.Documentation) mds.value = this.Documentation;
-		item.documentation = mds;
-		if (sortString) item.sortText = sortString;
-		if (this.Detail) item.detail = this.Detail;
-		return item;
-
-	}
-
-	ToSignatureInformation()
-	{
-		return new vscode.SignatureInformation(this.Documentation, new vscode.MarkdownString(this.Description));
-	}
-}
-
-
-export class TibAttribute
+export class ITibAttribute
 {
 	Name: string = "";
 	Type: string = "";
@@ -440,153 +394,9 @@ export class TibAttribute
 		for (let key in obj)
 			this[key] = obj[key];
 	}
-
-	/** `nameOnly` - не подставлять значения */
-	ToCompletionItem(callback: (query: string) => string[], nameOnly = false): vscode.CompletionItem
-	{
-		let item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Property);
-		let snip = this.Name;
-		if (!nameOnly)
-		{
-			snip += '="';
-			let valAr: string[];
-			let auto = this.AutoValue();
-			if (!auto)
-			{
-				valAr = this.ValueCompletitions(callback);
-				if (valAr.length > 0) snip += "${1|" + valAr.join(",") + "|}";
-				else snip += "$1";
-			}
-			else snip += auto;
-			snip += '"';
-		}
-		let res = new vscode.SnippetString(snip);
-		item.insertText = res;
-		item.detail = (this.Detail ? this.Detail : this.Name) + (this.Type ? (" (" + this.Type + ")") : "");
-		let doc = "";
-		if (this.Default) doc += "Значение по умолчанию: `" + this.Default + "`";
-		doc += "\nПоддержка кодовых вставок: `" + (this.AllowCode ? "да" : "нет") + "`";
-		item.documentation = new vscode.MarkdownString(doc);
-		return item;
-	}
-
-	ValueCompletitions(callback: (query: string) => string[]): string[]
-	{
-		if (this.Values && this.Values.length) return this.Values;
-		else if (!!this.Result) return callback(this.Result);
-		return [];
-	}
-
-	AutoValue(): string
-	{
-		if (this.Auto) return this.Auto;
-		if (this.Type == "Boolean")
-		{
-			if (!!this.Default) return this.Default == "true" ? "false" : "true";
-			return "true";
-		}
-		return null;
-	}
 }
 
 
-export class TibMethod
-{
-	public Name: string = "";
-	public Signature: string = "";
-	public IsFunction: boolean;
-	public Type: string;
-	public FileName: String;
-
-	private Uri: vscode.Uri;
-	private Location: vscode.Range;
-
-	constructor(name: string, sign: string, location: vscode.Range, fileName: string, isFunction: boolean = false, type: string = "")
-	{
-		this.Name = name;
-		this.Signature = sign;
-		this.Location = location;
-		this.Type = type;
-		this.FileName = fileName;
-		this.Uri = vscode.Uri.file(fileName);
-		this.IsFunction = isFunction;
-	}
-
-	public GetLocation(): vscode.Location
-	{
-		return new vscode.Location(this.Uri, this.Location)
-	}
-
-	ToCompletionItem()
-	{
-		let item = new vscode.CompletionItem(this.Name, vscode.CompletionItemKind.Function);
-		if (this.IsFunction) item.insertText = new vscode.SnippetString(this.Name + "($0)");
-		let mds = new vscode.MarkdownString();
-		mds.value = this.Signature;
-		if (this.Type) item.detail = this.Type;
-		item.documentation = mds;
-		item.sortText = '___' + this.Name;
-		return item;
-	}
-
-	ToHoverItem()
-	{
-		return { language: "csharp", value: this.Signature };
-	}
-
-	ToSignatureInformation()
-	{
-		return new vscode.SignatureInformation(this.Name, new vscode.MarkdownString(this.Signature));
-	}
-}
-
-
-export class TibMethods extends KeyedCollection<TibMethod>
-{
-	constructor(collection?: KeyedCollection<TibMethod>)
-	{
-		super();
-		if (!!collection)
-			collection.forEach((key, value) =>
-			{
-				this.Add(value);
-			})
-	}
-
-	public Add(item: TibMethod)
-	{
-		if (!this.Contains(item.Name)) this.AddPair(item.Name, item);
-	}
-
-	CompletionArray(): vscode.CompletionItem[]
-	{
-		return this.Values().map(function (e)
-		{
-			return e.ToCompletionItem();
-		});
-	}
-
-	HoverArray(word: string): any[]
-	{
-		return this.Values().map(function (e)
-		{
-			if (e.Name == word) return e.ToHoverItem();
-		});
-	}
-
-	SignatureArray(word: string)
-	{
-		return this.Values().map(function (e)
-		{
-			if (e.Name == word) return e.ToSignatureInformation();
-		}).filter(x => !!x);
-	}
-
-	Filter(filter: (key: string, value: TibMethod) => boolean): TibMethods
-	{
-		return new TibMethods(super.Filter(filter));
-	}
-}
 
 
 /** Текстовая структура для хранения Name/Value */
@@ -612,17 +422,17 @@ export class InlineAttribute
  */
 export class SimpleTag
 {
-	constructor(document: vscode.TextDocument, range: vscode.Range)
+	constructor(document: server.TextDocument, range: server.Range)
 	{
 		let raw = document.getText(range);
-		let StartPosition = range.start.translate(0, raw.indexOf("<"));
+		let startPosition = translatePosition(document, range.start, raw.indexOf("<"));
 		this.Raw = raw;
 		let cl = this.Raw.trim().find(Constants.RegExpPatterns.OpenTagFull);
 		let from = document.offsetAt(range.start);
 		if (cl.Index > -1)
-			this.OpenTagRange = new vscode.Range(StartPosition, document.positionAt(from + cl.Result[0].length));
+			this.OpenTagRange = server.Range.create(startPosition, document.positionAt(from + cl.Result[0].length));
 		else
-			this.OpenTagRange = new vscode.Range(StartPosition, range.end);
+			this.OpenTagRange = server.Range.create(startPosition, range.end);
 		let res = raw.match(/<(\w+)(\W|$)/);
 		if (!!res) this.Name = res[1];
 	}
@@ -655,7 +465,7 @@ export class SimpleTag
 	protected Attrs: KeyedCollection<string>;
 	/** Позиция открывающего тега */
 	//public readonly StartPosition: vscode.Position;
-	public readonly OpenTagRange: vscode.Range;
+	public readonly OpenTagRange: server.Range;
 
 	private readonly Raw: string; // хранение исходных данных
 }
@@ -666,15 +476,22 @@ export interface CurrentTagFields
 {
 	PreviousText: string;
 	//PreviousTextSafe: string;
-	StartPosition?: vscode.Position;
+	StartPosition?: server.Position;
 	StartIndex?: number;
 	OpenTagIsClosed?: boolean;
 	LastParent?: SimpleTag;
 	Body?: string;
 	Parents?: SimpleTag[];
-	OpenTagRange?: vscode.Range;
+	OpenTagRange?: server.Range;
 }
 
+export interface CurrentTagGetFields
+{
+	document: server.TextDocument;
+	position: server.Position;
+	text?: string;
+	force?: boolean;
+}
 
 /** Самый главный класс */
 export class CurrentTag
@@ -695,7 +512,7 @@ export class CurrentTag
 	public LastParent: SimpleTag;
 	/** Откуда начинается */
 	public StartIndex: number;
-	public OpenTagRange: vscode.Range;
+	public OpenTagRange: server.Range;
 	/** Текст от начала документа до Position */
 	public PreviousText = null;
 
@@ -828,7 +645,7 @@ export class CurrentTag
 	}
 
 	/** Получает все атрибуты, независимо от Position */
-	public GetAllAttributes(document: vscode.TextDocument): KeyedCollection<string>
+	public GetAllAttributes(document: server.TextDocument): KeyedCollection<string>
 	{
 		if (this.OpenTagIsClosed) return this.Attributes.toKeyedCollection(x => new KeyValuePair<string>(x.Name, x.Value));
 		let fromStart = document.getText().slice(this.StartIndex);
@@ -860,7 +677,7 @@ export class CurrentTag
 				if (tagLanguage == Language.CSharp)
 				{
 					if
-					(
+						(
 						!this.OpenTagIsClosed ||
 						!!this.Body && this.Body.match(/(<\/\w*$)|(^[\t ]+\r?\n)/)
 					)
@@ -1013,240 +830,6 @@ export class CurrentTag
 }
 
 
-/** Информация об XML узле */
-export class SurveyNode
-{
-	constructor(type: string, id: string, pos: vscode.Position, fileName: string)
-	{
-		this.Id = id;
-		this.Type = type;
-		this.Position = pos;
-		this.FileName = fileName;
-		this.Uri = vscode.Uri.file(fileName);
-		this.IconKind = this.GetKind(type);
-	}
-
-	public Id: string = "";
-	public Type: string = "";
-	public Position: vscode.Position;
-	public FileName: string;
-	public IconKind: vscode.CompletionItemKind;
-
-	private Uri: vscode.Uri;
-
-	GetLocation(): vscode.Location
-	{
-		return new vscode.Location(this.Uri, this.Position);
-	}
-
-	/** Чтобы иконки отличались */
-	private GetKind(nodeName: string): vscode.CompletionItemKind
-	{
-		switch (nodeName)
-		{
-			case "Page":
-				return vscode.CompletionItemKind.File;
-
-			case "Question":
-				return vscode.CompletionItemKind.EnumMember;
-
-			case "List":
-				return vscode.CompletionItemKind.Unit;
-
-			case "Quota":
-				return vscode.CompletionItemKind.Event;
-
-			default:
-				break;
-		}
-	}
-}
-
-
-export class SurveyNodes extends KeyedCollection<SurveyNode[]>
-{
-	constructor()
-	{
-		super();
-	}
-
-	/** Добавляет в нужный элемент */
-	Add(item: SurveyNode)
-	{
-		if (!this.Contains(item.Type))
-			this.AddPair(item.Type, [item]);
-		else if (this.Item(item.Type).findIndex(x => x.Id == item.Id)) this.Item(item.Type).push(item);
-	}
-
-
-	/** Добавляет к нужным элементам, не заменяя */
-	AddRange(range: KeyedCollection<SurveyNode[]>): void
-	{
-		range.forEach((key, value) =>
-		{
-			if (!this.Contains(key))
-				this.AddPair(key, value);
-			else this.UpdateValue(key, x => x.concat(value));
-		})
-	}
-
-	GetIds(type: string): string[]
-	{
-		let res = [];
-		if (this.Contains(type)) res = this.Item(type).map(e => e.Id);
-		return res;
-	}
-
-	GetItem(id: string, type?: string): SurveyNode
-	{
-		let nodes = this.Item(type);
-		if (!nodes) return null;
-		let res: SurveyNode;
-		if (!!nodes)
-		{
-			for (let i = 0; i < nodes.length; i++)
-			{
-				if (nodes[i].Id == id)
-				{
-					res = nodes[i];
-					break;
-				}
-			};
-		}
-
-		return res;
-	}
-
-	Clear(names?: string[])
-	{
-		if (!names) super.Clear();
-		else
-			names.forEach(element =>
-			{
-				this.items[element] = [];
-			});
-	}
-
-	CompletitionItems(name: string, closeQt: string = ""): vscode.CompletionItem[]
-	{
-		let res: vscode.CompletionItem[] = [];
-		if (!this.Item(name)) return res;
-		this.Item(name).forEach(element =>
-		{
-			let ci = new vscode.CompletionItem(element.Id, vscode.CompletionItemKind.Enum);
-			ci.detail = name;
-			ci.insertText = new vscode.SnippetString(element.Id + closeQt);
-			ci.kind = element.IconKind;
-			ci.sortText = name + ci.insertText;
-			res.push(ci);
-		});
-		return res;
-	}
-
-	/** Фильтрует элементы */
-	FilterNodes(filter: (node: SurveyNode) => boolean): SurveyNodes
-	{
-		let res = new SurveyNodes();
-		this.forEach((key, value) =>
-		{
-			let nodes = value.filter(x => filter(x));
-			if (nodes.length) res.AddPair(key, nodes);
-		})
-		return res;
-	}
-
-}
-
-
-/** Настройки расширения */
-export class ExtensionSettings extends KeyedCollection<any>
-{
-	constructor()
-	{
-		super();
-		this.Update();
-	}
-
-	/** Обновляет объект настроек из файла конфигурации */
-	public Update(): void
-	{
-		this.Config = vscode.workspace.getConfiguration('tib');
-		for (let key in this.Config) this.AddPair(key.toString(), this.Config.get(key));
-	}
-
-	/** Изменяет настройки */
-	public Set(key: string, value: any): Promise<void>
-	{
-		return new Promise<void>((resolve, reject) =>
-		{
-			try
-			{
-				this.Config.update(key, value, true).then(
-					() =>
-					{
-						resolve();
-					},
-					() => reject("Ошибка при изменении параметра конфигурации")
-				);
-			}
-			catch (error)
-			{
-				reject(error);
-			}
-		});
-	}
-
-	private Config: vscode.WorkspaceConfiguration;
-}
-
-
-
-/** Совмещённая структура ContentChangeEvent + Selection */
-export class ContextChange
-{
-	constructor(contextChange: vscode.TextDocumentContentChangeEvent, selection: vscode.Selection)
-	{
-		this.Change = contextChange;
-		this.Selection = selection;
-		this.Start = selection.start;
-		this.End = selection.end;
-		this.Active = selection.active;
-	}
-
-	Start: vscode.Position;
-	End: vscode.Position;
-	Active: vscode.Position;
-	Change: vscode.TextDocumentContentChangeEvent;
-	Selection: vscode.Selection;
-}
-
-
-/** Возвращает совмещённую структуру из изменений и соответствующих выделений */
-export function getContextChanges(selections: vscode.Selection[], changes: vscode.TextDocumentContentChangeEvent[]): ContextChange[]
-{
-	let res: ContextChange[] = [];
-	try
-	{
-		selections.forEach(selection =>
-		{
-			for (let i = 0; i < changes.length; i++)
-			{
-				if (selection.start.character == changes[i].range.start.character &&
-					selection.start.line == changes[i].range.start.line)
-				{
-					res.push(new ContextChange(changes[i], selection));
-					continue;
-				}
-			}
-		});
-	} catch (error)
-	{
-		throw error;
-	}
-	return res;
-}
-
-
 /** Собирает данные для первого встреченного <тега> на новой строке */
 export class TagInfo
 {
@@ -1361,25 +944,6 @@ export class TagInfo
 }
 
 
-/** Для преобразований Snippet -> CompletitionItem */
-export class SnippetObject
-{
-	prefix: string;
-	body: string;
-	description: string;
-
-	constructor(obj: Object)
-	{
-		for (let key in obj)
-		{
-			if (key == "body" && typeof obj[key] != "string")
-				this[key] = obj[key].join("\n");
-			else
-				this[key] = obj[key];
-		}
-	}
-}
-
 
 //#endregion
 
@@ -1388,6 +952,22 @@ export class SnippetObject
 
 /*---------------------------------------- Functions ----------------------------------------*/
 //#region
+
+
+/** Получает текст от начала документа до `position` */
+export function getPreviousText(document: server.TextDocument, position: server.Position, lineOnly: boolean = false): string
+{
+	try
+	{
+		let
+			start = lineOnly ? server.Position.create(position.line, 0) : server.Position.create(0, 0),
+			end = server.Position.create(position.line, position.character);
+		return document.getText(server.Range.create(start, end));
+	} catch (error)
+	{
+		throw "Ошибка получения текста документа";
+	}
+}
 
 
 /** C# / JS / CSS */
@@ -1427,17 +1007,6 @@ export function getFromClioboard(): string
 }
 
 
-/** преобразует стандартый Snippet в CompletionItem */
-export function snippetToCompletitionItem(obj: Object): vscode.CompletionItem
-{
-	let snip = new SnippetObject(obj);
-	let ci = new vscode.CompletionItem(snip.prefix, vscode.CompletionItemKind.Snippet);
-	ci.detail = snip.description;
-	ci.insertText = new vscode.SnippetString(snip.body);
-	return ci;
-}
-
-
 
 /** Подготовленная для RegExp строка */
 export function safeString(text: string): string
@@ -1446,171 +1015,14 @@ export function safeString(text: string): string
 }
 
 
-/** Открытие текста файла в новом окне */
-export function openFileText(path: string): Promise<void>
-{
-	return new Promise<void>((resolve, reject) =>
-	{
-		/* vscode.workspace.openTextDocument(path).then(doc =>
-		{ // открываем файл (в памяти)
-			let txt = doc.getText();
-			vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
-			{ // создаём пустой tib-файл
-				vscode.window.showTextDocument(newDoc).then(editor => 
-				{ // отображаем пустой
-					editor.edit(builder => 
-					{ // заливаем в него текст
-						builder.insert(new vscode.Position(0, 0), txt)
-					});
-				});
-			})
-		}); */
 
-		let fileBuffer = fs.readFileSync(path);
-		// по возможности читаем в 1251
-		let text = Parse.win1251Avaliabe(fileBuffer) ? iconv.decode(fileBuffer, 'win1251') : fileBuffer.toString('utf8');
-		vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
-		{ // создаём пустой tib-файл
-			if (!newDoc) return reject();
-			vscode.window.showTextDocument(newDoc).then(editor => 
-			{ // отображаем пустой
-				if (!editor) return reject();
-				editor.edit(builder => 
-				{ // заливаем в него текст
-					builder.insert(new vscode.Position(0, 0), text);
-					resolve();
-				});
-			});
-		})
-	});
+
+export function translatePosition(document: server.TextDocument, p: server.Position, offsetChars: number): server.Position
+{
+	let startOffset = document.offsetAt(p);
+	return document.positionAt(startOffset + offsetChars);
 }
 
-export function getDocumentMethods(document: vscode.TextDocument, Settings: ExtensionSettings): Promise<TibMethods>
-{
-	return new Promise<TibMethods>((resolve, reject) =>
-	{
-		let res = new TibMethods();
-		let text = document.getText();
-		if (Settings.Item("ignoreComments")) text = Encoding.clearXMLComments(text);
-		let mtd = text.matchAll(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
-		if (mtd.length == 0)
-		{
-			resolve(res);
-			return;
-		}
-		let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/);
-		let groups = {
-			Full: 0,
-			Modificator: 1,
-			Properties: 5,
-			Type: 9,
-			FullName: 10,
-			Name: 11,
-			Parameters: 12
-		};
-		mtd.forEach(element =>
-		{
-			let str = element[3];
-			if (Settings.Item("ignoreComments")) str = Encoding.clearCSComments(str);
-			let m = str.matchAll(reg);
-			m.forEach(met => 
-			{
-				if (met[groups.FullName])
-				{
-					let start = text.indexOf(met[groups.Full]);
-					let isFunc = !!met[groups.Parameters];
-					let end = text.indexOf(isFunc ? ")" : ";", start) + 1;
-					let positionFrom = document.positionAt(start);
-					let positionTo = document.positionAt(end);
-					let rng = new vscode.Range(positionFrom, positionTo);
-					res.Add(new TibMethod(met[groups.Name], met[groups.Full].trim().replace(/\s{2,}/g, " "), rng, document.fileName, isFunc, met[groups.Type]));
-				}
-			});
-		});
-		resolve(res);
-	});
-}
-
-
-export function getDocumentNodeIds(document: vscode.TextDocument, Settings: ExtensionSettings, NodeStoreNames: string[]): Promise<SurveyNodes>
-{
-	return new Promise<SurveyNodes>((resolve, reject) =>
-	{
-		let nNames = NodeStoreNames;
-		let txt = document.getText();
-		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
-		let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')");
-		let idIndex = nNames.length + 3;
-		let nodes = new SurveyNodes();
-		let res = txt.matchAll(reg);
-		res.forEach(element => 
-		{
-			let pos = document.positionAt(txt.indexOf(element[0]));
-			let item = new SurveyNode(element[1], element[idIndex], pos, document.fileName);
-			nodes.Add(item);
-		});
-		// дополнительно
-		nodes.Add(new SurveyNode("Page", "pre_data", null, document.fileName));
-		nodes.Add(new SurveyNode("Question", "pre_data", null, document.fileName));
-		nodes.Add(new SurveyNode("Question", "pre_sex", null, document.fileName));
-		nodes.Add(new SurveyNode("Question", "pre_age", null, document.fileName));
-		nodes.Add(new SurveyNode("Page", "debug", null, document.fileName));
-		nodes.Add(new SurveyNode("Question", "debug", null, document.fileName));
-		resolve(nodes);
-	});
-}
-
-
-/** Возвращает список MixId */
-export function getMixIds(document: vscode.TextDocument, Settings: ExtensionSettings): Promise<string[]>
-{
-	return new Promise<string[]>((resolve, reject) =>
-	{
-		let res: string[] = [];
-		let txt = document.getText();
-		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
-		let matches = txt.matchAll(/MixId=('|")((?!:)(\w+))(\1)/);
-		let matchesStore = txt.matchAll(/<Question[^>]+Store=('|")(\w+?)(\1)[^>]*>/);
-		let mixIdsStore: string[] = [];
-		matchesStore.forEach(element =>
-		{
-			let idmt = element[0].match(/\sId=("|')(.+?)\1/);
-			if (!idmt) return;
-			mixIdsStore.push(":" + idmt[2]);
-		});
-		if (!!matches) res = res.concat(matches.map(x => x[2]));
-		if (!!matchesStore) res = res.concat(mixIdsStore);
-		resolve(res.distinct());
-	});
-}
-
-
-
-
-/** Проверка текущего положения курсора на нахождение в CDATA */
-export function inCDATA(document: vscode.TextDocument, position: vscode.Position): boolean
-{
-	let range = new vscode.Range(new vscode.Position(0, 0), position);
-	let text = document.getText(range);
-	return text.lastIndexOf("<![CDATA[") > text.lastIndexOf("]]>");
-}
-
-/** проверяет язык для activeTextEditor */
-function isTib()
-{
-	return vscode.window.activeTextEditor.document.languageId == "tib";
-}
-
-
-/** Создаёт команду только для языка tib */
-export async function registerCommand(name: string, command: Function): Promise<void>
-{
-	await vscode.commands.registerCommand(name, (...args: any[]) => 
-	{
-		if (!isTib()) return;
-		command(...args);
-	});
-}
 
 
 //#endregion
@@ -1682,8 +1094,8 @@ String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
 {
 	let res: RegExpMatchArray[] = [];
 	let mat: RegExpExecArray;
-    let text = this;
-    let reg = new RegExp(search, "g");
+	let text = this;
+	let reg = new RegExp(search, "g");
 	while ((mat = reg.exec(text)) !== null)
 	{
 		res.push(mat);

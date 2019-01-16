@@ -1,11 +1,12 @@
 'use strict';
 
+import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
 
-import { TibAutoCompleteItem, TibAttribute, CurrentTag, SurveyNodes, TibMethods, ExtensionSettings, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, snippetToCompletitionItem, safeString, SimpleTag, openFileText, getDocumentMethods, getDocumentNodeIds, KeyValuePair, getMixIds, getContextChanges, inCDATA, registerCommand, ContextChange, Encoding, Parse } from "tib-api";
+import {  CurrentTag, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, SimpleTag,  KeyValuePair, Encoding, Parse, getPreviousText, translatePosition } from "tib-api";
 
-import { pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId } from "./classes";
+import { snippetToCompletitionItem, openFileText, getDocumentMethods, getDocumentNodeIds, getMixIds, getContextChanges, inCDATA, registerCommand, ContextChange, SurveyNodes, TibMethods, ExtensionSettings, pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, TibAutoCompleteItem } from "./classes";
 
 import * as Formatting from './formatting'
 import * as fs from 'fs';
@@ -15,9 +16,10 @@ import * as debug from './debug'
 import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes, XMLEmbeddings } from 'tib-api/lib/constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
-import { CacheSet } from './cache'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
+import { Server } from 'http';
+import { DeclarationServerCapabilities } from 'vscode-languageserver';
 
 
 
@@ -78,8 +80,7 @@ var Settings: ExtensionSettings;
 /** флаг использования Linq */
 var _useLinq = true;
 
-/** Объект для кэша объектов */
-var Cache: CacheSet;
+var Tag: CurrentTag = null;
 
 /** Имена документов из Include */
 var Includes: string[] = [];
@@ -119,12 +120,11 @@ export function activate(context: vscode.ExtensionContext)
 	})
 
 	/** Обновление документа */
-	function reload(clearCache = true)
+	function reload()
 	{
 		if (!editor || editor.document.languageId != "tib") return;
 		try
 		{
-			if (clearCache && Cache.Active()) Cache.Clear();
 			getSurveyData(editor.document);
 			diagnostic(editor.document);
 		} catch (er)
@@ -153,16 +153,16 @@ export function activate(context: vscode.ExtensionContext)
 	// общие дествия при старте расширения
 	getStaticData();
 	makeIndent();
-	autoComplete();
-	hoverDocs();
-	helper();
+	//autoComplete();
+	//hoverDocs();
+	//helper();
 	definitions();
 	registerCommands();
 	//registerActionCommands();
-	higlight();
+	//higlight();
 
 	// для каждого дукумента свои
-	reload(false);
+	reload();
 	anotherDocument(false, editor);
 
 	// смена документа
@@ -179,7 +179,7 @@ export function activate(context: vscode.ExtensionContext)
 		let originalPosition = editor.selection.start.translate(0, 1);
 		let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
 		let tag = getCurrentTag(editor.document, originalPosition, text);
-		reload(false);
+		reload();
 
 		// преобразования текста
 		if (!event || !event.contentChanges.length) return;
@@ -235,7 +235,6 @@ function getStaticData()
 		_LogPath = Settings.Item("logPath");
 		if (!pathExists(_LogPath)) logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
 		_useLinq = Settings.Item("useLinq");
-		Cache = new CacheSet();
 
 		// получаем фунцию форматирования C#
 		let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
@@ -379,16 +378,17 @@ function registerCommands()
 	registerCommand('tib.selectTag.closest', () => 
 	{
 		let editor = vscode.window.activeTextEditor;
+		let document = createServerDocument(editor.document);
 		let newSels: vscode.Selection[] = [];
 		editor.selections.forEach(selection =>
 		{
 			let tag = getCurrentTag(editor.document, selection.active);
 			if (!tag) return;
 			let from = tag.OpenTagRange.start;
-			let cl = findCloseTag("<", tag.Name, ">", editor.document, from.translate(0, 1));
+			var cl = findCloseTag("<", tag.Name, ">", document, translatePosition(document, from, 1));
 			if (!cl) return;
 			let to = cl.end;
-			let range = new vscode.Selection(from, to);
+			let range = createSelection(from, to);
 			newSels.push(range);
 		});
 		editor.selections = newSels;
@@ -399,14 +399,15 @@ function registerCommands()
 	{
 		let newSels: vscode.Selection[] = [];
 		let editor = vscode.window.activeTextEditor;
+		let document = createServerDocument(editor.document);
 		editor.selections.forEach(selection =>
 		{
-			let txt = getPreviousText(editor.document, selection.active);
+			let txt = getPreviousText(document, selection.active);
 			let tag = getCurrentTag(editor.document, selection.active, txt);
 			if (!tag || tag.Parents.length < 1) return;
 			// если это первый вложенный тег
 			let par: string;
-			let from: vscode.Position;
+			let from: server.Position;
 			if (tag.Parents.length == 1)
 			{
 				par = tag.Name;
@@ -417,10 +418,10 @@ function registerCommands()
 				par = tag.Parents[1].Name;
 				from = tag.Parents[1].OpenTagRange.start;
 			}
-			let cl = findCloseTag("<", par, ">", editor.document, from.translate(0, 1));
+			let cl = findCloseTag("<", par, ">", document, translatePosition(document, from, 1));
 			if (!cl) return;
 			let to = cl.end;
-			let range = new vscode.Selection(from, to);
+			let range = createSelection(from, to);;
 			let res = selectLines(editor.document, range);
 			newSels.push(range);
 		});
@@ -766,6 +767,7 @@ function registerCommands()
 
 
 /** Подсветка открывающегося и закрывающегося элементов */
+/*
 function higlight()
 {
 	// теги
@@ -901,10 +903,11 @@ function higlight()
 		}
 	})
 }
-
+*/
 
 
 /** Автозавершения */
+/*
 function autoComplete()
 {
 	// XML Snippets
@@ -1224,9 +1227,11 @@ function autoComplete()
 	}, ":", "");
 }
 
+*/
 
 
 /** Подсказки при вводе параметров функции */
+/*
 function helper()
 {
 	vscode.languages.registerSignatureHelpProvider('tib', {
@@ -1264,10 +1269,11 @@ function helper()
 		}
 	}, "(", ",");
 }
-
+*/
 
 
 /** подсказки при наведении */
+/*
 function hoverDocs()
 {
 	vscode.languages.registerHoverProvider('tib', {
@@ -1301,9 +1307,9 @@ function hoverDocs()
 			for (let i = 0; i < suit.length; i++)
 			{
 				if (suit[i].Documentation && suit[i].Description)
-				{
-					let doc = "/* " + suit[i].Description + " */\n" + suit[i].Documentation;
-					res.push({ language: "csharp", value: doc });
+				{*/
+					//let doc = "/* " + suit[i].Description + " */\n" + suit[i].Documentation;
+					/*res.push({ language: "csharp", value: doc });
 				}
 				else
 				{
@@ -1317,7 +1323,7 @@ function hoverDocs()
 			return new vscode.Hover(res, range);
 		}
 	});
-}
+}*/
 
 
 /** Делает первую букву тега заглавной */
@@ -1424,7 +1430,7 @@ function definitions()
 		{
 			let tag = getCurrentTag(document, position);
 			if (!tag || tag.Name != "Include") return;
-			let attrs = tag.GetAllAttributes(document);
+			let attrs = tag.GetAllAttributes(createServerDocument(document));
 			let fileName = attrs.Item("FileName");
 			if (!fileName) return;
 			fileName = applyConstants(fileName);
@@ -1710,7 +1716,7 @@ function getAllMixIds(): string[]
 
 
 /** Возвращает `null`, если тег не закрыт или SelfClosed */
-function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range
+function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
 {
 	try
 	{
@@ -1720,7 +1726,7 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 		if (!res || !res.Range) return null;
 		let startPos = document.positionAt(res.Range.From);
 		let endPos = document.positionAt(res.Range.To + 1);
-		return new vscode.Range(startPos, endPos);
+		return server.Range.create(startPos, endPos);
 	} catch (error)
 	{
 		logError("Ошибка выделения закрывающегося тега", error);
@@ -1733,7 +1739,7 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 {
 	try
 	{
-		let prevText = getPreviousText(document, position);
+		let prevText = getPreviousText(createServerDocument(document), position);
 		let res = Parse.findOpenTag(opBracket, tagName, clBracket, prevText);
 		if (!res) return null;
 		let startPos = document.positionAt(res.Range.From);
@@ -1751,45 +1757,6 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
 {
 	let tag: CurrentTag;
-	let text = txt || getPreviousText(document, position);
-
-	// сначала пытаемся вытащить из кэша (сначала обновить, если позиция изменилась)
-	if (!force)
-	{
-		if (Cache.Active())
-		{
-			Cache.Update(document, position, text);
-			tag = Cache.Tag.Get();
-		}
-	}
-
-	if (!tag)
-	{
-		// собираем тег заново
-		let pure: string;
-		if (!pure) pure = CurrentTag.PrepareXML(text);
-		let ranges = Parse.getParentRanges(document, pure);
-		// где-то вне
-		if (ranges.length == 0) tag = null;//new CurrentTag("XML");
-		else
-		{
-			let parents = ranges.map(range => new SimpleTag(document, range))
-
-			/** Последний незакрытый тег */
-			let current = parents.pop();
-			tag = new CurrentTag(current, parents);
-
-			// Заполняем поля
-			let lastRange = ranges.last();
-			tag.SetFields({
-				StartPosition: current.OpenTagRange.start,
-				StartIndex: document.offsetAt(current.OpenTagRange.start),
-				PreviousText: text,
-				Body: tag.OpenTagIsClosed ? document.getText(new vscode.Range(lastRange.end, position)) : undefined,
-				LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
-			});
-		}
-	}
 	if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
 	return tag;
 }
@@ -1829,23 +1796,6 @@ function getCurrentLineText(document: vscode.TextDocument, position: vscode.Posi
 		return null;
 	}
 
-}
-
-
-/** Получает текст от начала документа до `position` */
-export function getPreviousText(document: vscode.TextDocument, position: vscode.Position, lineOnly: boolean = false): string
-{
-	try
-	{
-		let
-			start = lineOnly ? new vscode.Position(position.line, 0) : new vscode.Position(0, 0),
-			end = new vscode.Position(position.line, position.character);
-		return document.getText(new vscode.Range(start, end));
-	} catch (error)
-	{
-		logError("Ошибка получения текста документа", error);
-		return null;
-	}
 }
 
 
@@ -2282,14 +2232,30 @@ async function createClientConnection(context: vscode.ExtensionContext)
 	_client.start();
 	_client.onReady().then(() =>
 	{
-		_client.onNotification("server.log", data =>
+
+		_client.onNotification("client.log", data =>
 		{
 			if (typeof data != 'string') logToOutput('Неправильный тип данных для логов с сервера', _WarningLogPrefix);
 			logToOutput(data);
 		});
 
+
+		_client.onNotification("getCurrentTag", (tag: CurrentTag) =>
+		{
+			console.log(1);
+			console.log(tag.Name);
+			Tag = tag;
+		});
+
 		clientIsReady = true;
 	});
+}
+
+
+/** Запрос и обработчик его ответа */
+async function request<T, R>(type: string, dataForServer: T): Promise<R>
+{
+	return await _client.sendRequest(type, dataForServer);	
 }
 
 
@@ -2298,6 +2264,16 @@ function getServerData(requestName: string, data: any)
 	if (clientIsReady)	_client.sendNotification(requestName, data);
 }
 
+
+function createServerDocument(document: vscode.TextDocument): server.TextDocument
+{
+	return server.TextDocument.create(document.uri.toString(), document.languageId, document.version, document.getText());
+}
+
+function createSelection(from: server.Position, to: server.Position): vscode.Selection
+{
+	return new vscode.Selection(new vscode.Position(from.line, from.character), new vscode.Position(to.line, to.character))
+}
 
 
 //#endregion

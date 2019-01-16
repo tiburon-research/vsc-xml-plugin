@@ -1,8 +1,9 @@
 'use  strict'
 
-import * as vscode from 'vscode'
-import { CurrentTag, TibMethods, SurveyNodes, SimpleTag, Parse } from 'tib-api'
-import { logError, Settings, getPreviousText, getCurrentTag } from './extension'
+import * as server from 'vscode-languageserver';
+import { CurrentTag, SimpleTag, Parse, getPreviousText } from 'tib-api'
+import { getCurrentTag } from './server'
+import { comparePositions } from './classes';
 
 
 class CacheItem<T>
@@ -40,23 +41,24 @@ export class CacheSet
 	public PreviousTextSafe = new CacheItem<string>();
 	public PreviousText = new CacheItem<string>();
 	public Tag = new CacheItem<CurrentTag>();
-	public Methods = new CacheItem<TibMethods>();
-	public CurrentNodes = new CacheItem<SurveyNodes>();
 
 	// поля для быстрой обработки
 	private Keys = ["PreviousTextSafe", "PreviousText", "Tag", "Methods", "CurrentNodes"];
 
+	/** Проверка активности */
+	private _isActive = () => false;
+
 	/** Полное обновление */
-	private updateAll(document: vscode.TextDocument, position: vscode.Position, text: string): void
+	private updateAll(document: server.TextDocument, position: server.Position, text: string): void
 	{
 		this.Clear();
 		this.PreviousText.Set(text);
 		this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
-		this.Tag.Set(getCurrentTag(document, position, text, true));
+		this.Tag.Set(getCurrentTag({ document, position, text, force: true }));
 	}
 
 	/** Обновление последнего куска */
-	private updatePart(document: vscode.TextDocument, position: vscode.Position, prevText: string, validParents: SimpleTag[], ind: number, restText: string): boolean
+	private updatePart(document: server.TextDocument, position: server.Position, prevText: string, validParents: SimpleTag[], ind: number, restText: string): boolean
 	{
 		try
 		{
@@ -79,10 +81,10 @@ export class CacheSet
 				if (validParents.length > 0)
 				{
 					let lastParent = validParents.pop();
-					let lastParentRange = new vscode.Range(lastParent.OpenTagRange.start, position);
+					let lastParentRange = server.Range.create(lastParent.OpenTagRange.start, position);
 					let current = new SimpleTag(document, lastParentRange);
 					let openTagIsclosed = current.isClosed();
-					let body = openTagIsclosed ? document.getText(new vscode.Range(current.OpenTagRange.end, position)) : undefined;
+					let body = openTagIsclosed ? document.getText(server.Range.create(current.OpenTagRange.end, position)) : undefined;
 					cachedTag.Update(current, {
 						PreviousText: prevText,
 						Parents: validParents,
@@ -98,21 +100,28 @@ export class CacheSet
 			{
 				cachedTag.Update(null, {
 					PreviousText: prevText,
-					Body: document.getText(new vscode.Range(cachedTag.OpenTagRange.end, position))
+					Body: document.getText(server.Range.create(cachedTag.OpenTagRange.end, position))
 				});
 			}
 
 		}
 		catch (error)
 		{
-			logError("Ошибка обновления части закешированного документа", error)
+			throw "Ошибка обновления части закешированного документа";
 		}
 		return false;
 	}
 
 
+
+	constructor(activeCheck: () => boolean)
+	{
+		this._isActive = activeCheck;
+	}
+
+
 	/** Обновление всего кеша (если требуется) */
-	public Update(document: vscode.TextDocument, position: vscode.Position, txt?: string): void
+	public Update(document: server.TextDocument, position: server.Position, txt?: string): void
 	{
 		try
 		{
@@ -133,12 +142,12 @@ export class CacheSet
 			let foundValidRange = false;
 			// сначала пробуем сравнить весь текст до начала тега
 			let upTo = cachedTag.OpenTagRange.start; // начало закешированного тега
-			if (upTo.compareTo(position) <= 0)
+			if (comparePositions(document, upTo, position) <= 0)
 			{
 				let newText = getPreviousText(document, upTo);
 				let ind = document.offsetAt(upTo); // а document типа не изменился
 				let oldText = cachedText.slice(0, ind);
-				let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после начала тега
+				let restText = document.getText(server.Range.create(upTo, position)); // остаток текста после начала тега
 				if (oldText == newText && !restText.match("</" + cachedTag.Name))
 				{
 					foundValidRange = this.updatePart(document, position, text, cachedTag.Parents, ind, restText);
@@ -156,9 +165,9 @@ export class CacheSet
 				let newText = getPreviousText(document, upTo);
 				let ind = document.offsetAt(upTo); // а document типа не изменился
 				let oldText = cachedText.slice(0, ind);
-				let restText = document.getText(new vscode.Range(upTo, position)); // остаток текста после последнего родителя
+				let restText = document.getText(server.Range.create(upTo, position)); // остаток текста после последнего родителя
 				// ищем такого, что он выше, текст перед ним сохранился и после него не появилось закрывающего его тега
-				if (upTo.compareTo(position) <= 0 && oldText == newText && !restText.match("</" + cachedTag.Parents[i].Name))
+				if (comparePositions(document, upTo, position) <= 0 && oldText == newText && !restText.match("</" + cachedTag.Parents[i].Name))
 				{
 					// обновляем только последний кусок
 					validParents = cachedTag.Parents.slice(0, i + 1);
@@ -170,7 +179,7 @@ export class CacheSet
 		}
 		catch (error)
 		{
-			logError("Ошибка обновления закешированного документа", error);
+			throw "Ошибка обновления закешированного документа";
 		}
 
 	}
@@ -178,7 +187,7 @@ export class CacheSet
 	/** Можно ли пользоваться кэшем */
 	public Active(): boolean
 	{
-		return !Settings.Contains("enableCache") || !!Settings.Item("enableCache");
+		return this._isActive();
 	}
 
 	/** Очистка всех полей */
@@ -193,7 +202,7 @@ export class CacheSet
 		}
 		catch (error)
 		{
-			logError("Ошибка очистки кеша", error)
+			throw "Ошибка очистки кеша";
 		}
 	}
 

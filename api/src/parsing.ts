@@ -4,7 +4,7 @@ import { TextRange, safeString, TagInfo, Language, positiveMin, KeyedCollection,
 import { clearXMLComments } from "./encoding"
 import { RegExpPatterns } from './constants'
 import * as charDetect from 'charset-detector'
-import * as vscode from 'vscode'
+import * as server from 'vscode-languageserver';
 //import { initJQuery } from "tib-jquery";
 
 
@@ -342,7 +342,7 @@ export function parseQuestion(text: string): ParsedElementObject
 
 interface ParentSearchResult
 {
-	Range: vscode.Range;
+	Range: server.Range;
 	TagName: string;
 }
 
@@ -352,9 +352,9 @@ interface ParentSearchResult
  * 
  * Теги JS, CSS и PlainText не парсятся
 */
-export function getParentRanges(document: vscode.TextDocument, prevText: string, startFrom: number = 0): vscode.Range[]
+export function getParentRanges(document: server.TextDocument, prevText: string, startFrom: number = 0): server.Range[]
 {
-	let res: vscode.Range[] = [];
+	let res: server.Range[] = [];
 	let rest = prevText.slice(startFrom);
 	let next = getNextParent(document, rest, prevText);
 	let i = 0;
@@ -380,7 +380,7 @@ export function getParentRanges(document: vscode.TextDocument, prevText: string,
  * 
  * теги JS, CSS и PlainText не парсятся
 */
-function getNextParent(document: vscode.TextDocument, text: string, fullPrevText?: string): ParentSearchResult
+function getNextParent(document: server.TextDocument, text: string, fullPrevText?: string): ParentSearchResult
 {
 	let res = text.find(/<((?!xml)(\w+))/); // находим открывающийся
 	if (res.Index < 0) return null;// открытых больше нет
@@ -394,8 +394,8 @@ function getNextParent(document: vscode.TextDocument, text: string, fullPrevText
 
 	if (lastIndex < 0) // если открывающий тег неполный, то считаем, что курсор сейчас в нём
 	{
-		let to = document.positionAt(fullPrevText.length - 1).translate(0, 1);
-		return { Range: new vscode.Range(from, to), TagName: tagName };
+		let to = document.positionAt(fullPrevText.length);
+		return { Range: server.Range.create(from, to), TagName: tagName };
 	}
 
 	// двигаем относительно начала тега
@@ -407,7 +407,7 @@ function getNextParent(document: vscode.TextDocument, text: string, fullPrevText
 	if (!closingTag) // если не закрыт, то возвращаем его
 	{
 		let to = document.positionAt(lastIndex + 1);
-		return { Range: new vscode.Range(from, to), TagName: tagName };
+		return { Range: server.Range.create(from, to), TagName: tagName };
 	}
 
 	// продолжаем искать после закрывающего
