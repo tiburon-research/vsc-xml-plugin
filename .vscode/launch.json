@@ -10,7 +10,11 @@
             "args": ["--extensionDevelopmentPath=${workspaceRoot}" ],
             "stopOnEntry": false,
             "sourceMaps": true,
-            "outFiles": [ "${workspaceRoot}/out/*.*/*.js" ],
+            "outFiles": [ 
+                "${workspaceRoot}/api/lib/*.js",
+                "${workspaceRoot}/client/out/*.js",
+                "${workspaceRoot}/server/out/*.js"
+            ],
             "preLaunchTask": "npm: watch"
         }
     ]

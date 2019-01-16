@@ -5,6 +5,7 @@
 		"outDir": "out",
 		"sourceMap": true,
 		"rootDir": "src",
+		"watch": true,
 		"composite": true
 	},
 	"include": [ "src" ],
@@ -12,6 +13,5 @@
 		"node_modules", 
 		".vscode-test",
 		"ignore"
-	],
-	"compileOnSave": true
+	]
 }

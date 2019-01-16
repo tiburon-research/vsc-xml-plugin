@@ -4,7 +4,8 @@
         "out": false, // set this to true to hide the "out" folder with the compiled JS files
         "*.vsix": true,
         "stuff/*.*": true,
-        "**/package-lock.json": true
+        "**/package-lock.json": true,
+        "ignore": true
     },
     "search.exclude": {
         "out": true // set this to false to include "out" folder in search results

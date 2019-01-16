@@ -1,18 +1,19 @@
 {
-    "compilerOptions": {
-      "target": "es6",
-      "module": "commonjs",
-      "declaration": true,
-      "outDir": "lib",
-      "rootDir": "src",
-      "sourceMap": true,
-      "composite": true
-    },
-    "include": [ "src" ],
-    "exclude": [
-      "node_modules", 
-      ".vscode-test",
-      "ignore"
-    ],
-    "compileOnSave": true
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es6",
+		"declaration": true,
+		"rootDir": "src",
+		"outDir": "lib",
+		"sourceMap": true,
+		"composite": true
+	},
+	"include": [
+		"src"
+	],
+	"exclude": [
+		"node_modules",
+		".vscode-test",
+		"ignore"
+	]
 }
