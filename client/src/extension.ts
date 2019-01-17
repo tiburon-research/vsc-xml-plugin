@@ -4,7 +4,7 @@ import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
 
-import {  CurrentTag, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, SimpleTag,  KeyValuePair, Encoding, Parse, getPreviousText, translatePosition } from "tib-api";
+import {  CurrentTag, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, SimpleTag,  KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields } from "tib-api";
 
 import { snippetToCompletitionItem, openFileText, getDocumentMethods, getDocumentNodeIds, getMixIds, getContextChanges, inCDATA, registerCommand, ContextChange, SurveyNodes, TibMethods, ExtensionSettings, pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, TibAutoCompleteItem } from "./classes";
 
@@ -1754,11 +1754,10 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 
 
 /** getCurrentTag для debug (без try-catch) */
-function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): CurrentTag
+function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, text?: string, force = false): CurrentTag
 {
-	let tag: CurrentTag;
-	if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
-	return tag;
+	if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(Tag);
+	return Tag;
 }
 
 
@@ -2240,23 +2239,19 @@ async function createClientConnection(context: vscode.ExtensionContext)
 		});
 
 
-		_client.onNotification("getCurrentTag", (tag: CurrentTag) =>
+		_client.onNotification("currentTag", (tag: CurrentTag) =>
 		{
-			console.log(1);
+			console.log('response!');
 			console.log(tag.Name);
 			Tag = tag;
 		});
+
 
 		clientIsReady = true;
 	});
 }
 
 
-/** Запрос и обработчик его ответа */
-async function request<T, R>(type: string, dataForServer: T): Promise<R>
-{
-	return await _client.sendRequest(type, dataForServer);	
-}
 
 
 function getServerData(requestName: string, data: any)

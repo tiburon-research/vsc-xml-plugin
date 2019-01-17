@@ -1,8 +1,7 @@
 'use  strict'
 
 import * as server from 'vscode-languageserver';
-import { CurrentTag, SimpleTag, Parse, getPreviousText } from 'tib-api'
-import { getCurrentTag } from './server'
+import { CurrentTag, SimpleTag, Parse, getPreviousText, CurrentTagGetFields } from 'tib-api'
 import { comparePositions } from './classes';
 
 
@@ -48,13 +47,15 @@ export class CacheSet
 	/** Проверка активности */
 	private _isActive = () => false;
 
+	private _getTagHandler = (data: CurrentTagGetFields) => null;
+
 	/** Полное обновление */
 	private updateAll(document: server.TextDocument, position: server.Position, text: string): void
 	{
 		this.Clear();
 		this.PreviousText.Set(text);
 		this.PreviousTextSafe.Set(CurrentTag.PrepareXML(text));
-		this.Tag.Set(getCurrentTag({ document, position, text, force: true }));
+		this.Tag.Set(this._getTagHandler({ document, position, text, force: true }));
 	}
 
 	/** Обновление последнего куска */
@@ -114,9 +115,10 @@ export class CacheSet
 
 
 
-	constructor(activeCheck: () => boolean)
+	constructor(activeCheck: () => boolean, getTagHandler: (data: CurrentTagGetFields) => CurrentTag)
 	{
 		this._isActive = activeCheck;
+		this._getTagHandler = getTagHandler;
 	}
 
 
