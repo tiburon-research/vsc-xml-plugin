@@ -5,15 +5,12 @@ import { KeyedCollection} from 'tib-api';
 import { sendDiagnostic } from './classes';
 
 
+//#region --------------------------- Инициализация
+
 var connection = server.createConnection(server.ProposedFeatures.all);
 var documents = new server.TextDocuments();
 var Settings = new KeyedCollection<any>();
 
-
-export function consoleLog(data)
-{
-	connection.sendNotification('console.log', data);
-}
 
 connection.onInitialize((params: server.InitializeParams) =>
 {
@@ -33,19 +30,39 @@ documents.listen(connection);
 connection.listen();
 
 
+//#endregion
 
 
+
+//#region --------------------------- Обработчики
 
 connection.onDidOpenTextDocument(data =>
 {
-	
+	let document = server.TextDocument.create(data.textDocument.uri, 'tib', data.textDocument.version, data.textDocument.text);
+	anyChangeHandler(document);
 })
-
 
 
 connection.onDidChangeTextDocument(data =>
 {
 	let text = data.contentChanges.last().text;
 	let document = server.TextDocument.create(data.textDocument.uri, 'tib', data.textDocument.version, text);
-	sendDiagnostic(connection, document, Settings);
+	anyChangeHandler(document);
 });
+
+
+
+//#region --------------------------- Функции
+
+export function consoleLog(data)
+{
+	connection.sendNotification('console.log', data);
+}
+
+/** Дёргаем при изменении или открытии */
+function anyChangeHandler(document: server.TextDocument)
+{
+	sendDiagnostic(connection, document, Settings);
+}
+
+//#endregion

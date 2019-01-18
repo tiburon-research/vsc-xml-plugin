@@ -11,7 +11,6 @@ export function sendDiagnostic(connection: server.Connection, document: server.T
 {
 	getDiagnosticElements(document, settings).then(diagnostics =>
 	{
-		consoleLog(diagnostics);
 		let clientDiagnostic: server.PublishDiagnosticsParams = {
 			diagnostics,
 			uri: document.uri

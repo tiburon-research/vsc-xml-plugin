@@ -525,13 +525,11 @@ export function getDuplicatedElementsIds(document: server.TextDocument, prepeare
 		let res: DocumentElement[] = [];
 		let tagNames = ['Page', 'List', 'Question', 'Block'];
 		let $dom;
-		console.log('duplicated stated');
-		/* try
-		{ */
+		try
+		{
 			$dom = $.XMLDOM(prepearedText);
-		/* } catch (error)
-		{ return resolve(null) } */
-		console.log('duplicated goes on');
+		} catch (error)
+		{ return resolve(null) }
 		if (!$dom) return resolve(res);
 
 		let ids = new KeyedCollection<string[]>();
