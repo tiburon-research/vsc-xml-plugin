@@ -1088,7 +1088,31 @@ function _getCurrentTag(document: server.TextDocument, position: server.Position
 
 
 
+const _translation = KeyedCollection.FromArrays(Constants.translationArray.rus, Constants.translationArray.eng);
+
+/** Транслитерация с учётом итераторов (`allowIterators`) */
+export function translate(input: string, allowIterators = true): string
+{
+	let res = "";
+	let reg = allowIterators ? /[\dA-Za-z_@\-\(\)]/ : /[\dA-Za-z_]/;
+	for (const char of input)
+	{
+		if (!char.match(reg))
+		{
+			if (_translation.Contains(char))
+				res += _translation.Item(char);
+			else res += "_";
+		}
+		else res += char;
+	}
+	return res;
+}
+
+
+
 //#endregion
+
+
 
 
 

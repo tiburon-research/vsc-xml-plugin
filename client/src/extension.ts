@@ -4,7 +4,7 @@ import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
 
-import {  CurrentTag, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, SimpleTag,  KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields, getCurrentTag as getTag} from "tib-api";
+import {  CurrentTag, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, SimpleTag,  KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields, getCurrentTag as getTag, translate} from "tib-api";
 
 import { CacheSet } from 'tib-api/lib/cache';
 
@@ -2271,6 +2271,113 @@ function createServerDocument(document: vscode.TextDocument): server.TextDocumen
 function createSelection(from: server.Position, to: server.Position): vscode.Selection
 {
 	return new vscode.Selection(new vscode.Position(from.line, from.character), new vscode.Position(to.line, to.character))
+}
+
+
+
+interface CodeActionCallback
+{
+	Arguments?: any[];
+	Enabled: boolean;
+}
+
+
+type ArgumentsInvoker = ((document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext) => CodeActionCallback);
+
+/** Создаёт комманду и CodeAction для неё */
+async function createCommandActionPair(cmdName: string, actionTitle: string, commandFunction: Function, argumentInvoker: ArgumentsInvoker): Promise<void>
+{
+	registerCommand(cmdName, commandFunction);
+	createCodeAction(actionTitle, cmdName, argumentInvoker);
+}
+
+
+function createCodeAction(actionTitle: string, commandName: string, argumentInvoker: ArgumentsInvoker)
+{
+	vscode.languages.registerCodeActionsProvider('tib', {
+		provideCodeActions(document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext, token: vscode.CancellationToken)
+		{
+			let inner = argumentInvoker(document, range, context);
+			if (!inner.Enabled) return;
+			let cmd: vscode.Command =
+			{
+				command: commandName,
+				title: actionTitle
+			};
+			if (!!inner.Arguments)
+			{
+				cmd.arguments = inner.Arguments;
+			}
+			let res = [cmd];
+			return res;
+		}
+	});
+}
+
+
+
+
+/** Создаёт команды + CodeActions */
+async function registerActionCommands()
+{
+	
+	// транслитерация
+	createCommandActionPair("tib.translateRange", "Транслитерация",
+		(range: vscode.Range) => 
+		{
+			let editor = vscode.window.activeTextEditor;
+			let text = editor.document.getText(range);
+			let res = translate(text);
+			editor.edit(builder =>
+			{
+				builder.replace(range, res);
+			});
+		},
+		(doc, range, cont) =>
+		{
+			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == "wrongIds";
+			return {
+				Enabled: en,
+				Arguments: !!en ? [cont.diagnostics[0].range] : []
+			}
+		}
+	);
+
+
+	// убираем _ из констант
+	createCommandActionPair("tib.replace_", "Назвать константу нормально",
+		(range: vscode.Range) => 
+		{
+			let editor = vscode.window.activeTextEditor;
+			let text = editor.document.getText(range);
+			let res = text;
+			let matches = text.matchAll(/_([a-zA-Z@\-\(\)]?)/);
+			matches.forEach(element => {
+				let search = "_";
+				let repl = "";
+				if (!!element[1])
+				{
+					search += element[1];
+					repl = element[1].toLocaleUpperCase();
+				}
+				res = res.replace(new RegExp(search, "g"), repl);
+			});
+			editor.edit(builder =>
+			{
+				builder.replace(range, res);
+			});
+		},
+		(doc, range, cont) =>
+		{
+			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == "delimitedConstant";
+			return {
+				Enabled: en,
+				Arguments: !!en ? [cont.diagnostics[0].range] : []
+			}
+		}
+	);
+
+
 }
 
 
