@@ -89,10 +89,10 @@ export async function getDiagnosticElements(document: server.TextDocument, Setti
 /** Id с недопустимым набором символов */
 async function getWrongIds(document: server.TextDocument, prepearedText: string): Promise<DocumentElement[]>
 {
-	let res = await getDocumentElements(document, /(\sId=("|'))(\w*[^\w'"\n@\-\(\)]\w*)+(\2)/, "In english, please!", prepearedText);
+	let res = await getDocumentElements(document, /(\sId=("|'))(\w*[^\w'"\n@\-\(\)]\w*)+(\2)/, "Вот таким Id быть не может", prepearedText);
 	for (let i = 0; i < res.length; i++)
 	{
-		res[i].Range = server.Range.create( translatePosition(document, res[i].Range.start, res[i].Value[1].length), translatePosition(document, res[i].Range.end, -1));
+		res[i].Range = server.Range.create(translatePosition(document, res[i].Range.start, res[i].Value[1].length), translatePosition(document, res[i].Range.end, -1));
 	}
 	return res;
 }
@@ -110,7 +110,9 @@ async function getLongIds(document: server.TextDocument, prepearedText: string):
 /** проверка недопустимых символов XML */
 async function getWrongXML(document: server.TextDocument, prepearedText: string): Promise<DocumentElement[]>
 {
-	let res = await getDocumentElements(document, /((&(?!(lt|gt|amp|quot|apos))(\w*);?)+)|(<(?![\?\/!]?\w+)(.*))/, "Такое надо прикрывать посредством CDATA", prepearedText);
+	let res: DocumentElement[] = [];
+	res = res.concat(await getDocumentElements(document, /(&(?!(lt|gt|amp|quot|apos))(\w*);?)+/, "Такое надо прикрывать посредством CDATA", prepearedText)); // &
+	res = res.concat(await getDocumentElements(document, /<((?![?\/!]|\w)(.*))/, "Тут, вроде CDATA надо", prepearedText)); // <
 	return res;
 }
 
