@@ -1,8 +1,8 @@
 'use  strict'
 
 import * as server from 'vscode-languageserver';
-import { CurrentTag, SimpleTag, Parse, getPreviousText, CurrentTagGetFields } from 'tib-api'
-import { comparePositions } from './classes';
+import { CurrentTag, SimpleTag, Parse, getPreviousText, CurrentTagGetFields } from './index'
+import { comparePositions } from './index';
 
 
 class CacheItem<T>
@@ -42,7 +42,7 @@ export class CacheSet
 	public Tag = new CacheItem<CurrentTag>();
 
 	// поля для быстрой обработки
-	private Keys = ["PreviousTextSafe", "PreviousText", "Tag", "Methods", "CurrentNodes"];
+	private Keys = ["PreviousTextSafe", "PreviousText", "Tag"];
 
 	/** Проверка активности */
 	private _isActive = () => false;

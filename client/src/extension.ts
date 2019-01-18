@@ -4,7 +4,9 @@ import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
 
-import {  CurrentTag, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, SimpleTag,  KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields } from "tib-api";
+import {  CurrentTag, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, SimpleTag,  KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields, getCurrentTag as getTag} from "tib-api";
+
+import { CacheSet } from 'tib-api/lib/cache';
 
 import { snippetToCompletitionItem, openFileText, getDocumentMethods, getDocumentNodeIds, getMixIds, getContextChanges, inCDATA, registerCommand, ContextChange, SurveyNodes, TibMethods, ExtensionSettings, pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, TibAutoCompleteItem } from "./classes";
 
@@ -29,6 +31,11 @@ export { bot, CSFormatter, logError, OutChannel, _LogPath, Settings };
 /*---------------------------------------- глобальные переменные ----------------------------------------*/
 //#region
 
+	
+var Cache = new CacheSet(
+	() => { return !Settings.Contains("enableCache") || !!Settings.Item("enableCache") },
+	(data: CurrentTagGetFields) => { return getTag(data, Cache) }
+);
 	
 var _client: client.LanguageClient;
 
@@ -79,8 +86,6 @@ var Settings: ExtensionSettings;
 
 /** флаг использования Linq */
 var _useLinq = true;
-
-var Tag: CurrentTag = null;
 
 /** Имена документов из Include */
 var Includes: string[] = [];
@@ -1756,8 +1761,15 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 /** getCurrentTag для debug (без try-catch) */
 function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, text?: string, force = false): CurrentTag
 {
-	if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(Tag);
-	return Tag;
+	let data: CurrentTagGetFields = {
+		document: createServerDocument(document),
+		position,
+		text,
+		force
+	};
+	let tag = getTag(data, Cache);
+	if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
+	return tag;
 }
 
 
@@ -2237,15 +2249,6 @@ async function createClientConnection(context: vscode.ExtensionContext)
 			if (typeof data != 'string') logToOutput('Неправильный тип данных для логов с сервера', _WarningLogPrefix);
 			logToOutput(data);
 		});
-
-
-		_client.onNotification("currentTag", (tag: CurrentTag) =>
-		{
-			console.log('response!');
-			console.log(tag.Name);
-			Tag = tag;
-		});
-
 
 		clientIsReady = true;
 	});
