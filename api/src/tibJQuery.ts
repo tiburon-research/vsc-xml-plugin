@@ -2,8 +2,9 @@
 
 import { JSDOM } from 'jsdom'
 import * as _JQuery from 'jquery'
-import { KeyedCollection, Encoding } from './index'
-//import { ReplaceXMLDeclaration } from './parsing';
+import { KeyedCollection } from './index'
+import * as Encoding from './encoding'
+import { ReplaceXMLDeclaration } from './parsing';
 
 
 /** Класс из XMLencodeResult:
@@ -48,12 +49,12 @@ export function init(): any
         if (isInitial)
         {
             // сохраняем XMLDeclaration
-            /*let decl = ReplaceXMLDeclaration(text);
+            let decl = ReplaceXMLDeclaration(text);
             if (!!decl.Declaration)
             {
                 text = decl.Result;
                 (JQuery.SurveyData as DOMSurveyData).XMLDeclaration = decl.Declaration;
-            }*/
+            }
         }
         let res = Encoding.safeXML(text, JQuery._delimiter(text));
         JQuery._saveData(res.toXMLencodeResult(), isInitial);

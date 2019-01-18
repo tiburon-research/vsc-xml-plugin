@@ -1,8 +1,8 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { CurrentTagGetFields, KeyedCollection, getCurrentTag } from 'tib-api';
-import { CacheSet } from 'tib-api/lib/cache';
+import { KeyedCollection} from 'tib-api';
+import { sendDiagnostic } from './classes';
 
 
 var connection = server.createConnection(server.ProposedFeatures.all);
@@ -10,14 +10,10 @@ var documents = new server.TextDocuments();
 var Settings = new KeyedCollection<any>();
 
 
-
-/** Подписываемся на Notification от клиента */
-function subscribeClient<T, R>(type: string, func: (dataFromClient: T) => R)
+export function consoleLog(data)
 {
-	connection.onNotification(type, func);
+	connection.sendNotification('console.log', data);
 }
-
-
 
 connection.onInitialize((params: server.InitializeParams) =>
 {
@@ -28,16 +24,28 @@ connection.onInitialize((params: server.InitializeParams) =>
 	};
 });
 
-
-
 connection.onInitialized(() =>
 {
 	connection.sendNotification("client.log", "Сервер запущен");
 });
 
-
-
 documents.listen(connection);
 connection.listen();
 
 
+
+
+
+connection.onDidOpenTextDocument(data =>
+{
+	
+})
+
+
+
+connection.onDidChangeTextDocument(data =>
+{
+	let text = data.contentChanges.last().text;
+	let document = server.TextDocument.create(data.textDocument.uri, 'tib', data.textDocument.version, text);
+	sendDiagnostic(connection, document, Settings);
+});

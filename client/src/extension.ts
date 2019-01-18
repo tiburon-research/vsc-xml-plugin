@@ -2244,10 +2244,15 @@ async function createClientConnection(context: vscode.ExtensionContext)
 	_client.onReady().then(() =>
 	{
 
-		_client.onNotification("client.log", data =>
+		_client.onNotification("client.out", data =>
 		{
 			if (typeof data != 'string') logToOutput('Неправильный тип данных для логов с сервера', _WarningLogPrefix);
 			logToOutput(data);
+		});
+
+		_client.onNotification("console.log", data =>
+		{
+			console.log(data);
 		});
 
 		clientIsReady = true;
