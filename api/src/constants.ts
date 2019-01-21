@@ -67,3 +67,10 @@ export const XMLEmbeddings = [
 	{ Name: 'sex', Title: "Пол респондента", Type: "string" },
 	{ Name: 'age', Title: "Возраст респондента", Type: "int" },
 ];
+
+
+export const PreDifinedConstants =
+	[
+		{ Scripts: "\\\\tib-srv-debug.corp.tiburon-research.ru\\scripts" },
+		{ StoreUrl: "S:" }
+	];

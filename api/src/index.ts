@@ -946,6 +946,258 @@ export class TagInfo
 
 
 
+
+export class TibMethod
+{
+	public Name: string = "";
+	public Signature: string = "";
+	public IsFunction: boolean;
+	public Type: string;
+	public FileName: String;
+
+	private Uri: string;
+	private Location: server.Range;
+
+	constructor(name: string, sign: string, location: server.Range, fileName: string, isFunction: boolean = false, type: string = "")
+	{
+		this.Name = name;
+		this.Signature = sign;
+		this.Location = location;
+		this.Type = type;
+		this.FileName = fileName;
+		this.Uri = fileName;
+		this.IsFunction = isFunction;
+	}
+
+	public GetLocation(): server.Location
+	{
+		return server.Location.create(this.Uri, this.Location)
+	}
+
+	ToCompletionItem()
+	{
+		let item = server.CompletionItem.create(this.Name);
+		item.kind = server.CompletionItemKind.Function;
+		if (this.IsFunction) item.insertText = this.Name + "($0)";
+		let mds: server.MarkedString = { language: 'XML', value: '' };
+		mds.value = this.Signature;
+		if (this.Type) item.detail = this.Type;
+		item.documentation = mds.value;
+		item.sortText = '___' + this.Name;
+		return item;
+	}
+
+	ToHoverItem()
+	{
+		return { language: "csharp", value: this.Signature };
+	}
+
+	ToSignatureInformation()
+	{
+		return server.SignatureInformation.create(this.Name, this.Signature);
+	}
+}
+
+
+export class TibMethods extends KeyedCollection<TibMethod>
+{
+	constructor(collection?: KeyedCollection<TibMethod>)
+	{
+		super();
+		if (!!collection)
+			collection.forEach((key, value) =>
+			{
+				this.Add(value);
+			})
+	}
+
+	public Add(item: TibMethod)
+	{
+		if (!this.Contains(item.Name)) this.AddPair(item.Name, item);
+	}
+
+	CompletionArray(): server.CompletionItem[]
+	{
+		return this.Values().map(function (e)
+		{
+			return e.ToCompletionItem();
+		});
+	}
+
+	HoverArray(word: string): any[]
+	{
+		return this.Values().map(function (e)
+		{
+			if (e.Name == word) return e.ToHoverItem();
+		});
+	}
+
+	SignatureArray(word: string)
+	{
+		return this.Values().map(function (e)
+		{
+			if (e.Name == word) return e.ToSignatureInformation();
+		}).filter(x => !!x);
+	}
+
+	Filter(filter: (key: string, value: TibMethod) => boolean): TibMethods
+	{
+		return new TibMethods(super.Filter(filter));
+	}
+}
+
+
+
+
+
+
+/** Информация об XML узле */
+export class SurveyNode
+{
+	constructor(type: string, id: string, pos: server.Position, fileName: string)
+	{
+		this.Id = id;
+		this.Type = type;
+		this.Position = pos;
+		this.FileName = fileName;
+		this.Uri = fileName;
+		this.IconKind = this.GetKind(type);
+	}
+
+	public Id: string = "";
+	public Type: string = "";
+	public Position: server.Position;
+	public FileName: string;
+	public IconKind: server.CompletionItemKind;
+
+	private Uri: string;
+
+	GetLocation(): server.Location
+	{
+		return server.Location.create(this.Uri, server.Range.create(this.Position, this.Position));
+	}
+
+	/** Чтобы иконки отличались */
+	private GetKind(nodeName: string): server.CompletionItemKind
+	{
+		switch (nodeName)
+		{
+			case "Page":
+				return server.CompletionItemKind.File;
+
+			case "Question":
+				return server.CompletionItemKind.EnumMember;
+
+			case "List":
+				return server.CompletionItemKind.Unit;
+
+			case "Quota":
+				return server.CompletionItemKind.Event;
+
+			default:
+				break;
+		}
+	}
+}
+
+
+export class SurveyNodes extends KeyedCollection<SurveyNode[]>
+{
+	constructor()
+	{
+		super();
+	}
+
+	/** Добавляет в нужный элемент */
+	Add(item: SurveyNode)
+	{
+		if (!this.Contains(item.Type))
+			this.AddPair(item.Type, [item]);
+		else if (this.Item(item.Type).findIndex(x => x.Id == item.Id)) this.Item(item.Type).push(item);
+	}
+
+
+	/** Добавляет к нужным элементам, не заменяя */
+	AddRange(range: KeyedCollection<SurveyNode[]>): void
+	{
+		range.forEach((key, value) =>
+		{
+			if (!this.Contains(key))
+				this.AddPair(key, value);
+			else this.UpdateValue(key, x => x.concat(value));
+		})
+	}
+
+	GetIds(type: string): string[]
+	{
+		let res = [];
+		if (this.Contains(type)) res = this.Item(type).map(e => e.Id);
+		return res;
+	}
+
+	GetItem(id: string, type?: string): SurveyNode
+	{
+		let nodes = this.Item(type);
+		if (!nodes) return null;
+		let res: SurveyNode;
+		if (!!nodes)
+		{
+			for (let i = 0; i < nodes.length; i++)
+			{
+				if (nodes[i].Id == id)
+				{
+					res = nodes[i];
+					break;
+				}
+			};
+		}
+
+		return res;
+	}
+
+	Clear(names?: string[])
+	{
+		if (!names) super.Clear();
+		else
+			names.forEach(element =>
+			{
+				this.items[element] = [];
+			});
+	}
+
+	CompletitionItems(name: string, closeQt: string = ""): server.CompletionItem[]
+	{
+		let res: server.CompletionItem[] = [];
+		if (!this.Item(name)) return res;
+		this.Item(name).forEach(element =>
+		{
+			let ci = server.CompletionItem.create(element.Id);
+			ci.kind = server.CompletionItemKind.Enum;
+			ci.detail = name;
+			ci.insertText = element.Id + closeQt;
+			ci.kind = element.IconKind;
+			ci.sortText = name + ci.insertText;
+			res.push(ci);
+		});
+		return res;
+	}
+
+	/** Фильтрует элементы */
+	FilterNodes(filter: (node: SurveyNode) => boolean): SurveyNodes
+	{
+		let res = new SurveyNodes();
+		this.forEach((key, value) =>
+		{
+			let nodes = value.filter(x => filter(x));
+			if (nodes.length) res.AddPair(key, nodes);
+		})
+		return res;
+	}
+
+}
+
+
+
 //#endregion
 
 
@@ -1108,6 +1360,108 @@ export function translate(input: string, allowIterators = true): string
 	return res;
 }
 
+
+
+
+
+export function getDocumentMethods(document: server.TextDocument, Settings: KeyedCollection<any>): Promise<TibMethods>
+{
+	return new Promise<TibMethods>((resolve, reject) =>
+	{
+		let res = new TibMethods();
+		let text = document.getText();
+		if (Settings.Item("ignoreComments")) text = Encoding.clearXMLComments(text);
+		let mtd = text.matchAll(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
+		if (mtd.length == 0)
+		{
+			resolve(res);
+			return;
+		}
+		let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/);
+		let groups = {
+			Full: 0,
+			Modificator: 1,
+			Properties: 5,
+			Type: 9,
+			FullName: 10,
+			Name: 11,
+			Parameters: 12
+		};
+		mtd.forEach(element =>
+		{
+			let str = element[3];
+			if (Settings.Item("ignoreComments")) str = Encoding.clearCSComments(str);
+			let m = str.matchAll(reg);
+			m.forEach(met => 
+			{
+				if (met[groups.FullName])
+				{
+					let start = text.indexOf(met[groups.Full]);
+					let isFunc = !!met[groups.Parameters];
+					let end = text.indexOf(isFunc ? ")" : ";", start) + 1;
+					let positionFrom = document.positionAt(start);
+					let positionTo = document.positionAt(end);
+					let rng = server.Range.create(positionFrom, positionTo);
+					res.Add(new TibMethod(met[groups.Name], met[groups.Full].trim().replace(/\s{2,}/g, " "), rng, document.uri, isFunc, met[groups.Type]));
+				}
+			});
+		});
+		resolve(res);
+	});
+}
+
+
+export function getDocumentNodeIds(document: server.TextDocument, Settings: KeyedCollection<any>, NodeStoreNames: string[]): Promise<SurveyNodes>
+{
+	return new Promise<SurveyNodes>((resolve, reject) =>
+	{
+		let nNames = NodeStoreNames;
+		let txt = document.getText();
+		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
+		let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')");
+		let idIndex = nNames.length + 3;
+		let nodes = new SurveyNodes();
+		let res = txt.matchAll(reg);
+		res.forEach(element => 
+		{
+			let pos = document.positionAt(txt.indexOf(element[0]));
+			let item = new SurveyNode(element[1], element[idIndex], pos, document.uri);
+			nodes.Add(item);
+		});
+		// дополнительно
+		nodes.Add(new SurveyNode("Page", "pre_data", null, document.uri));
+		nodes.Add(new SurveyNode("Question", "pre_data", null, document.uri));
+		nodes.Add(new SurveyNode("Question", "pre_sex", null, document.uri));
+		nodes.Add(new SurveyNode("Question", "pre_age", null, document.uri));
+		nodes.Add(new SurveyNode("Page", "debug", null, document.uri));
+		nodes.Add(new SurveyNode("Question", "debug", null, document.uri));
+		resolve(nodes);
+	});
+}
+
+
+/** Возвращает список MixId */
+export function getMixIds(document: server.TextDocument, Settings: KeyedCollection<any>): Promise<string[]>
+{
+	return new Promise<string[]>((resolve, reject) =>
+	{
+		let res: string[] = [];
+		let txt = document.getText();
+		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
+		let matches = txt.matchAll(/MixId=('|")((?!:)(\w+))(\1)/);
+		let matchesStore = txt.matchAll(/<Question[^>]+Store=('|")(\w+?)(\1)[^>]*>/);
+		let mixIdsStore: string[] = [];
+		matchesStore.forEach(element =>
+		{
+			let idmt = element[0].match(/\sId=("|')(.+?)\1/);
+			if (!idmt) return;
+			mixIdsStore.push(":" + idmt[2]);
+		});
+		if (!!matches) res = res.concat(matches.map(x => x[2]));
+		if (!!matchesStore) res = res.concat(mixIdsStore);
+		resolve(res.distinct());
+	});
+}
 
 
 //#endregion

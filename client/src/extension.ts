@@ -2,19 +2,18 @@
 
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
-import * as AutoCompleteArray from './autoComplete';
 
-import {  CurrentTag, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields, getCurrentTag as getTag, translate} from "tib-api";
+import {  CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields, getCurrentTag as getTag, translate} from "tib-api";
 
 import { CacheSet } from 'tib-api/lib/cache';
 
-import { openFileText, getDocumentMethods, getDocumentNodeIds, getMixIds, getContextChanges, inCDATA, registerCommand, ContextChange, SurveyNodes, TibMethods, ExtensionSettings, pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, TibAutoCompleteItem } from "./classes";
+import { openFileText, getContextChanges, inCDATA, registerCommand, ContextChange, ExtensionSettings, pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId } from "./classes";
 
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 
 import * as debug from './debug'
-import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, PreDifinedConstants } from 'tib-api/lib/constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
@@ -36,22 +35,11 @@ var Cache = new CacheSet(
 	
 var _client: client.LanguageClient;
 
-var clientIsReady: boolean = false;
 
 /** объект для управления ботом */
 var bot: TelegramBot;
 
 // константы
-
-/** Соответствие {{Elements}} и функции для получения */
-const _ElementFunctions = {
-	Questions: getAllQuestions,
-	QuestionTypes: getQuestionTypes,
-	Pages: getAllPages,
-	Lists: getAllLists,
-	MixIds: getAllMixIds
-};
-
 
 /** Во избежание рекурсивыных изменений */
 var InProcess = false;
@@ -61,22 +49,6 @@ var _LogPath: string;
 
 /** функция для форматирования C# из расширения Leopotam.csharpfixformat */
 var CSFormatter: (text: string) => Promise<string>;
-
-var TibAutoCompleteList = new KeyedCollection<TibAutoCompleteItem[]>();
-
-/** Список всех для C# (все перегрузки отдельно) */
-var CodeAutoCompleteArray: TibAutoCompleteItem[] = [];
-
-/** Список классов, типов, структу и т.д. */
-var ClassTypes: string[] = [];
-
-var Methods = new TibMethods();
-
-/** Список Id */
-var CurrentNodes: SurveyNodes = new SurveyNodes();
-
-/** Список MixId (подставляется в значениях атрибутов) */
-var MixIds: string[] = [];
 
 /** Настройки расширения */
 var Settings: ExtensionSettings;
@@ -127,7 +99,7 @@ export function activate(context: vscode.ExtensionContext)
 		if (!editor || editor.document.languageId != "tib") return;
 		try
 		{
-			getSurveyData(editor.document);
+			//getSurveyData(editor.document);
 			diagnostic();
 		} catch (er)
 		{
@@ -139,8 +111,8 @@ export function activate(context: vscode.ExtensionContext)
 	function anotherDocument(needReload: boolean, editor: vscode.TextEditor)
 	{
 		Includes = [];
-		Methods.Clear();
-		CurrentNodes.Clear();
+		/* Methods.Clear();
+		CurrentNodes.Clear(); */
 		if (!editor || editor.document.languageId != 'tib') return;
 		if (!editor.document.isUntitled)
 		{
@@ -158,7 +130,7 @@ export function activate(context: vscode.ExtensionContext)
 	//autoComplete();
 	//hoverDocs();
 	//helper();
-	definitions();
+	//definitions();
 	registerCommands();
 	registerActionCommands();
 	//higlight();
@@ -263,73 +235,6 @@ function getStaticData()
 				});
 			}
 		}
-
-		// получаем AutoComplete
-		let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });
-		let statCS: TibAutoCompleteItem[] = [];
-		for (let key in AutoCompleteArray.StaticMethods)
-		{
-			// добавляем сам тип в AutoComplete
-			let tp = new TibAutoCompleteItem({
-				Name: key,
-				Kind: "Class",
-				Detail: "Тип данных/класс " + key
-			});
-			statCS.push(tp);
-			// и в classTypes
-			ClassTypes.push(key);
-			// добавляем все его статические методы
-			let items: object[] = AutoCompleteArray.StaticMethods[key];
-			items.forEach(item =>
-			{
-				let aci = new TibAutoCompleteItem(item);
-				aci.Parent = key;
-				aci.Kind = "Method";
-				statCS.push(aci);
-			});
-		}
-
-		// объединённый массив Tiburon + MSDN
-		let all = tibCode.concat(statCS);
-
-		all.forEach(element =>
-		{
-			let item = new TibAutoCompleteItem(element);
-			if (!item.Kind || !item.Name) return;
-
-			CodeAutoCompleteArray.push(new TibAutoCompleteItem(element)); // сюда добавляем всё
-			// если такого типа ещё нет, то добавляем
-			if (!TibAutoCompleteList.Contains(item.Kind)) TibAutoCompleteList.AddPair(item.Kind, [item])
-			else // если есть то добавляем в массив с учётом перегрузок
-			{
-				// ищем индекс элемента с таким же типом, именем и родителем
-				let ind = TibAutoCompleteList.Item(item.Kind).findIndex(x =>
-				{
-					return x.Name == item.Name && (!!x.Parent && x.Parent == item.Parent || !x.Parent && !item.Parent);
-				});
-
-				if (ind < 0)
-				{
-					TibAutoCompleteList.Item(item.Kind).push(item);
-				}
-				else
-				{
-					// добавляем в перегрузку к имеющемуся (и сам имеющийся тоже, если надо)
-					//if (!TibAutoCompleteList.Item(item.Kind)[ind].Overloads) TibAutoCompleteList.Item(item.Kind)[ind].Overloads = [];
-					let len = TibAutoCompleteList.Item(item.Kind)[ind].Overloads.length;
-					if (len == 0)
-					{
-						let parent = new TibAutoCompleteItem(TibAutoCompleteList.Item(item.Kind)[ind]);
-						TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(parent);
-						len++;
-					}
-					TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(item);
-					let doc = "Перегрузок: " + (len + 1);
-					TibAutoCompleteList.Item(item.Kind)[ind].Description = doc;
-					TibAutoCompleteList.Item(item.Kind)[ind].Documentation = doc;
-				}
-			}
-		});
 	} catch (er)
 	{
 		logError("Ошибка при инициализации расширения", er);
@@ -907,426 +812,6 @@ function higlight()
 */
 
 
-/** Автозавершения */
-/*
-function autoComplete()
-{
-	// XML Snippets
-	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
-		{
-			let completionItems = [];
-			let tag = getCurrentTag(document, position);
-			if (tag && tag.GetLaguage() == Language.XML)
-			{
-				let text = getPreviousText(document, position, true);
-
-				// XML Features
-				if (tag.OpenTagIsClosed && text.match(/\b_\w*$/))
-				{
-					return AutoCompleteArray.XMLFeatures.map(x => snippetToCompletitionItem(x));
-				}
-
-				let curOpenMatch = text.match(/<(\w+)$/);
-				if (!curOpenMatch) return;
-				let opening = curOpenMatch[1].toLocaleLowerCase();
-
-				//Item Snippet
-				if ("item".indexOf(opening) > -1)
-				{
-					let parent;
-					for (let key in ItemSnippets)
-						if (!!tag.Parents.find(x => x.Name == key))
-						{
-							parent = key;
-							break;
-						}
-					if (!parent || !ItemSnippets[parent]) parent = "List";
-					let res = new vscode.SnippetString(extractElements(ItemSnippets[parent]));
-					if (res)
-					{
-						let ci = new vscode.CompletionItem("Item", vscode.CompletionItemKind.Snippet);
-						ci.detail = "Структура Item для " + parent;
-						ci.insertText = res;
-						//ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
-						completionItems.push(ci);
-					}
-				}
-				// Answer Snippet
-				else if ("answer".indexOf(opening) > -1)
-				{
-					let ci = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
-					let ciS = new vscode.CompletionItem("AnswerShort", vscode.CompletionItemKind.Snippet);
-
-					let iterator = "1";
-					let text = "$2";
-
-					if (tag.LastParent && tag.LastParent.Name == "Repeat")
-					{
-						let source = tag.LastParent.getRepeatSource();
-						ci.detail = "Полная структура Answer в Repeat по " + source;
-						ciS.detail = "Краткая структура Answer в Repeat по " + source;
-						iterator = source == "List" ? "@ID" : "@Itera";
-						text = source == "List" ? "@Text" : "@Itera";
-					}
-					else
-					{
-						ci.detail = "Полная структура Answer";
-						ciS.detail = "Краткая структура Answer";
-					}
-					// полный вариант
-					ci.insertText = new vscode.SnippetString("Answer Id=\"${1:" + iterator + "}\"><Text>${2:" + text + "}</Text></Answer>");
-					completionItems.push(ci);
-					// краткий вариант
-					ciS.insertText = new vscode.SnippetString("Answer Id=\"${1:" + iterator + "}\"/>");
-					completionItems.push(ciS);
-				}
-			}
-			return completionItems;
-		},
-		resolveCompletionItem(item, token)
-		{
-			return item;
-		}
-	});
-
-	//Attributes
-	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
-		{
-			let completionItems = [];
-			let tag = getCurrentTag(document, position);
-			if (!!tag && tag.GetLaguage() == Language.XML && !tag.OpenTagIsClosed && !tag.InString() && AutoCompleteArray.Attributes[tag.Id])
-			{
-				let existAttrs = tag.AttributeNames();
-				let textAfter = document.getText().slice(document.offsetAt(position));
-				let attrs = textAfter.match(RegExpPatterns.RestAttributes);
-				let nameOnly = !!textAfter.match(/^=["']/);
-				let nexAttrs: string[] = [];
-				if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
-				AutoCompleteArray.Attributes[tag.Id].filter(x => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach(element =>
-				{
-					let attr = new TibAttribute(element);
-					let ci = attr.ToCompletionItem(function (query)
-					{
-						return safeValsEval(query);
-					}, nameOnly);
-					completionItems.push(ci);
-				});
-			}
-			return completionItems;
-		},
-		resolveCompletionItem(item, token)
-		{
-			return item;
-		}
-	}, " ");
-
-	//Functions, Variables, Enums, Classes, Custom Methods, C# Snippets, Types, node Ids
-	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
-		{
-			let completionItems: vscode.CompletionItem[] = [];
-			let tag = getCurrentTag(document, position);
-			if (!tag) return;
-
-			let curLine = getPreviousText(document, position, true);
-			let mt = curLine.match(/(#|\$)?\w*$/);
-			let lang = tag.GetLaguage();
-			if (!mt) return;
-			if (lang != Language.CSharp && mt[1] != "$") return;
-
-			//пропускаем объявления
-			if (Parse.isMethodDefinition(curLine)) return;
-
-			let str = getCurrentLineText(document, position).substr(position.character);
-			if (mt[1] == "$")
-			{
-				// добавляем snippet для $repeat
-				let ci = new vscode.CompletionItem("repeat", vscode.CompletionItemKind.Snippet);
-				ci.detail = "Строчный repeat";
-				ci.insertText = new vscode.SnippetString("repeat(${1|" + getAllLists().join(',') + "|}){${2:@ID}[${3:,}]}");
-				completionItems.push(ci);
-				// добавляем snippet для $place
-				ci = new vscode.CompletionItem("place", vscode.CompletionItemKind.Snippet);
-				ci.detail = "Указатель на вложенный вопрос";
-				ci.insertText = new vscode.SnippetString("place(${1|" + getAllQuestions().join(',') + "|})");
-				completionItems.push(ci);
-				// добавляем стандартные константы
-				if (lang == Language.CSharp && !tag.CSSingle()) XMLEmbeddings.forEach(x =>
-				{
-					ci = new vscode.CompletionItem(x.Name, vscode.CompletionItemKind.Constant);
-					if (!!x.Type) ci.detail = x.Type;
-					ci.documentation = x.Title;
-					completionItems.push(ci);
-				});
-			}
-
-			let customMethods = Methods.CompletionArray();
-			if (customMethods && !tag.InCSString()) completionItems = completionItems.concat(customMethods); //Custom Methods
-
-			// если начинается с $, то больше ничего не надо
-			if (mt[1] == "$") return completionItems;
-
-			//C# Featrues
-			if (mt[1] == "#")
-			{
-				AutoCompleteArray.CSFeatures.forEach(element =>
-				{
-					completionItems.push(snippetToCompletitionItem(element));
-				});
-			}
-
-			if (!tag.CSSingle() && !curLine.match(/\w+\.\w*$/))
-			{
-				if (!tag.InCSString())
-				{
-					let ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Variable"), TibAutoCompleteList.Item("Enum"), TibAutoCompleteList.Item("Class"), TibAutoCompleteList.Item("Type"), TibAutoCompleteList.Item("Struct"));
-					let adBracket = !str.match(/\w*\(/);
-					ar.forEach(element =>
-					{
-						if (element) completionItems.push(element.ToCompletionItem(adBracket));
-					});
-					//C# Snippets
-					AutoCompleteArray.CSSnippets.forEach(element =>
-					{
-						completionItems.push(snippetToCompletitionItem(element));
-					});
-				}
-				else //node Ids
-				{
-					let qt = curLine.lastIndexOf('"');
-					if (qt > -1) // от недоверия к tag.InCSString()
-					{
-						let stuff = curLine.substr(0, qt);
-						let match = stuff.match(/((CurrentSurvey\.Lists\[)|(Page\s*=)|(Question\s*=))\s*$/);
-						const matchResults =
-						{
-							List: 2,
-							Page: 3,
-							Question: 4
-						};
-						if (!!match)
-						{
-							let resultMatch = match.findIndex((val, index) => { return index > 1 && !!val; });
-							switch (resultMatch)
-							{
-								case matchResults.List:
-									completionItems = completionItems.concat(CurrentNodes.CompletitionItems("List"));
-									break;
-
-								case matchResults.Page:
-									completionItems = completionItems.concat(CurrentNodes.CompletitionItems("Page"));
-									break;
-
-								case matchResults.Question:
-									completionItems = completionItems.concat(CurrentNodes.CompletitionItems("Question"));
-									break;
-
-								default:
-									break;
-							}
-						}
-						else // всё подряд
-						{
-							_NodeStoreNames.forEach(name =>
-							{
-								completionItems = completionItems.concat(CurrentNodes.CompletitionItems(name));
-							});
-						}
-					}
-				}
-			}
-			return completionItems;
-		},
-		resolveCompletionItem(item, token)
-		{
-			return item;
-		}
-	}, "\"", "", "$", "#");
-
-	//Properties, Methods, EnumMembers, Linq
-	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
-		{
-			let completionItems = [];
-			let tag = getCurrentTag(document, position);
-			if (!!tag && tag.GetLaguage() == Language.CSharp && !tag.InCSString() && !tag.CSSingle())
-			{
-				let lastLine = getPreviousText(document, position, true);
-				let ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Property").concat(TibAutoCompleteList.Item("Method"), TibAutoCompleteList.Item("EnumMember"));
-				let str = getCurrentLineText(document, position).substr(position.character);
-				let needClose = !str.match(/\w*\(/);
-				let mt = lastLine.match(/(\w+)\.w*$/);
-				let parent: string;
-				if (!!mt && !!mt[1]) parent = mt[1];
-				ar.forEach(element =>
-				{
-					let m = false;
-					if (element.Parent)
-					{
-						let reg = new RegExp(element.Parent + "\\.\\w*$");
-						m = !!lastLine.match(reg);
-					}
-					if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "__" + element.Name));
-				});
-				// добавляем Linq
-				if (lastLine.match(/\.\w*$/) && (!parent || ClassTypes.indexOf(parent) == -1) && _useLinq)
-				{
-					let linqAr = TibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "zzz" + x.Name));
-					completionItems = completionItems.concat(linqAr);
-				}
-			}
-			return completionItems;
-		},
-		resolveCompletionItem(item, token)
-		{
-			return item;
-		}
-	}, ".");
-
-	//Значения атрибутов
-	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
-		{
-			let completionItems = [];
-			let tag = getCurrentTag(document, position);
-			if (!tag || tag.OpenTagIsClosed) return;
-			let text = getPreviousText(document, position, true);
-			//let needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
-
-			let curAttr = text.match(/(\w+)=(["'])(:?\w*)$/);
-			if (!curAttr) return;
-
-			let atrs: TibAttribute[] = AutoCompleteArray.Attributes[tag.Id];
-			if (!atrs) return;
-
-			let attr = atrs.find(function (e, i)
-			{
-				return e.Name == curAttr[1];
-			});
-			if (!attr) return;
-
-
-			let attrT = new TibAttribute(attr);
-			let vals = attrT.ValueCompletitions(function (query)
-			{
-				return safeValsEval(query);
-			});
-			vals.forEach(v =>
-			{
-				let ci = new vscode.CompletionItem(v, vscode.CompletionItemKind.Enum);
-				ci.insertText = v;
-				completionItems.push(ci);
-			});
-			return completionItems;
-		},
-		resolveCompletionItem(item, token)
-		{
-			return item;
-		}
-	}, ":", "");
-}
-
-*/
-
-
-/** Подсказки при вводе параметров функции */
-/*
-function helper()
-{
-	vscode.languages.registerSignatureHelpProvider('tib', {
-		provideSignatureHelp(document, position, token)
-		{
-			let tag = getCurrentTag(document, position);
-			if (!tag || tag.GetLaguage() != Language.CSharp) return;
-			let sign = new vscode.SignatureHelp();
-			let lastLine = getPreviousText(document, position, true);
-			//пропускаем объявления
-			if (Parse.isMethodDefinition(lastLine)) return;
-			let ar = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Method"));
-			let mtch = lastLine.match(/((^)|(.*\b))(\w+)\([^\(\)]*$/);
-			if (!mtch || mtch.length < 4) return sign;
-			let reg = mtch[1].match(/(\w+)\.$/);
-			let parent = !!reg ? reg[1] : null;
-			ar.forEach(element =>
-			{
-				if (element.Name == mtch[4] && (element.Kind == vscode.CompletionItemKind[vscode.CompletionItemKind.Function] || !!parent && element.Parent == parent))
-				{
-					if (element.Overloads.length == 0) sign.signatures.push(element.ToSignatureInformation());
-					else element.Overloads.forEach(el =>
-					{
-						sign.signatures.push(el.ToSignatureInformation());
-					});
-				}
-			});
-			// Custom Methods
-			Methods.SignatureArray(mtch[4]).forEach(element =>
-			{
-				sign.signatures.push(element);
-			});
-			sign.activeSignature = 0;
-			return sign;
-		}
-	}, "(", ",");
-}
-*/
-
-
-/** подсказки при наведении */
-/*
-function hoverDocs()
-{
-	vscode.languages.registerHoverProvider('tib', {
-		provideHover(document, position, token)
-		{
-			let res = [];
-			let range = document.getWordRangeAtPosition(position);
-			if (!range) return;
-			let tag = getCurrentTag(document, range.end);
-			if (!tag) return;
-			if (tag.GetLaguage() != Language.CSharp) return;
-			let text = document.getText(range);
-			let parent = null;
-			let lastText = getPreviousText(document, position);
-			let reg = lastText.match(/(\w+)\.\w*$/);
-			if (!!reg)
-			{
-				parent = reg[1];
-			}
-			// надо проверить родителя: если нашёлся static, то только его, иначе всё подходящее
-			let suit = CodeAutoCompleteArray.filter(x => x.Name == text);
-			let staticParens = CodeAutoCompleteArray.filter(x => x.Kind == vscode.CompletionItemKind[vscode.CompletionItemKind.Class]).map(x => x.Name);
-			if (staticParens.contains(parent))
-			{
-				suit = suit.filter(x =>
-				{
-					return x.Name == text && (x.Parent == parent);
-				});
-			}
-
-			for (let i = 0; i < suit.length; i++)
-			{
-				if (suit[i].Documentation && suit[i].Description)
-				{*/
-					//let doc = "/* " + suit[i].Description + " */\n" + suit[i].Documentation;
-					/*res.push({ language: "csharp", value: doc });
-				}
-				else
-				{
-					if (suit[i].Documentation) res.push({ language: "csharp", value: suit[i].Documentation });
-					if (suit[i].Description) res.push(suit[i].Description);
-				}
-			}
-			let customMethods = Methods.HoverArray(text);
-			if (customMethods) res = res.concat(customMethods);
-			if (res.length == 0) return;
-			return new vscode.Hover(res, range);
-		}
-	});
-}*/
-
-
 /** Делает первую букву тега заглавной */
 function upcaseFirstLetter(changes: ContextChange[], editor: vscode.TextEditor, tag: CurrentTag)
 {
@@ -1378,7 +863,7 @@ async function diagnostic()
 
 
 /** Переход к определениям */
-function definitions()
+/* function definitions()
 {
 	// C#
 	vscode.languages.registerDefinitionProvider('tib', {
@@ -1439,7 +924,7 @@ function definitions()
 			return res;
 		}
 	});
-}
+} */
 
 
 /** добавление отступов при нажатии enter между > и < */
@@ -1602,7 +1087,7 @@ function insertSpecialSnippets(changes: ContextChange[], editor: vscode.TextEdit
 
 
 /** Собирает данные из текущего документа и Includ'ов */
-async function getSurveyData(document: vscode.TextDocument): Promise<void>
+/* async function getSurveyData(document: vscode.TextDocument): Promise<void>
 {
 	let docs = [document.fileName];
 	let includes = getIncludePaths(document.getText());
@@ -1641,61 +1126,7 @@ async function getSurveyData(document: vscode.TextDocument): Promise<void>
 	{
 		logError("Ошибка при сборе сведений о документе", error);
 	}
-}
-
-
-
-
-
-// функции для получения элементов
-
-/** Заменяет {{Elements}} на строку для Snippet */
-export function extractElements(input: string): string
-{
-	let res = new KeyedCollection<string[]>();
-	let match = input.matchAll(/{{(\w+)}}/);
-	if (!match || match.length == 0) return input;
-	match.forEach(element =>
-	{
-		if (!!_ElementFunctions[element[1]] && !res.Contains(element[1]))
-		{
-			res.AddPair(element[1], _ElementFunctions[element[1]]());
-		}
-	});
-	let resultStr = input;
-	let i = 1;
-	res.forEach((key, value) =>
-	{
-		resultStr = resultStr.replace(new RegExp("{{" + key + "}}", "g"), "${" + i + "|" + value.join(",") + "|}");
-		i++;
-	});
-	return resultStr;
-}
-
-function getAllPages(): string[]
-{
-	return CurrentNodes.GetIds('Page');
-}
-
-function getAllLists(): string[]
-{
-	return CurrentNodes.GetIds('List');
-}
-
-function getAllQuestions(): string[]
-{
-	return CurrentNodes.GetIds('Question');
-}
-
-function getQuestionTypes(): string[]
-{
-	return QuestionTypes;
-}
-
-function getAllMixIds(): string[]
-{
-	return MixIds;
-}
+} */
 
 
 
@@ -1957,9 +1388,9 @@ function getLogData(edt?: vscode.TextEditor): LogData
 			CacheEnabled: !!Settings.Item("enableCache")
 		});
 		let survObj = {
-			Methods: Methods.Keys(),
+			/* Methods: Methods.Keys(),
 			NodesLength: CurrentNodes.Keys().map(x => x + ": " + (CurrentNodes.Item(x).length || 0)),
-			MixIds: MixIds,
+			MixIds: MixIds, */
 			Includes: Includes
 		};
 		res.add({ SurveyData: survObj });
@@ -2024,14 +1455,6 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 }
 
 
-/** Обновляет все <Include> */
-function getIncludePaths(text: string): string[]
-{
-	let reg = /<Include[\s\S]*?FileName=(("[^"]+")|('[^']+'))/;
-	let txt = text;
-	if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
-	return txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x));
-}
 
 
 /** Проверки документа */
@@ -2154,12 +1577,6 @@ function getFilePathForMessage(path: string)
 }
 
 
-/** Заменяет в строке все константы на значения */
-function applyConstants(input: string): string
-{
-	let cons = AutoCompleteArray.PreDifinedConstants.toKeyedCollection(x => x).Map((key, value) => new KeyValuePair<string>('@' + key, value));
-	return input.replaceValues(cons);
-}
 
 
 async function createElements(elementType: SurveyElementType)
@@ -2219,7 +1636,6 @@ async function createClientConnection(context: vscode.ExtensionContext)
 			console.log(data);
 		});
 
-		clientIsReady = true;
 	});
 }
 

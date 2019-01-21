@@ -1025,13 +1025,6 @@ var KnownCode = [
 ];
 
 
-export const PreDifinedConstants =
-[
-	{ Scripts: "\\\\tib-srv-debug.corp.tiburon-research.ru\\scripts" },
-	{ StoreUrl: "S:" }
-];
-
-
 export const Code = ManualCode.concat(KnownCode);
 
 
