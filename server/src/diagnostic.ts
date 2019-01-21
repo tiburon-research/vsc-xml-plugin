@@ -28,7 +28,7 @@ const _AllDiagnostics: IDiagnosticType[] =
 			Type: server.DiagnosticSeverity.Warning,
 			Functions: KeyedCollection.FromPairs(
 				[
-					{ Key: "constantIds", Value: dangerousConstandIds }
+					{ Key: "constantIds", Value: dangerousConstandIds } // иногда оно может стать "delimitedConstant"
 				]
 			)
 		}

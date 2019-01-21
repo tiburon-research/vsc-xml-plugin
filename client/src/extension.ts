@@ -4,24 +4,21 @@ import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 import * as AutoCompleteArray from './autoComplete';
 
-import {  CurrentTag, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, SimpleTag,  KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields, getCurrentTag as getTag, translate} from "tib-api";
+import {  CurrentTag, KeyedCollection, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields, getCurrentTag as getTag, translate} from "tib-api";
 
 import { CacheSet } from 'tib-api/lib/cache';
 
-import { snippetToCompletitionItem, openFileText, getDocumentMethods, getDocumentNodeIds, getMixIds, getContextChanges, inCDATA, registerCommand, ContextChange, SurveyNodes, TibMethods, ExtensionSettings, pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, showError, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, TibAutoCompleteItem } from "./classes";
+import { openFileText, getDocumentMethods, getDocumentNodeIds, getMixIds, getContextChanges, inCDATA, registerCommand, ContextChange, SurveyNodes, TibMethods, ExtensionSettings, pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, TibAutoCompleteItem } from "./classes";
 
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 
 import * as debug from './debug'
-//import { registerActionCommands } from './diagnostic'
-import { ItemSnippets, _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes, XMLEmbeddings } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, QuestionTypes } from 'tib-api/lib/constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
-import { Server } from 'http';
-import { DeclarationServerCapabilities } from 'vscode-languageserver';
 
 
 
@@ -119,7 +116,7 @@ export function activate(context: vscode.ExtensionContext)
 	let editor = vscode.window.activeTextEditor;
 
 	// обновляем настройки при сохранении
-	vscode.workspace.onDidChangeConfiguration(event =>
+	vscode.workspace.onDidChangeConfiguration(() =>
 	{
 		Settings.Update();
 	})
@@ -131,7 +128,7 @@ export function activate(context: vscode.ExtensionContext)
 		try
 		{
 			getSurveyData(editor.document);
-			diagnostic(editor.document);
+			diagnostic();
 		} catch (er)
 		{
 			logError("Ошибка при сборе информации", er);
@@ -163,7 +160,7 @@ export function activate(context: vscode.ExtensionContext)
 	//helper();
 	definitions();
 	registerCommands();
-	//registerActionCommands();
+	registerActionCommands();
 	//higlight();
 
 	// для каждого дукумента свои
@@ -245,7 +242,7 @@ function getStaticData()
 		let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
 		if (!!csharpfixformat)
 		{
-			if (!csharpfixformat.isActive) csharpfixformat.activate().then(function (a)
+			if (!csharpfixformat.isActive) csharpfixformat.activate().then(function ()
 			{
 				CSFormatter = getCSFormatter(csharpfixformat);
 			});
@@ -427,7 +424,6 @@ function registerCommands()
 			if (!cl) return;
 			let to = cl.end;
 			let range = createSelection(from, to);;
-			let res = selectLines(editor.document, range);
 			newSels.push(range);
 		});
 		editor.selections = newSels;
@@ -684,7 +680,7 @@ function registerCommands()
 		}
 		CurrentStatus.setProcessMessage("Открывается демка...").then(x =>
 		{
-			openFileText(path).then(x => CurrentStatus.removeCurrentMessage()).then(res =>
+			openFileText(path).then(() => CurrentStatus.removeCurrentMessage()).then(() =>
 			{
 				x.dispose();
 			});
@@ -1374,10 +1370,10 @@ function upcaseFirstLetter(changes: ContextChange[], editor: vscode.TextEditor, 
 
 
 /** Подсказки и ошибки */
-async function diagnostic(document: vscode.TextDocument)
+async function diagnostic()
 {
 	// if (document.languageId != 'tib' || !Settings.Item('enableDiagnostic')) return Diagnostics.delete(document.uri);
-	getServerData('client/getDiagnostic', document);
+	
 }
 
 
@@ -1386,7 +1382,7 @@ function definitions()
 {
 	// C#
 	vscode.languages.registerDefinitionProvider('tib', {
-		provideDefinition(document, position, token)
+		provideDefinition(document, position)
 		{
 			let tag = getCurrentTag(document, position);
 			if (!tag || tag.GetLaguage() != Language.CSharp || tag.InCSString()) return;
@@ -1405,7 +1401,7 @@ function definitions()
 
 	// XML узлы
 	vscode.languages.registerDefinitionProvider('tib', {
-		provideDefinition(document, position, token)
+		provideDefinition(document, position)
 		{
 			let res: vscode.Location;
 			try
@@ -1431,7 +1427,7 @@ function definitions()
 
 	// include
 	vscode.languages.registerDefinitionProvider('tib', {
-		provideDefinition(document, position, token)
+		provideDefinition(document, position)
 		{
 			let tag = getCurrentTag(document, position);
 			if (!tag || tag.Name != "Include") return;
@@ -1648,22 +1644,6 @@ async function getSurveyData(document: vscode.TextDocument): Promise<void>
 }
 
 
-/** Безопасное выполнение eval() */
-function safeValsEval(query: string): string[]
-{
-	let res = [];
-	try
-	{
-		res = eval(query);
-	}
-	catch (error)
-	{
-		let data = getLogData();
-		data.add({ Data: { EvalString: query }, StackTrace: error });
-		saveError("Не получилось выполнить eval()", data);
-	}
-	return res;
-}
 
 
 
@@ -1740,22 +1720,6 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 }
 
 
-function findOpenTag(opBracket: string, tagName: string, clBracket: string, document: vscode.TextDocument, position: vscode.Position): vscode.Range
-{
-	try
-	{
-		let prevText = getPreviousText(createServerDocument(document), position);
-		let res = Parse.findOpenTag(opBracket, tagName, clBracket, prevText);
-		if (!res) return null;
-		let startPos = document.positionAt(res.Range.From);
-		let endPos = document.positionAt(res.Range.To + 1);
-		return new vscode.Range(startPos, endPos);
-	} catch (error)
-	{
-		logError("Ошибка выделения открывающегося тега", error);
-		return null;
-	}
-}
 
 
 /** getCurrentTag для debug (без try-catch) */
@@ -2210,7 +2174,7 @@ async function createElements(elementType: SurveyElementType)
 	Formatting.format(res.value, Language.XML, Settings, "\t", indent).then(x =>
 	{
 		res.value = x;
-		vscode.window.activeTextEditor.insertSnippet(res).then(x => { InProcess = false });
+		vscode.window.activeTextEditor.insertSnippet(res).then(() => { InProcess = false });
 	});
 }
 
@@ -2262,10 +2226,6 @@ async function createClientConnection(context: vscode.ExtensionContext)
 
 
 
-function getServerData(requestName: string, data: any)
-{
-	if (clientIsReady)	_client.sendNotification(requestName, data);
-}
 
 
 function createServerDocument(document: vscode.TextDocument): server.TextDocument
@@ -2300,7 +2260,7 @@ async function createCommandActionPair(cmdName: string, actionTitle: string, com
 function createCodeAction(actionTitle: string, commandName: string, argumentInvoker: ArgumentsInvoker)
 {
 	vscode.languages.registerCodeActionsProvider('tib', {
-		provideCodeActions(document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext, token: vscode.CancellationToken)
+		provideCodeActions(document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext)
 		{
 			let inner = argumentInvoker(document, range, context);
 			if (!inner.Enabled) return;

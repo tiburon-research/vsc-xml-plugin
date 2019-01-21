@@ -3,7 +3,6 @@
 import * as server from 'vscode-languageserver';
 import { KeyedCollection } from 'tib-api';
 import { getDiagnosticElements } from './diagnostic';
-import { consoleLog } from './server';
 
 
 
