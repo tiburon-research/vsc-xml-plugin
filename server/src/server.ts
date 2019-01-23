@@ -1,10 +1,12 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods } from 'tib-api';
+import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync } from 'tib-api';
 import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { CacheSet } from 'tib-api/lib/cache';
+import { _NodeStoreNames } from 'tib-api/lib/constants';
+
 
 
 //#region --------------------------- Инициализация
@@ -35,10 +37,10 @@ connection.onInitialize((params: server.InitializeParams) =>
 	getAutoComleteList();
 	return {
 		capabilities: { // тут надо перечислить всё, что клиент будет ждать от сервера
-			textDocumentSync: documents.syncKind,
+			textDocumentSync: server.TextDocumentSyncKind.Incremental/* ,
 			completionProvider: {
 				resolveProvider: false
-			}
+			} */
 		}
 	};
 });
@@ -66,26 +68,48 @@ documents.onDidChangeContent(event =>
 })
 
 
-connection.onCompletion(context =>
+/* connection.onCompletion(context =>
 {
 	let document = documents.get(context.textDocument.uri);
+	console.log(document.getText().length);
 	let tag = Cache.Tag.Get();
 	let items = getCompletions(connection, tag, document, context.position, SurveyData);
-	consoleLog(items);
 	return items;
-})
+}) */
 
 
 connection.onDidChangeTextDocument(e =>
-{ 
-	let content = e.contentChanges.last().text;
-	consoleLog(e);
+{
 	let position = e.contentChanges[0].range.end;
-	let document = server.TextDocument.create(e.textDocument.uri, 'tib', e.textDocument.version, content)
-	getServerTag({ document, position, force: false, text: content });
+	let document = documents.get(e.textDocument.uri);
+	SurveyData =
+		{
+			CurrentNodes: getDocumentNodeIdsSync(document, Settings, _NodeStoreNames),
+			Methods: getDocumentMethodsSync(document, Settings),
+			MixIds: getMixIdsSync(document, Settings)
+		};
+	
+	let tag = getServerTag({ document, position, force: false });
+	let items = getCompletions(connection, tag, document, position, SurveyData);
+	//console.log(items);
+	//connection.sendNotification('textDocument/publishDiagnostics', items);
+	connection.sendNotification('currentTag', tag);
 })
 
 
+
+/* connection.onNotification('currentTag', (data) =>
+{
+	let fields: CurrentTagGetFields = {
+		document: server.TextDocument.create(data.document.uri, data.document.languageId, data.document.version, data.document._content),
+		position: data.position,
+		text: data.text,
+		force: data.force
+	};
+	let tag = getCurrentTag(fields, Cache);
+	Cache.Tag.Set(tag);
+	connection.sendNotification('currentTag', tag);
+}) */
 
 
 
@@ -94,11 +118,14 @@ connection.onDidChangeTextDocument(e =>
 
 function getServerTag(data: CurrentTagGetFields): CurrentTag
 {
-	return getCurrentTag(data, Cache);
+	let tag = getCurrentTag(data, Cache);
+	Cache.Tag.Set(tag);
+	//consoleLog(tag);
+	return tag;
 }
 
 
-export function consoleLog(data)
+export function consoleLog(...data)
 {
 	connection.sendNotification('console.log', data);
 }

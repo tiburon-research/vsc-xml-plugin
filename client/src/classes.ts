@@ -8,7 +8,7 @@ import * as winattr from 'winattr'
 import { machineIdSync } from "node-machine-id"
 import { bot, _LogPath, OutChannel, } from './extension'
 import { _LockInfoFilePrefix } from 'tib-api/lib/constants'
-import { CurrentTag, Language, KeyedCollection, ITibAttribute, Encoding, Parse, TibMethods, TibMethod, SurveyNodes, SurveyNode } from 'tib-api';
+import { CurrentTag, Language, KeyedCollection, ITibAttribute, Parse } from 'tib-api';
 
 
 

@@ -28,13 +28,15 @@ export { bot, CSFormatter, logError, OutChannel, _LogPath, Settings };
 //#region
 
 	
-var Cache = new CacheSet(
+var Cache: CacheSet = new CacheSet(
 	() => { return !Settings.Contains("enableCache") || !!Settings.Item("enableCache") },
 	(data: CurrentTagGetFields) => { return getTag(data, Cache) }
 );
 	
 var _client: client.LanguageClient;
 
+
+var Tag: CurrentTag;
 
 /** объект для управления ботом */
 var bot: TelegramBot;
@@ -1156,13 +1158,8 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 /** getCurrentTag для debug (без try-catch) */
 function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, text?: string, force = false): CurrentTag
 {
-	let data: CurrentTagGetFields = {
-		document: createServerDocument(document),
-		position,
-		text,
-		force
-	};
-	let tag = getTag(data, Cache);
+	_client.sendNotification('currentTag', { document: createServerDocument(document), position, text, force });
+	let tag = Tag;//getTag(data, Cache);
 	if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
 	return tag;
 }
@@ -1634,6 +1631,14 @@ async function createClientConnection(context: vscode.ExtensionContext)
 		_client.onNotification("console.log", data =>
 		{
 			console.log(data);
+		});
+
+		_client.onNotification("currentTag", (data: CurrentTag) =>
+		{
+			let tag = new CurrentTag(data.Name, data.Parents);
+			Object.assign(tag, data);
+			if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
+			Tag = tag;
 		});
 
 	});

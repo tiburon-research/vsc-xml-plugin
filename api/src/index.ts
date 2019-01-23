@@ -1281,7 +1281,7 @@ export function translatePosition(document: server.TextDocument, p: server.Posit
 /** Разница `p1`-`p2` */
 export function comparePositions(document: server.TextDocument, p1: server.Position, p2: server.Position): number
 {
-    return document.offsetAt(p1) - document.offsetAt(p2);
+	return document.offsetAt(p1) - document.offsetAt(p2);
 }
 
 
@@ -1295,7 +1295,6 @@ export function getCurrentTag(data: CurrentTagGetFields, cache: CacheSet)
 function _getCurrentTag(document: server.TextDocument, position: server.Position, cache: CacheSet, txt?: string, force = false): CurrentTag
 {
 	let tag: CurrentTag;
-	document.getText
 	let text = txt || getPreviousText(document, position);
 
 	// сначала пытаемся вытащить из кэша (сначала обновить, если позиция изменилась)
@@ -1368,75 +1367,88 @@ export function getDocumentMethods(document: server.TextDocument, Settings: Keye
 {
 	return new Promise<TibMethods>((resolve, reject) =>
 	{
-		let res = new TibMethods();
-		let text = document.getText();
-		if (Settings.Item("ignoreComments")) text = Encoding.clearXMLComments(text);
-		let mtd = text.matchAll(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
-		if (mtd.length == 0)
-		{
-			resolve(res);
-			return;
-		}
-		let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/);
-		let groups = {
-			Full: 0,
-			Modificator: 1,
-			Properties: 5,
-			Type: 9,
-			FullName: 10,
-			Name: 11,
-			Parameters: 12
-		};
-		mtd.forEach(element =>
-		{
-			let str = element[3];
-			if (Settings.Item("ignoreComments")) str = Encoding.clearCSComments(str);
-			let m = str.matchAll(reg);
-			m.forEach(met => 
-			{
-				if (met[groups.FullName])
-				{
-					let start = text.indexOf(met[groups.Full]);
-					let isFunc = !!met[groups.Parameters];
-					let end = text.indexOf(isFunc ? ")" : ";", start) + 1;
-					let positionFrom = document.positionAt(start);
-					let positionTo = document.positionAt(end);
-					let rng = server.Range.create(positionFrom, positionTo);
-					res.Add(new TibMethod(met[groups.Name], met[groups.Full].trim().replace(/\s{2,}/g, " "), rng, document.uri, isFunc, met[groups.Type]));
-				}
-			});
-		});
-		resolve(res);
+		resolve(getDocumentMethodsSync(document, Settings));
 	});
 }
+
+
+
+export function getDocumentMethodsSync(document: server.TextDocument, Settings: KeyedCollection<any>): TibMethods
+{
+	let res = new TibMethods();
+	let text = document.getText();
+	if (Settings.Item("ignoreComments")) text = Encoding.clearXMLComments(text);
+	let mtd = text.matchAll(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
+	if (mtd.length == 0)
+	{
+		return res;
+	}
+	let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/);
+	let groups = {
+		Full: 0,
+		Modificator: 1,
+		Properties: 5,
+		Type: 9,
+		FullName: 10,
+		Name: 11,
+		Parameters: 12
+	};
+	mtd.forEach(element =>
+	{
+		let str = element[3];
+		if (Settings.Item("ignoreComments")) str = Encoding.clearCSComments(str);
+		let m = str.matchAll(reg);
+		m.forEach(met => 
+		{
+			if (met[groups.FullName])
+			{
+				let start = text.indexOf(met[groups.Full]);
+				let isFunc = !!met[groups.Parameters];
+				let end = text.indexOf(isFunc ? ")" : ";", start) + 1;
+				let positionFrom = document.positionAt(start);
+				let positionTo = document.positionAt(end);
+				let rng = server.Range.create(positionFrom, positionTo);
+				res.Add(new TibMethod(met[groups.Name], met[groups.Full].trim().replace(/\s{2,}/g, " "), rng, document.uri, isFunc, met[groups.Type]));
+			}
+		});
+	});
+	return res;
+}
+
 
 
 export function getDocumentNodeIds(document: server.TextDocument, Settings: KeyedCollection<any>, NodeStoreNames: string[]): Promise<SurveyNodes>
 {
 	return new Promise<SurveyNodes>((resolve, reject) =>
 	{
-		let nNames = NodeStoreNames;
-		let txt = document.getText();
-		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
-		let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')");
-		let idIndex = nNames.length + 3;
-		let nodes = new SurveyNodes();
-		let res = txt.matchAll(reg);
-		res.forEach(element => 
-		{
-			let pos = document.positionAt(txt.indexOf(element[0]));
-			let item = new SurveyNode(element[1], element[idIndex], pos, document.uri);
-			nodes.Add(item);
-		});
-		// дополнительно
-		nodes.Add(new SurveyNode("Page", "pre_data", null, document.uri));
-		nodes.Add(new SurveyNode("Question", "pre_data", null, document.uri));
-		nodes.Add(new SurveyNode("Question", "pre_sex", null, document.uri));
-		nodes.Add(new SurveyNode("Question", "pre_age", null, document.uri));
-		nodes.Add(new SurveyNode("Page", "debug", null, document.uri));
-		nodes.Add(new SurveyNode("Question", "debug", null, document.uri));
-		resolve(nodes);
+		resolve(getDocumentNodeIdsSync(document, Settings, NodeStoreNames));
 	});
+}
+
+
+export function getDocumentNodeIdsSync(document: server.TextDocument, Settings: KeyedCollection<any>, NodeStoreNames: string[]): SurveyNodes
+{
+	let nNames = NodeStoreNames;
+	let txt = document.getText();
+	if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
+	let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')");
+	let idIndex = nNames.length + 3;
+	let nodes = new SurveyNodes();
+	let res = txt.matchAll(reg);
+	res.forEach(element => 
+	{
+		let pos = document.positionAt(txt.indexOf(element[0]));
+		let item = new SurveyNode(element[1], element[idIndex], pos, document.uri);
+		nodes.Add(item);
+	});
+	// дополнительно
+	nodes.Add(new SurveyNode("Page", "pre_data", null, document.uri));
+	nodes.Add(new SurveyNode("Question", "pre_data", null, document.uri));
+	nodes.Add(new SurveyNode("Question", "pre_sex", null, document.uri));
+	nodes.Add(new SurveyNode("Question", "pre_age", null, document.uri));
+	nodes.Add(new SurveyNode("Page", "debug", null, document.uri));
+	nodes.Add(new SurveyNode("Question", "debug", null, document.uri));
+	return nodes;
 }
 
 
@@ -1445,22 +1457,29 @@ export function getMixIds(document: server.TextDocument, Settings: KeyedCollecti
 {
 	return new Promise<string[]>((resolve, reject) =>
 	{
-		let res: string[] = [];
-		let txt = document.getText();
-		if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
-		let matches = txt.matchAll(/MixId=('|")((?!:)(\w+))(\1)/);
-		let matchesStore = txt.matchAll(/<Question[^>]+Store=('|")(\w+?)(\1)[^>]*>/);
-		let mixIdsStore: string[] = [];
-		matchesStore.forEach(element =>
-		{
-			let idmt = element[0].match(/\sId=("|')(.+?)\1/);
-			if (!idmt) return;
-			mixIdsStore.push(":" + idmt[2]);
-		});
-		if (!!matches) res = res.concat(matches.map(x => x[2]));
-		if (!!matchesStore) res = res.concat(mixIdsStore);
-		resolve(res.distinct());
+		resolve(getMixIdsSync(document, Settings));
 	});
+}
+
+
+/** Возвращает список MixId */
+export function getMixIdsSync(document: server.TextDocument, Settings: KeyedCollection<any>): string[]
+{
+	let res: string[] = [];
+	let txt = document.getText();
+	if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
+	let matches = txt.matchAll(/MixId=('|")((?!:)(\w+))(\1)/);
+	let matchesStore = txt.matchAll(/<Question[^>]+Store=('|")(\w+?)(\1)[^>]*>/);
+	let mixIdsStore: string[] = [];
+	matchesStore.forEach(element =>
+	{
+		let idmt = element[0].match(/\sId=("|')(.+?)\1/);
+		if (!idmt) return;
+		mixIdsStore.push(":" + idmt[2]);
+	});
+	if (!!matches) res = res.concat(matches.map(x => x[2]));
+	if (!!matchesStore) res = res.concat(mixIdsStore);
+	return res.distinct();
 }
 
 
