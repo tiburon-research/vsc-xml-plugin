@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields, getCurrentTag as getTag, translate, ProtocolTagFields } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields, getCurrentTag as getTag, translate, ProtocolTagFields, IProtocolTagFields } from "tib-api";
 
 import { CacheSet } from 'tib-api/lib/cache';
 
@@ -1158,18 +1158,25 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 
 
 /** getCurrentTag для debug (без try-catch) */
-function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, text?: string, force = false): CurrentTag
+function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, text?: string, force = false): Promise<CurrentTag>
 {
-	let fields: ProtocolTagFields = {
-		uri: document.uri.toString(),
-		position,
-		text,
-		force
-	};
-	_client.sendNotification('currentTag', fields);
-	let tag = Tag;//getTag(data, Cache);
-	if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
-	return tag;
+	return new Promise<CurrentTag>((resolve, reject) => {
+		let fields: IProtocolTagFields = {
+			uri: document.uri.toString(),
+			position,
+			text,
+			force
+		};
+		_client.sendRequest<CurrentTag>('ct', fields).then(data =>
+		{
+			if (!data) return;
+			let tag = new CurrentTag(data.Name, data.Parents); // потому что методы с сервера не приходят
+			Object.assign(tag, data);
+			resolve(tag);
+			if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
+			Tag = tag;
+		});
+	});
 }
 
 
@@ -1641,14 +1648,14 @@ async function createClientConnection(context: vscode.ExtensionContext)
 			console.log(data);
 		});
 
-		_client.onNotification("currentTag", (data: CurrentTag) =>
+		/*_client.onNotification("currentTag", (data: CurrentTag) =>
 		{
 			if (!data) return;
 			let tag = new CurrentTag(data.Name, data.Parents);
 			Object.assign(tag, data);
 			if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
 			Tag = tag;
-		});
+		});*/
 
 	});
 }

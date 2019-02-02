@@ -121,16 +121,9 @@ export class DocumentBuffer
 		this.createDocument(version, content);
 	}
 
-	public update(version: number, content: string): server.TextDocument;
-	public update(version: number, contentChanges: server.TextDocumentContentChangeEvent[]): server.TextDocument;
-	public update(version: number, data: string | server.TextDocumentContentChangeEvent[])
+	public update(version: number, contentChanges: server.TextDocumentContentChangeEvent[]): server.TextDocument
 	{
-		let content: string;
-		if (typeof data == 'string') content = data;
-		else
-		{
-			content = this.applyChangesToContent(data);
-		}
+		let content = this.applyChangesToContent(contentChanges);
 		this.createDocument(version, content);
 		return this.document;
 	}
@@ -163,6 +156,35 @@ export class DocumentBuffer
 	private _uri: string
 }
 
+
+export class ServerDocumentStore
+{
+	private _docs = new KeyedCollection<DocumentBuffer>();
+
+	public get(uri: string): server.TextDocument
+	{
+		let buffer = this._docs.Item(uri);
+		if (!buffer) return;
+		return buffer.document;
+	}
+
+	/** Добавляет документ в коллекцию */
+	public add(uri: string, version: number, content: string): server.TextDocument
+	{
+		let buffer = new DocumentBuffer(uri, version, content);
+		this._docs.AddPair(uri, buffer);
+		return buffer.document;
+	}
+
+	/** Обновляет документ в коллекции на основе `contentChanges` */
+	public update(uri: string, version: number, contentChanges: server.TextDocumentContentChangeEvent[]): server.TextDocument
+	{
+		let doc = this._docs.Item(uri);
+		doc.update(version, contentChanges);
+		return doc.document;
+	}
+
+}
 
 //#region --------------------------- функции для получения элементов
 

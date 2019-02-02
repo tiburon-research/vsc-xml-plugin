@@ -1,8 +1,8 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields } from 'tib-api';
-import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData, DocumentBuffer } from './classes';
+import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields, IProtocolTagFields } from 'tib-api';
+import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData, DocumentBuffer, ServerDocumentStore } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { CacheSet } from 'tib-api/lib/cache';
 import { _NodeStoreNames } from 'tib-api/lib/constants';
@@ -13,7 +13,7 @@ import { _NodeStoreNames } from 'tib-api/lib/constants';
 
 var connection = server.createConnection();
 var Settings = new KeyedCollection<any>();
-var documents = new KeyedCollection<DocumentBuffer>();
+var documents = new ServerDocumentStore();
 
 var TibAutoCompleteList = new KeyedCollection<TibAutoCompleteItem[]>();
 /** Список классов, типов, структу и т.д. */
@@ -63,15 +63,14 @@ connection.listen();
 connection.onDidOpenTextDocument(event =>
 {
 	if (event.textDocument.languageId != 'tib') return;
-	let buffer = new DocumentBuffer(event.textDocument.uri, event.textDocument.version, event.textDocument.text);
-	anyChangeHandler(buffer.document);
-	documents.AddPair(event.textDocument.uri, buffer);
+	let doc = documents.add(event.textDocument.uri, event.textDocument.version, event.textDocument.text);
+	anyChangeHandler(doc);
 })
 
 
 connection.onCompletion(context =>
 {
-	let document = documents.Item(context.textDocument.uri).document;
+	let document = documents.get(context.textDocument.uri);
 	let tag = Cache.Tag.Get();
 	let items = getCompletions(connection, tag, document, context.position, SurveyData);
 	return items;
@@ -80,28 +79,32 @@ connection.onCompletion(context =>
 
 connection.onDidChangeTextDocument(e =>
 {
-	let document = documents.Item(e.textDocument.uri).update(e.textDocument.version, e.contentChanges);
+	let document = documents.update(e.textDocument.uri, e.textDocument.version, e.contentChanges);
 	let position = e.contentChanges[0].range.end;
 	anyChangeHandler(document);
 	let tag = getServerTag({ document, position, force: false });
-	connection.sendNotification('currentTag', tag);
-})
-
-
-
-connection.onNotification('currentTag', (data: ProtocolTagFields) =>
-{
-	let fields: CurrentTagGetFields = {
-		document: documents.Item(data.uri).document,
-		force: data.force,
-		position: data.position,
-		text: data.text
-	}
-	let tag = getCurrentTag(fields, Cache);
 	Cache.Tag.Set(tag);
 	connection.sendNotification('currentTag', tag);
 })
 
+
+
+connection.onNotification('currentTag', (data: IProtocolTagFields) =>
+{
+	let fields = new ProtocolTagFields(data).toCurrentTagGetFields(documents.get(data.uri));
+	/*let tag = getCurrentTag(fields, Cache);
+	console.log(tag.Name);
+	Cache.Tag.Set(tag);
+	connection.sendNotification('currentTag', tag);*/
+})
+
+
+connection.onRequest('ct', (fields: IProtocolTagFields) =>
+{
+	return new Promise<CurrentTag>((resolve, reject) => {
+		resolve(getServerTag(new ProtocolTagFields(fields).toCurrentTagGetFields(documents.get(fields.uri))))
+	});
+})
 
 
 //#region --------------------------- Функции
@@ -111,7 +114,6 @@ function getServerTag(data: CurrentTagGetFields): CurrentTag
 {
 	let tag = getCurrentTag(data, Cache);
 	Cache.Tag.Set(tag);
-	//consoleLog(tag);
 	return tag;
 }
 

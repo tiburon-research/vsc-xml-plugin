@@ -487,12 +487,38 @@ export interface CurrentTagFields
 }
 
 
-export interface ProtocolTagFields
+export interface IProtocolTagFields
 {
 	uri: string;
 	position: server.Position;
 	text?: string;
 	force?: boolean;
+}
+
+export class ProtocolTagFields
+{
+	constructor(data: IProtocolTagFields)
+	{
+		for (let key in data)
+		{
+			this[key] = data[key];
+		}
+	}
+
+	uri: string;
+	position: server.Position;
+	text?: string;
+	force?: boolean;
+
+	toCurrentTagGetFields(document: server.TextDocument): CurrentTagGetFields
+	{
+		return {
+			document,
+			text: this.text,
+			position: this.position,
+			force: this.force
+		};
+	}
 }
 
 export interface CurrentTagGetFields
