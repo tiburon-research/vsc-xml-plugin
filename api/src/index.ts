@@ -486,6 +486,15 @@ export interface CurrentTagFields
 	OpenTagRange?: server.Range;
 }
 
+
+export interface ProtocolTagFields
+{
+	uri: string;
+	position: server.Position;
+	text?: string;
+	force?: boolean;
+}
+
 export interface CurrentTagGetFields
 {
 	document: server.TextDocument;

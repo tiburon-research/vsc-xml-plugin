@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import {  CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields, getCurrentTag as getTag, translate} from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields, getCurrentTag as getTag, translate, ProtocolTagFields } from "tib-api";
 
 import { CacheSet } from 'tib-api/lib/cache';
 
@@ -27,12 +27,12 @@ export { bot, CSFormatter, logError, OutChannel, _LogPath, Settings };
 /*---------------------------------------- глобальные переменные ----------------------------------------*/
 //#region
 
-	
+
 var Cache: CacheSet = new CacheSet(
 	() => { return !Settings.Contains("enableCache") || !!Settings.Item("enableCache") },
 	(data: CurrentTagGetFields) => { return getTag(data, Cache) }
 );
-	
+
 var _client: client.LanguageClient;
 
 
@@ -160,9 +160,11 @@ export function activate(context: vscode.ExtensionContext)
 		// преобразования текста
 		if (!event || !event.contentChanges.length) return;
 		let changes: ContextChange[];
-		try {
+		try
+		{
 			changes = getContextChanges(editor.selections, event.contentChanges);
-		} catch (error) {
+		} catch (error)
+		{
 			logError(error);
 		}
 		if (!changes || changes.length == 0) return;
@@ -860,7 +862,7 @@ function upcaseFirstLetter(changes: ContextChange[], editor: vscode.TextEditor, 
 async function diagnostic()
 {
 	// if (document.languageId != 'tib' || !Settings.Item('enableDiagnostic')) return Diagnostics.delete(document.uri);
-	
+
 }
 
 
@@ -1059,7 +1061,7 @@ function insertSpecialSnippets(changes: ContextChange[], editor: vscode.TextEdit
 	// закрывание [тегов]
 	let tagT = text.match(/\[([a-zA-Z]\w*(#)?)(\s[^\]\[]*)?(\/)?\]$/);
 	if
-	(
+		(
 		change == "]" &&
 		!!tagT &&
 		!!tagT[1] &&
@@ -1158,7 +1160,13 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 /** getCurrentTag для debug (без try-catch) */
 function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, text?: string, force = false): CurrentTag
 {
-	_client.sendNotification('currentTag', { document: createServerDocument(document), position, text, force });
+	let fields: ProtocolTagFields = {
+		uri: document.uri.toString(),
+		position,
+		text,
+		force
+	};
+	_client.sendNotification('currentTag', fields);
 	let tag = Tag;//getTag(data, Cache);
 	if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
 	return tag;
@@ -1353,7 +1361,7 @@ function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], l
 function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: boolean = false): void
 {
 	if (separate) lines = lines.map(s => { return s.replace(/\t/g, ",") });
-	multiPaste(editor, editor.selections.sort((a, b) => { let ld = a.start.line - b.start.line; return ld == 0 ? a.start.character - b.start.character : ld ; }), lines, function ()
+	multiPaste(editor, editor.selections.sort((a, b) => { let ld = a.start.line - b.start.line; return ld == 0 ? a.start.character - b.start.character : ld; }), lines, function ()
 	{
 		// ставим курсор в конец
 		editor.selections = editor.selections.map(sel => { return new vscode.Selection(sel.end, sel.end) });
@@ -1635,6 +1643,7 @@ async function createClientConnection(context: vscode.ExtensionContext)
 
 		_client.onNotification("currentTag", (data: CurrentTag) =>
 		{
+			if (!data) return;
 			let tag = new CurrentTag(data.Name, data.Parents);
 			Object.assign(tag, data);
 			if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
@@ -1706,7 +1715,7 @@ function createCodeAction(actionTitle: string, commandName: string, argumentInvo
 /** Создаёт команды + CodeActions */
 async function registerActionCommands()
 {
-	
+
 	// транслитерация
 	createCommandActionPair("tib.translateRange", "Транслитерация",
 		(range: vscode.Range) => 
@@ -1738,7 +1747,8 @@ async function registerActionCommands()
 			let text = editor.document.getText(range);
 			let res = text;
 			let matches = text.matchAll(/_([a-zA-Z@\-\(\)]?)/);
-			matches.forEach(element => {
+			matches.forEach(element =>
+			{
 				let search = "_";
 				let repl = "";
 				if (!!element[1])

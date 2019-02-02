@@ -1,8 +1,8 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync } from 'tib-api';
-import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData } from './classes';
+import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields } from 'tib-api';
+import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData, DocumentBuffer } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { CacheSet } from 'tib-api/lib/cache';
 import { _NodeStoreNames } from 'tib-api/lib/constants';
@@ -12,8 +12,8 @@ import { _NodeStoreNames } from 'tib-api/lib/constants';
 //#region --------------------------- Инициализация
 
 var connection = server.createConnection();
-var documents = new server.TextDocuments();
 var Settings = new KeyedCollection<any>();
+var documents = new KeyedCollection<DocumentBuffer>();
 
 var TibAutoCompleteList = new KeyedCollection<TibAutoCompleteItem[]>();
 /** Список классов, типов, структу и т.д. */
@@ -37,10 +37,10 @@ connection.onInitialize((params: server.InitializeParams) =>
 	getAutoComleteList();
 	return {
 		capabilities: { // тут надо перечислить всё, что клиент будет ждать от сервера
-			textDocumentSync: server.TextDocumentSyncKind.Incremental/* ,
+			textDocumentSync: server.TextDocumentSyncKind.Incremental,
 			completionProvider: {
 				resolveProvider: false
-			} */
+			}
 		}
 	};
 });
@@ -50,7 +50,6 @@ connection.onInitialized(() =>
 	connection.sendNotification("client.out", "Сервер запущен");
 });
 
-documents.listen(connection);
 connection.listen();
 
 
@@ -60,56 +59,48 @@ connection.listen();
 
 //#region --------------------------- Обработчики
 
-// это дёргается и при onDidOpen, но при смене вкладки обратно ничего не происходит
-documents.onDidChangeContent(event =>
+
+connection.onDidOpenTextDocument(event =>
 {
-	anyChangeHandler(event.document);
-	//getServerTag({ document: event.document, force: false, position: event.document. })
+	if (event.textDocument.languageId != 'tib') return;
+	let buffer = new DocumentBuffer(event.textDocument.uri, event.textDocument.version, event.textDocument.text);
+	anyChangeHandler(buffer.document);
+	documents.AddPair(event.textDocument.uri, buffer);
 })
 
 
-/* connection.onCompletion(context =>
+connection.onCompletion(context =>
 {
-	let document = documents.get(context.textDocument.uri);
-	console.log(document.getText().length);
+	let document = documents.Item(context.textDocument.uri).document;
 	let tag = Cache.Tag.Get();
 	let items = getCompletions(connection, tag, document, context.position, SurveyData);
 	return items;
-}) */
+})
 
 
 connection.onDidChangeTextDocument(e =>
 {
+	let document = documents.Item(e.textDocument.uri).update(e.textDocument.version, e.contentChanges);
 	let position = e.contentChanges[0].range.end;
-	let document = documents.get(e.textDocument.uri);
-	SurveyData =
-		{
-			CurrentNodes: getDocumentNodeIdsSync(document, Settings, _NodeStoreNames),
-			Methods: getDocumentMethodsSync(document, Settings),
-			MixIds: getMixIdsSync(document, Settings)
-		};
-	
+	anyChangeHandler(document);
 	let tag = getServerTag({ document, position, force: false });
-	let items = getCompletions(connection, tag, document, position, SurveyData);
-	//console.log(items);
-	//connection.sendNotification('textDocument/publishDiagnostics', items);
 	connection.sendNotification('currentTag', tag);
 })
 
 
 
-/* connection.onNotification('currentTag', (data) =>
+connection.onNotification('currentTag', (data: ProtocolTagFields) =>
 {
 	let fields: CurrentTagGetFields = {
-		document: server.TextDocument.create(data.document.uri, data.document.languageId, data.document.version, data.document._content),
+		document: documents.Item(data.uri).document,
+		force: data.force,
 		position: data.position,
-		text: data.text,
-		force: data.force
-	};
+		text: data.text
+	}
 	let tag = getCurrentTag(fields, Cache);
 	Cache.Tag.Set(tag);
 	connection.sendNotification('currentTag', tag);
-}) */
+})
 
 
 
@@ -133,6 +124,12 @@ export function consoleLog(...data)
 /** Дёргаем при изменении или открытии */
 function anyChangeHandler(document: server.TextDocument)
 {
+	SurveyData =
+		{
+			CurrentNodes: getDocumentNodeIdsSync(document, Settings, _NodeStoreNames),
+			Methods: getDocumentMethodsSync(document, Settings),
+			MixIds: getMixIdsSync(document, Settings)
+		};
 	sendDiagnostic(connection, document, Settings);
 }
 

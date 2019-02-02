@@ -1,7 +1,7 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, Encoding, TibMethod, SurveyNode } from 'tib-api';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, Encoding, TibMethod, SurveyNode, comparePositions } from 'tib-api';
 import { getDiagnosticElements } from './diagnostic';
 import { ItemSnippets, QuestionTypes } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
@@ -111,6 +111,59 @@ function snippetToCompletitionItem(obj: Object): server.CompletionItem
 
 
 
+export class DocumentBuffer
+{
+	public document: server.TextDocument;
+
+	constructor(uri: string, version: number, content: string)
+	{
+		this._uri = uri;
+		this.createDocument(version, content);
+	}
+
+	public update(version: number, content: string): server.TextDocument;
+	public update(version: number, contentChanges: server.TextDocumentContentChangeEvent[]): server.TextDocument;
+	public update(version: number, data: string | server.TextDocumentContentChangeEvent[])
+	{
+		let content: string;
+		if (typeof data == 'string') content = data;
+		else
+		{
+			content = this.applyChangesToContent(data);
+		}
+		this.createDocument(version, content);
+		return this.document;
+	}
+
+
+	public setDocument(document: server.TextDocument): void
+	{
+		this.document = document;
+	}
+
+
+	private applyChangesToContent(contentChanges: server.TextDocumentContentChangeEvent[]): string
+	{
+		let res = this.document.getText();
+		contentChanges.sort((c1, c2) => { return comparePositions(this.document, c2.range.start, c1.range.start); }).forEach(change => {
+			let from = this.document.offsetAt(change.range.start);
+			let to = this.document.offsetAt(change.range.end);
+			let prev = res.slice(0, from);
+			let post = res.slice(to);
+			res = prev + change.text + post;
+		});
+		return res;
+	}
+
+	private createDocument(version: number, content: string)
+	{
+		this.document = server.TextDocument.create(this._uri, 'tib', version, content);
+	}
+
+	private _uri: string
+}
+
+
 //#region --------------------------- функции для получения элементов
 
 export interface ISurveyDataData
@@ -195,7 +248,6 @@ class ElementExtractor
 }
 
 
-
 //#endregion
 
 
@@ -218,7 +270,7 @@ namespace AutoCompletes
 			}
 
 			let curOpenMatch = text.match(/<(\w+)$/);
-			if (!curOpenMatch) return;
+			if (!curOpenMatch) return completionItems;
 			let opening = curOpenMatch[1].toLocaleLowerCase();
 
 			//Item Snippet
