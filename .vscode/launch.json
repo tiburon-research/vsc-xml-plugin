@@ -12,10 +12,27 @@
             "sourceMaps": true,
             "outFiles": [ 
                 "${workspaceRoot}/api/lib/*.js",
-                "${workspaceRoot}/client/out/*.js",
-                "${workspaceRoot}/server/out/*.js"
+                "${workspaceRoot}/client/out/*.js"
             ],
             "preLaunchTask": "npm: watch"
-        }
-    ]
+        },
+        {
+			"type": "node",
+			"request": "attach",
+			"name": "Attach to Server",
+			"port": 6009,
+            "restart": true,
+			"outFiles": [
+                "${workspaceRoot}/api/lib/*.js",
+                "${workspaceRoot}/server/out/*.js"
+            ]
+		},
+    ],
+    "compounds": [
+		{
+			"name": "Client + Server",
+			"configurations": ["Launch Extension", "Attach to Server"]
+		}
+	]
+
 }
