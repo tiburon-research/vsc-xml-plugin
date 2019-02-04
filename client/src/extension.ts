@@ -168,9 +168,13 @@ export function activate(context: vscode.ExtensionContext)
 				logError(error);
 			}
 			if (!changes || changes.length == 0) return;
-			insertAutoCloseTags(changes, editor, tag);
-			insertSpecialSnippets(changes, editor, text, tag);
-			upcaseFirstLetter(changes, editor, tag);
+			let data: ITibEditorData = {
+				changes,
+				tag,
+				text,
+				editor
+			};
+			tibEdit([insertAutoCloseTags, insertSpecialSnippets, upcaseFirstLetter], data);
 
 			reload();
 		});
@@ -932,21 +936,32 @@ interface ITibEditorData
 	text: string;
 }
 
-type TibEditor = (data: ITibEditorData) => Promise<any>[];
+type TibEditor = (data: ITibEditorData) => Thenable<any>[];
 
-function tibEdit(funcs: TibEditor[], data: ITibEditorData): Promise<any>
+/** Выполняет все переданные функции по очереди */
+function tibEdit(funcs: TibEditor[], data: ITibEditorData): Promise<void>
 {
-	let promises: Promise<any>[] = [];
-	funcs.forEach(f => {
-		promises.push(Promise.all(f(data)));
+	return new Promise<void>((resolve, reject) => {
+		(function callNext(restFuncs: TibEditor[])
+		{
+			if (restFuncs.length > 0)
+			{
+				Promise.all(restFuncs.pop()(data)).then(() =>
+				{
+					callNext(restFuncs);
+				});
+			}
+			else return resolve();
+		})(funcs);
 	});
-	return Promise.all(promises);
 }
 
 /** автоматическое закрывание <тегов> */
-function insertAutoCloseTags(data: ITibEditorData): void
+function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 {
-	if (!data.tag || InProcess || !data.editor) return;
+	let res: Thenable<any>[] = [];
+
+	if (!data.tag || InProcess || !data.editor) return res;
 	let fullText = data.editor.document.getText();
 
 	// сохраняем начальное положение
@@ -980,7 +995,9 @@ function insertAutoCloseTags(data: ITibEditorData): void
 					{
 						changesCount++;
 						InProcess = true;
-						data.editor.insertSnippet(new vscode.SnippetString("</" + result[1] + ">"), originalPosition, { undoStopAfter: false, undoStopBefore: false }).then(() =>
+						let snp = data.editor.insertSnippet(new vscode.SnippetString("</" + result[1] + ">"), originalPosition, { undoStopAfter: false, undoStopBefore: false });
+						res.push(snp);
+						snp.then(() =>
 						{
 							// ожидаем конца всех изменений
 							if (changesCount <= 1)
@@ -995,12 +1012,15 @@ function insertAutoCloseTags(data: ITibEditorData): void
 			}
 		});
 	}
+
+	return res;
 }
 
 
-function insertSpecialSnippets(data: ITibEditorData): void
+function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
 {
-	if (!data.tag || InProcess || !data.editor) return;
+	let res: Thenable<any>[] = [];
+	if (!data.tag || InProcess || !data.editor) return res;
 
 	let change = data.changes[0].Change.text;
 	let positions = data.editor.selections.map(x => new vscode.Position(x.active.line, x.active.character + 1));
@@ -1030,7 +1050,9 @@ function insertSpecialSnippets(data: ITibEditorData): void
 	if (isScriptLanguage(lang) && !data.tag.InString() && change[change.length - 1] == "[")
 	{
 		InProcess = true;
-		data.editor.insertSnippet(new vscode.SnippetString("$0]"), data.changes.map(x => x.Selection.active.translate(0, 1))).then(() =>
+		let snp = data.editor.insertSnippet(new vscode.SnippetString("$0]"), data.changes.map(x => x.Selection.active.translate(0, 1)));
+		res.push(snp);
+		snp.then(() =>
 		{
 			InProcess = false;
 		});
@@ -1051,16 +1073,20 @@ function insertSpecialSnippets(data: ITibEditorData): void
 	{
 		InProcess = true;
 		let str = tagT[2] ? "$0;[/c#]" : "$0[/" + tagT[1] + "]";
-		data.editor.insertSnippet(new vscode.SnippetString(str), positions).then(() =>
+		let snp = data.editor.insertSnippet(new vscode.SnippetString(str), positions);
+		res.push(snp);
+		snp.then(() =>
 		{
 			InProcess = false;
 		});
 	}
 
+	return res;
+
 }
 
 /** Делает первую букву тега заглавной */
-function upcaseFirstLetter(data: ITibEditorData)
+function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 {
 	// если хоть одна позиция такова, то нафиг
 	if (!data.tag || !Settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return;
@@ -1350,9 +1376,9 @@ function commentAllBlocks(selections: vscode.Selection[]): void
  * @param text новый текст
  * @param callback по окончании
  * */
-function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text: string, callback: Function): void
+function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text: string, callback: Function): Thenable<any>
 {
-	editor.edit((editBuilder) =>
+	let edit = editor.edit((editBuilder) =>
 	{
 		try
 		{
@@ -1362,10 +1388,12 @@ function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text:
 		{
 			logError("Ошибка замены текста в выделении", error);
 		}
-	}, { undoStopAfter: false, undoStopBefore: false }).then(() =>
+	}, { undoStopAfter: false, undoStopBefore: false });
+	edit.then(() =>
 	{
 		callback();
 	});
+	return edit;
 }
 
 
