@@ -1566,6 +1566,8 @@ declare global
 		toKeyedCollection(func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
 		/** Преjбразует массив в коллекцию T */
 		toKeyedCollection(func: (x: T) => Object): KeyedCollection<any>
+		/** Асинхронный forEach */
+		forEachAsync<R>(func: (x: T) => Promise<R>): Promise<R[]>
 	}
 
 }
@@ -1691,6 +1693,16 @@ Array.prototype.toKeyedCollection = function <T>(func: (x: T) => Object): KeyedC
 		res.AddPair(key, obj[key] as T);
 	});
 	return res;
+}
+
+
+Array.prototype.forEachAsync = function <T, R>(func: (x: T) => Promise<R>): Promise<R[]>
+{
+	let promises: Promise<R>[] = [];
+	this.forEach(element => {
+		promises.push(func(element));
+	});
+	return Promise.all(promises);
 }
 
 //#endregion

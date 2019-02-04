@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as server from 'vscode-languageserver';
 import * as dateFormat from 'dateFormat';
 import * as os from 'os'
 import * as fs from 'fs'
@@ -8,7 +9,7 @@ import * as winattr from 'winattr'
 import { machineIdSync } from "node-machine-id"
 import { bot, _LogPath, OutChannel, } from './extension'
 import { _LockInfoFilePrefix } from 'tib-api/lib/constants'
-import { CurrentTag, Language, KeyedCollection, ITibAttribute, Parse } from 'tib-api';
+import { CurrentTag, Language, KeyedCollection, ITibAttribute, Parse, translatePosition } from 'tib-api';
 
 
 
@@ -77,10 +78,8 @@ export class ContextChange
 }
 
 
-
-
 /** Возвращает совмещённую структуру из изменений и соответствующих выделений */
-export function getContextChanges(selections: vscode.Selection[], changes: vscode.TextDocumentContentChangeEvent[]): ContextChange[]
+export function getContextChanges(document: server.TextDocument, selections: vscode.Selection[], changes: vscode.TextDocumentContentChangeEvent[]): ContextChange[]
 {
 	let res: ContextChange[] = [];
 	try
@@ -89,8 +88,9 @@ export function getContextChanges(selections: vscode.Selection[], changes: vscod
 		{
 			for (let i = 0; i < changes.length; i++)
 			{
-				if (selection.start.character == changes[i].range.start.character &&
-					selection.start.line == changes[i].range.start.line)
+				let afterChange = translatePosition(document, changes[i].range.start, changes[i].text.length);
+				if (selection.active.character == afterChange.character &&
+					selection.active.line == afterChange.line)
 				{
 					res.push(new ContextChange(changes[i], selection));
 					continue;
