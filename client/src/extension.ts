@@ -174,7 +174,11 @@ export function activate(context: vscode.ExtensionContext)
 				text,
 				editor
 			};
-			tibEdit([insertAutoCloseTags, insertSpecialSnippets, upcaseFirstLetter], data);
+			InProcess = true;
+			tibEdit([insertAutoCloseTags, insertSpecialSnippets, upcaseFirstLetter], data).then(() =>
+			{ 
+				InProcess = false;
+			});
 
 			reload();
 		});
@@ -995,7 +999,6 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 					if (!closed)
 					{
 						changesCount++;
-						InProcess = true;
 						let snp = data.editor.insertSnippet(new vscode.SnippetString("</" + result[1] + ">"), originalPosition, { undoStopAfter: false, undoStopBefore: false });
 						res.push(snp);
 						snp.then(() =>
@@ -1004,7 +1007,6 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 							if (changesCount <= 1)
 							{
 								data.editor.selections = prevSels;
-								InProcess = false;
 							}
 							else changesCount--;
 						});
@@ -1050,13 +1052,8 @@ function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
 	// автозакрывание этих скобок отключено для языка tib, чтобы нормально закрывать теги
 	if (isScriptLanguage(lang) && !data.tag.InString() && change[change.length - 1] == "[")
 	{
-		InProcess = true;
 		let snp = data.editor.insertSnippet(new vscode.SnippetString("$0]"), data.changes.map(x => x.Selection.active.translate(0, 1)));
 		res.push(snp);
-		snp.then(() =>
-		{
-			InProcess = false;
-		});
 	}
 
 	// закрывание [тегов]
@@ -1076,10 +1073,6 @@ function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
 		let str = tagT[2] ? "$0;[/c#]" : "$0[/" + tagT[1] + "]";
 		let snp = data.editor.insertSnippet(new vscode.SnippetString(str), positions);
 		res.push(snp);
-		snp.then(() =>
-		{
-			InProcess = false;
-		});
 	}
 
 	return res;
@@ -1088,8 +1081,9 @@ function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
 /** Делает первую букву тега заглавной */
 function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 {
+	let res: Thenable<any>[] = [];
 	// если хоть одна позиция такова, то нафиг
-	if (!data.tag || !Settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return;
+	if (!data.tag || !Settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return res;
 	let tagRegex = /(<\/?)(\w+)$/;
 	let nullPosition = new vscode.Position(0, 0);
 	try
@@ -1112,18 +1106,19 @@ function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 			replaces.push({ Range: range, Value: up });
 		});
 
-		data.editor.edit(builder =>
+		res.push(data.editor.edit(builder =>
 		{
 			replaces.forEach(element =>
 			{
 				builder.replace(element.Range, element.Value);
 			});
-		});
+		}));
 
 	} catch (error)
 	{
 		logError("Ошибка при добавлении заглавной буквы", error);
 	}
+	return res;
 }
 
 
@@ -1416,7 +1411,6 @@ function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: bo
 	{
 		// ставим курсор в конец
 		editor.selections = editor.selections.map(sel => { return new vscode.Selection(sel.end, sel.end) });
-		InProcess = false;
 	});
 }
 
