@@ -966,7 +966,7 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 {
 	let res: Thenable<any>[] = [];
 
-	if (!data.tag || InProcess || !data.editor) return res;
+	if (!data.tag || !data.editor) return res;
 	let fullText = data.editor.document.getText();
 
 	// сохраняем начальное положение
@@ -1023,7 +1023,7 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
 {
 	let res: Thenable<any>[] = [];
-	if (!data.tag || InProcess || !data.editor) return res;
+	if (!data.tag || !data.editor) return res;
 
 	let change = data.changes[0].Change.text;
 	let positions = data.editor.selections.map(x => new vscode.Position(x.active.line, x.active.character + 1));
@@ -1069,7 +1069,6 @@ function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
 		!Parse.isSelfClosedTag(tagT[1])
 	)
 	{
-		InProcess = true;
 		let str = tagT[2] ? "$0;[/c#]" : "$0[/" + tagT[1] + "]";
 		let snp = data.editor.insertSnippet(new vscode.SnippetString(str), positions);
 		res.push(snp);
