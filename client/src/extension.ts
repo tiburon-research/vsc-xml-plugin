@@ -941,7 +941,8 @@ type TibEditor = (data: ITibEditorData) => Thenable<any>[];
 /** Выполняет все переданные функции по очереди */
 function tibEdit(funcs: TibEditor[], data: ITibEditorData): Promise<void>
 {
-	return new Promise<void>((resolve, reject) => {
+	return new Promise<void>((resolve, reject) =>
+	{
 		(function callNext(restFuncs: TibEditor[])
 		{
 			if (restFuncs.length > 0)
@@ -1042,7 +1043,7 @@ function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
 			results.push("");
 			sels.push(nextCharRangeC);
 		});
-		multiPaste(data.editor, sels, results);
+		res.push(multiPaste(data.editor, sels, results));
 	}
 
 	// закрывание скобок
@@ -1082,7 +1083,6 @@ function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
 	}
 
 	return res;
-
 }
 
 /** Делает первую букву тега заглавной */
@@ -1376,39 +1376,35 @@ function commentAllBlocks(selections: vscode.Selection[]): void
  * @param text новый текст
  * @param callback по окончании
  * */
-function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text: string, callback: Function): Thenable<any>
+function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text: string): Promise<any>
 {
-	let edit = editor.edit((editBuilder) =>
+	return new Promise<any>((resolve, reject) =>
 	{
-		try
+		editor.edit((editBuilder) =>
 		{
-			editBuilder.replace(selection, text);
-		}
-		catch (error)
-		{
-			logError("Ошибка замены текста в выделении", error);
-		}
-	}, { undoStopAfter: false, undoStopBefore: false });
-	edit.then(() =>
-	{
-		callback();
+			try
+			{
+				editBuilder.replace(selection, text);
+			}
+			catch (error)
+			{
+				logError("Ошибка замены текста в выделении", error);
+			}
+		}, { undoStopAfter: false, undoStopBefore: false }).then(() => { resolve(); });
 	});
-	return edit;
 }
 
 
-/** Последовательная замена (вставка) элементов из `lines` в соответствующие выделения `selections` */
-function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[], callback?: Function): void
+/** Замена (вставка) элементов из `lines` в соответствующие выделения `selections` */
+async function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[], callback?: Function): Promise<void>
 {
-	pasteText(editor, selections.pop(), lines.pop(), function ()
+	let i = 0;
+	await selections.forEachAsync(element =>
 	{
-		if (selections.length == 0)
-		{
-			if (!!callback) callback();
-			return;
-		}
-		multiPaste(editor, selections, lines, callback);
+		i++;
+		return pasteText(editor, element, lines[i]);
 	});
+	if (!!callback) callback();
 }
 
 
