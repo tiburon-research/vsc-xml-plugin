@@ -63,6 +63,7 @@ connection.listen();
 connection.onDidOpenTextDocument(event =>
 {
 	if (event.textDocument.languageId != 'tib') return;
+	
 	let doc = documents.add(event.textDocument.uri, event.textDocument.version, event.textDocument.text);
 	anyChangeHandler(doc);
 })
@@ -84,22 +85,18 @@ connection.onDidChangeTextDocument(e =>
 	anyChangeHandler(document);
 	let tag = getServerTag({ document, position, force: false });
 	Cache.Tag.Set(tag);
-	connection.sendNotification('currentTag', tag);
+	//connection.sendNotification('currentTag', tag);
 })
 
-
-
-connection.onNotification('currentTag', (data: IProtocolTagFields) =>
+connection.onRequest('onDidChangeTextDocument', (fields: IProtocolTagFields) =>
 {
-	let fields = new ProtocolTagFields(data).toCurrentTagGetFields(documents.get(data.uri));
-	/*let tag = getCurrentTag(fields, Cache);
-	console.log(tag.Name);
-	Cache.Tag.Set(tag);
-	connection.sendNotification('currentTag', tag);*/
+	return new Promise<CurrentTag>((resolve, reject) => {
+		resolve(getServerTag(new ProtocolTagFields(fields).toCurrentTagGetFields(documents.get(fields.uri))))
+	});
 })
 
 
-connection.onRequest('ct', (fields: IProtocolTagFields) =>
+connection.onRequest('currentTag', (fields: IProtocolTagFields) =>
 {
 	return new Promise<CurrentTag>((resolve, reject) => {
 		resolve(getServerTag(new ProtocolTagFields(fields).toCurrentTagGetFields(documents.get(fields.uri))))

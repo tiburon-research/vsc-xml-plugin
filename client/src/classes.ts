@@ -79,7 +79,7 @@ export class ContextChange
 
 
 /** Возвращает совмещённую структуру из изменений и соответствующих выделений */
-export function getContextChanges(document: server.TextDocument, selections: vscode.Selection[], changes: vscode.TextDocumentContentChangeEvent[]): ContextChange[]
+export function getContextChanges(document: server.TextDocument, selections: vscode.Selection[], changes: vscode.TextDocumentContentChangeEvent[], isBefore = false): ContextChange[]
 {
 	let res: ContextChange[] = [];
 	try
@@ -88,7 +88,7 @@ export function getContextChanges(document: server.TextDocument, selections: vsc
 		{
 			for (let i = 0; i < changes.length; i++)
 			{
-				let afterChange = translatePosition(document, changes[i].range.start, changes[i].text.length);
+				let afterChange = isBefore ?  changes[i].range.start : translatePosition(document, changes[i].range.start, changes[i].text.length);
 				if (selection.active.character == afterChange.character &&
 					selection.active.line == afterChange.line)
 				{

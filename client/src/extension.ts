@@ -3,9 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, KeyValuePair, Encoding, Parse, getPreviousText, translatePosition, CurrentTagGetFields, getCurrentTag as getTag, translate, ProtocolTagFields, IProtocolTagFields } from "tib-api";
-
-import { CacheSet } from 'tib-api/lib/cache';
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields } from "tib-api";
 
 import { openFileText, getContextChanges, inCDATA, registerCommand, ContextChange, ExtensionSettings, pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId } from "./classes";
 
@@ -13,7 +11,7 @@ import * as Formatting from './formatting'
 import * as fs from 'fs';
 
 import * as debug from './debug'
-import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, PreDifinedConstants } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix } from 'tib-api/lib/constants'
 import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
@@ -28,15 +26,7 @@ export { bot, CSFormatter, logError, OutChannel, _LogPath, Settings };
 //#region
 
 
-var Cache: CacheSet = new CacheSet(
-	() => { return !Settings.Contains("enableCache") || !!Settings.Item("enableCache") },
-	(data: CurrentTagGetFields) => { return getTag(data, Cache) }
-);
-
 var _client: client.LanguageClient;
-
-
-var Tag: CurrentTag;
 
 /** объект для управления ботом */
 var bot: TelegramBot;
@@ -153,21 +143,26 @@ export function activate(context: vscode.ExtensionContext)
 
 		// преобразования текста
 		if (!event || !event.contentChanges.length) return;
-
-		let originalPosition = editor.selection.start.translate(0, 1);
-		let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
 		let serverDocument = createServerDocument(event.document);
-		getCurrentTag(editor.document, originalPosition, text).then(tag =>
+
+		let changes: ContextChange[];
+		try
 		{
-			let changes: ContextChange[];
-			try
-			{
-				changes = getContextChanges(serverDocument, editor.selections, event.contentChanges);
-			} catch (error)
-			{
-				logError(error);
-			}
-			if (!changes || changes.length == 0) return;
+			changes = getContextChanges(serverDocument, editor.selections, event.contentChanges, true);
+		} catch (error)
+		{
+			logError(error);
+		}
+
+		if (!changes || changes.length == 0) return;
+
+		let mainChange = changes.find(x => x.Active == editor.selection.active);
+		let originalPositionServer = translatePosition(serverDocument, mainChange.Start, mainChange.Change.text.length);
+		let originalPosition = new vscode.Position(originalPositionServer.line, originalPositionServer.character);
+		let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
+		
+		getCurrentTag(event.document, originalPosition, text).then(tag =>
+		{
 			let data: ITibEditorData = {
 				changes,
 				tag,
@@ -176,7 +171,7 @@ export function activate(context: vscode.ExtensionContext)
 			};
 			InProcess = true;
 			tibEdit([insertAutoCloseTags, insertSpecialSnippets, upcaseFirstLetter], data).then(() =>
-			{ 
+			{
 				InProcess = false;
 			});
 
@@ -303,7 +298,7 @@ function registerCommands()
 		let document = createServerDocument(editor.document);
 		editor.selections.forEachAsync(selection =>
 		{
-			return new Promise<vscode.Selection>((resolve, reject) =>
+			return new Promise<vscode.Selection>((resolve) =>
 			{
 				getCurrentTag(editor.document, selection.active).then(tag =>
 				{
@@ -326,7 +321,7 @@ function registerCommands()
 		let document = createServerDocument(editor.document);
 		editor.selections.forEachAsync(selection =>
 		{
-			return new Promise<vscode.Selection>((resolve, reject) =>
+			return new Promise<vscode.Selection>((resolve) =>
 			{
 				let txt = getPreviousText(document, selection.active);
 				getCurrentTag(editor.document, selection.active, txt).then(tag =>
@@ -945,7 +940,7 @@ type TibEditor = (data: ITibEditorData) => Thenable<any>[];
 /** Выполняет все переданные функции по очереди */
 function tibEdit(funcs: TibEditor[], data: ITibEditorData): Promise<void>
 {
-	return new Promise<void>((resolve, reject) =>
+	return new Promise<void>((resolve) =>
 	{
 		(function callNext(restFuncs: TibEditor[])
 		{
@@ -1200,7 +1195,7 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 /** getCurrentTag для debug (без try-catch) */
 function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, text?: string, force = false): Promise<CurrentTag>
 {
-	return new Promise<CurrentTag>((resolve, reject) =>
+	return new Promise<CurrentTag>((resolve) =>
 	{
 		let fields: IProtocolTagFields = {
 			uri: document.uri.toString(),
@@ -1208,14 +1203,13 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 			text,
 			force
 		};
-		_client.sendRequest<CurrentTag>('ct', fields).then(data =>
+		_client.sendRequest<CurrentTag>('currentTag', fields).then(data =>
 		{
 			if (!data) return;
 			let tag = new CurrentTag(data.Name, data.Parents); // потому что методы с сервера не приходят
 			Object.assign(tag, data);
 			resolve(tag);
 			if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
-			Tag = tag;
 		});
 	});
 }
@@ -1354,7 +1348,6 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 /** Последовательное комментирование выделенных фрагментов */
 function commentAllBlocks(selections: vscode.Selection[]): void
 {
-	let results: string[] = [];
 	let editor = vscode.window.activeTextEditor;
 	editor.selections = selections;
 	selections.forEachAsync(selection =>
@@ -1372,7 +1365,7 @@ function commentAllBlocks(selections: vscode.Selection[]): void
  * */
 function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text: string): Promise<any>
 {
-	return new Promise<any>((resolve, reject) =>
+	return new Promise<any>((resolve) =>
 	{
 		editor.edit((editBuilder) =>
 		{
@@ -1685,14 +1678,13 @@ async function createClientConnection(context: vscode.ExtensionContext)
 			console.log(data);
 		});
 
-		/*_client.onNotification("currentTag", (data: CurrentTag) =>
+		/* _client.onNotification("currentTag", (data: CurrentTag) =>
 		{
 			if (!data) return;
 			let tag = new CurrentTag(data.Name, data.Parents);
 			Object.assign(tag, data);
 			if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
-			Tag = tag;
-		});*/
+		}); */
 
 	});
 }
