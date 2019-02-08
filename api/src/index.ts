@@ -27,6 +27,23 @@ interface SearchResult
 }
 
 
+export interface IServerDocument
+{
+	uri: string;
+	version: number;
+	content: string
+}
+
+
+export interface OnDidChangeDocumentData
+{
+	document: IServerDocument;
+	contentChanges: server.TextDocumentContentChangeEvent[];
+	currentPosition?: server.Position;
+	previousText?: string;
+}
+
+
 /**
  * @param From Включаемая граница
  * @param To Не влючамая граница

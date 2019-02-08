@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData as OnDidChangeDocumentData } from "tib-api";
 
 import { openFileText, getContextChanges, inCDATA, registerCommand, ContextChange, ExtensionSettings, pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId } from "./classes";
 
@@ -27,6 +27,8 @@ export { bot, CSFormatter, logError, OutChannel, _LogPath, Settings };
 
 
 var _client: client.LanguageClient;
+
+var ClientIsReady = false;
 
 /** объект для управления ботом */
 var bot: TelegramBot;
@@ -143,12 +145,12 @@ export function activate(context: vscode.ExtensionContext)
 
 		// преобразования текста
 		if (!event || !event.contentChanges.length) return;
-		let serverDocument = createServerDocument(event.document);
+		//let serverDocument = createServerDocument(event.document);
 
 		let changes: ContextChange[];
 		try
 		{
-			changes = getContextChanges(serverDocument, editor.selections, event.contentChanges, true);
+			changes = getContextChanges(event.document, editor.selections, event.contentChanges, true);
 		} catch (error)
 		{
 			logError(error);
@@ -156,13 +158,22 @@ export function activate(context: vscode.ExtensionContext)
 
 		if (!changes || changes.length == 0) return;
 
-		let mainChange = changes.find(x => x.Active == editor.selection.active);
-		let originalPositionServer = translatePosition(serverDocument, mainChange.Start, mainChange.Change.text.length);
-		let originalPosition = new vscode.Position(originalPositionServer.line, originalPositionServer.character);
+		//let mainChange = changes.find(x => x.Active == editor.selection.active);
+		//let originalPositionServer = translatePosition(serverDocument, mainChange.Start, mainChange.Change.text.length);
+		//let originalPosition = new vscode.Position(originalPositionServer.line, originalPositionServer.character);
+		let originalPosition = editor.selection.active;
 		let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
-		
-		getCurrentTag(event.document, originalPosition, text).then(tag =>
+
+		let changeData: OnDidChangeDocumentData = {
+			document: { content: event.document.getText(), uri: event.document.uri.toString(), version: event.document.version },
+			contentChanges: event.contentChanges,
+			currentPosition: originalPosition,
+			previousText:text
+		};
+
+		createRequest<OnDidChangeDocumentData, CurrentTag>('onDidChangeTextDocument', changeData).then(serverTag =>
 		{
+			let tag = tagFromServerTag(serverTag);
 			let data: ITibEditorData = {
 				changes,
 				tag,
@@ -1203,15 +1214,23 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 			text,
 			force
 		};
-		_client.sendRequest<CurrentTag>('currentTag', fields).then(data =>
+
+		createRequest<IProtocolTagFields, CurrentTag>('currentTag', fields).then(data =>
 		{
 			if (!data) return;
-			let tag = new CurrentTag(data.Name, data.Parents); // потому что методы с сервера не приходят
-			Object.assign(tag, data);
+			let tag = tagFromServerTag(data);
 			resolve(tag);
-			if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
 		});
 	});
+}
+
+/** Обработка `CurrentTag`, приехавшего с сервера */
+function tagFromServerTag(tag: CurrentTag): CurrentTag
+{
+	let newTag = new CurrentTag(tag.Name, tag.Parents); // потому что методы с сервера не приходят
+	Object.assign(tag, tag);
+	if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(newTag);
+	return newTag;
 }
 
 
@@ -1678,6 +1697,8 @@ async function createClientConnection(context: vscode.ExtensionContext)
 			console.log(data);
 		});
 
+		ClientIsReady = true;
+
 		/* _client.onNotification("currentTag", (data: CurrentTag) =>
 		{
 			if (!data) return;
@@ -1689,6 +1710,12 @@ async function createClientConnection(context: vscode.ExtensionContext)
 	});
 }
 
+
+async function createRequest<T, R>(name: string, data: T): Promise<R>
+{
+	if (!ClientIsReady) return undefined;
+	return _client.sendRequest<R>(name, data);
+}
 
 
 

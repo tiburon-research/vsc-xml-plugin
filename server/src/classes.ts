@@ -1,7 +1,7 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, Encoding, TibMethod, SurveyNode, comparePositions } from 'tib-api';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, Encoding, TibMethod, SurveyNode, comparePositions, IServerDocument } from 'tib-api';
 import { getDiagnosticElements } from './diagnostic';
 import { ItemSnippets, QuestionTypes } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
@@ -110,15 +110,14 @@ function snippetToCompletitionItem(obj: Object): server.CompletionItem
 }
 
 
-
 export class DocumentBuffer
 {
 	public document: server.TextDocument;
 
-	constructor(uri: string, version: number, content: string)
+	constructor(data: IServerDocument)
 	{
-		this._uri = uri;
-		this.createDocument(version, content);
+		this._uri = data.uri;
+		this.createDocument(data.version, data.content);
 	}
 
 	public update(version: number, contentChanges: server.TextDocumentContentChangeEvent[]): server.TextDocument
@@ -156,7 +155,6 @@ export class DocumentBuffer
 	private _uri: string
 }
 
-
 export class ServerDocumentStore
 {
 	private _docs = new KeyedCollection<DocumentBuffer>();
@@ -169,11 +167,17 @@ export class ServerDocumentStore
 	}
 
 	/** Добавляет документ в коллекцию */
-	public add(uri: string, version: number, content: string): server.TextDocument
+	public add(data: IServerDocument): server.TextDocument
 	{
-		let buffer = new DocumentBuffer(uri, version, content);
-		this._docs.AddPair(uri, buffer);
+		let buffer = new DocumentBuffer(data);
+		this._docs.AddPair(data.uri, buffer);
 		return buffer.document;
+	}
+
+	/** Полностью заменяет документ */
+	public set(data: IServerDocument)
+	{
+		return this.add(data);
 	}
 
 	/** Обновляет документ в коллекции на основе `contentChanges` */
@@ -185,6 +189,8 @@ export class ServerDocumentStore
 	}
 
 }
+
+
 
 //#region --------------------------- функции для получения элементов
 

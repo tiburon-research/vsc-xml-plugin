@@ -1,7 +1,7 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields, IProtocolTagFields } from 'tib-api';
+import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData } from 'tib-api';
 import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData, DocumentBuffer, ServerDocumentStore } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { CacheSet } from 'tib-api/lib/cache';
@@ -63,8 +63,12 @@ connection.listen();
 connection.onDidOpenTextDocument(event =>
 {
 	if (event.textDocument.languageId != 'tib') return;
-	
-	let doc = documents.add(event.textDocument.uri, event.textDocument.version, event.textDocument.text);
+	let data: IServerDocument = {
+		uri: event.textDocument.uri,
+		version: event.textDocument.version,
+		content: event.textDocument.text
+	}
+	let doc = documents.add(data);
 	anyChangeHandler(doc);
 })
 
@@ -78,7 +82,7 @@ connection.onCompletion(context =>
 })
 
 
-connection.onDidChangeTextDocument(e =>
+/*connection.onDidChangeTextDocument(e =>
 {
 	let document = documents.update(e.textDocument.uri, e.textDocument.version, e.contentChanges);
 	let position = e.contentChanges[0].range.end;
@@ -86,11 +90,21 @@ connection.onDidChangeTextDocument(e =>
 	let tag = getServerTag({ document, position, force: false });
 	Cache.Tag.Set(tag);
 	//connection.sendNotification('currentTag', tag);
-})
+})*/
 
-connection.onRequest('onDidChangeTextDocument', (fields: IProtocolTagFields) =>
+
+connection.onRequest('onDidChangeTextDocument', (data: OnDidChangeDocumentData) =>
 {
-	return new Promise<CurrentTag>((resolve, reject) => {
+	return new Promise<CurrentTag>((resolve, reject) =>
+	{
+		documents.set(data.document);
+		let fields: IProtocolTagFields = {
+			uri: data.document.uri,
+			position: data.currentPosition,
+			force: false,
+			text: data.previousText
+		};
+
 		resolve(getServerTag(new ProtocolTagFields(fields).toCurrentTagGetFields(documents.get(fields.uri))))
 	});
 })
