@@ -145,7 +145,7 @@ export function activate(context: vscode.ExtensionContext)
 
 		// преобразования текста
 		if (!event || !event.contentChanges.length) return;
-		//let serverDocument = createServerDocument(event.document);
+		let serverDocument = createServerDocument(event.document);
 
 		let changes: ContextChange[];
 		try
@@ -158,10 +158,10 @@ export function activate(context: vscode.ExtensionContext)
 
 		if (!changes || changes.length == 0) return;
 
-		//let mainChange = changes.find(x => x.Active == editor.selection.active);
-		//let originalPositionServer = translatePosition(serverDocument, mainChange.Start, mainChange.Change.text.length);
-		//let originalPosition = new vscode.Position(originalPositionServer.line, originalPositionServer.character);
-		let originalPosition = editor.selection.active;
+		let mainChange = changes.find(x => x.Active == editor.selection.active);
+		let originalPositionServer = translatePosition(serverDocument, mainChange.Start, mainChange.Change.text.length);
+		let originalPosition = new vscode.Position(originalPositionServer.line, originalPositionServer.character);
+		//let originalPosition = editor.selection.active;
 		let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
 
 		let changeData: OnDidChangeDocumentData = {
@@ -976,7 +976,7 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 	let fullText = data.editor.document.getText();
 
 	// сохраняем начальное положение
-	let prevSels = data.editor.selections.map(function (e) { return new vscode.Selection(e.start.translate(0, 1), e.end.translate(0, 1)); });
+	let prevSels = data.editor.selections;
 
 	let changesCount = 0;
 
