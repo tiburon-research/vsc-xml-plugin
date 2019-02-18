@@ -97,14 +97,14 @@ connection.onRequest('onDidChangeTextDocument', (data: OnDidChangeDocumentData) 
 {
 	return new Promise<CurrentTag>((resolve, reject) =>
 	{
-		documents.set(data.document);
+		let doc = documents.set(data.document);
 		let fields: IProtocolTagFields = {
 			uri: data.document.uri,
 			position: data.currentPosition,
 			force: false,
 			text: data.previousText
 		};
-
+		anyChangeHandler(doc);
 		resolve(getServerTag(new ProtocolTagFields(fields).toCurrentTagGetFields(documents.get(fields.uri))))
 	});
 })

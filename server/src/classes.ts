@@ -106,6 +106,7 @@ function snippetToCompletitionItem(obj: Object): server.CompletionItem
 	ci.kind = server.CompletionItemKind.Snippet;
 	ci.detail = snip.description;
 	ci.insertText = snip.body;
+	ci.insertTextFormat = server.InsertTextFormat.Snippet;
 	return ci;
 }
 
@@ -284,7 +285,7 @@ class ElementExtractor
 
 namespace AutoCompletes
 {
-	export function getXMLSnippets(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData)
+	export function getXMLSnippets(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData): server.CompletionItem[]
 	{
 		let completionItems: server.CompletionItem[] = [];
 		if (tag && tag.GetLaguage() == Language.XML)
@@ -320,6 +321,7 @@ namespace AutoCompletes
 					ci.kind = server.CompletionItemKind.Snippet;
 					ci.detail = "Структура Item для " + parent;
 					ci.insertText = res;
+					ci.insertTextFormat = server.InsertTextFormat.Snippet;
 					//ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
 					completionItems.push(ci);
 				}
@@ -329,8 +331,10 @@ namespace AutoCompletes
 			{
 				let ci = server.CompletionItem.create("Answer");
 				ci.kind = server.CompletionItemKind.Snippet;
+				ci.insertTextFormat = server.InsertTextFormat.Snippet;
 				let ciS = server.CompletionItem.create("AnswerShort");
 				ciS.kind = server.CompletionItemKind.Snippet;
+				ciS.insertTextFormat = server.InsertTextFormat.Snippet;
 
 				let iterator = "1";
 				let text = "$2";
