@@ -21,9 +21,9 @@ export function sendDiagnostic(connection: server.Connection, document: server.T
 }
 
 
-export function getCompletions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, TibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, char: string)
+export function getCompletions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, settings: KeyedCollection<any>, classTypes: string[], char: string)
 {
-	let TibAC = new AutoCompletes(tag, document, position, surveyData, TibAutoCompleteList, char);
+	let TibAC = new AutoCompletes(tag, document, position, surveyData, tibAutoCompleteList, settings, classTypes, char);
 	return TibAC.getAll();
 }
 
@@ -291,27 +291,32 @@ export class AutoCompletes
 	private position: server.Position;
 	private surveyData: ISurveyDataData;
 	private char: string;
-	private TibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>
+	private tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>;
+	private settings: KeyedCollection<any>;
+	private classTypes: string[];
 
 
-	constructor(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, TibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, char: string)
+	constructor(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, settings: KeyedCollection<any>, classTypes: string[], char: string)
 	{
 		this.tag = tag;
 		this.document = document;
 		this.position = position;
 		this.surveyData = surveyData;
 		this.char = char;
-		this.TibAutoCompleteList = TibAutoCompleteList;
+		this.tibAutoCompleteList = tibAutoCompleteList;
+		this.settings = settings;
+		this.classTypes = classTypes;
 	}
 
-	
+
 	public getAll(): server.CompletionItem[]
 	{
 		let res: server.CompletionItem[] = [];
 		let allF: (() => server.CompletionItem[])[] = [
 			this.getXMLSnippets,
 			this.getXMLAttrs,
-			this.getMainCS
+			this.getMainCS,
+			this.getCSMethods
 		];
 		let parent = this;
 		allF.forEach(f =>
@@ -321,7 +326,7 @@ export class AutoCompletes
 		return res;
 	}
 
-	// XML Features
+	/** XML Features */
 	private getXMLSnippets(): server.CompletionItem[]
 	{
 		let completionItems: server.CompletionItem[] = [];
@@ -342,7 +347,7 @@ export class AutoCompletes
 			//Item Snippet
 			if ("item".indexOf(opening) > -1)
 			{
-				let parent;
+				let parent: string;
 				for (let key in ItemSnippets)
 					if (!!this.tag.Parents.find(x => x.Name == key))
 					{
@@ -400,7 +405,7 @@ export class AutoCompletes
 		return completionItems;
 	}
 
-	// атрибуты
+	/** атрибуты */
 	private getXMLAttrs(): server.CompletionItem[]
 	{
 		let completionItems: server.CompletionItem[] = [];
@@ -414,7 +419,7 @@ export class AutoCompletes
 			let nameOnly = !!textAfter.match(/^=["']/);
 			let nexAttrs: string[] = [];
 			if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
-			AutoCompleteArray.Attributes[this.tag.Id].filter(x => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach(element =>
+			AutoCompleteArray.Attributes[this.tag.Id].filter((x: { Name: string; }) => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach((element: Object) =>
 			{
 				let attr = new TibAttribute(element);
 				let ci = attr.ToCompletionItem(function (query)
@@ -427,21 +432,21 @@ export class AutoCompletes
 		return completionItems;
 	}
 
-	//Functions, Variables, Enums, Classes, Custom Methods, C# Snippets, Types, node Ids
+	/** Functions, Variables, Enums, Classes, Custom Methods, C# Snippets, Types, node Ids */
 	private getMainCS(): server.CompletionItem[]
 	{
 		let completionItems: server.CompletionItem[] = [];
 
-		if (!this.tag || this.char == ' ') return;
+		if (!this.tag || this.char == ' ' || this.char == '.') return completionItems;
 
 		let curLine = getPreviousText(this.document, this.position, true);
 		let mt = curLine.match(/(#|\$)?\w*$/);
 		let lang = this.tag.GetLaguage();
 		if (!mt) return;
-		if (lang != Language.CSharp && mt[1] != "$") return;
+		if (lang != Language.CSharp && mt[1] != "$") return completionItems;
 
 		//пропускаем объявления
-		if (Parse.isMethodDefinition(curLine)) return;
+		if (Parse.isMethodDefinition(curLine)) return completionItems;
 
 		let str = getCurrentLineText(this.document, this.position).substr(this.position.character);
 		if (mt[1] == "$")
@@ -491,7 +496,7 @@ export class AutoCompletes
 		{
 			if (!this.tag.InCSString())
 			{
-				let ar: TibAutoCompleteItem[] = this.TibAutoCompleteList.Item("Function").concat(this.TibAutoCompleteList.Item("Variable"), this.TibAutoCompleteList.Item("Enum"), this.TibAutoCompleteList.Item("Class"), this.TibAutoCompleteList.Item("Type"), this.TibAutoCompleteList.Item("Struct"));
+				let ar: TibAutoCompleteItem[] = this.tibAutoCompleteList.Item("Function").concat(this.tibAutoCompleteList.Item("Variable"), this.tibAutoCompleteList.Item("Enum"), this.tibAutoCompleteList.Item("Class"), this.tibAutoCompleteList.Item("Type"), this.tibAutoCompleteList.Item("Struct"));
 				let adBracket = !str.match(/\w*\(/);
 				ar.forEach(element =>
 				{
@@ -550,51 +555,44 @@ export class AutoCompletes
 
 		return completionItems;
 	}
+
+	/** Properties, Methods, EnumMembers, Linq */
+	private getCSMethods(): server.CompletionItem[]
+	{
+		let completionItems: server.CompletionItem[] = [];
+		if (this.char != '.' || !!this.tag && this.tag.GetLaguage() == Language.CSharp && !this.tag.InCSString() && !this.tag.CSSingle())
+		{
+			let lastLine = getPreviousText(this.document, this.position, true);
+			let ar: TibAutoCompleteItem[] = this.tibAutoCompleteList.Item("Property").concat(this.tibAutoCompleteList.Item("Method"), this.tibAutoCompleteList.Item("EnumMember"));
+			let str = getCurrentLineText(this.document, this.position).substr(this.position.character);
+			let needClose = !str.match(/\w*\(/);
+			let mt = lastLine.match(/(\w+)\.w*$/);
+			let parent: string;
+			if (!!mt && !!mt[1]) parent = mt[1];
+			ar.forEach(element =>
+			{
+				let m = false;
+				if (element.Parent)
+				{
+					let reg = new RegExp(element.Parent + "\\.\\w*$");
+					m = !!lastLine.match(reg);
+				}
+				if (m && (!element.ParentTag || element.ParentTag == this.tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "__" + element.Name));
+			});
+			// добавляем Linq
+			if (lastLine.match(/\.\w*$/) && (!parent || this.classTypes.indexOf(parent) == -1) && !!this.settings.Item('useLinq'))
+			{
+				let linqAr = this.tibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "zzz" + x.Name));
+				completionItems = completionItems.concat(linqAr);
+			}
+		}
+		return completionItems;
+	}
 }
 
 /*
 function autoComplete()
 {
-	//Properties, Methods, EnumMembers, Linq
-	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
-		{
-			let completionItems = [];
-			let tag = getCurrentTag(document, position);
-			if (!!tag && tag.GetLaguage() == Language.CSharp && !tag.InCSString() && !tag.CSSingle())
-			{
-				let lastLine = getPreviousText(document, position, true);
-				let ar: TibAutoCompleteItem[] = TibAutoCompleteList.Item("Property").concat(TibAutoCompleteList.Item("Method"), TibAutoCompleteList.Item("EnumMember"));
-				let str = getCurrentLineText(document, position).substr(position.character);
-				let needClose = !str.match(/\w*\(/);
-				let mt = lastLine.match(/(\w+)\.w*$/);
-				let parent: string;
-				if (!!mt && !!mt[1]) parent = mt[1];
-				ar.forEach(element =>
-				{
-					let m = false;
-					if (element.Parent)
-					{
-						let reg = new RegExp(element.Parent + "\\.\\w*$");
-						m = !!lastLine.match(reg);
-					}
-					if (m && (!element.ParentTag || element.ParentTag == tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "__" + element.Name));
-				});
-				// добавляем Linq
-				if (lastLine.match(/\.\w*$/) && (!parent || ClassTypes.indexOf(parent) == -1) && _useLinq)
-				{
-					let linqAr = TibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "zzz" + x.Name));
-					completionItems = completionItems.concat(linqAr);
-				}
-			}
-			return completionItems;
-		},
-		resolveCompletionItem(item, token)
-		{
-			return item;
-		}
-	}, ".");
-
 	//Значения атрибутов
 	vscode.languages.registerCompletionItemProvider('tib', {
 		provideCompletionItems(document, position, token, context)
