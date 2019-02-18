@@ -66,6 +66,7 @@ export const XMLEmbeddings = [
 	{ Name: 'today', Title: "Сегодняшнее число", Type: "string" },
 	{ Name: 'sex', Title: "Пол респондента", Type: "string" },
 	{ Name: 'age', Title: "Возраст респондента", Type: "int" },
+	{ Name: 'respuid', Title: "RespUID", Type: "string" }
 ];
 
 
