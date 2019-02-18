@@ -39,7 +39,8 @@ connection.onInitialize((params: server.InitializeParams) =>
 		capabilities: { // тут надо перечислить всё, что клиент будет ждать от сервера
 			textDocumentSync: server.TextDocumentSyncKind.Incremental,
 			completionProvider: {
-				resolveProvider: false
+				resolveProvider: false,
+				triggerCharacters: [' ', '.']
 			}
 		}
 	};
@@ -77,7 +78,7 @@ connection.onCompletion(context =>
 {
 	let document = documents.get(context.textDocument.uri);
 	let tag = Cache.Tag.Get();
-	let items = getCompletions(connection, tag, document, context.position, SurveyData);
+	let items = getCompletions(tag, document, context.position, SurveyData, context.context.triggerCharacter);
 	return items;
 })
 

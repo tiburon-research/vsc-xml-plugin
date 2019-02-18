@@ -387,7 +387,7 @@ export class OrderedCollection<T>
 
 
 
-export class ITibAttribute
+export class TibAttribute
 {
 	Name: string = "";
 	Type: string = "";
@@ -412,8 +412,57 @@ export class ITibAttribute
 		for (let key in obj)
 			this[key] = obj[key];
 	}
-}
 
+	/** `nameOnly` - не подставлять значения */
+	ToCompletionItem(callback: (query: string) => string[], nameOnly = false): server.CompletionItem
+	{
+		let item = server.CompletionItem.create(this.Name);
+		let snip = this.Name;
+		if (!nameOnly)
+		{
+			snip += '="';
+			let valAr: string[];
+			let auto = this.AutoValue();
+			if (!auto)
+			{
+				valAr = this.ValueCompletitions(callback);
+				if (valAr.length > 0) snip += "${1|" + valAr.join(",") + "|}";
+				else snip += "$1";
+			}
+			else snip += auto;
+			snip += '"';
+		}
+		item.insertText = snip;
+		item.insertTextFormat = server.InsertTextFormat.Snippet;
+		item.detail = (this.Detail ? this.Detail : this.Name) + (this.Type ? (" (" + this.Type + ")") : "");
+		let doc = "";
+		if (this.Default) doc += "Значение по умолчанию: `" + this.Default + "`";
+		doc += "\nПоддержка кодовых вставок: `" + (this.AllowCode ? "да" : "нет") + "`";
+		item.documentation = {
+			kind: server.MarkupKind.Markdown,
+			value: doc
+		};
+		return item;
+	}
+
+	ValueCompletitions(callback: (query: string) => string[]): string[]
+	{
+		if (this.Values && this.Values.length) return this.Values;
+		else if (!!this.Result) return callback(this.Result);
+		return [];
+	}
+
+	AutoValue(): string
+	{
+		if (this.Auto) return this.Auto;
+		if (this.Type == "Boolean")
+		{
+			if (!!this.Default) return this.Default == "true" ? "false" : "true";
+			return "true";
+		}
+		return null;
+	}
+}
 
 
 

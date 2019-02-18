@@ -1,9 +1,9 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, Encoding, TibMethod, SurveyNode, comparePositions, IServerDocument } from 'tib-api';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, comparePositions, IServerDocument, TibAttribute } from 'tib-api';
 import { getDiagnosticElements } from './diagnostic';
-import { ItemSnippets, QuestionTypes } from 'tib-api/lib/constants';
+import { ItemSnippets, QuestionTypes, RegExpPatterns } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
 
 
@@ -21,10 +21,10 @@ export function sendDiagnostic(connection: server.Connection, document: server.T
 }
 
 
-export function getCompletions(connection: server.Connection, tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData)
+export function getCompletions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, char: string)
 {
 	let items: server.CompletionItem[] = [];
-	items = items.concat(AutoCompletes.getXMLSnippets(tag, document, position, surveyData));
+	items = AutoCompletes.getAll(tag, document, position, surveyData, char);
 	return items;
 }
 
@@ -285,7 +285,19 @@ class ElementExtractor
 
 namespace AutoCompletes
 {
-	export function getXMLSnippets(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData): server.CompletionItem[]
+	type ITibAutoCompleteFunction = (tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, char: string) => server.CompletionItem[];
+
+	export function getAll(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, char: string): server.CompletionItem[]
+	{
+		let res: server.CompletionItem[] = [];
+		let allF: ITibAutoCompleteFunction[] = [getXMLSnippets, getXMLAttrs];
+		allF.forEach(f => {
+			res = res.concat(f(tag, document, position, surveyData, char));
+		});
+		return res;
+	}
+	
+	function getXMLSnippets(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, char: string): server.CompletionItem[]
 	{
 		let completionItems: server.CompletionItem[] = [];
 		if (tag && tag.GetLaguage() == Language.XML)
@@ -362,90 +374,39 @@ namespace AutoCompletes
 		}
 		return completionItems;
 	}
+
+
+	function getXMLAttrs(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, char: string): server.CompletionItem[]
+	{
+		let completionItems: server.CompletionItem[] = [];
+		let text = getPreviousText(document, position, true);
+		if (!(char == ' ' || !!text.match(/\w+$/))) return completionItems;
+		if (!!tag && tag.GetLaguage() == Language.XML && !tag.OpenTagIsClosed && !tag.InString() && AutoCompleteArray.Attributes[tag.Id])
+		{
+			let existAttrs = tag.AttributeNames();
+			let textAfter = document.getText().slice(document.offsetAt(position));
+			let attrs = textAfter.match(RegExpPatterns.RestAttributes);
+			let nameOnly = !!textAfter.match(/^=["']/);
+			let nexAttrs: string[] = [];
+			if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
+			AutoCompleteArray.Attributes[tag.Id].filter(x => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach(element =>
+			{
+				let attr = new TibAttribute(element);
+				let ci = attr.ToCompletionItem(function (query)
+				{
+					return safeValsEval(query);
+				}, nameOnly);
+				completionItems.push(ci);
+			});
+		}
+		return completionItems;
+	}
+
 }
 
 /*
 function autoComplete()
 {
-	// XML Snippets
-	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
-		{
-			let completionItems = [];
-			let tag = getCurrentTag(document, position);
-			if (tag && tag.GetLaguage() == Language.XML)
-			{
-				let text = getPreviousText(document, position, true);
-
-				// XML Features
-				if (tag.OpenTagIsClosed && text.match(/\b_\w*$/))
-				{
-					return AutoCompleteArray.XMLFeatures.map(x => snippetToCompletitionItem(x));
-				}
-
-				let curOpenMatch = text.match(/<(\w+)$/);
-				if (!curOpenMatch) return;
-				let opening = curOpenMatch[1].toLocaleLowerCase();
-
-				//Item Snippet
-				if ("item".indexOf(opening) > -1)
-				{
-					let parent;
-					for (let key in ItemSnippets)
-						if (!!tag.Parents.find(x => x.Name == key))
-						{
-							parent = key;
-							break;
-						}
-					if (!parent || !ItemSnippets[parent]) parent = "List";
-					let res = new vscode.SnippetString(extractElements(ItemSnippets[parent]));
-					if (res)
-					{
-						let ci = new vscode.CompletionItem("Item", vscode.CompletionItemKind.Snippet);
-						ci.detail = "Структура Item для " + parent;
-						ci.insertText = res;
-						//ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
-						completionItems.push(ci);
-					}
-				}
-				// Answer Snippet
-				else if ("answer".indexOf(opening) > -1)
-				{
-					let ci = new vscode.CompletionItem("Answer", vscode.CompletionItemKind.Snippet);
-					let ciS = new vscode.CompletionItem("AnswerShort", vscode.CompletionItemKind.Snippet);
-
-					let iterator = "1";
-					let text = "$2";
-
-					if (tag.LastParent && tag.LastParent.Name == "Repeat")
-					{
-						let source = tag.LastParent.getRepeatSource();
-						ci.detail = "Полная структура Answer в Repeat по " + source;
-						ciS.detail = "Краткая структура Answer в Repeat по " + source;
-						iterator = source == "List" ? "@ID" : "@Itera";
-						text = source == "List" ? "@Text" : "@Itera";
-					}
-					else
-					{
-						ci.detail = "Полная структура Answer";
-						ciS.detail = "Краткая структура Answer";
-					}
-					// полный вариант
-					ci.insertText = new vscode.SnippetString("Answer Id=\"${1:" + iterator + "}\"><Text>${2:" + text + "}</Text></Answer>");
-					completionItems.push(ci);
-					// краткий вариант
-					ciS.insertText = new vscode.SnippetString("Answer Id=\"${1:" + iterator + "}\"/>");
-					completionItems.push(ciS);
-				}
-			}
-			return completionItems;
-		},
-		resolveCompletionItem(item, token)
-		{
-			return item;
-		}
-	});
-
 	//Attributes
 	vscode.languages.registerCompletionItemProvider('tib', {
 		provideCompletionItems(document, position, token, context)
@@ -788,6 +749,27 @@ return new vscode.Hover(res, range);
 
 
 
+//#region --------------------------- доп. функции
 
+
+/** Безопасное выполнение eval() */
+function safeValsEval(query: string): string[]
+{
+	let res = [];
+	try
+	{
+		res = eval(query);
+	}
+	catch (error)
+	{
+		/*let data = getLogData();
+		data.add({ Data: { EvalString: query }, StackTrace: error });
+		saveError("Не получилось выполнить eval()", data);*/
+	}
+	return res;
+}
+
+
+//#endregion
 
 

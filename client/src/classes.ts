@@ -9,7 +9,7 @@ import * as winattr from 'winattr'
 import { machineIdSync } from "node-machine-id"
 import { bot, _LogPath, OutChannel, } from './extension'
 import { _LockInfoFilePrefix } from 'tib-api/lib/constants'
-import { CurrentTag, Language, KeyedCollection, ITibAttribute, Parse, translatePosition } from 'tib-api';
+import { CurrentTag, Language, KeyedCollection, Parse, translatePosition } from 'tib-api';
 
 
 
@@ -169,66 +169,6 @@ export async function registerCommand(name: string, command: Function): Promise<
 		if (!isTib()) return;
 		command(...args);
 	});
-}
-
-
-
-
-
-export class TibAttribute extends ITibAttribute
-{
-
-	constructor(obj: Object)
-	{
-		super(obj);
-	}
-
-	/** `nameOnly` - не подставлять значения */
-	ToCompletionItem(callback: (query: string) => string[], nameOnly = false): vscode.CompletionItem
-	{
-		let item = new vscode.CompletionItem(super.Name, vscode.CompletionItemKind.Property);
-		let snip = this.Name;
-		if (!nameOnly)
-		{
-			snip += '="';
-			let valAr: string[];
-			let auto = this.AutoValue();
-			if (!auto)
-			{
-				valAr = this.ValueCompletitions(callback);
-				if (valAr.length > 0) snip += "${1|" + valAr.join(",") + "|}";
-				else snip += "$1";
-			}
-			else snip += auto;
-			snip += '"';
-		}
-		let res = new vscode.SnippetString(snip);
-		item.insertText = res;
-		item.detail = (this.Detail ? this.Detail : this.Name) + (this.Type ? (" (" + this.Type + ")") : "");
-		let doc = "";
-		if (this.Default) doc += "Значение по умолчанию: `" + this.Default + "`";
-		doc += "\nПоддержка кодовых вставок: `" + (this.AllowCode ? "да" : "нет") + "`";
-		item.documentation = new vscode.MarkdownString(doc);
-		return item;
-	}
-
-	ValueCompletitions(callback: (query: string) => string[]): string[]
-	{
-		if (this.Values && this.Values.length) return this.Values;
-		else if (!!this.Result) return callback(this.Result);
-		return [];
-	}
-
-	AutoValue(): string
-	{
-		if (this.Auto) return this.Auto;
-		if (this.Type == "Boolean")
-		{
-			if (!!this.Default) return this.Default == "true" ? "false" : "true";
-			return "true";
-		}
-		return null;
-	}
 }
 
 
