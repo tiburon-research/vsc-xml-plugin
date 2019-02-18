@@ -78,7 +78,7 @@ connection.onCompletion(context =>
 {
 	let document = documents.get(context.textDocument.uri);
 	let tag = Cache.Tag.Get();
-	let items = getCompletions(tag, document, context.position, SurveyData, context.context.triggerCharacter);
+	let items = getCompletions(tag, document, context.position, SurveyData, TibAutoCompleteList, context.context.triggerCharacter);
 	return items;
 })
 

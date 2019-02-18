@@ -1,9 +1,9 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, comparePositions, IServerDocument, TibAttribute } from 'tib-api';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, comparePositions, IServerDocument, TibAttribute, Parse } from 'tib-api';
 import { getDiagnosticElements } from './diagnostic';
-import { ItemSnippets, QuestionTypes, RegExpPatterns } from 'tib-api/lib/constants';
+import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
 
 
@@ -21,11 +21,10 @@ export function sendDiagnostic(connection: server.Connection, document: server.T
 }
 
 
-export function getCompletions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, char: string)
+export function getCompletions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, TibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, char: string)
 {
-	let items: server.CompletionItem[] = [];
-	items = AutoCompletes.getAll(tag, document, position, surveyData, char);
-	return items;
+	let TibAC = new AutoCompletes(tag, document, position, surveyData, TibAutoCompleteList, char);
+	return TibAC.getAll();
 }
 
 
@@ -138,7 +137,8 @@ export class DocumentBuffer
 	private applyChangesToContent(contentChanges: server.TextDocumentContentChangeEvent[]): string
 	{
 		let res = this.document.getText();
-		contentChanges.sort((c1, c2) => { return comparePositions(this.document, c2.range.start, c1.range.start); }).forEach(change => {
+		contentChanges.sort((c1, c2) => { return comparePositions(this.document, c2.range.start, c1.range.start); }).forEach(change =>
+		{
 			let from = this.document.offsetAt(change.range.start);
 			let to = this.document.offsetAt(change.range.end);
 			let prev = res.slice(0, from);
@@ -247,27 +247,27 @@ class ElementExtractor
 		MixIds: this.getAllMixIds
 	};
 
-	private getAllPages(): string[]
+	public getAllPages(): string[]
 	{
 		return this.Data.CurrentNodes.GetIds('Page');
 	}
 
-	private getAllLists(): string[]
+	public getAllLists(): string[]
 	{
 		return this.Data.CurrentNodes.GetIds('List');
 	}
 
-	private getAllQuestions(): string[]
+	public getAllQuestions(): string[]
 	{
 		return this.Data.CurrentNodes.GetIds('Question');
 	}
 
-	private getQuestionTypes(): string[]
+	public getQuestionTypes(): string[]
 	{
 		return QuestionTypes;
 	}
 
-	private getAllMixIds(): string[]
+	public getAllMixIds(): string[]
 	{
 		return this.Data.MixIds;
 	}
@@ -283,29 +283,54 @@ class ElementExtractor
 
 //#region --------------------------- Автозавершения
 
-namespace AutoCompletes
+export class AutoCompletes
 {
-	type ITibAutoCompleteFunction = (tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, char: string) => server.CompletionItem[];
 
-	export function getAll(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, char: string): server.CompletionItem[]
+	private tag: CurrentTag;
+	private document: server.TextDocument;
+	private position: server.Position;
+	private surveyData: ISurveyDataData;
+	private char: string;
+	private TibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>
+
+
+	constructor(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, TibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, char: string)
+	{
+		this.tag = tag;
+		this.document = document;
+		this.position = position;
+		this.surveyData = surveyData;
+		this.char = char;
+		this.TibAutoCompleteList = TibAutoCompleteList;
+	}
+
+	
+	public getAll(): server.CompletionItem[]
 	{
 		let res: server.CompletionItem[] = [];
-		let allF: ITibAutoCompleteFunction[] = [getXMLSnippets, getXMLAttrs];
-		allF.forEach(f => {
-			res = res.concat(f(tag, document, position, surveyData, char));
+		let allF: (() => server.CompletionItem[])[] = [
+			this.getXMLSnippets,
+			this.getXMLAttrs,
+			this.getMainCS
+		];
+		let parent = this;
+		allF.forEach(f =>
+		{
+			res = res.concat(f.apply(parent));
 		});
 		return res;
 	}
-	
-	function getXMLSnippets(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, char: string): server.CompletionItem[]
+
+	// XML Features
+	private getXMLSnippets(): server.CompletionItem[]
 	{
 		let completionItems: server.CompletionItem[] = [];
-		if (tag && tag.GetLaguage() == Language.XML)
+		if (this.tag && this.tag.GetLaguage() == Language.XML)
 		{
-			let text = getPreviousText(document, position, true);
+			let text = getPreviousText(this.document, this.position, true);
 
 			// XML Features
-			if (tag.OpenTagIsClosed && text.match(/\b_\w*$/))
+			if (this.tag.OpenTagIsClosed && text.match(/\b_\w*$/))
 			{
 				return AutoCompleteArray.XMLFeatures.map(x => snippetToCompletitionItem(x));
 			}
@@ -319,13 +344,13 @@ namespace AutoCompletes
 			{
 				let parent;
 				for (let key in ItemSnippets)
-					if (!!tag.Parents.find(x => x.Name == key))
+					if (!!this.tag.Parents.find(x => x.Name == key))
 					{
 						parent = key;
 						break;
 					}
 				if (!parent || !ItemSnippets[parent]) parent = "List";
-				let extractor = new ElementExtractor(surveyData);
+				let extractor = new ElementExtractor(this.surveyData);
 				let res = extractor.get(ItemSnippets[parent]);
 				if (res)
 				{
@@ -351,9 +376,9 @@ namespace AutoCompletes
 				let iterator = "1";
 				let text = "$2";
 
-				if (tag.LastParent && tag.LastParent.Name == "Repeat")
+				if (this.tag.LastParent && this.tag.LastParent.Name == "Repeat")
 				{
-					let source = tag.LastParent.getRepeatSource();
+					let source = this.tag.LastParent.getRepeatSource();
 					ci.detail = "Полная структура Answer в Repeat по " + source;
 					ciS.detail = "Краткая структура Answer в Repeat по " + source;
 					iterator = source == "List" ? "@ID" : "@Itera";
@@ -375,21 +400,21 @@ namespace AutoCompletes
 		return completionItems;
 	}
 
-
-	function getXMLAttrs(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, char: string): server.CompletionItem[]
+	// атрибуты
+	private getXMLAttrs(): server.CompletionItem[]
 	{
 		let completionItems: server.CompletionItem[] = [];
-		let text = getPreviousText(document, position, true);
-		if (!(char == ' ' || !!text.match(/\w+$/))) return completionItems;
-		if (!!tag && tag.GetLaguage() == Language.XML && !tag.OpenTagIsClosed && !tag.InString() && AutoCompleteArray.Attributes[tag.Id])
+		let text = getPreviousText(this.document, this.position, true);
+		if (!(this.char == ' ' || !!text.match(/\w+$/))) return completionItems;
+		if (!!this.tag && this.tag.GetLaguage() == Language.XML && !this.tag.OpenTagIsClosed && !this.tag.InString() && AutoCompleteArray.Attributes[this.tag.Id])
 		{
-			let existAttrs = tag.AttributeNames();
-			let textAfter = document.getText().slice(document.offsetAt(position));
+			let existAttrs = this.tag.AttributeNames();
+			let textAfter = this.document.getText().slice(this.document.offsetAt(this.position));
 			let attrs = textAfter.match(RegExpPatterns.RestAttributes);
 			let nameOnly = !!textAfter.match(/^=["']/);
 			let nexAttrs: string[] = [];
 			if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
-			AutoCompleteArray.Attributes[tag.Id].filter(x => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach(element =>
+			AutoCompleteArray.Attributes[this.tag.Id].filter(x => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach(element =>
 			{
 				let attr = new TibAttribute(element);
 				let ci = attr.ToCompletionItem(function (query)
@@ -402,43 +427,134 @@ namespace AutoCompletes
 		return completionItems;
 	}
 
+	//Functions, Variables, Enums, Classes, Custom Methods, C# Snippets, Types, node Ids
+	private getMainCS(): server.CompletionItem[]
+	{
+		let completionItems: server.CompletionItem[] = [];
+
+		if (!this.tag || this.char == ' ') return;
+
+		let curLine = getPreviousText(this.document, this.position, true);
+		let mt = curLine.match(/(#|\$)?\w*$/);
+		let lang = this.tag.GetLaguage();
+		if (!mt) return;
+		if (lang != Language.CSharp && mt[1] != "$") return;
+
+		//пропускаем объявления
+		if (Parse.isMethodDefinition(curLine)) return;
+
+		let str = getCurrentLineText(this.document, this.position).substr(this.position.character);
+		if (mt[1] == "$")
+		{
+			let extractor = new ElementExtractor(this.surveyData);
+			// добавляем snippet для $repeat
+			let ci = server.CompletionItem.create("repeat");
+			ci.detail = "Строчный repeat";
+			ci.kind = server.CompletionItemKind.Snippet;
+			ci.insertTextFormat = server.InsertTextFormat.Snippet;
+			ci.insertText = "repeat(${1|" + extractor.getAllLists().join(',') + "|}){${2:@ID}[${3:,}]}";
+			completionItems.push(ci);
+			// добавляем snippet для $place
+			ci = server.CompletionItem.create("place");
+			ci.detail = "Указатель на вложенный вопрос";
+			ci.kind = server.CompletionItemKind.Snippet;
+			ci.insertTextFormat = server.InsertTextFormat.Snippet;
+			ci.insertText = "place(${1|" + extractor.getAllQuestions().join(',') + "|})";
+			completionItems.push(ci);
+			// добавляем стандартные константы
+			if (lang == Language.CSharp && !this.tag.CSSingle()) XMLEmbeddings.forEach(x =>
+			{
+				ci = server.CompletionItem.create(x.Name);
+				ci.kind = server.CompletionItemKind.Constant;
+				if (!!x.Type) ci.detail = x.Type;
+				ci.documentation = x.Title;
+				completionItems.push(ci);
+			});
+		}
+
+		let customMethods = this.surveyData.Methods.CompletionArray();
+		if (customMethods && !this.tag.InCSString()) completionItems = completionItems.concat(customMethods); //Custom Methods
+
+		// если начинается с $, то больше ничего не надо
+		if (mt[1] == "$") return completionItems;
+
+		//C# Featrues
+		if (mt[1] == "#")
+		{
+			AutoCompleteArray.CSFeatures.forEach(element =>
+			{
+				completionItems.push(snippetToCompletitionItem(element));
+			});
+		}
+
+		if (!this.tag.CSSingle() && !curLine.match(/\w+\.\w*$/))
+		{
+			if (!this.tag.InCSString())
+			{
+				let ar: TibAutoCompleteItem[] = this.TibAutoCompleteList.Item("Function").concat(this.TibAutoCompleteList.Item("Variable"), this.TibAutoCompleteList.Item("Enum"), this.TibAutoCompleteList.Item("Class"), this.TibAutoCompleteList.Item("Type"), this.TibAutoCompleteList.Item("Struct"));
+				let adBracket = !str.match(/\w*\(/);
+				ar.forEach(element =>
+				{
+					if (element) completionItems.push(element.ToCompletionItem(adBracket));
+				});
+				//C# Snippets
+				AutoCompleteArray.CSSnippets.forEach(element =>
+				{
+					completionItems.push(snippetToCompletitionItem(element));
+				});
+			}
+			else //node Ids
+			{
+				let qt = curLine.lastIndexOf('"');
+				if (qt > -1) // от недоверия к tag.InCSString()
+				{
+					let stuff = curLine.substr(0, qt);
+					let match = stuff.match(/((CurrentSurvey\.Lists\[)|(Page\s*=)|(Question\s*=))\s*$/);
+					const matchResults =
+					{
+						List: 2,
+						Page: 3,
+						Question: 4
+					};
+					if (!!match)
+					{
+						let resultMatch = match.findIndex((val, index) => { return index > 1 && !!val; });
+						switch (resultMatch)
+						{
+							case matchResults.List:
+								completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems("List"));
+								break;
+
+							case matchResults.Page:
+								completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems("Page"));
+								break;
+
+							case matchResults.Question:
+								completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems("Question"));
+								break;
+
+							default:
+								break;
+						}
+					}
+					else // всё подряд
+					{
+						_NodeStoreNames.forEach(name =>
+						{
+							completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems(name));
+						});
+					}
+				}
+			}
+		}
+
+		return completionItems;
+	}
 }
 
 /*
 function autoComplete()
 {
-	//Attributes
-	vscode.languages.registerCompletionItemProvider('tib', {
-		provideCompletionItems(document, position, token, context)
-		{
-			let completionItems = [];
-			let tag = getCurrentTag(document, position);
-			if (!!tag && tag.GetLaguage() == Language.XML && !tag.OpenTagIsClosed && !tag.InString() && AutoCompleteArray.Attributes[tag.Id])
-			{
-				let existAttrs = tag.AttributeNames();
-				let textAfter = document.getText().slice(document.offsetAt(position));
-				let attrs = textAfter.match(RegExpPatterns.RestAttributes);
-				let nameOnly = !!textAfter.match(/^=["']/);
-				let nexAttrs: string[] = [];
-				if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
-				AutoCompleteArray.Attributes[tag.Id].filter(x => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach(element =>
-				{
-					let attr = new TibAttribute(element);
-					let ci = attr.ToCompletionItem(function (query)
-					{
-						return safeValsEval(query);
-					}, nameOnly);
-					completionItems.push(ci);
-				});
-			}
-			return completionItems;
-		},
-		resolveCompletionItem(item, token)
-		{
-			return item;
-		}
-	}, " ");
-
 	//Functions, Variables, Enums, Classes, Custom Methods, C# Snippets, Types, node Ids
 	vscode.languages.registerCompletionItemProvider('tib', {
 		provideCompletionItems(document, position, token, context)
@@ -726,7 +842,7 @@ function hoverDocs()
 			{
 				if (suit[i].Documentation && suit[i].Description)
 				{*/
-					//let doc = "/* " + suit[i].Description + " */\n" + suit[i].Documentation;
+//let doc = "/* " + suit[i].Description + " */\n" + suit[i].Documentation;
 /*res.push({ language: "csharp", value: doc });
 }
 else
@@ -767,6 +883,26 @@ function safeValsEval(query: string): string[]
 		saveError("Не получилось выполнить eval()", data);*/
 	}
 	return res;
+}
+
+
+function getCurrentLineText(document: server.TextDocument, position: server.Position): string
+{
+	try
+	{
+		let start = server.Position.create(position.line, 0);
+		let from = document.offsetAt(start);
+		let fullText = document.getText();
+		let res = fullText.slice(from);
+		let lastIndex = res.indexOf('\n');
+		if (lastIndex > -1) res = res.slice(0, lastIndex);
+		return res;
+	} catch (error)
+	{
+		/*logError("Ошибка получения текста текущей строки", error);
+		return null;*/
+	}
+
 }
 
 
