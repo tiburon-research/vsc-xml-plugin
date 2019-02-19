@@ -2,7 +2,7 @@
 
 import * as server from 'vscode-languageserver';
 import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData } from 'tib-api';
-import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData, DocumentBuffer, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights } from './classes';
+import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData, DocumentBuffer, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getCSDefinitions } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { CacheSet } from 'tib-api/lib/cache';
 import { _NodeStoreNames } from 'tib-api/lib/constants';
@@ -46,7 +46,8 @@ connection.onInitialize((params: server.InitializeParams) =>
 				triggerCharacters: ['(', ',']
 			},
 			hoverProvider: true,
-			documentHighlightProvider: true
+			documentHighlightProvider: true,
+			definitionProvider: true
 		}
 	};
 });
@@ -123,6 +124,18 @@ connection.onDocumentHighlight(data =>
 	});
 	let higlights = new TibDocumentHighLights(tag, document, data.position);
 	return higlights.getAll();
+})
+
+
+connection.onDefinition(data =>
+{
+	let document = documents.get(data.textDocument.uri);
+	let tag = getServerTag({
+		document,
+		position: data.position,
+		force: false
+	});
+	return getCSDefinitions(tag, document, data.position, SurveyData);
 })
 
 connection.onRequest('onDidChangeTextDocument', (data: OnDidChangeDocumentData) =>

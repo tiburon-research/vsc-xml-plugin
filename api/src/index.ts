@@ -1079,6 +1079,7 @@ export class TibMethod
 	{
 		let item = server.CompletionItem.create(this.Name);
 		item.kind = server.CompletionItemKind.Function;
+		item.insertTextFormat = server.InsertTextFormat.Snippet;
 		if (this.IsFunction) item.insertText = this.Name + "($0)";
 		let mds: server.MarkedString = { language: 'XML', value: '' };
 		mds.value = this.Signature;

@@ -710,8 +710,8 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
 		}
 		else
 		{
-			if (suit[i].Documentation) res.push({ language: "plaintext", value: suit[i].Documentation });
-			if (suit[i].Description) res.push({ language: "plaintext", value: suit[i].Description });
+			if (suit[i].Documentation) res.push({ language: "csharp", value: suit[i].Documentation });
+			if (suit[i].Description) res.push({ language: "csharp", value: suit[i].Description });
 		}
 	}
 	let customMethods = surveyData.Methods.HoverArray(text);
@@ -876,6 +876,36 @@ export class TibDocumentHighLights
 		res.push(server.DocumentHighlight.create(nextRange));
 		return res;
 	}
+}
+
+
+/** Переход к определению */
+export function getCSDefinitions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData): server.Location
+{
+	let res: server.Location;
+
+	let word = document.getText(getWordRangeAtPosition(document, position));
+	if (!tag) return res;
+
+	if (tag.GetLaguage() == Language.CSharp && !tag.InCSString()) // C#
+	{
+		if (surveyData.Methods.Contains(word)) res = surveyData.Methods.Item(word).GetLocation();
+	}
+	else // XML узлы
+	{
+		let enabledNodes = ["Page", "List", "Question"];
+		enabledNodes.forEach(element =>
+		{
+			let item = surveyData.CurrentNodes.GetItem(word, element);
+			if (!!item)
+			{
+				res = item.GetLocation();
+				return;
+			}
+		});
+	}
+	
+	return res;
 }
 
 //#endregion
