@@ -1308,6 +1308,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 //#region
 
 
+/** Текст всей строки для `position` */
 export function getCurrentLineText(document: server.TextDocument, position: server.Position): string
 {
 	try
@@ -1326,31 +1327,52 @@ export function getCurrentLineText(document: server.TextDocument, position: serv
 	}
 }
 
+
+/** Возвращает диапазон для слова в позиции `index` строки `line` */
+function getWordRange(document: server.TextDocument, index: number, line: string, regex?: RegExp): { from: number, to: number }
+{
+	if (!regex) regex = /[\w]/;
+	let from = index;
+	let to = from + 1;
+	for (let i = index; i < line.length; i++) {
+		if (!line[i].match(regex))
+		{
+			to = i;
+			break;
+		}
+	}
+	for (let i = index; i > 0; i--) {
+		if (!line[i - 1].match(regex))
+		{
+			from = i;
+			break;
+		}
+	}
+	return { from, to };
+}
+
+
 /** Получает слово в текущей позиции 
  * 
  * `regex` - набор символов
  */
 export function getWordAtPosition(document: server.TextDocument, position: server.Position, regex?: RegExp): string
 {
-	if (!regex) regex = /[\w]/;
 	let line = getCurrentLineText(document, position);
-	let from = position.character;
-	let to = from + 1;
-	for (let index = position.character; index < line.length; index++) {
-		if (!line[index].match(regex))
-		{
-			to = index;
-			break;
-		}
-	}
-	for (let index = position.character; index > 0; index--) {
-		if (!line[index - 1].match(regex))
-		{
-			from = index;
-			break;
-		}
-	}
-	return line.slice(from, to);
+	let range = getWordRange(document, position.character, line, regex);
+	return line.slice(range.from, range.to);
+}
+
+
+/** Получает диапазон слова в позиции `position`
+ * 
+ * `regex` - набор символов
+ */
+export function getWordRangeAtPosition(document: server.TextDocument, position: server.Position, regex?: RegExp): server.Range
+{
+	let line = getCurrentLineText(document, position);
+	let range = getWordRange(document, position.character, line, regex);
+	return server.Range.create(server.Position.create(position.line, range.from), server.Position.create(position.line, range.to));
 }
 
 

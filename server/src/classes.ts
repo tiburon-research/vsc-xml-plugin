@@ -1,7 +1,7 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, comparePositions, IServerDocument, TibAttribute, Parse, getCurrentLineText, getWordAtPosition } from 'tib-api';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, comparePositions, IServerDocument, TibAttribute, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition } from 'tib-api';
 import { getDiagnosticElements } from './diagnostic';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
@@ -23,7 +23,7 @@ export function sendDiagnostic(connection: server.Connection, document: server.T
 
 export function getCompletions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, settings: KeyedCollection<any>, classTypes: string[], char: string)
 {
-	let TibAC = new AutoCompletes(tag, document, position, surveyData, tibAutoCompleteList, settings, classTypes, char);
+	let TibAC = new TibAutoCompletes(tag, document, position, surveyData, tibAutoCompleteList, settings, classTypes, char);
 	return TibAC.getAll();
 }
 
@@ -283,8 +283,9 @@ class ElementExtractor
 
 //#region --------------------------- Подготовка данных для стандартных событий клиента
 
+
 /** Автозавершения */
-export class AutoCompletes
+export class TibAutoCompletes
 {
 
 	private tag: CurrentTag;
@@ -681,7 +682,6 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
 {
 	let res: LanguageString[] = [];
 	let text = getWordAtPosition(document, position);
-	console.log("'" + text + "'");
 	if (!text || !tag || tag.GetLaguage() != Language.CSharp) return res;
 	let parent = null;
 	let lastText = getPreviousText(document, position);
@@ -720,4 +720,201 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
 }
 
 
+/** Подсветка элементов */
+export class TibDocumentHighLights
+{
+	private tag: CurrentTag;
+	private document: server.TextDocument;
+	private position: server.Position;
+
+	constructor(tag: CurrentTag, document: server.TextDocument, position: server.Position)
+	{
+		this.tag = tag;
+		this.document = document;
+		this.position = position;
+	}
+
+	/** Все подсвечивающиеся */
+	public getAll(): server.DocumentHighlight[]
+	{
+		let res: server.DocumentHighlight[] = [];
+		let allF: (() => server.DocumentHighlight[])[] = [
+			this.getTagsHighlights,
+			this.getBlockHighlights
+		];
+		let parent = this;
+		allF.forEach(f =>
+		{
+			res = res.concat(f.apply(parent));
+		});
+		return res;
+	}
+
+	/** Подсветка парных тегов */
+	public getTagsHighlights(): server.DocumentHighlight[]
+	{
+		let res: server.DocumentHighlight[] = [];
+		let text = getPreviousText(this.document, this.position);
+		if (!this.tag) return res;
+		let curRange = getWordRangeAtPosition(this.document, this.position);
+		let word = this.document.getText(curRange);
+		if (word == "CDATA") return res;
+		if (this.tag.GetLaguage() == Language.CSharp && word != 'c#') return res; // такой костыль потому что при нахождении на [/c#] хз что там дальше и tag.CSMode == true
+		let fullText = this.document.getText();
+		let after = getCurrentLineText(this.document, this.position).substr(this.position.character);
+		let mt = text.match(/(((\[)|(<))\/?)\w*$/);
+
+		if (!mt) return res;
+		let ind = -1;
+		let range: server.Range;
+
+		switch (mt[1])
+		{
+			case "<":
+				{
+					// открывающийся
+					let endpos = this.document.positionAt(fullText.indexOf(">", text.length) + 1);
+					curRange = server.Range.create(translatePosition(this.document, curRange.start, -1), endpos);
+					res.push(server.DocumentHighlight.create(curRange));
+
+					// закрывающийся
+					if (!after.match(/^[^>]*\/>/) && !Parse.isSelfClosedTag(word))
+					{
+						range = findCloseTag("<", word, ">", this.document, this.position);
+						if (range) res.push(server.DocumentHighlight.create(range));
+					}
+					break;
+				}
+			case "[":
+				{
+					// открывающийся
+					let endpos = this.document.positionAt(fullText.indexOf("]", text.length) + 1);
+					curRange = server.Range.create(translatePosition(this.document, curRange.start, -1), endpos);
+					res.push(server.DocumentHighlight.create(curRange));
+
+					// закрывающийся
+					if (!after.match(/^[^\]]*\/\]/) && !Parse.isSelfClosedTag(word))
+					{
+						range = findCloseTag("[", word, "]", this.document, this.position);
+						if (range) res.push(server.DocumentHighlight.create(range));
+					}
+					break;
+				}
+			case "</":
+				{
+					// закрывающийся
+					let endpos = this.document.positionAt(fullText.indexOf(">", text.length) + 1);
+					curRange = server.Range.create(translatePosition(this.document, curRange.start, -2), endpos);
+					res.push(server.DocumentHighlight.create(curRange));
+
+					// открывающийся
+					range = findOpenTag("<", word, ">", this.document, this.position);
+					if (range) res.push(server.DocumentHighlight.create(range));
+					break;
+				}
+			case "[/":
+				{
+					// закрывающийся
+					let endpos = this.document.positionAt(fullText.indexOf("]", text.length) + 1);
+					curRange = server.Range.create(translatePosition(this.document, curRange.start, -2), endpos);
+					res.push(server.DocumentHighlight.create(curRange));
+
+					// открывающийся
+					range = findOpenTag("[", word, "]", this.document, this.position);
+					if (range) res.push(server.DocumentHighlight.create(range));
+					break;
+				}
+		}
+		return res;
+	}
+
+	public getBlockHighlights(): server.DocumentHighlight[]
+	{
+		let res: server.DocumentHighlight[] = [];
+		let lineText = getCurrentLineText(this.document, this.position);
+		let reg = lineText.match(/<!--#(end)?block.*-->/);
+		if (!reg) return res;
+		if (reg.index > this.position.character || reg.index + reg[0].length < this.position.character) return res;
+		let nextRange: server.Range;
+
+		let prevRange = server.Range.create(
+			server.Position.create(0, 0),
+			server.Position.create(this.position.line, 0)
+		);
+		let prevText = this.document.getText(prevRange);
+
+		if (!!reg[1])
+		{
+			let allBlocks = prevText.matchAll(/<!--#block.*-->/);
+			if (!allBlocks || allBlocks.length == 0) return res;
+
+			let match = allBlocks.last();
+			nextRange = server.Range.create(
+				this.document.positionAt(match.index),
+				this.document.positionAt(match.index + match[0].length)
+			);
+		}
+		else
+		{
+			let offset = prevText.length;
+			let after = this.document.getText().slice(offset);
+			let match = after.match(/<!--#endblock-->/);
+			if (!match) return res;
+
+			nextRange = server.Range.create(
+				this.document.positionAt(offset + match.index),
+				this.document.positionAt(offset + match.index + match[0].length)
+			);
+		}
+
+		let thisRange = server.Range.create(
+			server.Position.create(this.position.line, reg.index),
+			server.Position.create(this.position.line, reg.index + reg[0].length)
+		);
+
+		res.push(server.DocumentHighlight.create(thisRange));
+		res.push(server.DocumentHighlight.create(nextRange));
+		return res;
+	}
+}
+
 //#endregion
+
+
+
+/** Возвращает `null`, если тег не закрыт или SelfClosed */
+function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
+{
+	try
+	{
+		let fullText = document.getText();
+		let prevText = getPreviousText(document, position);
+		let res = Parse.findCloseTag(opBracket, tagName, clBracket, prevText, fullText);
+		if (!res || !res.Range) return null;
+		let startPos = document.positionAt(res.Range.From);
+		let endPos = document.positionAt(res.Range.To + 1);
+		return server.Range.create(startPos, endPos);
+	} catch (error)
+	{
+		//logError("Ошибка выделения закрывающегося тега", error);
+	}
+	return null;
+}
+
+
+function findOpenTag(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
+{
+	try
+	{
+		let prevText = getPreviousText(document, position);
+		let res = Parse.findOpenTag(opBracket, tagName, clBracket, prevText);
+		if (!res) return null;
+		let startPos = document.positionAt(res.Range.From);
+		let endPos = document.positionAt(res.Range.To + 1);
+		return server.Range.create(startPos, endPos);
+	} catch (error)
+	{
+		//logError("Ошибка выделения открывающегося тега", error);
+	}
+	return null;
+}
