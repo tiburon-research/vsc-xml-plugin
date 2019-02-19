@@ -40,7 +40,7 @@ connection.onInitialize((params: server.InitializeParams) =>
 			textDocumentSync: server.TextDocumentSyncKind.Incremental,
 			completionProvider: {
 				resolveProvider: false,
-				triggerCharacters: [' ', '.', '$']
+				triggerCharacters: [' ', '.', '$', ':']
 			}
 		}
 	};

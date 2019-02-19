@@ -1313,10 +1313,10 @@ export function getPreviousText(document: server.TextDocument, position: server.
 {
 	try
 	{
-		let
-			start = lineOnly ? server.Position.create(position.line, 0) : server.Position.create(0, 0),
-			end = server.Position.create(position.line, position.character);
-		return document.getText(server.Range.create(start, end));
+		let start = lineOnly ? server.Position.create(position.line, 0) : server.Position.create(0, 0);
+		let end = server.Position.create(position.line, position.character);
+		let res = document.getText(server.Range.create(start, end));
+		return res;
 	} catch (error)
 	{
 		throw "Ошибка получения текста документа";

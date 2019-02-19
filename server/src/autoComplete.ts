@@ -1673,7 +1673,7 @@ export const Attributes = {
 		{
 			"Name": "Store",
 			"Type": "String",
-			Result: "getAllQuestions()"
+			Result: "getAllQuestions"
 		},
 		{
 			"Name": "CornerText",
@@ -1897,13 +1897,13 @@ export const Attributes = {
 	"ConditionItem": [
 		{
 			"Name": "Page",
-			Result: "getAllPages()",
+			Result: "getAllPages",
 			"Type": "String"
 		},
 		{
 			"Name": "Question",
 			"Type": "String",
-			Result: "getAllQuestions()"
+			Result: "getAllQuestions"
 		},
 		{
 			"Name": "Answer",
@@ -1935,7 +1935,7 @@ export const Attributes = {
 	"Redirect": [
 		{
 			"Name": "Page",
-			Result: "getAllPages()",
+			Result: "getAllPages",
 			"Type": "String"
 		},
 		{
@@ -1984,7 +1984,7 @@ export const Attributes = {
 		},
 		{
 			"Name": "Page",
-			Result: "getAllPages()",
+			Result: "getAllPages",
 			"Type": "String"
 		},
 		{
@@ -1998,7 +1998,7 @@ export const Attributes = {
 		{
 			"Name": "Apply",
 			"Type": "String",
-			Result: "getAllPages()"
+			Result: "getAllPages"
 		},
 		{
 			"Name": "Monadic",
@@ -2077,7 +2077,7 @@ export const Attributes = {
 		},
 		{
 			"Name": "List",
-			Result: "getAllLists()",
+			Result: "getAllLists",
 			"Type": "String"
 		},
 		{
@@ -2098,7 +2098,7 @@ export const Attributes = {
 		{
 			"Name": "PinQuestion",
 			"Type": "String",
-			Result: "getAllQuestions()"
+			Result: "getAllQuestions"
 		},
 		{
 			"Name": "PinAnswer",
@@ -2280,12 +2280,12 @@ export const Attributes = {
 		{
 			"Name": "Page",
 			"Type": "string",
-			Result: "getAllPages()"
+			Result: "getAllPages"
 		},
 		{
 			"Name": "Question",
 			"Type": "string",
-			Result: "getAllQuestions()"
+			Result: "getAllQuestions"
 		},
 		{
 			"Name": "Answer",
