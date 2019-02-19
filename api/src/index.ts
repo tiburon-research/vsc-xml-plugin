@@ -1309,6 +1309,13 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 //#region
 
 
+/** Заменяет в строке все константы на значения */
+export function applyConstants(input: string): string
+{
+	let cons = Constants.PreDifinedConstants.toKeyedCollection(x => x).Map((key, value) => new KeyValuePair<string>('@' + key, value));
+	return input.replaceValues(cons);
+}
+
 /** Текст всей строки для `position` */
 export function getCurrentLineText(document: server.TextDocument, position: server.Position): string
 {

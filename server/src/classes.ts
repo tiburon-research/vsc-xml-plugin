@@ -1,10 +1,11 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, comparePositions, IServerDocument, TibAttribute, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition } from 'tib-api';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, comparePositions, IServerDocument, TibAttribute, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition, applyConstants } from 'tib-api';
 import { getDiagnosticElements } from './diagnostic';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
+import Uri from 'vscode-uri'
 
 
 
@@ -893,6 +894,18 @@ export function getCSDefinitions(tag: CurrentTag, document: server.TextDocument,
 	}
 	else // XML узлы
 	{
+		if (tag.Name == "Include")
+		{
+			let attrs = tag.GetAllAttributes(document);
+			let fileName = attrs.Item("FileName");
+			if (!!fileName)
+			{
+				fileName = applyConstants(fileName);
+				let nullPosition = server.Position.create(0, 0);
+				res = server.Location.create(Uri.file(fileName).toString(), server.Range.create(nullPosition, nullPosition));	
+			}
+		}
+
 		let enabledNodes = ["Page", "List", "Question"];
 		enabledNodes.forEach(element =>
 		{
@@ -904,7 +917,7 @@ export function getCSDefinitions(tag: CurrentTag, document: server.TextDocument,
 			}
 		});
 	}
-	
+
 	return res;
 }
 

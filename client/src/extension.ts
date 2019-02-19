@@ -50,9 +50,6 @@ var Settings: ExtensionSettings;
 /** флаг использования Linq */
 var _useLinq = true;
 
-/** Имена документов из Include */
-var Includes: string[] = [];
-
 /** Канал вывода */
 var OutChannel = vscode.window.createOutputChannel("tib");
 
@@ -103,8 +100,8 @@ export function activate(context: vscode.ExtensionContext)
 	/** Документ сменился */
 	function anotherDocument(needReload: boolean, editor: vscode.TextEditor)
 	{
-		Includes = [];
-		/* Methods.Clear();
+		/* Includes = [];
+		Methods.Clear();
 		CurrentNodes.Clear(); */
 		if (!editor || editor.document.languageId != 'tib') return;
 		if (!editor.document.isUntitled)
@@ -120,10 +117,8 @@ export function activate(context: vscode.ExtensionContext)
 	// общие дествия при старте расширения
 	getStaticData();
 	makeIndent();
-	//definitions();
 	registerCommands();
 	registerActionCommands();
-	//higlight();
 
 	// для каждого дукумента свои
 	anotherDocument(true, editor);
@@ -694,73 +689,6 @@ function registerCommands()
 }
 
 
-
-
-/** Переход к определениям */
-/* function definitions()
-{
-	// C#
-	vscode.languages.registerDefinitionProvider('tib', {
-		provideDefinition(document, position)
-		{
-			let tag = getCurrentTag(document, position);
-			if (!tag || tag.GetLaguage() != Language.CSharp || tag.InCSString()) return;
-			let res: vscode.Location;
-			try
-			{
-				let word = document.getText(document.getWordRangeAtPosition(position));
-				if (Methods.Contains(word)) res = Methods.Item(word).GetLocation();
-			} catch (error)
-			{
-				logError("Ошибка при получении определения метода", error);
-			}
-			return res;
-		}
-	});
-
-	// XML узлы
-	vscode.languages.registerDefinitionProvider('tib', {
-		provideDefinition(document, position)
-		{
-			let res: vscode.Location;
-			try
-			{
-				let word = document.getText(document.getWordRangeAtPosition(position));
-				let enabledNodes = ["Page", "List", "Question"];
-				enabledNodes.forEach(element =>
-				{
-					let item = CurrentNodes.GetItem(word, element);
-					if (item)
-					{
-						res = item.GetLocation();
-						return res;
-					}
-				});
-			} catch (error)
-			{
-				logError("Ошибка при получении определения узла XML", error);
-			}
-			return res;
-		}
-	});
-
-	// include
-	vscode.languages.registerDefinitionProvider('tib', {
-		provideDefinition(document, position)
-		{
-			let tag = getCurrentTag(document, position);
-			if (!tag || tag.Name != "Include") return;
-			let attrs = tag.GetAllAttributes(createServerDocument(document));
-			let fileName = attrs.Item("FileName");
-			if (!fileName) return;
-			fileName = applyConstants(fileName);
-			let res = new vscode.Location(vscode.Uri.file(fileName), new vscode.Position(0, 0));
-			return res;
-		}
-	});
-} */
-
-
 /** добавление отступов при нажатии enter между > и < */
 function makeIndent(): void
 {
@@ -1308,8 +1236,8 @@ function getLogData(edt?: vscode.TextEditor): LogData
 		let survObj = {
 			/* Methods: Methods.Keys(),
 			NodesLength: CurrentNodes.Keys().map(x => x + ": " + (CurrentNodes.Item(x).length || 0)),
-			MixIds: MixIds, */
-			Includes: Includes
+			MixIds: MixIds,
+			Includes: Includes */
 		};
 		res.add({ SurveyData: survObj });
 	} catch (error)
