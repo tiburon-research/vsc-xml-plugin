@@ -2,7 +2,7 @@
 
 import * as server from 'vscode-languageserver';
 import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData } from 'tib-api';
-import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData, DocumentBuffer, ServerDocumentStore, getSignatureHelpers } from './classes';
+import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData, DocumentBuffer, ServerDocumentStore, getSignatureHelpers, getHovers } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { CacheSet } from 'tib-api/lib/cache';
 import { _NodeStoreNames } from 'tib-api/lib/constants';
@@ -44,7 +44,8 @@ connection.onInitialize((params: server.InitializeParams) =>
 			},
 			signatureHelpProvider: {
 				triggerCharacters: ['(', ',']
-			}
+			},
+			hoverProvider: true
 		}
 	};
 });
@@ -98,6 +99,18 @@ connection.onSignatureHelp(data =>
 	return { signatures } as server.SignatureHelp;
 })
 
+connection.onHover(data =>
+{
+	let document = documents.get(data.textDocument.uri);
+	let tag = getServerTag({
+		document,
+		position: data.position,
+		force: false
+	});
+	return {
+		contents: getHovers(tag, document, data.position, SurveyData, CodeAutoCompleteArray)
+	};
+})
 
 connection.onRequest('onDidChangeTextDocument', (data: OnDidChangeDocumentData) =>
 {

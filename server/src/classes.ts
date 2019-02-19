@@ -1,7 +1,7 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, comparePositions, IServerDocument, TibAttribute, Parse } from 'tib-api';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, comparePositions, IServerDocument, TibAttribute, Parse, getCurrentLineText, getWordAtPosition } from 'tib-api';
 import { getDiagnosticElements } from './diagnostic';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
@@ -283,6 +283,7 @@ class ElementExtractor
 
 //#region --------------------------- Подготовка данных для стандартных событий клиента
 
+/** Автозавершения */
 export class AutoCompletes
 {
 
@@ -311,7 +312,7 @@ export class AutoCompletes
 		this.extractor = new ElementExtractor(surveyData);
 	}
 
-
+	/** Все автозавершения */
 	public getAll(): server.CompletionItem[]
 	{
 		let res: server.CompletionItem[] = [];
@@ -635,6 +636,7 @@ export class AutoCompletes
 }
 
 
+/** Подсказки при вводе */
 export function getSignatureHelpers(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>): server.SignatureInformation[]
 {
 	let sign: server.SignatureInformation[] = [];
@@ -668,90 +670,54 @@ export function getSignatureHelpers(tag: CurrentTag, document: server.TextDocume
 }
 
 
-
-/** подсказки при наведении */
-/*
-	function hoverDocs()
-	{
-		vscode.languages.registerHoverProvider('tib', {
-			provideHover(document, position, token)
-			{
-				let res = [];
-				let range = document.getWordRangeAtPosition(position);
-				if (!range) return;
-				let tag = getCurrentTag(document, range.end);
-				if (!tag) return;
-				if (tag.GetLaguage() != Language.CSharp) return;
-				let text = document.getText(range);
-				let parent = null;
-				let lastText = getPreviousText(document, position);
-				let reg = lastText.match(/(\w+)\.\w*$/);
-				if (!!reg)
-				{
-					parent = reg[1];
-				}
-				// надо проверить родителя: если нашёлся static, то только его, иначе всё подходящее
-				let suit = CodeAutoCompleteArray.filter(x => x.Name == text);
-				let staticParens = CodeAutoCompleteArray.filter(x => x.Kind == vscode.CompletionItemKind[vscode.CompletionItemKind.Class]).map(x => x.Name);
-				if (staticParens.contains(parent))
-				{
-					suit = suit.filter(x =>
-					{
-						return x.Name == text && (x.Parent == parent);
-					});
-				}
-
-				for (let i = 0; i < suit.length; i++)
-				{
-					if (suit[i].Documentation && suit[i].Description)
-					{*/
-//let doc = "/* " + suit[i].Description + " */\n" + suit[i].Documentation;
-/*res.push({ language: "csharp", value: doc });
-}
-else
+export interface LanguageString
 {
-if (suit[i].Documentation) res.push({ language: "csharp", value: suit[i].Documentation });
-if (suit[i].Description) res.push(suit[i].Description);
-}
-}
-let customMethods = Methods.HoverArray(text);
-if (customMethods) res = res.concat(customMethods);
-if (res.length == 0) return;
-return new vscode.Hover(res, range);
-}
-});
-}
-*/
+	language: string;
+	value: string
+};
 
-
-//#endregion
-
-
-
-
-//#region --------------------------- доп. функции
-
-
-function getCurrentLineText(document: server.TextDocument, position: server.Position): string
+/** Подсказки при наведении */
+export function getHovers(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, codeAutoCompleteArray: TibAutoCompleteItem[]): LanguageString[]
 {
-	try
+	let res: LanguageString[] = [];
+	let text = getWordAtPosition(document, position);
+	console.log("'" + text + "'");
+	if (!text || !tag || tag.GetLaguage() != Language.CSharp) return res;
+	let parent = null;
+	let lastText = getPreviousText(document, position);
+	let reg = lastText.match(/(\w+)\.\w*$/);
+	if (!!reg)
 	{
-		let start = server.Position.create(position.line, 0);
-		let from = document.offsetAt(start);
-		let fullText = document.getText();
-		let res = fullText.slice(from);
-		let lastIndex = res.indexOf('\n');
-		if (lastIndex > -1) res = res.slice(0, lastIndex);
-		return res;
-	} catch (error)
+		parent = reg[1];
+	}
+	// надо проверить родителя: если нашёлся static, то только его, иначе всё подходящее
+	let suit = codeAutoCompleteArray.filter(x => x.Name == text);
+	let staticParens = codeAutoCompleteArray.filter(x => x.Kind == 'Class').map(x => x.Name);
+	if (staticParens.contains(parent))
 	{
-		/*logError("Ошибка получения текста текущей строки", error);
-		return null;*/
+		suit = suit.filter(x =>
+		{
+			return x.Name == text && (x.Parent == parent);
+		});
 	}
 
+	for (let i = 0; i < suit.length; i++)
+	{
+		if (suit[i].Documentation && suit[i].Description)
+		{
+			let doc = "/* " + suit[i].Description + " */\n" + suit[i].Documentation;
+			res.push({ language: "csharp", value: doc });
+		}
+		else
+		{
+			if (suit[i].Documentation) res.push({ language: "plaintext", value: suit[i].Documentation });
+			if (suit[i].Description) res.push({ language: "plaintext", value: suit[i].Description });
+		}
+	}
+	let customMethods = surveyData.Methods.HoverArray(text);
+	if (customMethods) res = res.concat(customMethods);
+	return res;
 }
 
 
 //#endregion
-
-

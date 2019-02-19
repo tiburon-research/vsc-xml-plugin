@@ -1122,7 +1122,7 @@ export class TibMethods extends KeyedCollection<TibMethod>
 		return this.Values().map(function (e)
 		{
 			return e.ToCompletionItem();
-		});
+		}).filter(x => !!x);;
 	}
 
 	HoverArray(word: string): any[]
@@ -1130,7 +1130,7 @@ export class TibMethods extends KeyedCollection<TibMethod>
 		return this.Values().map(function (e)
 		{
 			if (e.Name == word) return e.ToHoverItem();
-		});
+		}).filter(x => !!x);
 	}
 
 	SignatureArray(word: string)
@@ -1306,6 +1306,52 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 
 /*---------------------------------------- Functions ----------------------------------------*/
 //#region
+
+
+export function getCurrentLineText(document: server.TextDocument, position: server.Position): string
+{
+	try
+	{
+		let start = server.Position.create(position.line, 0);
+		let from = document.offsetAt(start);
+		let fullText = document.getText();
+		let res = fullText.slice(from);
+		let lastIndex = res.indexOf('\n');
+		if (lastIndex > -1) res = res.slice(0, lastIndex);
+		return res;
+	} catch (error)
+	{
+		/*logError("Ошибка получения текста текущей строки", error);
+		return null;*/
+	}
+}
+
+/** Получает слово в текущей позиции 
+ * 
+ * `regex` - набор символов
+ */
+export function getWordAtPosition(document: server.TextDocument, position: server.Position, regex?: RegExp): string
+{
+	if (!regex) regex = /[\w]/;
+	let line = getCurrentLineText(document, position);
+	let from = position.character;
+	let to = from + 1;
+	for (let index = position.character; index < line.length; index++) {
+		if (!line[index].match(regex))
+		{
+			to = index;
+			break;
+		}
+	}
+	for (let index = position.character; index > 0; index--) {
+		if (!line[index - 1].match(regex))
+		{
+			from = index;
+			break;
+		}
+	}
+	return line.slice(from, to);
+}
 
 
 /** Получает текст от начала документа до `position` */
