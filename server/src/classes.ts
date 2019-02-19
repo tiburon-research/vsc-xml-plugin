@@ -637,11 +637,11 @@ export class AutoCompletes
 
 export function getSignatureHelpers(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>): server.SignatureInformation[]
 {
-	if (!tag || tag.GetLaguage() != Language.CSharp) return;
 	let sign: server.SignatureInformation[] = [];
+	if (!tag || tag.GetLaguage() != Language.CSharp) return sign;
 	let lastLine = getPreviousText(document, position, true);
 	//пропускаем объявления
-	if (Parse.isMethodDefinition(lastLine)) return;
+	if (Parse.isMethodDefinition(lastLine)) return sign;
 	let ar = tibAutoCompleteList.Item("Function").concat(tibAutoCompleteList.Item("Method"));
 	let mtch = lastLine.match(/((^)|(.*\b))(\w+)\([^\(\)]*$/);
 	if (!mtch || mtch.length < 4) return sign;
