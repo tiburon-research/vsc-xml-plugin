@@ -2,7 +2,7 @@
 
 import * as server from 'vscode-languageserver';
 import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData } from 'tib-api';
-import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData, DocumentBuffer, ServerDocumentStore } from './classes';
+import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData, DocumentBuffer, ServerDocumentStore, getSignatureHelpers } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { CacheSet } from 'tib-api/lib/cache';
 import { _NodeStoreNames } from 'tib-api/lib/constants';
@@ -41,6 +41,9 @@ connection.onInitialize((params: server.InitializeParams) =>
 			completionProvider: {
 				resolveProvider: false,
 				triggerCharacters: [' ', '.', '$', ':']
+			},
+			signatureHelpProvider: {
+				triggerCharacters: ['(', ',']
 			}
 		}
 	};
@@ -83,15 +86,17 @@ connection.onCompletion(context =>
 })
 
 
-/*connection.onDidChangeTextDocument(e =>
+connection.onSignatureHelp(data =>
 {
-	let document = documents.update(e.textDocument.uri, e.textDocument.version, e.contentChanges);
-	let position = e.contentChanges[0].range.end;
-	anyChangeHandler(document);
-	let tag = getServerTag({ document, position, force: false });
-	Cache.Tag.Set(tag);
-	//connection.sendNotification('currentTag', tag);
-})*/
+	let document = documents.get(data.textDocument.uri);
+	let tag = getServerTag({
+		document,
+		position: data.position,
+		force: false
+	});
+	let signatures = getSignatureHelpers(tag, document, data.position, SurveyData, TibAutoCompleteList);
+	return { signatures } as server.SignatureHelp;
+})
 
 
 connection.onRequest('onDidChangeTextDocument', (data: OnDidChangeDocumentData) =>

@@ -281,7 +281,7 @@ class ElementExtractor
 
 
 
-//#region --------------------------- Автозавершения
+//#region --------------------------- Подготовка данных для стандартных событий клиента
 
 export class AutoCompletes
 {
@@ -441,7 +441,7 @@ export class AutoCompletes
 	private getAttrValues(): server.CompletionItem[]
 	{
 		let completionItems: server.CompletionItem[] = [];
-		
+
 		if (!this.tag || this.tag.OpenTagIsClosed) return completionItems;
 		let text = getPreviousText(this.document, this.position, true);
 		//let needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
@@ -635,46 +635,38 @@ export class AutoCompletes
 }
 
 
-/** Подсказки при вводе параметров функции */
-/*
-function helper()
+export function getSignatureHelpers(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>): server.SignatureInformation[]
 {
-	vscode.languages.registerSignatureHelpProvider('tib', {
-		provideSignatureHelp(document, position, token)
+	if (!tag || tag.GetLaguage() != Language.CSharp) return;
+	let sign: server.SignatureInformation[] = [];
+	let lastLine = getPreviousText(document, position, true);
+	//пропускаем объявления
+	if (Parse.isMethodDefinition(lastLine)) return;
+	let ar = tibAutoCompleteList.Item("Function").concat(tibAutoCompleteList.Item("Method"));
+	let mtch = lastLine.match(/((^)|(.*\b))(\w+)\([^\(\)]*$/);
+	if (!mtch || mtch.length < 4) return sign;
+	let reg = mtch[1].match(/(\w+)\.$/);
+	let parent = !!reg ? reg[1] : null;
+	ar = ar.filter(x => x.Name == mtch[4]);
+	ar.forEach(element =>
+	{
+		if (element.Kind == "Function" || !!parent && element.Parent == parent)
 		{
-			let tag = getCurrentTag(document, position);
-			if (!tag || tag.GetLaguage() != Language.CSharp) return;
-			let sign = new vscode.SignatureHelp();
-			let lastLine = getPreviousText(document, position, true);
-			//пропускаем объявления
-			if (Parse.isMethodDefinition(lastLine)) return;
-			let ar = TibAutoCompleteList.Item("Function").concat(TibAutoCompleteList.Item("Method"));
-			let mtch = lastLine.match(/((^)|(.*\b))(\w+)\([^\(\)]*$/);
-			if (!mtch || mtch.length < 4) return sign;
-			let reg = mtch[1].match(/(\w+)\.$/);
-			let parent = !!reg ? reg[1] : null;
-			ar.forEach(element =>
+			if (element.Overloads.length == 0) sign.push(element.ToSignatureInformation());
+			else element.Overloads.forEach(el =>
 			{
-				if (element.Name == mtch[4] && (element.Kind == vscode.CompletionItemKind[vscode.CompletionItemKind.Function] || !!parent && element.Parent == parent))
-				{
-					if (element.Overloads.length == 0) sign.signatures.push(element.ToSignatureInformation());
-					else element.Overloads.forEach(el =>
-					{
-						sign.signatures.push(el.ToSignatureInformation());
-					});
-				}
+				sign.push(el.ToSignatureInformation());
 			});
-			// Custom Methods
-			Methods.SignatureArray(mtch[4]).forEach(element =>
-			{
-				sign.signatures.push(element);
-			});
-			sign.activeSignature = 0;
-			return sign;
 		}
-	}, "(", ",");
+	});
+	// Custom Methods
+	surveyData.Methods.SignatureArray(mtch[4]).forEach(element =>
+	{
+		sign.push(element);
+	});
+	return sign;
 }
-*/
+
 
 
 /** подсказки при наведении */
@@ -713,22 +705,22 @@ function helper()
 				{
 					if (suit[i].Documentation && suit[i].Description)
 					{*/
-		//let doc = "/* " + suit[i].Description + " */\n" + suit[i].Documentation;
-		/*res.push({ language: "csharp", value: doc });
-		}
-		else
-		{
-		if (suit[i].Documentation) res.push({ language: "csharp", value: suit[i].Documentation });
-		if (suit[i].Description) res.push(suit[i].Description);
-		}
-		}
-		let customMethods = Methods.HoverArray(text);
-		if (customMethods) res = res.concat(customMethods);
-		if (res.length == 0) return;
-		return new vscode.Hover(res, range);
-		}
-		});
-	}
+//let doc = "/* " + suit[i].Description + " */\n" + suit[i].Documentation;
+/*res.push({ language: "csharp", value: doc });
+}
+else
+{
+if (suit[i].Documentation) res.push({ language: "csharp", value: suit[i].Documentation });
+if (suit[i].Description) res.push(suit[i].Description);
+}
+}
+let customMethods = Methods.HoverArray(text);
+if (customMethods) res = res.concat(customMethods);
+if (res.length == 0) return;
+return new vscode.Hover(res, range);
+}
+});
+}
 */
 
 
