@@ -1541,7 +1541,7 @@ export const Attributes = {
 		},
 		{
 			"Name": "MixId",
-			Result: "MixIds",
+			Result: "getAllMixIds",
 			"Type": "String"
 		},
 		{
@@ -1632,7 +1632,7 @@ export const Attributes = {
 			"Name": "Type",
 			"Default": "RadioButton",
 			"Type": "QuestionType",
-			Result: "getQuestionTypes()"
+			Result: "getQuestionTypes"
 		},
 		{
 			"Name": "SyncId",
@@ -1696,12 +1696,12 @@ export const Attributes = {
 		},
 		{
 			"Name": "UnionMixId",
-			Result: "MixIds",
+			Result: "getAllMixIds",
 			"Type": "String"
 		},
 		{
 			"Name": "MixId",
-			Result: "MixIds",
+			Result: "getAllMixIds",
 			"Type": "String"
 		},
 		{
@@ -2036,7 +2036,7 @@ export const Attributes = {
 		},
 		{
 			"Name": "MixId",
-			Result: "MixIds",
+			Result: "getAllMixIds",
 			"AllowCode": "true",
 			"Type": "String"
 		},
@@ -2082,7 +2082,7 @@ export const Attributes = {
 		},
 		{
 			"Name": "MixId",
-			Result: "MixIds",
+			Result: "getAllMixIds",
 			"Type": "String"
 		},
 		{
