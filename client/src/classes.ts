@@ -89,7 +89,7 @@ export function getContextChanges(document: vscode.TextDocument, selections: vsc
 			for (let i = 0; i < changes.length; i++)
 			{
 				//let afterChange = isBefore ?  changes[i].range.start : translatePosition(document, changes[i].range.start, changes[i].text.length);
-				let afterChange = isBefore ?  changes[i].range.start : document.positionAt(document.offsetAt(changes[i].range.start) + changes[i].text.length);
+				let afterChange = isBefore ? changes[i].range.start : document.positionAt(document.offsetAt(changes[i].range.start) + changes[i].text.length);
 				if (selection.active.character == afterChange.character &&
 					selection.active.line == afterChange.line)
 				{
@@ -809,4 +809,38 @@ export function openUrl(url: string): Promise<string>
 			reject();
 		});
 	});
+}
+
+
+export namespace ClientServerTransforms
+{
+
+	export namespace FromServer
+	{
+		export function Document(document: vscode.TextDocument): server.TextDocument
+		{
+			return server.TextDocument.create(document.uri.toString(), document.languageId, document.version, document.getText());
+		}
+
+		export function Selection(from: server.Position, to: server.Position): vscode.Selection
+		{
+			return new vscode.Selection(new vscode.Position(from.line, from.character), new vscode.Position(to.line, to.character))
+		}
+
+		export function Position(position: server.Position): vscode.Position
+		{
+			return new vscode.Position(position.line, position.character);
+		}
+
+		export function Range(range: server.Range): vscode.Range
+		{
+			return new vscode.Range(this.Position(range.start), this.Position(range.end));
+		}
+
+		export function Tag(tag: CurrentTag): CurrentTag
+		{
+			return new CurrentTag(tag.Name, tag.Parents); // потому что методы с сервера не приходят
+		}
+	}
+
 }
