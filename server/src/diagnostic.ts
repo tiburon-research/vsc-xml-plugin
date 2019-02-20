@@ -61,7 +61,7 @@ export async function getDiagnosticElements(document: server.TextDocument, Setti
 	let res: server.Diagnostic[] = [];
 	let stack = [];
 	let text = document.getText();
-	if (!!Settings.Item("ignoreComments")) text = clearXMLComments(text);
+	text = clearXMLComments(text);
 	text = clearCDATA(text);
 
 	for (const diagnosticType of _AllDiagnostics) 

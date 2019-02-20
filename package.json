@@ -215,11 +215,6 @@
     "configuration": {
       "title": "Tiburon XML Helper",
       "properties": {
-        "tib.ignoreComments": {
-          "description": "Игнорировать комментарии",
-          "type": "boolean",
-          "default": true
-        },
         "tib.demoPath": {
           "description": "Путь к скрипту демонстрационной анкеты",
           "type": "string",

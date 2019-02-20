@@ -1554,7 +1554,7 @@ export function getDocumentMethodsSync(document: server.TextDocument, Settings: 
 {
 	let res = new TibMethods();
 	let text = document.getText();
-	if (Settings.Item("ignoreComments")) text = Encoding.clearXMLComments(text);
+	text = Encoding.clearXMLComments(text);
 	let mtd = text.matchAll(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
 	if (mtd.length == 0)
 	{
@@ -1573,7 +1573,7 @@ export function getDocumentMethodsSync(document: server.TextDocument, Settings: 
 	mtd.forEach(element =>
 	{
 		let str = element[3];
-		if (Settings.Item("ignoreComments")) str = Encoding.clearCSComments(str);
+		str = Encoding.clearCSComments(str);
 		let m = str.matchAll(reg);
 		m.forEach(met => 
 		{
@@ -1607,7 +1607,7 @@ export function getDocumentNodeIdsSync(document: server.TextDocument, Settings: 
 {
 	let nNames = NodeStoreNames;
 	let txt = document.getText();
-	if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
+	txt = Encoding.clearXMLComments(txt);
 	let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')");
 	let idIndex = nNames.length + 3;
 	let nodes = new SurveyNodes();
@@ -1644,7 +1644,7 @@ export function getMixIdsSync(document: server.TextDocument, Settings: KeyedColl
 {
 	let res: string[] = [];
 	let txt = document.getText();
-	if (Settings.Item("ignoreComments")) txt = Encoding.clearXMLComments(txt);
+	txt = Encoding.clearXMLComments(txt);
 	let matches = txt.matchAll(/MixId=('|")((?!:)(\w+))(\1)/);
 	let matchesStore = txt.matchAll(/<Question[^>]+Store=('|")(\w+?)(\1)[^>]*>/);
 	let mixIdsStore: string[] = [];
