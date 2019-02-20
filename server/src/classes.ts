@@ -426,13 +426,13 @@ export class TibAutoCompletes
 			let nameOnly = !!textAfter.match(/^=["']/);
 			let nexAttrs: string[] = [];
 			if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
-			let patent = this;
+			let parent = this;
 			AutoCompleteArray.Attributes[this.tag.Id].filter((x: { Name: string; }) => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach((element: Object) =>
 			{
 				let attr = new TibAttribute(element);
 				let ci = attr.ToCompletionItem(function (query)
 				{
-					return patent.extractor[query]();
+					return parent.extractor[query]();
 				}, nameOnly);
 				completionItems.push(ci);
 			});
