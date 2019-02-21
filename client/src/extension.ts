@@ -985,8 +985,7 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 /** Обработка `CurrentTag`, приехавшего с сервера */
 function tagFromServerTag(tag: CurrentTag): CurrentTag
 {
-	let newTag = new CurrentTag(tag.Name, tag.Parents); // потому что методы с сервера не приходят
-	Object.assign(tag, tag);
+	let newTag = ClientServerTransforms.FromServer.Tag(tag);
 	if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(newTag);
 	return newTag;
 }

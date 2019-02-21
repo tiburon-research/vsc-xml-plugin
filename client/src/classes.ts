@@ -805,26 +805,31 @@ export namespace ClientServerTransforms
 	{
 		export function Document(document: vscode.TextDocument): server.TextDocument
 		{
+			if (!document) return null;
 			return server.TextDocument.create(document.uri.toString(), document.languageId, document.version, document.getText());
 		}
 
 		export function Selection(from: server.Position, to: server.Position): vscode.Selection
 		{
+			if (!from || !to) return null;
 			return new vscode.Selection(new vscode.Position(from.line, from.character), new vscode.Position(to.line, to.character))
 		}
 
 		export function Position(position: server.Position): vscode.Position
 		{
+			if (!position) return null;
 			return new vscode.Position(position.line, position.character);
 		}
 
 		export function Range(range: server.Range): vscode.Range
 		{
+			if (!range) return null;
 			return new vscode.Range(this.Position(range.start), this.Position(range.end));
 		}
 
 		export function Tag(tag: CurrentTag): CurrentTag
 		{
+			if (!tag) return null;
 			return new CurrentTag(tag.Name, tag.Parents); // потому что методы с сервера не приходят
 		}
 	}
@@ -834,6 +839,7 @@ export namespace ClientServerTransforms
 	{
 		export function Document(document: vscode.TextDocument): IServerDocument
 		{
+			if (!document) return null;
 			return {
 				uri: document.uri.toString(),
 				version: document.version,
