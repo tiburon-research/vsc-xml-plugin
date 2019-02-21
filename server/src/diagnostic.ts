@@ -112,7 +112,7 @@ async function getWrongXML(document: server.TextDocument, prepearedText: string)
 {
 	let res: DocumentElement[] = [];
 	res = res.concat(await getDocumentElements(document, /(&(?!(lt|gt|amp|quot|apos))(\w*);?)+/, "Такое надо прикрывать посредством CDATA", prepearedText)); // &
-	res = res.concat(await getDocumentElements(document, /<((?![?\/!]|\w)(.*))/, "Тут, вроде CDATA надо", prepearedText)); // <
+	res = res.concat(await getDocumentElements(document, /<((?![?\/!]|\w)(.*))/, "Тут, вроде, CDATA надо", prepearedText)); // <
 	return res;
 }
 
@@ -171,7 +171,7 @@ async function dangerousConstandIds(document: server.TextDocument, prepearedText
 						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length;
 						let wrongItem = new DocumentElement(document, {
 							Value: ["_"],
-							Message: "Константы с '_' не распознаются в расширении как константы ¯\\_(ツ)_/¯",
+							Message: "Константы с '_' не распознаются в расширении как константы",
 							From: from,
 							To: from + item[itemIdGroup].length,
 							DiagnosticProperties:

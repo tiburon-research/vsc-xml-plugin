@@ -1,7 +1,7 @@
 'use strict'
 
 import { SurveyElementType, SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage } from './surveyObjects';
-import { OrderedCollection, Parse } from 'tib-api'
+import { OrderedCollection, Parse, safeString } from 'tib-api'
 import * as vscode from 'vscode'
 import { QuestionTypes } from 'tib-api/lib/constants';
 import { init as initJQuery } from 'tib-api/lib/tibJQuery';
@@ -92,14 +92,13 @@ export function RemoveQuestionIds(text: string): string
 
 	$question.map(function ()
 	{
-
-		let $questionHeader = $(this).find("Header");
-		let $headerText = $questionHeader.text();
-		let $qIDValue = $(this).attr('Id');
-
-		$qIDValue = $headerText.match($qIDValue + "\\.? ?");
-		$headerText = $questionHeader.text().replace($qIDValue, "");
-		$questionHeader.text($headerText);
+		let questionHeader = $(this).find("Header");
+		let headerText = questionHeader.text();
+		let qIDValue = $(this).attr('Id');
+		let regex = new RegExp("^\\s*" + safeString(qIDValue) + "\\.?\\s*");
+		qIDValue = headerText.match(regex);
+		headerText = questionHeader.text().replace(qIDValue, "");
+		questionHeader.text(headerText);
 	});
 
 	return $dom.xml();
