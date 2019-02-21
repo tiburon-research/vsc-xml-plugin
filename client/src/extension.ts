@@ -161,7 +161,7 @@ export function activate(context: vscode.ExtensionContext)
 		{
 			originalPosition = editor.selection.active;
 		}
-		
+
 		let text = getPreviousText(serverDocument, originalPosition);
 
 		let changeData: OnDidChangeDocumentData = {
@@ -1155,15 +1155,20 @@ function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text:
 
 
 /** Замена (вставка) элементов из `lines` в соответствующие выделения `selections` */
-async function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[], callback?: Function): Promise<void>
+function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[], callback?: Function): Promise<void>
 {
-	let i = 0;
-	await selections.forEachAsync(element =>
+	return new Promise<void>((resolve, reject) =>
 	{
-		i++;
-		return pasteText(editor, element, lines[i]);
+		selections.forEachAsync((element, i) =>
+		{
+			let txt = lines[i];
+			return pasteText(editor, element, txt);
+		}).then(() =>
+		{
+			if (!!callback) callback();
+			resolve();
+		}, er => { reject(er) });
 	});
-	if (!!callback) callback();
 }
 
 

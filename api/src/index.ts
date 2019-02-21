@@ -1731,7 +1731,7 @@ declare global
 		/** Преjбразует массив в коллекцию T */
 		toKeyedCollection(func: (x: T) => Object): KeyedCollection<any>
 		/** Асинхронный forEach */
-		forEachAsync<R>(func: (x: T) => Promise<R>): Promise<R[]>
+		forEachAsync<R>(func: (x: T, i?: number) => Promise<R>): Promise<R[]>
 	}
 
 }
@@ -1860,11 +1860,13 @@ Array.prototype.toKeyedCollection = function <T>(func: (x: T) => Object): KeyedC
 }
 
 
-Array.prototype.forEachAsync = function <T, R>(func: (x: T) => Promise<R>): Promise<R[]>
+Array.prototype.forEachAsync = function <T, R>(func: (x: T, i?: number) => Promise<R>): Promise<R[]>
 {
 	let promises: Promise<R>[] = [];
+	let index = 0;
 	this.forEach(element => {
-		promises.push(func(element));
+		promises.push(func(element, index));
+		index++;
 	});
 	return Promise.all(promises);
 }
