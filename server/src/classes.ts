@@ -882,11 +882,11 @@ export class TibDocumentHighLights
 
 
 /** Переход к определению */
-export function getCSDefinitions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData): server.Location
+export function getDefinitions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData): server.Location
 {
 	let res: server.Location;
-
-	let word = document.getText(getWordRangeAtPosition(document, position));
+	let range = getWordRangeAtPosition(document, position);
+	let word = document.getText(range);
 	if (!tag) return res;
 
 	if (tag.GetLaguage() == Language.CSharp && !tag.InCSString()) // C#

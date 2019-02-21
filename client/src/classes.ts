@@ -9,7 +9,7 @@ import * as winattr from 'winattr'
 import { machineIdSync } from "node-machine-id"
 import { bot, _LogPath, OutChannel, } from './extension'
 import { _LockInfoFilePrefix } from 'tib-api/lib/constants'
-import { CurrentTag, Language, KeyedCollection, Parse, pathExists, createDir } from 'tib-api';
+import { CurrentTag, Language, KeyedCollection, Parse, pathExists, createDir, IServerDocument } from 'tib-api';
 
 
 
@@ -826,6 +826,19 @@ export namespace ClientServerTransforms
 		export function Tag(tag: CurrentTag): CurrentTag
 		{
 			return new CurrentTag(tag.Name, tag.Parents); // потому что методы с сервера не приходят
+		}
+	}
+
+
+	export namespace ToServer
+	{
+		export function Document(document: vscode.TextDocument): IServerDocument
+		{
+			return {
+				uri: document.uri.toString(),
+				version: document.version,
+				content: document.getText()
+			}
 		}
 	}
 

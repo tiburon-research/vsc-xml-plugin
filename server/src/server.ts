@@ -2,7 +2,7 @@
 
 import * as server from 'vscode-languageserver';
 import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, getDocumentMethods, getDocumentNodeIds, getMixIds } from 'tib-api';
-import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyData, DocumentBuffer, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getCSDefinitions, getIncludePaths } from './classes';
+import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyData, DocumentBuffer, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinitions, getIncludePaths } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { CacheSet } from 'tib-api/lib/cache';
 import { _NodeStoreNames } from 'tib-api/lib/constants';
@@ -86,6 +86,8 @@ connection.onCompletion(context =>
 	let document = documents.get(context.textDocument.uri);
 	let tag = Cache.Tag.Get();
 	let items = getCompletions(tag, document, context.position, SurveyData, TibAutoCompleteList, Settings, ClassTypes, context.context.triggerCharacter);
+	// костыль для понимания в каком документе произошло onCompletionResolve
+	items = items.map(x => Object.assign(x, { data: document.uri })); 
 	return items;
 })
 
@@ -136,7 +138,7 @@ connection.onDefinition(data =>
 		position: data.position,
 		force: false
 	});
-	return getCSDefinitions(tag, document, data.position, SurveyData);
+	return getDefinitions(tag, document, data.position, SurveyData);
 })
 
 connection.onRequest('onDidChangeTextDocument', (data: OnDidChangeDocumentData) =>
@@ -306,7 +308,7 @@ async function updateSurveyData(document: server.TextDocument)
 }
 
 
-/** Если файла нет в `documents`, то запрашивает у клиента данные для файла */
+/** Если файла нет в `documents`, то запрашивает у клиента данные для файла и добавляет в `documents` */
 function getDocument(uri: string): Promise<server.TextDocument>
 {
 	return new Promise<server.TextDocument>((resolve, reject) =>

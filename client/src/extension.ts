@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 
 import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument } from "tib-api";
 
-import { openFileText, getContextChanges, inCDATA, registerCommand, ContextChange, ExtensionSettings, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId } from "./classes";
+import { openFileText, getContextChanges, inCDATA, registerCommand, ContextChange, ExtensionSettings, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, ClientServerTransforms } from "./classes";
 
 import * as Formatting from './formatting'
 import * as fs from 'fs';
@@ -137,7 +137,9 @@ export function activate(context: vscode.ExtensionContext)
 
 		// преобразования текста
 		if (!event || !event.contentChanges.length) return;
-		let serverDocument = createServerDocument(event.document);
+
+		let documentData = ClientServerTransforms.ToServer.Document(event.document);
+		let serverDocument = createServerDocument(documentData);
 
 		let changes: ContextChange[];
 		try
@@ -148,17 +150,23 @@ export function activate(context: vscode.ExtensionContext)
 			logError(error);
 		}
 
-		if (!changes || changes.length == 0) return;
-
-		let mainChange = changes.find(x => x.Active == editor.selection.active);
-		let originalPositionServer = translatePosition(serverDocument, mainChange.Start, mainChange.Change.text.length);
-		let originalPosition = new vscode.Position(originalPositionServer.line, originalPositionServer.character);
-		//let originalPosition = editor.selection.active;
-		let text = event.document.getText(new vscode.Range(new vscode.Position(0, 0), originalPosition));
+		let originalPosition: vscode.Position;
+		if (!!changes && changes.length > 0)
+		{
+			let mainChange = changes.find(x => x.Active == editor.selection.active);
+			let originalPositionServer = translatePosition(serverDocument, mainChange.Start, mainChange.Change.text.length);
+			originalPosition = new vscode.Position(originalPositionServer.line, originalPositionServer.character);
+		}
+		else // это случается при удалении или замене (в т.ч. Snippet) 
+		{
+			originalPosition = editor.selection.active;
+		}
+		
+		let text = getPreviousText(serverDocument, originalPosition);
 
 		let changeData: OnDidChangeDocumentData = {
-			document: { content: event.document.getText(), uri: event.document.uri.toString(), version: event.document.version },
-			contentChanges: event.contentChanges,
+			document: documentData,
+			//contentChanges: event.contentChanges,
 			currentPosition: originalPosition,
 			previousText: text
 		};
@@ -766,7 +774,7 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 {
 	let res: Thenable<any>[] = [];
 
-	if (!data.tag || !data.editor) return res;
+	if (!data.tag || !data.editor || !data.changes || data.changes.length == 0) return res;
 	let fullText = data.editor.document.getText();
 
 	// сохраняем начальное положение
@@ -823,7 +831,7 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
 {
 	let res: Thenable<any>[] = [];
-	if (!data.tag || !data.editor) return res;
+	if (!data.tag || !data.editor || !data.changes || data.changes.length == 0) return res;
 
 	let change = data.changes[0].Change.text;
 	let positions = data.editor.selections.map(x => new vscode.Position(x.active.line, x.active.character + 1));
@@ -882,7 +890,7 @@ function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 {
 	let res: Thenable<any>[] = [];
 	// если хоть одна позиция такова, то нафиг
-	if (!data.tag || !Settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return res;
+	if (!data.tag || !data.changes || data.changes.length == 0 || !Settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return res;
 	let tagRegex = /(<\/?)(\w+)$/;
 	let nullPosition = new vscode.Position(0, 0);
 	try
@@ -1456,12 +1464,7 @@ async function createClientConnection(context: vscode.ExtensionContext)
 			{
 				vscode.workspace.openTextDocument(vscode.Uri.parse(uri)).then(doc =>
 				{
-					let data: IServerDocument = {
-						uri: doc.uri.toString(),
-						version: doc.version,
-						content: doc.getText()
-					}
-					resolve(data);
+					resolve(ClientServerTransforms.ToServer.Document(doc));
 				}, err => { reject(err) });
 			});
 		})
@@ -1479,11 +1482,13 @@ async function createRequest<T, R>(name: string, data: T): Promise<R>
 
 
 
+function createServerDocument(document: vscode.TextDocument): server.TextDocument;
+function createServerDocument(data: IServerDocument): server.TextDocument;
 
-
-function createServerDocument(document: vscode.TextDocument): server.TextDocument
+function createServerDocument(document: vscode.TextDocument | IServerDocument): server.TextDocument
 {
-	return server.TextDocument.create(document.uri.toString(), document.languageId, document.version, document.getText());
+	let text: string = !document['getText'] ? document['content'] : document['getText']();
+	return server.TextDocument.create(document.uri.toString(), 'tib', document.version, text);
 }
 
 function createSelection(from: server.Position, to: server.Position): vscode.Selection

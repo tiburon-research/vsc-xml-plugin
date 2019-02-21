@@ -40,7 +40,7 @@ export interface IServerDocument
 export interface OnDidChangeDocumentData
 {
 	document: IServerDocument;
-	contentChanges: server.TextDocumentContentChangeEvent[];
+	//contentChanges: server.TextDocumentContentChangeEvent[];
 	currentPosition?: server.Position;
 	previousText?: string;
 }
