@@ -1,11 +1,10 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, comparePositions, IServerDocument, TibAttribute, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition, applyConstants } from 'tib-api';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, comparePositions, IServerDocument, TibAttribute, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition, applyConstants, Encoding, pathExists, uriFromName } from 'tib-api';
 import { getDiagnosticElements } from './diagnostic';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
-import Uri from 'vscode-uri'
 
 
 
@@ -22,7 +21,7 @@ export function sendDiagnostic(connection: server.Connection, document: server.T
 }
 
 
-export function getCompletions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, settings: KeyedCollection<any>, classTypes: string[], char: string)
+export function getCompletions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, settings: KeyedCollection<any>, classTypes: string[], char: string)
 {
 	let TibAC = new TibAutoCompletes(tag, document, position, surveyData, tibAutoCompleteList, settings, classTypes, char);
 	return TibAC.getAll();
@@ -168,7 +167,7 @@ export class ServerDocumentStore
 		return buffer.document;
 	}
 
-	/** Добавляет документ в коллекцию */
+	/** Добавляет или заменяет документ в коллекцию */
 	public add(data: IServerDocument): server.TextDocument
 	{
 		let buffer = new DocumentBuffer(data);
@@ -196,7 +195,7 @@ export class ServerDocumentStore
 
 //#region --------------------------- функции для получения элементов
 
-export interface ISurveyDataData
+export interface ISurveyData
 {
 	/** Список методов */
 	Methods: TibMethods;
@@ -204,13 +203,15 @@ export interface ISurveyDataData
 	CurrentNodes: SurveyNodes;
 	/** Список MixId (подставляется в значениях атрибутов) */
 	MixIds: string[];
+	/** Список путей Include */
+	Includes: string[]
 }
 
 /** Класс для работы с {{Elements}} в строках */
 class ElementExtractor
 {
 
-	constructor(data: ISurveyDataData)
+	constructor(data: ISurveyData)
 	{
 		this.Data = data;
 	}
@@ -274,7 +275,7 @@ class ElementExtractor
 	}
 
 
-	private Data: ISurveyDataData;
+	private Data: ISurveyData;
 }
 
 
@@ -292,7 +293,7 @@ export class TibAutoCompletes
 	private tag: CurrentTag;
 	private document: server.TextDocument;
 	private position: server.Position;
-	private surveyData: ISurveyDataData;
+	private surveyData: ISurveyData;
 	private char: string;
 	private tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>;
 	private settings: KeyedCollection<any>;
@@ -300,7 +301,7 @@ export class TibAutoCompletes
 	private extractor: ElementExtractor;
 
 
-	constructor(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, settings: KeyedCollection<any>, classTypes: string[], char: string)
+	constructor(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, settings: KeyedCollection<any>, classTypes: string[], char: string)
 	{
 		this.tag = tag;
 		this.document = document;
@@ -639,7 +640,7 @@ export class TibAutoCompletes
 
 
 /** Подсказки при вводе */
-export function getSignatureHelpers(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>): server.SignatureInformation[]
+export function getSignatureHelpers(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>): server.SignatureInformation[]
 {
 	let sign: server.SignatureInformation[] = [];
 	if (!tag || tag.GetLaguage() != Language.CSharp) return sign;
@@ -679,7 +680,7 @@ export interface LanguageString
 };
 
 /** Подсказки при наведении */
-export function getHovers(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData, codeAutoCompleteArray: TibAutoCompleteItem[]): LanguageString[]
+export function getHovers(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData, codeAutoCompleteArray: TibAutoCompleteItem[]): LanguageString[]
 {
 	let res: LanguageString[] = [];
 	let text = getWordAtPosition(document, position);
@@ -881,7 +882,7 @@ export class TibDocumentHighLights
 
 
 /** Переход к определению */
-export function getCSDefinitions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyDataData): server.Location
+export function getCSDefinitions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData): server.Location
 {
 	let res: server.Location;
 
@@ -902,7 +903,7 @@ export function getCSDefinitions(tag: CurrentTag, document: server.TextDocument,
 			{
 				fileName = applyConstants(fileName);
 				let nullPosition = server.Position.create(0, 0);
-				res = server.Location.create(Uri.file(fileName).toString(), server.Range.create(nullPosition, nullPosition));	
+				res = server.Location.create(uriFromName(fileName), server.Range.create(nullPosition, nullPosition));	
 			}
 		}
 
@@ -960,4 +961,13 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 		//logError("Ошибка выделения открывающегося тега", error);
 	}
 	return null;
+}
+
+/** Получает URI ко всем <Include> */
+export function getIncludePaths(text: string): string[]
+{
+	let reg = /<Include[\s\S]*?FileName=(("[^"]+")|('[^']+'))/;
+	let txt = text;
+	txt = Encoding.clearXMLComments(txt);
+	return txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x)).map(x => uriFromName(x));
 }

@@ -7,6 +7,8 @@ import * as clipboard from "clipboardy"
 import * as Constants from './constants'
 import * as JQuery from './tibJQuery'
 import { CacheSet } from './cache'
+import * as fs from 'fs'
+import Uri from 'vscode-uri'
 
 
 export { Encoding, Parse, Constants, JQuery };
@@ -1659,6 +1661,26 @@ export function getMixIdsSync(document: server.TextDocument, Settings: KeyedColl
 	return res.distinct();
 }
 
+
+/** проверяет наличие файла/папки */
+export function pathExists(path: string): boolean
+{
+	return fs.existsSync(path);
+}
+
+
+/** создаёт папку */
+export function createDir(path: string)
+{
+	fs.mkdirSync(path);
+}
+
+
+/** Преобразует путь в URI */
+export function uriFromName(path: string): string
+{
+	return Uri.file(path).toString()
+}
 
 //#endregion
 

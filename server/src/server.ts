@@ -1,8 +1,8 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData } from 'tib-api';
-import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyDataData, DocumentBuffer, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getCSDefinitions } from './classes';
+import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, getDocumentMethods, getDocumentNodeIds, getMixIds } from 'tib-api';
+import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyData, DocumentBuffer, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getCSDefinitions, getIncludePaths } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { CacheSet } from 'tib-api/lib/cache';
 import { _NodeStoreNames } from 'tib-api/lib/constants';
@@ -23,10 +23,11 @@ var CodeAutoCompleteArray: TibAutoCompleteItem[] = [];
 
 var Cache = new CacheSet(() => true, getServerTag);
 
-var SurveyData: ISurveyDataData = {
+var SurveyData: ISurveyData = {
 	CurrentNodes: new SurveyNodes(),
 	Methods: new TibMethods(),
-	MixIds: []
+	MixIds: [],
+	Includes: []
 }
 
 
@@ -157,10 +158,12 @@ connection.onRequest('onDidChangeTextDocument', (data: OnDidChangeDocumentData) 
 
 connection.onRequest('currentTag', (fields: IProtocolTagFields) =>
 {
-	return new Promise<CurrentTag>((resolve, reject) => {
+	return new Promise<CurrentTag>((resolve, reject) =>
+	{
 		resolve(getServerTag(new ProtocolTagFields(fields).toCurrentTagGetFields(documents.get(fields.uri))))
 	});
 })
+
 
 
 //#region --------------------------- Функции
@@ -182,12 +185,7 @@ export function consoleLog(...data)
 /** Дёргаем при изменении или открытии */
 function anyChangeHandler(document: server.TextDocument)
 {
-	SurveyData =
-		{
-			CurrentNodes: getDocumentNodeIdsSync(document, Settings, _NodeStoreNames),
-			Methods: getDocumentMethodsSync(document, Settings),
-			MixIds: getMixIdsSync(document, Settings)
-		};
+	updateSurveyData(document);
 	sendDiagnostic(connection, document, Settings);
 }
 
@@ -260,6 +258,65 @@ async function getAutoComleteList()
 				TibAutoCompleteList.Item(item.Kind)[ind].Documentation = doc;
 			}
 		}
+	});
+}
+
+
+/** Собирает данные из текущего документа и Includ'ов */
+async function updateSurveyData(document: server.TextDocument)
+{
+	let docs = [document.uri];
+	let includes = getIncludePaths(document.getText());
+	let methods = new TibMethods();
+	let nodes = new SurveyNodes();
+	let mixIds: string[] = [];
+
+	// если Include поменялись, то обновляем все
+	if (!SurveyData.Includes || !SurveyData.Includes.equalsTo(includes))
+	{
+		docs = docs.concat(includes);
+		SurveyData.Includes = includes;
+	}
+	else // иначе обновляем только текущий документ
+	{
+		methods = SurveyData.Methods.Filter((name, element) => element.FileName != document.uri);
+		nodes = SurveyData.CurrentNodes.FilterNodes((node) => node.FileName != document.uri);
+	}
+
+	try
+	{
+		for (let i = 0; i < docs.length; i++) 
+		{
+			// либо этот, либо надо открыть
+			let doc = docs[i] == document.uri ? document : await getDocument(docs[i]);
+			let mets = await getDocumentMethods(doc, Settings);
+			let nods = await getDocumentNodeIds(doc, Settings, _NodeStoreNames);
+			let mixs = await getMixIds(doc, Settings);
+			methods.AddRange(mets);
+			nodes.AddRange(nods);
+			mixIds = mixIds.concat(mixs);
+		}
+		SurveyData.Methods = methods;
+		SurveyData.CurrentNodes = nodes;
+		SurveyData.MixIds = mixIds;
+	} catch (error)
+	{
+		//logError("Ошибка при сборе сведений о документе", error);
+	}
+}
+
+
+/** Если файла нет в `documents`, то запрашивает у клиента данные для файла */
+function getDocument(uri: string): Promise<server.TextDocument>
+{
+	return new Promise<server.TextDocument>((resolve, reject) =>
+	{
+		let document = documents.get(uri);
+		if (!!document) return resolve(document);
+		connection.sendRequest<IServerDocument>('getDocument', uri).then(doc =>
+		{
+			resolve(documents.add(doc));
+		}, err => { reject(err); });
 	});
 }
 

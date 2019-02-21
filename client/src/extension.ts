@@ -3,9 +3,9 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData as OnDidChangeDocumentData } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument } from "tib-api";
 
-import { openFileText, getContextChanges, inCDATA, registerCommand, ContextChange, ExtensionSettings, pathExists, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId } from "./classes";
+import { openFileText, getContextChanges, inCDATA, registerCommand, ContextChange, ExtensionSettings, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId } from "./classes";
 
 import * as Formatting from './formatting'
 import * as fs from 'fs';
@@ -930,50 +930,6 @@ function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 //#region
 
 
-/** Собирает данные из текущего документа и Includ'ов */
-/* async function getSurveyData(document: vscode.TextDocument): Promise<void>
-{
-	let docs = [document.fileName];
-	let includes = getIncludePaths(document.getText());
-	let methods = new TibMethods();
-	let nodes = new SurveyNodes();
-	let mixIds: string[] = [];
-	// если Include поменялись, то обновляем все
-	if (!Includes || !Includes.equalsTo(includes))
-	{
-		docs = docs.concat(includes);
-		Includes = includes;
-	}
-	else // иначе обновляем только текущий документ
-	{
-		methods = Methods.Filter((name, element) => element.FileName != document.fileName);
-		nodes = CurrentNodes.FilterNodes((node) => node.FileName != document.fileName);
-	}
-
-	try
-	{
-		for (let i = 0; i < docs.length; i++) 
-		{
-			// либо этот, либо надо открыть
-			let doc = docs[i] == document.fileName ? document : await vscode.workspace.openTextDocument(docs[i])
-			let mets = await getDocumentMethods(doc, Settings);
-			let nods = await getDocumentNodeIds(doc, Settings, _NodeStoreNames);
-			let mixs = await getMixIds(doc, Settings);
-			methods.AddRange(mets);
-			nodes.AddRange(nods);
-			mixIds = mixIds.concat(mixs);
-		}
-		Methods = methods;
-		CurrentNodes = nodes;
-		MixIds = mixIds;
-	} catch (error)
-	{
-		logError("Ошибка при сборе сведений о документе", error);
-	}
-} */
-
-
-
 
 /** Возвращает `null`, если тег не закрыт или SelfClosed */
 function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
@@ -1493,13 +1449,23 @@ async function createClientConnection(context: vscode.ExtensionContext)
 
 		ClientIsReady = true;
 
-		/* _client.onNotification("currentTag", (data: CurrentTag) =>
+		// запрос документа с ссервера
+		_client.onRequest('getDocument', (uri: string) =>
 		{
-			if (!data) return;
-			let tag = new CurrentTag(data.Name, data.Parents);
-			Object.assign(tag, data);
-			if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(tag);
-		}); */
+			return new Promise<IServerDocument>((resolve, reject) =>
+			{
+				vscode.workspace.openTextDocument(vscode.Uri.parse(uri)).then(doc =>
+				{
+					let data: IServerDocument = {
+						uri: doc.uri.toString(),
+						version: doc.version,
+						content: doc.getText()
+					}
+					resolve(data);
+				}, err => { reject(err) });
+			});
+		})
+
 
 	});
 }

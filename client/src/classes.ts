@@ -9,7 +9,7 @@ import * as winattr from 'winattr'
 import { machineIdSync } from "node-machine-id"
 import { bot, _LogPath, OutChannel, } from './extension'
 import { _LockInfoFilePrefix } from 'tib-api/lib/constants'
-import { CurrentTag, Language, KeyedCollection, Parse, translatePosition } from 'tib-api';
+import { CurrentTag, Language, KeyedCollection, Parse, pathExists, createDir } from 'tib-api';
 
 
 
@@ -241,20 +241,6 @@ export class StatusBar
 			setTimeout(x => { resolve(res) }, 100);
 		});
 	}
-}
-
-
-/** проверяет наличие файла/папки */
-export function pathExists(path: string): boolean
-{
-	return fs.existsSync(path);
-}
-
-
-/** создаёт папку */
-export function createDir(path: string)
-{
-	fs.mkdirSync(path);
 }
 
 
