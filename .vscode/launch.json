@@ -13,17 +13,14 @@
             "outFiles": [ 
                 "${workspaceRoot}/api/lib/*.js",
                 "${workspaceRoot}/client/out/*.js"
-            ],
-            "preLaunchTask": "npm: watch"
+            ]
         },
         {
 			"type": "node",
 			"request": "attach",
 			"name": "Attach to Server",
 			"port": 6009,
-            "restart": true,
 			"outFiles": [
-                "${workspaceRoot}/api/lib/*.js",
                 "${workspaceRoot}/server/out/*.js"
             ]
 		},
