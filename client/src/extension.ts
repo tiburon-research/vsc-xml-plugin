@@ -959,8 +959,6 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 }
 
 
-
-
 /** getCurrentTag для debug (без try-catch) */
 function __getCurrentTag(document: vscode.TextDocument, position: vscode.Position, text?: string, force = false): Promise<CurrentTag>
 {
@@ -1010,7 +1008,6 @@ export async function getCurrentTag(document: vscode.TextDocument, position: vsc
 }
 
 
-
 function getCurrentLineText(document: vscode.TextDocument, position: vscode.Position): string
 {
 	try
@@ -1026,7 +1023,6 @@ function getCurrentLineText(document: vscode.TextDocument, position: vscode.Posi
 	}
 
 }
-
 
 
 /** Range всего документа */
@@ -1274,7 +1270,6 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 
 
 
-
 /** Проверки документа */
 function checkDocument(editor: vscode.TextEditor)
 {
@@ -1395,8 +1390,6 @@ function getFilePathForMessage(path: string)
 }
 
 
-
-
 async function createElements(elementType: SurveyElementType)
 {
 	let editor = vscode.window.activeTextEditor;
@@ -1480,7 +1473,6 @@ async function createRequest<T, R>(name: string, data: T): Promise<R>
 }
 
 
-
 function createServerDocument(document: vscode.TextDocument): server.TextDocument;
 function createServerDocument(data: IServerDocument): server.TextDocument;
 
@@ -1494,7 +1486,6 @@ function createSelection(from: server.Position, to: server.Position): vscode.Sel
 {
 	return new vscode.Selection(new vscode.Position(from.line, from.character), new vscode.Position(to.line, to.character))
 }
-
 
 
 interface CodeActionCallback
@@ -1535,8 +1526,6 @@ function createCodeAction(actionTitle: string, commandName: string, argumentInvo
 		}
 	});
 }
-
-
 
 
 /** Создаёт команды + CodeActions */

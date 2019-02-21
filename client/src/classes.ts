@@ -830,7 +830,9 @@ export namespace ClientServerTransforms
 		export function Tag(tag: CurrentTag): CurrentTag
 		{
 			if (!tag) return null;
-			return new CurrentTag(tag.Name, tag.Parents); // потому что методы с сервера не приходят
+			let newTag = new CurrentTag(tag.Name, tag.Parents); // потому что методы с сервера не приходят
+			Object.assign(newTag, tag);
+			return newTag;
 		}
 	}
 
