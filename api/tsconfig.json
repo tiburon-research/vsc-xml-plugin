@@ -4,6 +4,7 @@
 		"target": "es6",
 		"declaration": true,
 		"rootDir": "src",
+		"sourceMap": true,
 		"outDir": "lib",
 		"composite": true,
 		"declarationMap": true
