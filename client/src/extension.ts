@@ -1150,27 +1150,15 @@ function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text:
 }
 
 
-/**
- * Вставляет Snippet
- * @param selection выделение в котором заменить текст (или позиция куда вставить)
- * */
-function insertSnippet(editor: vscode.TextEditor, selection: vscode.Selection, snip: vscode.SnippetString): Thenable<boolean>
-{
-	return editor.insertSnippet(snip, selection, { undoStopAfter: false, undoStopBefore: false });
-}
-
-
 /** Замена (вставка) элементов из `lines` в соответствующие выделения `selections` */
-async function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[] | vscode.SnippetString[]): Promise<void>
+async function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[]): Promise<void>
 {
 	if (selections.length != lines.length) throw 'Количесво выделенных областей не совпадает с количеством вставляемых строк';
 
 	/** функция для рекурсивной вставки */
-	async function pasteLines(selections: vscode.Selection[], lines: any[])
+	async function pasteLines(selections: vscode.Selection[], lines: string[])
 	{
-		// вытаскиваем первый элемент
-		if (typeof lines[0] == 'string') await pasteText(editor, selections.shift(), lines.shift());
-		else await insertSnippet(editor, selections.shift(), lines.shift());
+		await pasteText(editor, selections.pop(), lines.pop());
 		if (selections.length > 0) await pasteLines(selections, lines);
 	};
 
@@ -1411,38 +1399,17 @@ function getFilePathForMessage(path: string)
 
 async function createElements(elementType: SurveyElementType)
 {
-	InProcess = true;
 	let editor = vscode.window.activeTextEditor;
-	let tag = await getCurrentTag(editor.document, editor.selection.active); // как обычно, берём только первый tag
-	let indent = !!tag ? tag.GetIndent() : 1;
+	let text = editor.document.getText(editor.selection);
+	let res = TibDocumentEdits.createElements(text, elementType);
 
-	let oldSelections = editor.selections;
-	
-	editor.selections.forEachAsync(sel =>
+	InProcess = true;
+	let tag = await getCurrentTag(editor.document, editor.selection.active);
+	let indent = !!tag ? tag.GetIndent() : 1;
+	Formatting.format(res.value, Language.XML, Settings, "\t", indent).then(x =>
 	{
-		return new Promise<vscode.SnippetString>((resolve, reject) =>
-		{
-			let text = editor.document.getText(sel);
-			let res = TibDocumentEdits.createElements(text, elementType);
-			Formatting.format(res.value, Language.XML, Settings, "\t", indent).then(x =>
-			{
-				res.value = x;
-				resolve(res);
-			});
-		});
-	}).then((data) =>
-	{
-		multiPaste(editor, editor.selections, data).then(() =>
-		{
-			editor.selections =oldSelections.map((sel, i) =>
-			{
-				// ставим курсор в конец
-				let end = editor.document.offsetAt(sel.start) + data[i].value.length;
-				let endpos = editor.document.positionAt(end);
-				return new vscode.Selection(endpos, endpos);
-			});
-			InProcess = false;	
-		})
+		res.value = x;
+		vscode.window.activeTextEditor.insertSnippet(res).then(() => { InProcess = false });
 	});
 }
 
