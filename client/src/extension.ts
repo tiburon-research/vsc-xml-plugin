@@ -1133,54 +1133,56 @@ function commentAllBlocks(selections: vscode.Selection[]): void
  * Заменяет текст
  * @param selection выделение в котором заменить текст (или позиция куда вставить)
  * @param text новый текст
- * @param callback по окончании
  * */
-function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text: string): Promise<any>
+function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text: string): Thenable<boolean>
 {
-	return new Promise<any>((resolve) =>
+	return editor.edit((editBuilder) =>
 	{
-		editor.edit((editBuilder) =>
+		try
 		{
-			try
-			{
-				editBuilder.replace(selection, text);
-			}
-			catch (error)
-			{
-				logError("Ошибка замены текста в выделении", error);
-			}
-		}, { undoStopAfter: false, undoStopBefore: false }).then(() => { resolve(); });
-	});
+			editBuilder.replace(selection, text);
+		}
+		catch (error)
+		{
+			logError("Ошибка замены текста в выделении", error);
+		}
+	}, { undoStopAfter: false, undoStopBefore: false })
 }
 
 
 /** Замена (вставка) элементов из `lines` в соответствующие выделения `selections` */
-function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[], callback?: Function): Promise<void>
+async function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[]): Promise<void>
 {
-	return new Promise<void>((resolve, reject) =>
+	if (selections.length != lines.length) throw 'Количесво выделенных областей не совпадает с количеством вставляемых строк';
+
+	/** функция для рекурсивной вставки */
+	async function pasteLines(selections: vscode.Selection[], lines: string[])
 	{
-		selections.forEachAsync((element, i) =>
-		{
-			let txt = lines[i];
-			return pasteText(editor, element, txt);
-		}).then(() =>
-		{
-			if (!!callback) callback();
-			resolve();
-		}, er => { reject(er) });
+		await pasteText(editor, selections.pop(), lines.pop());
+		if (selections.length > 0) await pasteLines(selections, lines);
+	};
+
+	// Сортируем оба массива так, чтобы вставлялось снизу вверх
+	let sortingData = selections.orderBy((a: vscode.Selection, b: vscode.Selection) =>
+	{
+		let lineD = b.active.line - a.active.line;
+		if (lineD != 0) return lineD;
+		return b.active.character - a.active.character;
 	});
+	let newSelections = sortingData.Array;
+	let newLines = sortingData.IndexOrder.map(i => lines[i]);
+
+	await pasteLines(newSelections, newLines);
 }
 
 
 // вынесенный кусок из комманды вставки
-function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: boolean = false): void
+async function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: boolean = false): Promise<void>
 {
 	if (separate) lines = lines.map(s => { return s.replace(/\t/g, ",") });
-	multiPaste(editor, editor.selections.sort((a, b) => { let ld = a.start.line - b.start.line; return ld == 0 ? a.start.character - b.start.character : ld; }), lines, function ()
-	{
-		// ставим курсор в конец
-		editor.selections = editor.selections.map(sel => { return new vscode.Selection(sel.end, sel.end) });
-	});
+	await multiPaste(editor, editor.selections.sort((a, b) => { let ld = a.start.line - b.start.line; return ld == 0 ? a.start.character - b.start.character : ld; }), lines);
+	// ставим курсор в конец
+	editor.selections = editor.selections.map(sel => { return new vscode.Selection(sel.end, sel.end) });
 }
 
 

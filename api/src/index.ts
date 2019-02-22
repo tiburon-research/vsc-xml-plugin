@@ -18,6 +18,20 @@ export { Encoding, Parse, Constants, JQuery };
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
 //#region
 
+/** Результат сортировки массива */
+export interface SortedArrayResult<T>
+{
+	/** Отсортированный массив элементов */
+	Array: T[];
+	/** Отсортированный массив индексов */
+	IndexOrder: number[];
+}
+
+interface ArraySortingData<T>
+{
+	Element: T;
+	Index: number;
+}
 
 export enum Language { XML, CSharp, CSS, JS, PlainText, Inline };
 
@@ -1732,6 +1746,8 @@ declare global
 		toKeyedCollection(func: (x: T) => Object): KeyedCollection<any>
 		/** Асинхронный forEach */
 		forEachAsync<R>(func: (x: T, i?: number) => Promise<R>): Promise<R[]>
+		/** Сортировка массива с сохранением порядка индексов (аналогично `sort`) */
+		orderBy<T>(func: (a: T, b: T) => number): SortedArrayResult<T>
 	}
 
 }
@@ -1793,7 +1809,7 @@ String.prototype.contains = function (search: string): boolean
 
 
 
-Array.prototype.last = function <T>(): T
+Array.prototype.last = function <T>(this: T[]): T
 {
 	let res: T;
 	if (this.length > 0) res = this[this.length - 1];
@@ -1801,7 +1817,7 @@ Array.prototype.last = function <T>(): T
 }
 
 
-Array.prototype.equalsTo = function <T>(ar: Array<T>): boolean
+Array.prototype.equalsTo = function <T>(this: T[], ar: Array<T>): boolean
 {
 	if (this.length != ar.length) return false;
 	let tmp = ar;
@@ -1815,28 +1831,28 @@ Array.prototype.equalsTo = function <T>(ar: Array<T>): boolean
 }
 
 
-Array.prototype.distinct = function <T>(): T[]
+Array.prototype.distinct = function <T>(this: T[]): T[]
 {
 	let orig: Array<T> = this;
 	return [... new Set(orig)];
 }
 
 
-Array.prototype.contains = function <T>(element: T): boolean
+Array.prototype.contains = function <T>(this: T[], element: T): boolean
 {
 	return this.indexOf(element) > -1;
 }
 
-Array.prototype.remove = function <T>(element: T): T
+Array.prototype.remove = function <T>(this: T[], element: T): T
 {
 	let index = this.indexOf(element);
 	let res: T;
 	if (index > -1)
-		res = this.splice(index, 1);
+		res = this.splice(index, 1)[0];
 	return res;
 }
 
-Array.prototype.toKeyedCollection = function <T>(func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
+Array.prototype.toKeyedCollection = function <T>(this: T[], func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
 {
 	let res = new KeyedCollection<any>();
 	this.forEach(element =>
@@ -1847,10 +1863,10 @@ Array.prototype.toKeyedCollection = function <T>(func: (x: T) => KeyValuePair<an
 }
 
 
-Array.prototype.toKeyedCollection = function <T>(func: (x: T) => Object): KeyedCollection<any>
+Array.prototype.toKeyedCollection = function <T>(this: T[], func: (x: T) => Object): KeyedCollection<any>
 {
 	let res = new KeyedCollection<any>();
-	(this as T[]).forEach(element =>
+	this.forEach(element =>
 	{
 		let obj = func(element);
 		let key = Object.keys(obj)[0];
@@ -1860,7 +1876,7 @@ Array.prototype.toKeyedCollection = function <T>(func: (x: T) => Object): KeyedC
 }
 
 
-Array.prototype.forEachAsync = function <T, R>(func: (x: T, i?: number) => Promise<R>): Promise<R[]>
+Array.prototype.forEachAsync = function <T, R>(this: T[], func: (x: T, i?: number) => Promise<R>): Promise<R[]>
 {
 	let promises: Promise<R>[] = [];
 	let index = 0;
@@ -1869,6 +1885,16 @@ Array.prototype.forEachAsync = function <T, R>(func: (x: T, i?: number) => Promi
 		index++;
 	});
 	return Promise.all(promises);
+}
+
+
+Array.prototype.orderBy = function <T>(this: Array<T>, func: (a: T, b: T) => number): SortedArrayResult<T>
+{
+	let res: ArraySortingData<T>[] = this.map((x, i) => { return { Element: x, Index: i } as ArraySortingData<T> }).sort((a, b) => func(a.Element, b.Element));
+	return {
+		Array: res.map(x => x.Element),
+		IndexOrder: res.map(x => x.Index)
+	}
 }
 
 //#endregion
