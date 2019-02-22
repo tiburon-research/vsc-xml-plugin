@@ -1153,7 +1153,7 @@ function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text:
 /** Замена (вставка) элементов из `lines` в соответствующие выделения `selections` */
 async function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[]): Promise<void>
 {
-	if (selections.length != lines.length) throw 'Количесво выделенных областей не совпадает с количеством вставляемых строк';
+	if (selections.length != lines.length) return showWarning('Количесво выделенных областей не совпадает с количеством вставляемых строк');
 
 	/** функция для рекурсивной вставки */
 	async function pasteLines(selections: vscode.Selection[], lines: string[])
@@ -1400,6 +1400,11 @@ function getFilePathForMessage(path: string)
 async function createElements(elementType: SurveyElementType)
 {
 	let editor = vscode.window.activeTextEditor;
+	if (editor.selections.length > 1)
+	{
+		showWarning('Данная команда не поддерживает мультикурсор');
+		return;
+	}
 	let text = editor.document.getText(editor.selection);
 	let res = TibDocumentEdits.createElements(text, elementType);
 
