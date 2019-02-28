@@ -5,20 +5,8 @@ import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, Sur
 import { getDiagnosticElements } from './diagnostic';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
+import { logError } from './server';
 
-
-
-export function sendDiagnostic(connection: server.Connection, document: server.TextDocument, settings: KeyedCollection<any>)
-{
-	getDiagnosticElements(document, settings).then(diagnostics =>
-	{
-		let clientDiagnostic: server.PublishDiagnosticsParams = {
-			diagnostics,
-			uri: document.uri
-		};
-		connection.sendDiagnostics(clientDiagnostic);
-	})
-}
 
 
 export function getCompletions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, settings: KeyedCollection<any>, classTypes: string[], char: string)
@@ -137,20 +125,32 @@ export class DocumentBuffer
 	private applyChangesToContent(contentChanges: server.TextDocumentContentChangeEvent[]): string
 	{
 		let res = this.document.getText();
-		contentChanges.sort((c1, c2) => { return comparePositions(this.document, c2.range.start, c1.range.start); }).forEach(change =>
+		try
 		{
-			let from = this.document.offsetAt(change.range.start);
-			let to = this.document.offsetAt(change.range.end);
-			let prev = res.slice(0, from);
-			let post = res.slice(to);
-			res = prev + change.text + post;
-		});
+			contentChanges.sort((c1, c2) => { return comparePositions(this.document, c2.range.start, c1.range.start); }).forEach(change =>
+			{
+				let from = this.document.offsetAt(change.range.start);
+				let to = this.document.offsetAt(change.range.end);
+				let prev = res.slice(0, from);
+				let post = res.slice(to);
+				res = prev + change.text + post;
+			});
+		} catch (error)
+		{
+			logError('Ошибка применения изменений к документу');
+		}
 		return res;
 	}
 
 	private createDocument(version: number, content: string)
 	{
-		this.document = server.TextDocument.create(this._uri, 'tib', version, content);
+		try
+		{
+			this.document = server.TextDocument.create(this._uri, 'tib', version, content);
+		} catch (error)
+		{
+			logError('Ошибка создания нового документа')
+		}
 	}
 
 	private _uri: string
@@ -219,23 +219,31 @@ class ElementExtractor
 	/** Заменяет {{Elements}} на строку для Snippet */
 	get(input: string): string
 	{
-		let res = new KeyedCollection<string[]>();
-		let match = input.matchAll(/{{(\w+)}}/);
-		if (!match || match.length == 0) return input;
-		match.forEach(element =>
-		{
-			if (!!this._ElementFunctions[element[1]] && !res.Contains(element[1]))
-			{
-				res.AddPair(element[1], this._ElementFunctions[element[1]]());
-			}
-		});
 		let resultStr = input;
-		let i = 1;
-		res.forEach((key, value) =>
+
+		try
 		{
-			resultStr = resultStr.replace(new RegExp("{{" + key + "}}", "g"), "${" + i + "|" + value.join(",") + "|}");
-			i++;
-		});
+			let res = new KeyedCollection<string[]>();
+			let match = input.matchAll(/{{(\w+)}}/);
+			if (!match || match.length == 0) return input;
+			match.forEach(element =>
+			{
+				if (!!this._ElementFunctions[element[1]] && !res.Contains(element[1]))
+				{
+					res.AddPair(element[1], this._ElementFunctions[element[1]]());
+				}
+			});
+			let i = 1;
+			res.forEach((key, value) =>
+			{
+				resultStr = resultStr.replace(new RegExp("{{" + key + "}}", "g"), "${" + i + "|" + value.join(",") + "|}");
+				i++;
+			});
+		} catch (error)
+		{
+			logError('Ошибка получения элементов');
+		}
+
 		return resultStr;
 	}
 
@@ -338,77 +346,84 @@ export class TibAutoCompletes
 	private getXMLSnippets(): server.CompletionItem[]
 	{
 		let completionItems: server.CompletionItem[] = [];
-		if (this.tag && this.tag.GetLaguage() == Language.XML)
+
+		try
 		{
-			let text = getPreviousText(this.document, this.position, true);
-
-			// XML Features
-			if (this.tag.OpenTagIsClosed && text.match(/\b_\w*$/))
+			if (this.tag && this.tag.GetLaguage() == Language.XML)
 			{
-				return AutoCompleteArray.XMLFeatures.map(x => snippetToCompletitionItem(x));
-			}
+				let text = getPreviousText(this.document, this.position, true);
 
-			let curOpenMatch = text.match(/<(\w+)$/);
-			if (!curOpenMatch) return completionItems;
-			let opening = curOpenMatch[1].toLocaleLowerCase();
+				// XML Features
+				if (this.tag.OpenTagIsClosed && text.match(/\b_\w*$/))
+				{
+					return AutoCompleteArray.XMLFeatures.map(x => snippetToCompletitionItem(x));
+				}
 
-			//Item Snippet
-			if ("item".indexOf(opening) > -1)
-			{
-				let parent: string;
-				for (let key in ItemSnippets)
-					if (!!this.tag.Parents.find(x => x.Name == key))
+				let curOpenMatch = text.match(/<(\w+)$/);
+				if (!curOpenMatch) return completionItems;
+				let opening = curOpenMatch[1].toLocaleLowerCase();
+
+				//Item Snippet
+				if ("item".indexOf(opening) > -1)
+				{
+					let parent: string;
+					for (let key in ItemSnippets)
+						if (!!this.tag.Parents.find(x => x.Name == key))
+						{
+							parent = key;
+							break;
+						}
+					if (!parent || !ItemSnippets[parent]) parent = "List";
+					let extractor = new ElementExtractor(this.surveyData);
+					let res = extractor.get(ItemSnippets[parent]);
+					if (res)
 					{
-						parent = key;
-						break;
+						let ci = server.CompletionItem.create("Item");
+						ci.kind = server.CompletionItemKind.Snippet;
+						ci.detail = "Структура Item для " + parent;
+						ci.insertText = res;
+						ci.insertTextFormat = server.InsertTextFormat.Snippet;
+						//ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
+						completionItems.push(ci);
 					}
-				if (!parent || !ItemSnippets[parent]) parent = "List";
-				let extractor = new ElementExtractor(this.surveyData);
-				let res = extractor.get(ItemSnippets[parent]);
-				if (res)
+				}
+				// Answer Snippet
+				else if ("answer".indexOf(opening) > -1)
 				{
-					let ci = server.CompletionItem.create("Item");
+					let ci = server.CompletionItem.create("Answer");
 					ci.kind = server.CompletionItemKind.Snippet;
-					ci.detail = "Структура Item для " + parent;
-					ci.insertText = res;
 					ci.insertTextFormat = server.InsertTextFormat.Snippet;
-					//ci.additionalTextEdits = [vscode.TextEdit.replace(range, "")];
+					let ciS = server.CompletionItem.create("AnswerShort");
+					ciS.kind = server.CompletionItemKind.Snippet;
+					ciS.insertTextFormat = server.InsertTextFormat.Snippet;
+
+					let iterator = "1";
+					let text = "$2";
+
+					if (this.tag.LastParent && this.tag.LastParent.Name == "Repeat")
+					{
+						let source = this.tag.LastParent.getRepeatSource();
+						ci.detail = "Полная структура Answer в Repeat по " + source;
+						ciS.detail = "Краткая структура Answer в Repeat по " + source;
+						iterator = source == "List" ? "@ID" : "@Itera";
+						text = source == "List" ? "@Text" : "@Itera";
+					}
+					else
+					{
+						ci.detail = "Полная структура Answer";
+						ciS.detail = "Краткая структура Answer";
+					}
+					// полный вариант
+					ci.insertText = "Answer Id=\"${1:" + iterator + "}\"><Text>${2:" + text + "}</Text></Answer>";
 					completionItems.push(ci);
+					// краткий вариант
+					ciS.insertText = "Answer Id=\"${1:" + iterator + "}\"/>";
+					completionItems.push(ciS);
 				}
 			}
-			// Answer Snippet
-			else if ("answer".indexOf(opening) > -1)
-			{
-				let ci = server.CompletionItem.create("Answer");
-				ci.kind = server.CompletionItemKind.Snippet;
-				ci.insertTextFormat = server.InsertTextFormat.Snippet;
-				let ciS = server.CompletionItem.create("AnswerShort");
-				ciS.kind = server.CompletionItemKind.Snippet;
-				ciS.insertTextFormat = server.InsertTextFormat.Snippet;
-
-				let iterator = "1";
-				let text = "$2";
-
-				if (this.tag.LastParent && this.tag.LastParent.Name == "Repeat")
-				{
-					let source = this.tag.LastParent.getRepeatSource();
-					ci.detail = "Полная структура Answer в Repeat по " + source;
-					ciS.detail = "Краткая структура Answer в Repeat по " + source;
-					iterator = source == "List" ? "@ID" : "@Itera";
-					text = source == "List" ? "@Text" : "@Itera";
-				}
-				else
-				{
-					ci.detail = "Полная структура Answer";
-					ciS.detail = "Краткая структура Answer";
-				}
-				// полный вариант
-				ci.insertText = "Answer Id=\"${1:" + iterator + "}\"><Text>${2:" + text + "}</Text></Answer>";
-				completionItems.push(ci);
-				// краткий вариант
-				ciS.insertText = "Answer Id=\"${1:" + iterator + "}\"/>";
-				completionItems.push(ciS);
-			}
+		} catch (error)
+		{
+			logError('Ошибка получения XML Features Autocomplete');
 		}
 		return completionItems;
 	}
@@ -417,27 +432,35 @@ export class TibAutoCompletes
 	private getXMLAttrs(): server.CompletionItem[]
 	{
 		let completionItems: server.CompletionItem[] = [];
-		let text = getPreviousText(this.document, this.position, true);
-		if (!(this.char == ' ' || !!text.match(/\w+$/))) return completionItems;
-		if (!!this.tag && this.tag.GetLaguage() == Language.XML && !this.tag.OpenTagIsClosed && !this.tag.InString() && AutoCompleteArray.Attributes[this.tag.Id])
+
+		try
 		{
-			let existAttrs = this.tag.AttributeNames();
-			let textAfter = this.document.getText().slice(this.document.offsetAt(this.position));
-			let attrs = textAfter.match(RegExpPatterns.RestAttributes);
-			let nameOnly = !!textAfter.match(/^=["']/);
-			let nexAttrs: string[] = [];
-			if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
-			let parent = this;
-			AutoCompleteArray.Attributes[this.tag.Id].filter((x: { Name: string; }) => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach((element: Object) =>
+			let text = getPreviousText(this.document, this.position, true);
+			if (!(this.char == ' ' || !!text.match(/\w+$/))) return completionItems;
+			if (!!this.tag && this.tag.GetLaguage() == Language.XML && !this.tag.OpenTagIsClosed && !this.tag.InString() && AutoCompleteArray.Attributes[this.tag.Id])
 			{
-				let attr = new TibAttribute(element);
-				let ci = attr.ToCompletionItem(function (query)
+				let existAttrs = this.tag.AttributeNames();
+				let textAfter = this.document.getText().slice(this.document.offsetAt(this.position));
+				let attrs = textAfter.match(RegExpPatterns.RestAttributes);
+				let nameOnly = !!textAfter.match(/^=["']/);
+				let nexAttrs: string[] = [];
+				if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
+				let parent = this;
+				AutoCompleteArray.Attributes[this.tag.Id].filter((x: { Name: string; }) => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach((element: Object) =>
 				{
-					return parent.extractor[query]();
-				}, nameOnly);
-				completionItems.push(ci);
-			});
+					let attr = new TibAttribute(element);
+					let ci = attr.ToCompletionItem(function (query)
+					{
+						return parent.extractor[query]();
+					}, nameOnly);
+					completionItems.push(ci);
+				});
+			}
+		} catch (error)
+		{
+			logError('Ошибка получения XML Attrs Autocomplete');
 		}
+
 		return completionItems;
 	}
 
@@ -446,36 +469,43 @@ export class TibAutoCompletes
 	{
 		let completionItems: server.CompletionItem[] = [];
 
-		if (!this.tag || this.tag.OpenTagIsClosed) return completionItems;
-		let text = getPreviousText(this.document, this.position, true);
-		//let needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
-
-		let curAttr = text.match(/(\w+)=(["'])(:?\w*)$/);
-		if (!curAttr) return completionItems;
-
-		let atrs: TibAttribute[] = AutoCompleteArray.Attributes[this.tag.Id];
-		if (!atrs) return completionItems;
-
-		let attr = atrs.find(function (e, i)
+		try
 		{
-			return e.Name == curAttr[1];
-		});
-		if (!attr) return completionItems;
+			if (!this.tag || this.tag.OpenTagIsClosed) return completionItems;
+			let text = getPreviousText(this.document, this.position, true);
+			//let needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
+
+			let curAttr = text.match(/(\w+)=(["'])(:?\w*)$/);
+			if (!curAttr) return completionItems;
+
+			let atrs: TibAttribute[] = AutoCompleteArray.Attributes[this.tag.Id];
+			if (!atrs) return completionItems;
+
+			let attr = atrs.find(function (e, i)
+			{
+				return e.Name == curAttr[1];
+			});
+			if (!attr) return completionItems;
 
 
-		let attrT = new TibAttribute(attr);
-		let patent = this;
-		let vals = attrT.ValueCompletitions(function (query)
+			let attrT = new TibAttribute(attr);
+			let patent = this;
+			let vals = attrT.ValueCompletitions(function (query)
+			{
+				return patent.extractor[query]();
+			});
+			vals.forEach(v =>
+			{
+				let ci = server.CompletionItem.create(v);
+				ci.insertText = v;
+				ci.kind = server.CompletionItemKind.Enum;
+				completionItems.push(ci);
+			});
+		} catch (error)
 		{
-			return patent.extractor[query]();
-		});
-		vals.forEach(v =>
-		{
-			let ci = server.CompletionItem.create(v);
-			ci.insertText = v;
-			ci.kind = server.CompletionItemKind.Enum;
-			completionItems.push(ci);
-		});
+			logError('Ошибка получения XML AttrValues Autocomplete');
+		}
+
 		return completionItems;
 	}
 
@@ -484,120 +514,126 @@ export class TibAutoCompletes
 	{
 		let completionItems: server.CompletionItem[] = [];
 
-		if (!this.tag || this.char == ' ' || this.char == '.') return completionItems;
-
-		let curLine = getPreviousText(this.document, this.position, true);
-		let mt = curLine.match(/(#|\$)?\w*$/);
-		let lang = this.tag.GetLaguage();
-		if (!mt) return;
-		if (lang != Language.CSharp && mt[1] != "$") return completionItems;
-
-		//пропускаем объявления
-		if (Parse.isMethodDefinition(curLine)) return completionItems;
-
-		let str = getCurrentLineText(this.document, this.position).substr(this.position.character);
-		if (mt[1] == "$")
+		try
 		{
-			let extractor = new ElementExtractor(this.surveyData);
-			// добавляем snippet для $repeat
-			let ci = server.CompletionItem.create("repeat");
-			ci.detail = "Строчный repeat";
-			ci.kind = server.CompletionItemKind.Snippet;
-			ci.insertTextFormat = server.InsertTextFormat.Snippet;
-			ci.insertText = "repeat(${1|" + extractor.getAllLists().join(',') + "|}){${2:@ID}[${3:,}]}";
-			completionItems.push(ci);
-			// добавляем snippet для $place
-			ci = server.CompletionItem.create("place");
-			ci.detail = "Указатель на вложенный вопрос";
-			ci.kind = server.CompletionItemKind.Snippet;
-			ci.insertTextFormat = server.InsertTextFormat.Snippet;
-			ci.insertText = "place(${1|" + extractor.getAllQuestions().join(',') + "|})";
-			completionItems.push(ci);
-			// добавляем стандартные константы
-			if (lang == Language.CSharp && !this.tag.CSSingle()) XMLEmbeddings.forEach(x =>
+			if (!this.tag || this.char == ' ' || this.char == '.') return completionItems;
+
+			let curLine = getPreviousText(this.document, this.position, true);
+			let mt = curLine.match(/(#|\$)?\w*$/);
+			let lang = this.tag.GetLaguage();
+			if (!mt) return;
+			if (lang != Language.CSharp && mt[1] != "$") return completionItems;
+
+			//пропускаем объявления
+			if (Parse.isMethodDefinition(curLine)) return completionItems;
+
+			let str = getCurrentLineText(this.document, this.position).substr(this.position.character);
+			if (mt[1] == "$")
 			{
-				ci = server.CompletionItem.create(x.Name);
-				ci.kind = server.CompletionItemKind.Constant;
-				if (!!x.Type) ci.detail = x.Type;
-				ci.documentation = x.Title;
+				let extractor = new ElementExtractor(this.surveyData);
+				// добавляем snippet для $repeat
+				let ci = server.CompletionItem.create("repeat");
+				ci.detail = "Строчный repeat";
+				ci.kind = server.CompletionItemKind.Snippet;
+				ci.insertTextFormat = server.InsertTextFormat.Snippet;
+				ci.insertText = "repeat(${1|" + extractor.getAllLists().join(',') + "|}){${2:@ID}[${3:,}]}";
 				completionItems.push(ci);
-			});
-		}
-
-		let customMethods = this.surveyData.Methods.CompletionArray();
-		if (customMethods && !this.tag.InCSString()) completionItems = completionItems.concat(customMethods); //Custom Methods
-
-		// если начинается с $, то больше ничего не надо
-		if (mt[1] == "$") return completionItems;
-
-		//C# Featrues
-		if (mt[1] == "#")
-		{
-			AutoCompleteArray.CSFeatures.forEach(element =>
-			{
-				completionItems.push(snippetToCompletitionItem(element));
-			});
-		}
-
-		if (!this.tag.CSSingle() && !curLine.match(/\w+\.\w*$/))
-		{
-			if (!this.tag.InCSString())
-			{
-				let ar: TibAutoCompleteItem[] = this.tibAutoCompleteList.Item("Function").concat(this.tibAutoCompleteList.Item("Variable"), this.tibAutoCompleteList.Item("Enum"), this.tibAutoCompleteList.Item("Class"), this.tibAutoCompleteList.Item("Type"), this.tibAutoCompleteList.Item("Struct"));
-				let adBracket = !str.match(/\w*\(/);
-				ar.forEach(element =>
+				// добавляем snippet для $place
+				ci = server.CompletionItem.create("place");
+				ci.detail = "Указатель на вложенный вопрос";
+				ci.kind = server.CompletionItemKind.Snippet;
+				ci.insertTextFormat = server.InsertTextFormat.Snippet;
+				ci.insertText = "place(${1|" + extractor.getAllQuestions().join(',') + "|})";
+				completionItems.push(ci);
+				// добавляем стандартные константы
+				if (lang == Language.CSharp && !this.tag.CSSingle()) XMLEmbeddings.forEach(x =>
 				{
-					if (element) completionItems.push(element.ToCompletionItem(adBracket));
+					ci = server.CompletionItem.create(x.Name);
+					ci.kind = server.CompletionItemKind.Constant;
+					if (!!x.Type) ci.detail = x.Type;
+					ci.documentation = x.Title;
+					completionItems.push(ci);
 				});
-				//C# Snippets
-				AutoCompleteArray.CSSnippets.forEach(element =>
+			}
+
+			let customMethods = this.surveyData.Methods.CompletionArray();
+			if (customMethods && !this.tag.InCSString()) completionItems = completionItems.concat(customMethods); //Custom Methods
+
+			// если начинается с $, то больше ничего не надо
+			if (mt[1] == "$") return completionItems;
+
+			//C# Featrues
+			if (mt[1] == "#")
+			{
+				AutoCompleteArray.CSFeatures.forEach(element =>
 				{
 					completionItems.push(snippetToCompletitionItem(element));
 				});
 			}
-			else //node Ids
+
+			if (!this.tag.CSSingle() && !curLine.match(/\w+\.\w*$/))
 			{
-				let qt = curLine.lastIndexOf('"');
-				if (qt > -1) // от недоверия к tag.InCSString()
+				if (!this.tag.InCSString())
 				{
-					let stuff = curLine.substr(0, qt);
-					let match = stuff.match(/((CurrentSurvey\.Lists\[)|(Page\s*=)|(Question\s*=))\s*$/);
-					const matchResults =
+					let ar: TibAutoCompleteItem[] = this.tibAutoCompleteList.Item("Function").concat(this.tibAutoCompleteList.Item("Variable"), this.tibAutoCompleteList.Item("Enum"), this.tibAutoCompleteList.Item("Class"), this.tibAutoCompleteList.Item("Type"), this.tibAutoCompleteList.Item("Struct"));
+					let adBracket = !str.match(/\w*\(/);
+					ar.forEach(element =>
 					{
-						List: 2,
-						Page: 3,
-						Question: 4
-					};
-					if (!!match)
+						if (element) completionItems.push(element.ToCompletionItem(adBracket));
+					});
+					//C# Snippets
+					AutoCompleteArray.CSSnippets.forEach(element =>
 					{
-						let resultMatch = match.findIndex((val, index) => { return index > 1 && !!val; });
-						switch (resultMatch)
+						completionItems.push(snippetToCompletitionItem(element));
+					});
+				}
+				else //node Ids
+				{
+					let qt = curLine.lastIndexOf('"');
+					if (qt > -1) // от недоверия к tag.InCSString()
+					{
+						let stuff = curLine.substr(0, qt);
+						let match = stuff.match(/((CurrentSurvey\.Lists\[)|(Page\s*=)|(Question\s*=))\s*$/);
+						const matchResults =
 						{
-							case matchResults.List:
-								completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems("List"));
-								break;
+							List: 2,
+							Page: 3,
+							Question: 4
+						};
+						if (!!match)
+						{
+							let resultMatch = match.findIndex((val, index) => { return index > 1 && !!val; });
+							switch (resultMatch)
+							{
+								case matchResults.List:
+									completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems("List"));
+									break;
 
-							case matchResults.Page:
-								completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems("Page"));
-								break;
+								case matchResults.Page:
+									completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems("Page"));
+									break;
 
-							case matchResults.Question:
-								completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems("Question"));
-								break;
+								case matchResults.Question:
+									completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems("Question"));
+									break;
 
-							default:
-								break;
+								default:
+									break;
+							}
 						}
-					}
-					else // всё подряд
-					{
-						_NodeStoreNames.forEach(name =>
+						else // всё подряд
 						{
-							completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems(name));
-						});
+							_NodeStoreNames.forEach(name =>
+							{
+								completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems(name));
+							});
+						}
 					}
 				}
 			}
+		} catch (error)
+		{
+			logError('Ошибка получения Main C# Autocomplete');
 		}
 
 		return completionItems;
@@ -607,31 +643,38 @@ export class TibAutoCompletes
 	private getCSMethods(): server.CompletionItem[]
 	{
 		let completionItems: server.CompletionItem[] = [];
-		if (this.char != '.' || !!this.tag && this.tag.GetLaguage() == Language.CSharp && !this.tag.InCSString() && !this.tag.CSSingle())
+
+		try
 		{
-			let lastLine = getPreviousText(this.document, this.position, true);
-			let ar: TibAutoCompleteItem[] = this.tibAutoCompleteList.Item("Property").concat(this.tibAutoCompleteList.Item("Method"), this.tibAutoCompleteList.Item("EnumMember"));
-			let str = getCurrentLineText(this.document, this.position).substr(this.position.character);
-			let needClose = !str.match(/\w*\(/);
-			let mt = lastLine.match(/(\w+)\.w*$/);
-			let parent: string;
-			if (!!mt && !!mt[1]) parent = mt[1];
-			ar.forEach(element =>
+			if (this.char != '.' || !!this.tag && this.tag.GetLaguage() == Language.CSharp && !this.tag.InCSString() && !this.tag.CSSingle())
 			{
-				let m = false;
-				if (element.Parent)
+				let lastLine = getPreviousText(this.document, this.position, true);
+				let ar: TibAutoCompleteItem[] = this.tibAutoCompleteList.Item("Property").concat(this.tibAutoCompleteList.Item("Method"), this.tibAutoCompleteList.Item("EnumMember"));
+				let str = getCurrentLineText(this.document, this.position).substr(this.position.character);
+				let needClose = !str.match(/\w*\(/);
+				let mt = lastLine.match(/(\w+)\.w*$/);
+				let parent: string;
+				if (!!mt && !!mt[1]) parent = mt[1];
+				ar.forEach(element =>
 				{
-					let reg = new RegExp(element.Parent + "\\.\\w*$");
-					m = !!lastLine.match(reg);
+					let m = false;
+					if (element.Parent)
+					{
+						let reg = new RegExp(element.Parent + "\\.\\w*$");
+						m = !!lastLine.match(reg);
+					}
+					if (m && (!element.ParentTag || element.ParentTag == this.tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "__" + element.Name));
+				});
+				// добавляем Linq
+				if (lastLine.match(/\.\w*$/) && (!parent || this.classTypes.indexOf(parent) == -1) && !!this.settings.Item('useLinq'))
+				{
+					let linqAr = this.tibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "zzz" + x.Name));
+					completionItems = completionItems.concat(linqAr);
 				}
-				if (m && (!element.ParentTag || element.ParentTag == this.tag.Name)) completionItems.push(element.ToCompletionItem(needClose, "__" + element.Name));
-			});
-			// добавляем Linq
-			if (lastLine.match(/\.\w*$/) && (!parent || this.classTypes.indexOf(parent) == -1) && !!this.settings.Item('useLinq'))
-			{
-				let linqAr = this.tibAutoCompleteList.Item("Method").filter(x => x.Parent == "Enumerable").map(x => x.ToCompletionItem(needClose, "zzz" + x.Name));
-				completionItems = completionItems.concat(linqAr);
 			}
+		} catch (error)
+		{
+			logError('Ошибка получения C# Fields Autocomplete');
 		}
 		return completionItems;
 	}
@@ -643,32 +686,40 @@ export class TibAutoCompletes
 export function getSignatureHelpers(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>): server.SignatureInformation[]
 {
 	let sign: server.SignatureInformation[] = [];
-	if (!tag || tag.GetLaguage() != Language.CSharp) return sign;
-	let lastLine = getPreviousText(document, position, true);
-	//пропускаем объявления
-	if (Parse.isMethodDefinition(lastLine)) return sign;
-	let ar = tibAutoCompleteList.Item("Function").concat(tibAutoCompleteList.Item("Method"));
-	let mtch = lastLine.match(/((^)|(.*\b))(\w+)\([^\(\)]*$/);
-	if (!mtch || mtch.length < 4) return sign;
-	let reg = mtch[1].match(/(\w+)\.$/);
-	let parent = !!reg ? reg[1] : null;
-	ar = ar.filter(x => x.Name == mtch[4]);
-	ar.forEach(element =>
+
+	try
 	{
-		if (element.Kind == "Function" || !!parent && element.Parent == parent)
+		if (!tag || tag.GetLaguage() != Language.CSharp) return sign;
+		let lastLine = getPreviousText(document, position, true);
+		//пропускаем объявления
+		if (Parse.isMethodDefinition(lastLine)) return sign;
+		let ar = tibAutoCompleteList.Item("Function").concat(tibAutoCompleteList.Item("Method"));
+		let mtch = lastLine.match(/((^)|(.*\b))(\w+)\([^\(\)]*$/);
+		if (!mtch || mtch.length < 4) return sign;
+		let reg = mtch[1].match(/(\w+)\.$/);
+		let parent = !!reg ? reg[1] : null;
+		ar = ar.filter(x => x.Name == mtch[4]);
+		ar.forEach(element =>
 		{
-			if (element.Overloads.length == 0) sign.push(element.ToSignatureInformation());
-			else element.Overloads.forEach(el =>
+			if (element.Kind == "Function" || !!parent && element.Parent == parent)
 			{
-				sign.push(el.ToSignatureInformation());
-			});
-		}
-	});
-	// Custom Methods
-	surveyData.Methods.SignatureArray(mtch[4]).forEach(element =>
+				if (element.Overloads.length == 0) sign.push(element.ToSignatureInformation());
+				else element.Overloads.forEach(el =>
+				{
+					sign.push(el.ToSignatureInformation());
+				});
+			}
+		});
+		// Custom Methods
+		surveyData.Methods.SignatureArray(mtch[4]).forEach(element =>
+		{
+			sign.push(element);
+		});
+	} catch (error)
 	{
-		sign.push(element);
-	});
+		logError('Ошибка получения SignatureHelpers');
+	}
+
 	return sign;
 }
 
@@ -683,41 +734,48 @@ export interface LanguageString
 export function getHovers(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData, codeAutoCompleteArray: TibAutoCompleteItem[]): LanguageString[]
 {
 	let res: LanguageString[] = [];
-	let text = getWordAtPosition(document, position);
-	if (!text || !tag || tag.GetLaguage() != Language.CSharp) return res;
-	let parent = null;
-	let lastText = getPreviousText(document, position);
-	let reg = lastText.match(/(\w+)\.\w*$/);
-	if (!!reg)
-	{
-		parent = reg[1];
-	}
-	// надо проверить родителя: если нашёлся static, то только его, иначе всё подходящее
-	let suit = codeAutoCompleteArray.filter(x => x.Name == text);
-	let staticParens = codeAutoCompleteArray.filter(x => x.Kind == 'Class').map(x => x.Name);
-	if (staticParens.contains(parent))
-	{
-		suit = suit.filter(x =>
-		{
-			return x.Name == text && (x.Parent == parent);
-		});
-	}
 
-	for (let i = 0; i < suit.length; i++)
+	try
 	{
-		if (suit[i].Documentation && suit[i].Description)
+		let text = getWordAtPosition(document, position);
+		if (!text || !tag || tag.GetLaguage() != Language.CSharp) return res;
+		let parent = null;
+		let lastText = getPreviousText(document, position);
+		let reg = lastText.match(/(\w+)\.\w*$/);
+		if (!!reg)
 		{
-			let doc = "/* " + suit[i].Description + " */\n" + suit[i].Documentation;
-			res.push({ language: "csharp", value: doc });
+			parent = reg[1];
 		}
-		else
+		// надо проверить родителя: если нашёлся static, то только его, иначе всё подходящее
+		let suit = codeAutoCompleteArray.filter(x => x.Name == text);
+		let staticParens = codeAutoCompleteArray.filter(x => x.Kind == 'Class').map(x => x.Name);
+		if (staticParens.contains(parent))
 		{
-			if (suit[i].Documentation) res.push({ language: "csharp", value: suit[i].Documentation });
-			if (suit[i].Description) res.push({ language: "csharp", value: suit[i].Description });
+			suit = suit.filter(x =>
+			{
+				return x.Name == text && (x.Parent == parent);
+			});
 		}
+
+		for (let i = 0; i < suit.length; i++)
+		{
+			if (suit[i].Documentation && suit[i].Description)
+			{
+				let doc = "/* " + suit[i].Description + " */\n" + suit[i].Documentation;
+				res.push({ language: "csharp", value: doc });
+			}
+			else
+			{
+				if (suit[i].Documentation) res.push({ language: "csharp", value: suit[i].Documentation });
+				if (suit[i].Description) res.push({ language: "csharp", value: suit[i].Description });
+			}
+		}
+		let customMethods = surveyData.Methods.HoverArray(text);
+		if (customMethods) res = res.concat(customMethods);
+	} catch (error)
+	{
+		logError('Ошибка получения Hovers');
 	}
-	let customMethods = surveyData.Methods.HoverArray(text);
-	if (customMethods) res = res.concat(customMethods);
 	return res;
 }
 
@@ -756,167 +814,189 @@ export class TibDocumentHighLights
 	public getTagsHighlights(): server.DocumentHighlight[]
 	{
 		let res: server.DocumentHighlight[] = [];
-		let text = getPreviousText(this.document, this.position);
-		if (!this.tag) return res;
-		let curRange = getWordRangeAtPosition(this.document, this.position);
-		let word = this.document.getText(curRange);
-		if (word == "CDATA") return res;
-		if (this.tag.GetLaguage() == Language.CSharp && word != 'c#') return res; // такой костыль потому что при нахождении на [/c#] хз что там дальше и tag.CSMode == true
-		let fullText = this.document.getText();
-		let after = getCurrentLineText(this.document, this.position).substr(this.position.character);
-		let mt = text.match(/(((\[)|(<))\/?)\w*$/);
 
-		if (!mt) return res;
-		let ind = -1;
-		let range: server.Range;
-
-		switch (mt[1])
+		try
 		{
-			case "<":
-				{
-					// открывающийся
-					let endpos = this.document.positionAt(fullText.indexOf(">", text.length) + 1);
-					curRange = server.Range.create(translatePosition(this.document, curRange.start, -1), endpos);
-					res.push(server.DocumentHighlight.create(curRange));
+			let text = getPreviousText(this.document, this.position);
+			if (!this.tag) return res;
+			let curRange = getWordRangeAtPosition(this.document, this.position);
+			let word = this.document.getText(curRange);
+			if (word == "CDATA") return res;
+			if (this.tag.GetLaguage() == Language.CSharp && word != 'c#') return res; // такой костыль потому что при нахождении на [/c#] хз что там дальше и tag.CSMode == true
+			let fullText = this.document.getText();
+			let after = getCurrentLineText(this.document, this.position).substr(this.position.character);
+			let mt = text.match(/(((\[)|(<))\/?)\w*$/);
 
-					// закрывающийся
-					if (!after.match(/^[^>]*\/>/) && !Parse.isSelfClosedTag(word))
+			if (!mt) return res;
+			let ind = -1;
+			let range: server.Range;
+
+			switch (mt[1])
+			{
+				case "<":
 					{
-						range = findCloseTag("<", word, ">", this.document, this.position);
-						if (range) res.push(server.DocumentHighlight.create(range));
-					}
-					break;
-				}
-			case "[":
-				{
-					// открывающийся
-					let endpos = this.document.positionAt(fullText.indexOf("]", text.length) + 1);
-					curRange = server.Range.create(translatePosition(this.document, curRange.start, -1), endpos);
-					res.push(server.DocumentHighlight.create(curRange));
+						// открывающийся
+						let endpos = this.document.positionAt(fullText.indexOf(">", text.length) + 1);
+						curRange = server.Range.create(translatePosition(this.document, curRange.start, -1), endpos);
+						res.push(server.DocumentHighlight.create(curRange));
 
-					// закрывающийся
-					if (!after.match(/^[^\]]*\/\]/) && !Parse.isSelfClosedTag(word))
+						// закрывающийся
+						if (!after.match(/^[^>]*\/>/) && !Parse.isSelfClosedTag(word))
+						{
+							range = findCloseTag("<", word, ">", this.document, this.position);
+							if (range) res.push(server.DocumentHighlight.create(range));
+						}
+						break;
+					}
+				case "[":
 					{
-						range = findCloseTag("[", word, "]", this.document, this.position);
-						if (range) res.push(server.DocumentHighlight.create(range));
+						// открывающийся
+						let endpos = this.document.positionAt(fullText.indexOf("]", text.length) + 1);
+						curRange = server.Range.create(translatePosition(this.document, curRange.start, -1), endpos);
+						res.push(server.DocumentHighlight.create(curRange));
+
+						// закрывающийся
+						if (!after.match(/^[^\]]*\/\]/) && !Parse.isSelfClosedTag(word))
+						{
+							range = findCloseTag("[", word, "]", this.document, this.position);
+							if (range) res.push(server.DocumentHighlight.create(range));
+						}
+						break;
 					}
-					break;
-				}
-			case "</":
-				{
-					// закрывающийся
-					let endpos = this.document.positionAt(fullText.indexOf(">", text.length) + 1);
-					curRange = server.Range.create(translatePosition(this.document, curRange.start, -2), endpos);
-					res.push(server.DocumentHighlight.create(curRange));
+				case "</":
+					{
+						// закрывающийся
+						let endpos = this.document.positionAt(fullText.indexOf(">", text.length) + 1);
+						curRange = server.Range.create(translatePosition(this.document, curRange.start, -2), endpos);
+						res.push(server.DocumentHighlight.create(curRange));
 
-					// открывающийся
-					range = findOpenTag("<", word, ">", this.document, this.position);
-					if (range) res.push(server.DocumentHighlight.create(range));
-					break;
-				}
-			case "[/":
-				{
-					// закрывающийся
-					let endpos = this.document.positionAt(fullText.indexOf("]", text.length) + 1);
-					curRange = server.Range.create(translatePosition(this.document, curRange.start, -2), endpos);
-					res.push(server.DocumentHighlight.create(curRange));
+						// открывающийся
+						range = findOpenTag("<", word, ">", this.document, this.position);
+						if (range) res.push(server.DocumentHighlight.create(range));
+						break;
+					}
+				case "[/":
+					{
+						// закрывающийся
+						let endpos = this.document.positionAt(fullText.indexOf("]", text.length) + 1);
+						curRange = server.Range.create(translatePosition(this.document, curRange.start, -2), endpos);
+						res.push(server.DocumentHighlight.create(curRange));
 
-					// открывающийся
-					range = findOpenTag("[", word, "]", this.document, this.position);
-					if (range) res.push(server.DocumentHighlight.create(range));
-					break;
-				}
+						// открывающийся
+						range = findOpenTag("[", word, "]", this.document, this.position);
+						if (range) res.push(server.DocumentHighlight.create(range));
+						break;
+					}
+			}
+		} catch (error)
+		{
+			logError('Ошибка получения Tags Highlights');
 		}
+
 		return res;
 	}
 
 	public getBlockHighlights(): server.DocumentHighlight[]
 	{
 		let res: server.DocumentHighlight[] = [];
-		let lineText = getCurrentLineText(this.document, this.position);
-		let reg = lineText.match(/<!--#(end)?block.*-->/);
-		if (!reg) return res;
-		if (reg.index > this.position.character || reg.index + reg[0].length < this.position.character) return res;
-		let nextRange: server.Range;
-
-		let prevRange = server.Range.create(
-			server.Position.create(0, 0),
-			server.Position.create(this.position.line, 0)
-		);
-		let prevText = this.document.getText(prevRange);
-
-		if (!!reg[1])
+		try
 		{
-			let allBlocks = prevText.matchAll(/<!--#block.*-->/);
-			if (!allBlocks || allBlocks.length == 0) return res;
+			let lineText = getCurrentLineText(this.document, this.position);
+			let reg = lineText.match(/<!--#(end)?block.*-->/);
+			if (!reg) return res;
+			if (reg.index > this.position.character || reg.index + reg[0].length < this.position.character) return res;
+			let nextRange: server.Range;
 
-			let match = allBlocks.last();
-			nextRange = server.Range.create(
-				this.document.positionAt(match.index),
-				this.document.positionAt(match.index + match[0].length)
+			let prevRange = server.Range.create(
+				server.Position.create(0, 0),
+				server.Position.create(this.position.line, 0)
 			);
-		}
-		else
+			let prevText = this.document.getText(prevRange);
+
+			if (!!reg[1])
+			{
+				let allBlocks = prevText.matchAll(/<!--#block.*-->/);
+				if (!allBlocks || allBlocks.length == 0) return res;
+
+				let match = allBlocks.last();
+				nextRange = server.Range.create(
+					this.document.positionAt(match.index),
+					this.document.positionAt(match.index + match[0].length)
+				);
+			}
+			else
+			{
+				let offset = prevText.length;
+				let after = this.document.getText().slice(offset);
+				let match = after.match(/<!--#endblock-->/);
+				if (!match) return res;
+
+				nextRange = server.Range.create(
+					this.document.positionAt(offset + match.index),
+					this.document.positionAt(offset + match.index + match[0].length)
+				);
+			}
+
+			let thisRange = server.Range.create(
+				server.Position.create(this.position.line, reg.index),
+				server.Position.create(this.position.line, reg.index + reg[0].length)
+			);
+
+			res.push(server.DocumentHighlight.create(thisRange));
+			res.push(server.DocumentHighlight.create(nextRange));
+		} catch (error)
 		{
-			let offset = prevText.length;
-			let after = this.document.getText().slice(offset);
-			let match = after.match(/<!--#endblock-->/);
-			if (!match) return res;
-
-			nextRange = server.Range.create(
-				this.document.positionAt(offset + match.index),
-				this.document.positionAt(offset + match.index + match[0].length)
-			);
+			logError('Ошибка получения Blocks Highlights');
 		}
 
-		let thisRange = server.Range.create(
-			server.Position.create(this.position.line, reg.index),
-			server.Position.create(this.position.line, reg.index + reg[0].length)
-		);
-
-		res.push(server.DocumentHighlight.create(thisRange));
-		res.push(server.DocumentHighlight.create(nextRange));
 		return res;
 	}
 }
 
 
 /** Переход к определению */
-export function getDefinitions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData): server.Location
+export function getDefinition(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData): server.Location
 {
 	let res: server.Location;
-	let range = getWordRangeAtPosition(document, position);
-	let word = document.getText(range);
-	if (!tag) return res;
 
-	if (tag.GetLaguage() == Language.CSharp && !tag.InCSString()) // C#
+	try
 	{
-		if (surveyData.Methods.Contains(word)) res = surveyData.Methods.Item(word).GetLocation();
-	}
-	else // XML узлы
-	{
-		if (tag.Name == "Include")
+		let range = getWordRangeAtPosition(document, position);
+		let word = document.getText(range);
+		if (!tag) return res;
+
+		if (tag.GetLaguage() == Language.CSharp && !tag.InCSString()) // C#
 		{
-			let attrs = tag.GetAllAttributes(document);
-			let fileName = attrs.Item("FileName");
-			if (!!fileName)
-			{
-				fileName = applyConstants(fileName);
-				let nullPosition = server.Position.create(0, 0);
-				res = server.Location.create(uriFromName(fileName), server.Range.create(nullPosition, nullPosition));	
-			}
+			if (surveyData.Methods.Contains(word)) res = surveyData.Methods.Item(word).GetLocation();
 		}
-
-		let enabledNodes = ["Page", "List", "Question"];
-		enabledNodes.forEach(element =>
+		else // XML узлы
 		{
-			let item = surveyData.CurrentNodes.GetItem(word, element);
-			if (!!item)
+			if (tag.Name == "Include")
 			{
-				res = item.GetLocation();
-				return;
+				let attrs = tag.GetAllAttributes(document);
+				let fileName = attrs.Item("FileName");
+				if (!!fileName)
+				{
+					fileName = applyConstants(fileName);
+					let nullPosition = server.Position.create(0, 0);
+					res = server.Location.create(uriFromName(fileName), server.Range.create(nullPosition, nullPosition));
+				}
 			}
-		});
+
+			let enabledNodes = ["Page", "List", "Question"];
+			enabledNodes.forEach(element =>
+			{
+				let item = surveyData.CurrentNodes.GetItem(word, element);
+				if (!!item)
+				{
+					res = item.GetLocation();
+					return;
+				}
+			});
+		}
+	} catch (error)
+	{
+		logError('Ошибка получения Definition');
 	}
 
 	return res;
@@ -940,7 +1020,7 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 		return server.Range.create(startPos, endPos);
 	} catch (error)
 	{
-		//logError("Ошибка выделения закрывающегося тега", error);
+		logError("Ошибка выделения закрывающегося тега");
 	}
 	return null;
 }
@@ -958,7 +1038,7 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 		return server.Range.create(startPos, endPos);
 	} catch (error)
 	{
-		//logError("Ошибка выделения открывающегося тега", error);
+		logError("Ошибка выделения открывающегося тега");
 	}
 	return null;
 }
@@ -966,8 +1046,16 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 /** Получает URI ко всем <Include> */
 export function getIncludePaths(text: string): string[]
 {
-	let reg = /<Include[\s\S]*?FileName=(("[^"]+")|('[^']+'))/;
-	let txt = text;
-	txt = Encoding.clearXMLComments(txt);
-	return txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x)).map(x => uriFromName(x));
+	let res: string[] = [];
+	try
+	{
+		let reg = /<Include[\s\S]*?FileName=(("[^"]+")|('[^']+'))/;
+		let txt = text;
+		txt = Encoding.clearXMLComments(txt);
+		res = txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x)).map(x => uriFromName(x));
+	} catch (error)
+	{
+		logError('Ошибка получения информации о подключённых файлах');
+	}
+	return res;
 }

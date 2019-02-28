@@ -18,6 +18,15 @@ export { Encoding, Parse, Constants, JQuery };
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
 //#region
 
+
+/** Для передачи ошибки на клиента */
+export interface IErrorLogData
+{
+	Message: string;
+	Error?: any;
+}
+
+
 /** Результат сортировки массива */
 export interface SortedArrayResult<T>
 {

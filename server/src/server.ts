@@ -1,11 +1,12 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, getDocumentMethods, getDocumentNodeIds, getMixIds } from 'tib-api';
-import { sendDiagnostic, TibAutoCompleteItem, getCompletions, ISurveyData, DocumentBuffer, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinitions, getIncludePaths } from './classes';
+import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, getDocumentNodeIdsSync, getDocumentMethodsSync, getMixIdsSync, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, getDocumentMethods, getDocumentNodeIds, getMixIds, IErrorLogData } from 'tib-api';
+import { TibAutoCompleteItem, getCompletions, ISurveyData, DocumentBuffer, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition, getIncludePaths } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { CacheSet } from 'tib-api/lib/cache';
 import { _NodeStoreNames } from 'tib-api/lib/constants';
+import { getDiagnosticElements } from './diagnostic';
 
 
 
@@ -87,7 +88,7 @@ connection.onCompletion(context =>
 	let tag = Cache.Tag.Get();
 	let items = getCompletions(tag, document, context.position, SurveyData, TibAutoCompleteList, Settings, ClassTypes, context.context.triggerCharacter);
 	// костыль для понимания в каком документе произошло onCompletionResolve
-	items = items.map(x => Object.assign(x, { data: document.uri })); 
+	items = items.map(x => Object.assign(x, { data: document.uri }));
 	return items;
 })
 
@@ -138,7 +139,7 @@ connection.onDefinition(data =>
 		position: data.position,
 		force: false
 	});
-	return getDefinitions(tag, document, data.position, SurveyData);
+	return getDefinition(tag, document, data.position, SurveyData);
 })
 
 connection.onRequest('onDidChangeTextDocument', (data: OnDidChangeDocumentData) =>
@@ -171,6 +172,19 @@ connection.onRequest('currentTag', (fields: IProtocolTagFields) =>
 //#region --------------------------- Функции
 
 
+function sendDiagnostic(connection: server.Connection, document: server.TextDocument, settings: KeyedCollection<any>)
+{
+	getDiagnosticElements(document, settings).then(diagnostics =>
+	{
+		let clientDiagnostic: server.PublishDiagnosticsParams = {
+			diagnostics,
+			uri: document.uri
+		};
+		connection.sendDiagnostics(clientDiagnostic);
+	})
+}
+
+
 function getServerTag(data: CurrentTagGetFields): CurrentTag
 {
 	let tag = getCurrentTag(data, Cache);
@@ -195,72 +209,79 @@ function anyChangeHandler(document: server.TextDocument)
 /** Создаёт список AutoComplete из autoComplete.ts */
 async function getAutoComleteList()
 {
-	// получаем AutoComplete
-	let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });
-	let statCS: TibAutoCompleteItem[] = [];
-	for (let key in AutoCompleteArray.StaticMethods)
+	try
 	{
-		// добавляем сам тип в AutoComplete
-		let tp = new TibAutoCompleteItem({
-			Name: key,
-			Kind: "Class",
-			Detail: "Тип данных/класс " + key
-		});
-		statCS.push(tp);
-		// и в classTypes
-		ClassTypes.push(key);
-		// добавляем все его статические методы
-		let items: object[] = AutoCompleteArray.StaticMethods[key];
-		items.forEach(item =>
+		// получаем AutoComplete
+		let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });
+		let statCS: TibAutoCompleteItem[] = [];
+		for (let key in AutoCompleteArray.StaticMethods)
 		{
-			let aci = new TibAutoCompleteItem(item);
-			aci.Parent = key;
-			aci.Kind = "Method";
-			statCS.push(aci);
+			// добавляем сам тип в AutoComplete
+			let tp = new TibAutoCompleteItem({
+				Name: key,
+				Kind: "Class",
+				Detail: "Тип данных/класс " + key
+			});
+			statCS.push(tp);
+			// и в classTypes
+			ClassTypes.push(key);
+			// добавляем все его статические методы
+			let items: object[] = AutoCompleteArray.StaticMethods[key];
+			items.forEach(item =>
+			{
+				let aci = new TibAutoCompleteItem(item);
+				aci.Parent = key;
+				aci.Kind = "Method";
+				statCS.push(aci);
+			});
+		}
+
+		// объединённый массив Tiburon + MSDN
+		let all = tibCode.concat(statCS);
+
+		all.forEach(element =>
+		{
+			let item = new TibAutoCompleteItem(element);
+			if (!item.Kind || !item.Name) return;
+
+			CodeAutoCompleteArray.push(new TibAutoCompleteItem(element)); // сюда добавляем всё
+			// если такого типа ещё нет, то добавляем
+			if (!TibAutoCompleteList.Contains(item.Kind)) TibAutoCompleteList.AddPair(item.Kind, [item])
+			else // если есть то добавляем в массив с учётом перегрузок
+			{
+				// ищем индекс элемента с таким же типом, именем и родителем
+				let ind = TibAutoCompleteList.Item(item.Kind).findIndex(x =>
+				{
+					return x.Name == item.Name && (!!x.Parent && x.Parent == item.Parent || !x.Parent && !item.Parent);
+				});
+
+				if (ind < 0)
+				{
+					TibAutoCompleteList.Item(item.Kind).push(item);
+				}
+				else
+				{
+					// добавляем в перегрузку к имеющемуся (и сам имеющийся тоже, если надо)
+					//if (!TibAutoCompleteList.Item(item.Kind)[ind].Overloads) TibAutoCompleteList.Item(item.Kind)[ind].Overloads = [];
+					let len = TibAutoCompleteList.Item(item.Kind)[ind].Overloads.length;
+					if (len == 0)
+					{
+						let parent = new TibAutoCompleteItem(TibAutoCompleteList.Item(item.Kind)[ind]);
+						TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(parent);
+						len++;
+					}
+					TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(item);
+					let doc = "Перегрузок: " + (len + 1);
+					TibAutoCompleteList.Item(item.Kind)[ind].Description = doc;
+					TibAutoCompleteList.Item(item.Kind)[ind].Documentation = doc;
+				}
+			}
 		});
+	} catch (error)
+	{
+		logError('Ошибка инициализации Autocomplete');
 	}
 
-	// объединённый массив Tiburon + MSDN
-	let all = tibCode.concat(statCS);
-
-	all.forEach(element =>
-	{
-		let item = new TibAutoCompleteItem(element);
-		if (!item.Kind || !item.Name) return;
-
-		CodeAutoCompleteArray.push(new TibAutoCompleteItem(element)); // сюда добавляем всё
-		// если такого типа ещё нет, то добавляем
-		if (!TibAutoCompleteList.Contains(item.Kind)) TibAutoCompleteList.AddPair(item.Kind, [item])
-		else // если есть то добавляем в массив с учётом перегрузок
-		{
-			// ищем индекс элемента с таким же типом, именем и родителем
-			let ind = TibAutoCompleteList.Item(item.Kind).findIndex(x =>
-			{
-				return x.Name == item.Name && (!!x.Parent && x.Parent == item.Parent || !x.Parent && !item.Parent);
-			});
-
-			if (ind < 0)
-			{
-				TibAutoCompleteList.Item(item.Kind).push(item);
-			}
-			else
-			{
-				// добавляем в перегрузку к имеющемуся (и сам имеющийся тоже, если надо)
-				//if (!TibAutoCompleteList.Item(item.Kind)[ind].Overloads) TibAutoCompleteList.Item(item.Kind)[ind].Overloads = [];
-				let len = TibAutoCompleteList.Item(item.Kind)[ind].Overloads.length;
-				if (len == 0)
-				{
-					let parent = new TibAutoCompleteItem(TibAutoCompleteList.Item(item.Kind)[ind]);
-					TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(parent);
-					len++;
-				}
-				TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(item);
-				let doc = "Перегрузок: " + (len + 1);
-				TibAutoCompleteList.Item(item.Kind)[ind].Description = doc;
-				TibAutoCompleteList.Item(item.Kind)[ind].Documentation = doc;
-			}
-		}
-	});
 }
 
 
@@ -303,7 +324,7 @@ async function updateSurveyData(document: server.TextDocument)
 		SurveyData.MixIds = mixIds;
 	} catch (error)
 	{
-		//logError("Ошибка при сборе сведений о документе", error);
+		logError("Ошибка при сборе сведений о документе");
 	}
 }
 
@@ -320,6 +341,17 @@ function getDocument(uri: string): Promise<server.TextDocument>
 			resolve(documents.add(doc));
 		}, err => { reject(err); });
 	});
+}
+
+
+export function logError(text: string)
+{
+	let data = new Error().stack;
+	let log: IErrorLogData = {
+		Message: text,
+		Error: !!data ? ('SERVER: ' + data) : undefined
+	};
+	connection.sendNotification('logError', log);
 }
 
 

@@ -425,12 +425,17 @@ export class LogData
 				case "SurveyData":
 				case "Data":
 					// разносим на отдельные строки
-					res += "-------- " + key + " --------\r\n";
+					let dt = ""
 					for (let dataKey in this.Data[key])
 					{
-						res += this.stringifyData(dataKey, this.Data[key]);
+						dt += this.stringifyData(dataKey, this.Data[key]);
 					}
-					res += "------------------------\r\n";
+					if (!!dt)
+					{
+						res += "-------- " + key + " --------\r\n";
+						res += dt;
+						res += "------------------------\r\n";
+					}
 					break;
 				default:
 					res += this.stringifyData(key, this.Data);

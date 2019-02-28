@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData } from "tib-api";
 
 import { openFileText, getContextChanges, inCDATA, registerCommand, ContextChange, ExtensionSettings, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, ClientServerTransforms } from "./classes";
 
@@ -1459,7 +1459,11 @@ async function createClientConnection(context: vscode.ExtensionContext)
 			console.log(data);
 		});
 
-		ClientIsReady = true;
+		// отчёт об ошибках
+		_client.onNotification("logError", (data: IErrorLogData) =>
+		{
+			logError(data.Message, data.Error);
+		});
 
 		// запрос документа с ссервера
 		_client.onRequest('getDocument', (uri: string) =>
@@ -1473,6 +1477,8 @@ async function createClientConnection(context: vscode.ExtensionContext)
 			});
 		})
 
+
+		ClientIsReady = true;
 
 	});
 }

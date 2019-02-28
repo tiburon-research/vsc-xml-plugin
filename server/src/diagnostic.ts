@@ -3,6 +3,7 @@ import { KeyedCollection, translatePosition } from 'tib-api';
 import { DocumentElement, getDocumentElements, getDuplicatedElementsIds } from 'tib-api/lib/parsing';
 import { clearCDATA, clearXMLComments } from 'tib-api/lib/encoding';
 import { RegExpPatterns } from 'tib-api/lib/constants';
+import { logError } from './server';
 
 
 //#region --------------------------- const type interface
@@ -59,19 +60,25 @@ interface IDiagnosticType
 export async function getDiagnosticElements(document: server.TextDocument, Settings: KeyedCollection<any>): Promise<server.Diagnostic[]>
 {
 	let res: server.Diagnostic[] = [];
-	let stack = [];
-	let text = document.getText();
-	text = clearXMLComments(text);
-	text = clearCDATA(text);
-
-	for (const diagnosticType of _AllDiagnostics) 
+	try
 	{
-		diagnosticType.Functions.forEach((name, func) =>
+		let stack = [];
+		let text = document.getText();
+		text = clearXMLComments(text);
+		text = clearCDATA(text);
+
+		for (const diagnosticType of _AllDiagnostics) 
 		{
-			stack.push(_diagnosticElements(document, diagnosticType.Type, text, func, name).then(x => res = res.concat(x)));
-		});
-	};
-	await Promise.all(stack);
+			diagnosticType.Functions.forEach((name, func) =>
+			{
+				stack.push(_diagnosticElements(document, diagnosticType.Type, text, func, name).then(x => res = res.concat(x)));
+			});
+		};
+		await Promise.all(stack);
+	} catch (error)
+	{
+		logError('Ошибка получения Diagnostic')
+	}
 	return res;
 }
 
