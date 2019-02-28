@@ -8,7 +8,7 @@ import * as shortHash from 'short-hash'
 import * as winattr from 'winattr'
 import { machineIdSync } from "node-machine-id"
 import { bot, _LogPath, OutChannel, } from './extension'
-import { _LockInfoFilePrefix } from 'tib-api/lib/constants'
+import { _LockInfoFilePrefix, _pack } from 'tib-api/lib/constants'
 import { CurrentTag, Language, KeyedCollection, Parse, pathExists, createDir, IServerDocument } from 'tib-api';
 
 
@@ -502,6 +502,7 @@ export function saveError(text: string, data: LogData)
 export function tibError(text: string, data: LogData, error?)
 {
 	showError(text);
+	if (_pack == "debug" && !!error) console.log(error);
 	if (!!error) data.add({ StackTrace: error });
 	saveError(text, data);
 }
