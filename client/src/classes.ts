@@ -499,9 +499,9 @@ export function saveError(text: string, data: LogData)
 
 
 /** Показ и сохранение ошибки */
-export function tibError(text: string, data: LogData, error?)
+export function tibError(text: string, data: LogData, error: any, showerror: boolean)
 {
-	showError(text);
+	if (showerror || _pack == "debug") showError(text);
 	if (_pack == "debug" && !!error) console.log(error);
 	if (!!error) data.add({ StackTrace: error });
 	saveError(text, data);
@@ -797,7 +797,7 @@ export function openUrl(url: string): Promise<string>
 				Data: { Url: url },
 				StackTrace: e
 			});
-			tibError("Не удалось открыть ссылку", data);
+			tibError("Не удалось открыть ссылку", data, e, true);
 			reject();
 		});
 	});

@@ -5,7 +5,7 @@ import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, Survey
 import { TibAutoCompleteItem, getCompletions, ISurveyData, DocumentBuffer, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition, getIncludePaths } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { CacheSet } from 'tib-api/lib/cache';
-import { _NodeStoreNames } from 'tib-api/lib/constants';
+import { _NodeStoreNames, _pack } from 'tib-api/lib/constants';
 import { getDiagnosticElements } from './diagnostic';
 
 
@@ -279,7 +279,7 @@ async function getAutoComleteList()
 		});
 	} catch (error)
 	{
-		logError('Ошибка инициализации Autocomplete');
+		logError('Ошибка инициализации Autocomplete', false);
 	}
 
 }
@@ -324,7 +324,7 @@ async function updateSurveyData(document: server.TextDocument)
 		SurveyData.MixIds = mixIds;
 	} catch (error)
 	{
-		logError("Ошибка при сборе сведений о документе");
+		logError("Ошибка при сборе сведений о документе", false);
 	}
 }
 
@@ -344,11 +344,12 @@ function getDocument(uri: string): Promise<server.TextDocument>
 }
 
 
-export function logError(text: string)
+export function logError(text: string, showError: boolean)
 {
 	let data = new Error().stack;
 	let log: IErrorLogData = {
 		Message: text,
+		Silent: !showError && _pack != "debug",
 		Error: !!data ? ('SERVER: ' + data) : undefined
 	};
 	connection.sendNotification('logError', log);

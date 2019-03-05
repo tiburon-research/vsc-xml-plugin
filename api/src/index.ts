@@ -23,6 +23,8 @@ export { Encoding, Parse, Constants, JQuery };
 export interface IErrorLogData
 {
 	Message: string;
+	/** Ошибка не будет показана */
+	Silent: boolean;
 	Error?: any;
 }
 

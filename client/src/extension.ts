@@ -93,7 +93,7 @@ export function activate(context: vscode.ExtensionContext)
 			//getSurveyData(editor.document);
 		} catch (er)
 		{
-			logError("Ошибка при сборе информации", er);
+			logError("Ошибка при сборе информации", false);
 		}
 	}
 
@@ -147,7 +147,7 @@ export function activate(context: vscode.ExtensionContext)
 			changes = getContextChanges(event.document, editor.selections, event.contentChanges, true);
 		} catch (error)
 		{
-			logError(error);
+			logError("Ошибка в getContextChanges", false)
 		}
 
 		let originalPosition: vscode.Position;
@@ -258,7 +258,7 @@ function getStaticData()
 		}
 	} catch (er)
 	{
-		logError("Ошибка при инициализации расширения", er);
+		logError("Ошибка при инициализации расширения", true)
 	}
 }
 
@@ -385,7 +385,7 @@ function registerCommands()
 			});
 		} catch (error)
 		{
-			logError("Ошибка при оборачивании в CDATA");
+			logError("Ошибка при оборачивании в CDATA", true);
 		}
 	});
 
@@ -414,7 +414,7 @@ function registerCommands()
 			} catch (error)
 			{
 				CurrentStatus.removeCurrentMessage();
-				logError("Ошибка при удалении Id вопроса из заголовка", error);
+				logError("Ошибка при удалении Id вопроса из заголовка", true)
 			}
 			x.dispose();
 		})
@@ -436,7 +436,7 @@ function registerCommands()
 		}
 		catch (error)
 		{
-			logError("Ошибка преобразования AnswersToItems", error);
+			logError("Ошибка преобразования AnswersToItems", true);
 		}
 	});
 
@@ -456,7 +456,7 @@ function registerCommands()
 		}
 		catch (error)
 		{
-			logError("Ошибка преобразования ItemsToAnswers", error);
+			logError("Ошибка преобразования ItemsToAnswers", true);
 		}
 	});
 
@@ -505,7 +505,7 @@ function registerCommands()
 				});
 			} catch (error)
 			{
-				logError("Ошибка при сортировке листа", error);
+				logError("Ошибка при сортировке листа", true);
 			}
 			x.dispose();
 		});
@@ -525,7 +525,7 @@ function registerCommands()
 			applyChanges(editor.selection, res, editor, true);
 		} catch (error)
 		{
-			logError("Ошибка в преобразовании возрастного списка", error);
+			logError("Ошибка в преобразовании возрастного списка", true);
 		}
 	});
 
@@ -607,7 +607,7 @@ function registerCommands()
 		let path = Settings.Item("demoPath");
 		if (!path)
 		{
-			logError("Невозможно получить доступ к файлу демки");
+			logError("Невозможно получить доступ к файлу демки", true);
 			return;
 		}
 		CurrentStatus.setProcessMessage("Открывается демка...").then(x =>
@@ -625,7 +625,7 @@ function registerCommands()
 		let templatePathFolder = Settings.Item("templatePathFolder") + '\\';
 		if (!templatePathFolder)
 		{
-			logError("Невозможно получить доступ к папке");
+			logError("Невозможно получить доступ к папке", true);
 			return;
 		}
 
@@ -693,7 +693,7 @@ function registerCommands()
 						},
 						(er) =>
 						{
-							logError(er);
+							logError(er, true);
 							x.dispose();
 						}
 					)
@@ -923,7 +923,7 @@ function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 
 	} catch (error)
 	{
-		logError("Ошибка при добавлении заглавной буквы", error);
+		logError("Ошибка при добавлении заглавной буквы", true);
 	}
 	return res;
 }
@@ -953,7 +953,7 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 		return server.Range.create(startPos, endPos);
 	} catch (error)
 	{
-		logError("Ошибка выделения закрывающегося тега", error);
+		logError("Ошибка выделения закрывающегося тега", false);
 	}
 	return null;
 }
@@ -1001,7 +1001,7 @@ export async function getCurrentTag(document: vscode.TextDocument, position: vsc
 	}
 	catch (error)
 	{
-		logError("Ошибка определения положения в XML", error);
+		logError("Ошибка определения положения в XML", false);
 		return null;
 	}
 	return tag;
@@ -1018,7 +1018,7 @@ function getCurrentLineText(document: vscode.TextDocument, position: vscode.Posi
 		return document.getText(new vscode.Range(start, end));
 	} catch (error)
 	{
-		logError("Ошибка получения текста текущей строки", error);
+		logError("Ошибка получения текста текущей строки", false);
 		return null;
 	}
 
@@ -1037,7 +1037,7 @@ function selectLines(document: vscode.TextDocument, selection: vscode.Selection)
 {
 	if (!selection)
 	{
-		logError("Ошибка при выделении элемента");
+		logError("Ошибка при выделении элемента", false);
 		return null;
 	}
 	return new vscode.Selection(
@@ -1056,7 +1056,7 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 	let tagTo = await getCurrentTag(document, selection.end);
 	if (!tagFrom || !tagTo)
 	{
-		logError("Ошибка получения границ выделения");
+		logError("Ошибка получения границ выделения", false);
 		return null;
 	}
 	let langFrom = tagFrom.GetLaguage();
@@ -1144,7 +1144,7 @@ function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text:
 		}
 		catch (error)
 		{
-			logError("Ошибка замены текста в выделении", error);
+			logError("Ошибка замены текста в выделении", true);
 		}
 	}, { undoStopAfter: false, undoStopBefore: false })
 }
@@ -1187,11 +1187,12 @@ async function multiLinePaste(editor: vscode.TextEditor, lines: string[], separa
 
 
 /** сообщение (+ отчёт) об ошибке */
-function logError(text: string, error?)
+function logError(text: string, showErrror: boolean)
 {
+	let error = new Error().stack;
 	let editor = vscode.window.activeTextEditor;
 	let data = getLogData(editor);
-	tibError(text, data, error);
+	tibError(text, data, error, showErrror);
 }
 
 
@@ -1268,7 +1269,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 		}
 		catch (error)
 		{
-			logError("Ошибка при обновлении текста документа", error);
+			logError("Ошибка при обновлении текста документа", false);
 		}
 	}
 	InProcess = false;
@@ -1284,7 +1285,7 @@ function checkDocument(editor: vscode.TextEditor)
 	{
 		yesNoHelper("Включить кэширование? Кеширование позволяет ускорить работу с большими документами таких функций расширения, как автозавершение, подсказки при вводе и т.д.").then((res) => 
 		{
-			if (res) Settings.Set("enableCache", true).then(null, (er) => { logError("Ошибка при изменении конфигурации", er); });
+			if (res) Settings.Set("enableCache", true).then(null, (er) => { logError("Ошибка при изменении конфигурации", true) });
 			else Refused.enableCache = true;
 		})
 	}
@@ -1462,7 +1463,9 @@ async function createClientConnection(context: vscode.ExtensionContext)
 		// отчёт об ошибках
 		_client.onNotification("logError", (data: IErrorLogData) =>
 		{
-			logError(data.Message, data.Error);
+			let logData = getLogData(vscode.window.activeTextEditor);
+			logData.add({ StackTrace: data.Error });
+			tibError(data.Message, logData, null, !data.Silent);
 		});
 
 		// запрос документа с ссервера

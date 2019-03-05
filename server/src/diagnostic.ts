@@ -77,7 +77,7 @@ export async function getDiagnosticElements(document: server.TextDocument, Setti
 		await Promise.all(stack);
 	} catch (error)
 	{
-		logError('Ошибка получения Diagnostic')
+		logError('Ошибка получения Diagnostic', true);
 	}
 	return res;
 }

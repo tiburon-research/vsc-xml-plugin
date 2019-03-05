@@ -137,7 +137,7 @@ export class DocumentBuffer
 			});
 		} catch (error)
 		{
-			logError('Ошибка применения изменений к документу');
+			logError('Ошибка применения изменений к документу', true);
 		}
 		return res;
 	}
@@ -149,7 +149,7 @@ export class DocumentBuffer
 			this.document = server.TextDocument.create(this._uri, 'tib', version, content);
 		} catch (error)
 		{
-			logError('Ошибка создания нового документа')
+			logError('Ошибка создания нового документа', true);
 		}
 	}
 
@@ -239,9 +239,10 @@ class ElementExtractor
 				resultStr = resultStr.replace(new RegExp("{{" + key + "}}", "g"), "${" + i + "|" + value.join(",") + "|}");
 				i++;
 			});
-		} catch (error)
+		}
+		catch (error)
 		{
-			logError('Ошибка получения элементов');
+			logError('Ошибка получения элементов', false);
 		}
 
 		return resultStr;
@@ -423,7 +424,7 @@ export class TibAutoCompletes
 			}
 		} catch (error)
 		{
-			logError('Ошибка получения XML Features Autocomplete');
+			logError('Ошибка получения XML Features Autocomplete', false);
 		}
 		return completionItems;
 	}
@@ -458,7 +459,7 @@ export class TibAutoCompletes
 			}
 		} catch (error)
 		{
-			logError('Ошибка получения XML Attrs Autocomplete');
+			logError('Ошибка получения XML Attrs Autocomplete', false);
 		}
 
 		return completionItems;
@@ -503,7 +504,7 @@ export class TibAutoCompletes
 			});
 		} catch (error)
 		{
-			logError('Ошибка получения XML AttrValues Autocomplete');
+			logError('Ошибка получения XML AttrValues Autocomplete', false);
 		}
 
 		return completionItems;
@@ -633,7 +634,7 @@ export class TibAutoCompletes
 			}
 		} catch (error)
 		{
-			logError('Ошибка получения Main C# Autocomplete');
+			logError('Ошибка получения Main C# Autocomplete', false);
 		}
 
 		return completionItems;
@@ -674,7 +675,7 @@ export class TibAutoCompletes
 			}
 		} catch (error)
 		{
-			logError('Ошибка получения C# Fields Autocomplete');
+			logError('Ошибка получения C# Fields Autocomplete', false);
 		}
 		return completionItems;
 	}
@@ -717,7 +718,7 @@ export function getSignatureHelpers(tag: CurrentTag, document: server.TextDocume
 		});
 	} catch (error)
 	{
-		logError('Ошибка получения SignatureHelpers');
+		logError('Ошибка получения SignatureHelpers', false);
 	}
 
 	return sign;
@@ -774,7 +775,7 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
 		if (customMethods) res = res.concat(customMethods);
 	} catch (error)
 	{
-		logError('Ошибка получения Hovers');
+		logError('Ошибка получения Hovers', false);
 	}
 	return res;
 }
@@ -890,7 +891,7 @@ export class TibDocumentHighLights
 			}
 		} catch (error)
 		{
-			logError('Ошибка получения Tags Highlights');
+			logError('Ошибка получения Tags Highlights', false);
 		}
 
 		return res;
@@ -946,7 +947,7 @@ export class TibDocumentHighLights
 			res.push(server.DocumentHighlight.create(nextRange));
 		} catch (error)
 		{
-			logError('Ошибка получения Blocks Highlights');
+			logError('Ошибка получения Blocks Highlights', false);
 		}
 
 		return res;
@@ -996,7 +997,7 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 		}
 	} catch (error)
 	{
-		logError('Ошибка получения Definition');
+		logError('Ошибка получения определения', true);
 	}
 
 	return res;
@@ -1020,7 +1021,7 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 		return server.Range.create(startPos, endPos);
 	} catch (error)
 	{
-		logError("Ошибка выделения закрывающегося тега");
+		logError("Ошибка выделения закрывающегося тега", false);
 	}
 	return null;
 }
@@ -1038,7 +1039,7 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 		return server.Range.create(startPos, endPos);
 	} catch (error)
 	{
-		logError("Ошибка выделения открывающегося тега");
+		logError("Ошибка выделения открывающегося тега", false);
 	}
 	return null;
 }
@@ -1055,7 +1056,7 @@ export function getIncludePaths(text: string): string[]
 		res = txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x)).map(x => uriFromName(x));
 	} catch (error)
 	{
-		logError('Ошибка получения информации о подключённых файлах');
+		logError('Ошибка получения информации о подключённых файлах', true);
 	}
 	return res;
 }
