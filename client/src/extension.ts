@@ -100,10 +100,9 @@ export function activate(context: vscode.ExtensionContext)
 	/** Документ сменился */
 	function anotherDocument(needReload: boolean, editor: vscode.TextEditor)
 	{
-		/* Includes = [];
-		Methods.Clear();
-		CurrentNodes.Clear(); */
 		if (!editor || editor.document.languageId != 'tib') return;
+		let documentData = ClientServerTransforms.ToServer.Document(editor.document);
+		createRequest<IServerDocument, void>("anotherDocument", documentData, true);
 		if (!editor.document.isUntitled)
 		{
 			if (isLocked(editor.document)) showLockInfo(editor.document);
@@ -1487,9 +1486,14 @@ async function createClientConnection(context: vscode.ExtensionContext)
 }
 
 
-async function createRequest<T, R>(name: string, data: T): Promise<R>
+/** Запрос к серверу */
+async function createRequest<T, R>(name: string, data: T, waitForServerIsReady = false): Promise<R>
 {
-	if (!ClientIsReady) return undefined;
+	if (!ClientIsReady)
+	{
+		if (waitForServerIsReady) await _client.onReady();
+		else return undefined;
+	}
 	return _client.sendRequest<R>(name, data);
 }
 

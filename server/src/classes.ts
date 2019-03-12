@@ -64,6 +64,29 @@ export class TibAutoCompleteItem
 
 
 
+export class SurveyData implements ISurveyData
+{
+	/** Список методов */
+	Methods: TibMethods;
+	/** Список Id */
+	CurrentNodes: SurveyNodes;
+	/** Список MixId (подставляется в значениях атрибутов) */
+	MixIds: string[];
+	/** Список путей Include */
+	Includes: string[]
+
+	/** Очистка */
+	public Clear()
+	{
+		this.Methods = new TibMethods();
+		this.CurrentNodes = new SurveyNodes();
+		this.MixIds = [];
+		this.Includes = [];
+	}
+}
+
+
+
 /** Для преобразований Snippet -> CompletitionItem */
 class SnippetObject
 {
