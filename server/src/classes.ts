@@ -249,11 +249,12 @@ class ElementExtractor
 			let res = new KeyedCollection<string[]>();
 			let match = input.matchAll(/{{(\w+)}}/);
 			if (!match || match.length == 0) return input;
+			let parent = this._ElementFunctions;
 			match.forEach(element =>
 			{
-				if (!!this._ElementFunctions[element[1]] && !res.Contains(element[1]))
+				if (!!parent[element[1]] && !res.Contains(element[1]))
 				{
-					res.AddPair(element[1], this._ElementFunctions[element[1]]());
+					res.AddPair(element[1], parent[element[1]].call(this)); // почему-то при вызове GeAll* this'ом считается _ElementFunctions
 				}
 			});
 			let i = 1;
@@ -445,7 +446,8 @@ export class TibAutoCompletes
 					completionItems.push(ciS);
 				}
 			}
-		} catch (error)
+		}
+		catch (error)
 		{
 			logError('Ошибка получения XML Features Autocomplete', false);
 		}
