@@ -501,10 +501,15 @@ export function saveError(text: string, data: LogData)
 /** Показ и сохранение ошибки */
 export function tibError(text: string, data: LogData, error: any, showerror: boolean)
 {
-	if (showerror || _pack == "debug") showError(text);
-	if (_pack == "debug" && !!error) console.log(error);
+	if (_pack == "debug")
+	{
+		showerror = true;
+		text = "debug: " + text;
+		if (!!error) console.log(error);
+	}
+	if (showerror) showError(text);
 	if (!!error) data.add({ StackTrace: error });
-	saveError(text, data);
+	if (_pack != "debug") saveError(text, data);
 }
 
 
