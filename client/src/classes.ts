@@ -155,20 +155,9 @@ export function inCDATA(document: vscode.TextDocument, position: vscode.Position
 }
 
 /** проверяет язык для activeTextEditor */
-function isTib()
+export function isTib()
 {
 	return vscode.window.activeTextEditor.document.languageId == "tib";
-}
-
-
-/** Создаёт команду только для языка tib */
-export async function registerCommand(name: string, command: Function): Promise<void>
-{
-	await vscode.commands.registerCommand(name, (...args: any[]) => 
-	{
-		if (!isTib()) return;
-		command(...args);
-	});
 }
 
 

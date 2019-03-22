@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 
 import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData } from "tib-api";
 
-import { openFileText, getContextChanges, inCDATA, registerCommand, ContextChange, ExtensionSettings, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, ClientServerTransforms } from "./classes";
+import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, ClientServerTransforms, isTib } from "./classes";
 
 import * as Formatting from './formatting'
 import * as fs from 'fs';
@@ -282,22 +282,25 @@ function registerCommands()
 	// команда для тестирования на отладке
 	registerCommand('tib.debugTestCommand', () => 
 	{
-		if (_pack != "debug") return;
-
-		// выполняем дебажный тест
-		debug.test();
-	});
+		return new Promise<void>((resolve, reject) =>
+		{
+			if (_pack != "debug") return;
+			// выполняем дебажный тест
+			debug.test();
+			resolve();
+		});
+	}, false);
 
 	// выделение Answer из текста
 	registerCommand('tib.getAnswers', () => 
 	{
-		createElements(SurveyElementType.Answer);
+		return createElements(SurveyElementType.Answer);
 	});
 
 	// выделение Item из текста
 	registerCommand('tib.getItems', () => 
 	{
-		createElements(SurveyElementType.ListItem);
+		return createElements(SurveyElementType.ListItem);
 	});
 
 
@@ -306,7 +309,7 @@ function registerCommands()
 	{
 		let editor = vscode.window.activeTextEditor;
 		let document = createServerDocument(editor.document);
-		editor.selections.forEachAsync(selection =>
+		let prom = editor.selections.forEachAsync(selection =>
 		{
 			return new Promise<vscode.Selection>((resolve) =>
 			{
@@ -321,7 +324,9 @@ function registerCommands()
 					resolve(range);
 				});
 			})
-		}).then(newSels => { editor.selections = newSels.filter(s => !!s); });
+		});
+		prom.then(newSels => { editor.selections = newSels.filter(s => !!s); });
+		return prom;
 	});
 
 	// выделение родительского <тега>
@@ -329,7 +334,7 @@ function registerCommands()
 	{
 		let editor = vscode.window.activeTextEditor;
 		let document = createServerDocument(editor.document);
-		editor.selections.forEachAsync(selection =>
+		let prom = editor.selections.forEachAsync(selection =>
 		{
 			return new Promise<vscode.Selection>((resolve) =>
 			{
@@ -357,175 +362,216 @@ function registerCommands()
 					resolve(range);
 				});
 			});
-		}).then(newSels => { editor.selections = newSels.filter(s => !!s); })
+		});
+		prom.then(newSels => { editor.selections = newSels.filter(s => !!s); });
+		return prom;
 	});
 
 	// оборачивание в [тег]
 	registerCommand('tib.insertTag', () => 
 	{
 		InProcess = true;
-		vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]")).then(() => 
+		return new Promise<void>((resolve, reject) =>
 		{
-			InProcess = false;
+			vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]")).then(() => 
+			{
+				InProcess = false;
+				resolve();
+			});
 		});
 	});
 
 	registerCommand('tib.cdata', () => 
 	{
-		try
+		return new Promise<void>((resolve, reject) =>
 		{
-			InProcess = true;
-			let multi = vscode.window.activeTextEditor.document.getText(vscode.window.activeTextEditor.selection).indexOf("\n") > -1;
-			let pre = multi ? "\n" : " ";
-			let post = multi ? "\n" : " ";
-			vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<![CDATA[" + pre + "$TM_SELECTED_TEXT" + post + "]]>")).then(() => 
+			try
 			{
-				InProcess = false;
-			});
-		} catch (error)
-		{
-			logError("Ошибка при оборачивании в CDATA", true);
-		}
+				InProcess = true;
+				let multi = vscode.window.activeTextEditor.document.getText(vscode.window.activeTextEditor.selection).indexOf("\n") > -1;
+				let pre = multi ? "\n" : " ";
+				let post = multi ? "\n" : " ";
+				vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<![CDATA[" + pre + "$TM_SELECTED_TEXT" + post + "]]>")).then(() => 
+				{
+					InProcess = false;
+					resolve();
+				});
+			} catch (error)
+			{
+				logError("Ошибка при оборачивании в CDATA", true);
+				resolve();
+			}
+		});
 	});
 
 	registerCommand('tib.commentBlock', () => 
 	{
-		InProcess = true;
-		let newSel = selectLines(vscode.window.activeTextEditor.document, vscode.window.activeTextEditor.selection);
-		if (!!newSel) vscode.window.activeTextEditor.selection = newSel;
-		vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<!--#block $1 -->\n\n$0$TM_SELECTED_TEXT\n\n<!--#endblock-->")).then(() => 
+		return new Promise<void>((resolve, reject) =>
 		{
-			InProcess = false;
+			InProcess = true;
+			let newSel = selectLines(vscode.window.activeTextEditor.document, vscode.window.activeTextEditor.selection);
+			if (!!newSel) vscode.window.activeTextEditor.selection = newSel;
+			vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<!--#block $1 -->\n\n$0$TM_SELECTED_TEXT\n\n<!--#endblock-->")).then(() => 
+			{
+				InProcess = false;
+				resolve();
+			});
 		});
 	});
 
 	//Удаление айди вопроса в заголовках вопроса
 	registerCommand('tib.remove.QuestionIds', () =>
 	{
-		let editor = vscode.window.activeTextEditor;
-		CurrentStatus.setProcessMessage("Удаление Id из заголовков...").then(x =>
+		return new Promise<void>((resolve, reject) =>
 		{
-			try
+			let editor = vscode.window.activeTextEditor;
+			CurrentStatus.setProcessMessage("Удаление Id из заголовков...").then(x =>
 			{
-				let text = editor.document.getText();
-				let res = TibDocumentEdits.RemoveQuestionIds(text);
-				applyChanges(getFullRange(editor.document), res, editor).then(() => CurrentStatus.removeCurrentMessage());
-			} catch (error)
-			{
-				CurrentStatus.removeCurrentMessage();
-				logError("Ошибка при удалении Id вопроса из заголовка", true)
-			}
-			x.dispose();
-		})
+				try
+				{
+					let text = editor.document.getText();
+					let res = TibDocumentEdits.RemoveQuestionIds(text);
+					applyChanges(getFullRange(editor.document), res, editor).then(() =>
+					{
+						CurrentStatus.removeCurrentMessage();
+						resolve();
+					});
+				} catch (error)
+				{
+					CurrentStatus.removeCurrentMessage();
+					logError("Ошибка при удалении Id вопроса из заголовка", true)
+					resolve();
+				}
+				x.dispose();
+			})
+		});
 	});
 
 	registerCommand('tib.transform.AnswersToItems', () => 
 	{
-		let editor = vscode.window.activeTextEditor;
-		try
+		return new Promise<void>((resolve, reject) =>
 		{
-			let results: string[] = [];
-			editor.selections.forEach(selection =>
+			let editor = vscode.window.activeTextEditor;
+			try
 			{
-				let text = editor.document.getText(selection);
-				let res = TibDocumentEdits.AnswersToItems(text);
-				results.push(res);
-			});
-			multiPaste(editor, editor.selections, results);
-		}
-		catch (error)
-		{
-			logError("Ошибка преобразования AnswersToItems", true);
-		}
+				let results: string[] = [];
+				editor.selections.forEach(selection =>
+				{
+					let text = editor.document.getText(selection);
+					let res = TibDocumentEdits.AnswersToItems(text);
+					results.push(res);
+				});
+				multiPaste(editor, editor.selections, results).then(() => { resolve(); });
+			}
+			catch (error)
+			{
+				logError("Ошибка преобразования AnswersToItems", true);
+				resolve();
+			}
+		});
 	});
 
 	registerCommand('tib.transform.ItemsToAnswers', () => 
 	{
-		let editor = vscode.window.activeTextEditor;
-		try
+		return new Promise<void>((resolve, reject) =>
 		{
-			let results: string[] = [];
-			editor.selections.forEach(selection =>
+			let editor = vscode.window.activeTextEditor;
+			try
 			{
-				let text = editor.document.getText(selection);
-				let res = TibDocumentEdits.ItemsToAnswers(text);
-				results.push(res);
-			});
-			multiPaste(editor, editor.selections, results);
-		}
-		catch (error)
-		{
-			logError("Ошибка преобразования ItemsToAnswers", true);
-		}
+				let results: string[] = [];
+				editor.selections.forEach(selection =>
+				{
+					let text = editor.document.getText(selection);
+					let res = TibDocumentEdits.ItemsToAnswers(text);
+					results.push(res);
+				});
+				multiPaste(editor, editor.selections, results).then(() => { resolve(); });
+			}
+			catch (error)
+			{
+				logError("Ошибка преобразования ItemsToAnswers", true);
+				resolve();
+			}
+		});
 	});
 
 
 	//Отсортировать List
 	registerCommand('tib.transform.SortList', () =>
 	{
-		let editor = vscode.window.activeTextEditor;
-		CurrentStatus.setProcessMessage("Сортировка списка...").then(x =>
+		return new Promise<void>((resolve, reject) =>
 		{
-			try
+			let editor = vscode.window.activeTextEditor;
+			CurrentStatus.setProcessMessage("Сортировка списка...").then(x =>
 			{
-				let sortBy = ["Id", "Text"];		//элементы сортировки
-
-				let text = editor.document.getText(editor.selection);			   //Берём выделенный текст
-				let varCount = TibDocumentEdits.getVarCountFromList(text);		  //Получаем количество Var'ов
-
-				for (let i = 0; i < varCount; i++)
-				{	  //заполняем Var'ы
-					sortBy.push("Var(" + i + ")");
-				}
-
-				vscode.window.showQuickPick(sortBy, { placeHolder: "Сортировать по" }).then(x =>
+				try
 				{
+					let sortBy = ["Id", "Text"];		//элементы сортировки
 
-					if (typeof x !== typeof undefined)
-					{
+					let text = editor.document.getText(editor.selection);			   //Берём выделенный текст
+					let varCount = TibDocumentEdits.getVarCountFromList(text);		  //Получаем количество Var'ов
 
-						let res;
-						let attr = x;
-
-						if (attr.includes("Var"))
-						{
-							let index = parseInt(attr.match(/\d+/)[0]);
-							res = TibDocumentEdits.sortListBy(text, "Var", index);
-						} else
-						{
-							res = TibDocumentEdits.sortListBy(text, x);		 //сортируем
-						}
-
-						res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");	 //форматируем xml
-
-
-						applyChanges(editor.selection, res, editor, true).then(() => CurrentStatus.removeCurrentMessage());	  //заменяем текст
+					for (let i = 0; i < varCount; i++)
+					{	  //заполняем Var'ы
+						sortBy.push("Var(" + i + ")");
 					}
-				});
-			} catch (error)
-			{
-				logError("Ошибка при сортировке листа", true);
-			}
-			x.dispose();
+
+					vscode.window.showQuickPick(sortBy, { placeHolder: "Сортировать по" }).then(x =>
+					{
+						if (typeof x !== 'undefined')
+						{
+							let res;
+							let attr = x;
+
+							if (attr.includes("Var"))
+							{
+								let index = parseInt(attr.match(/\d+/)[0]);
+								res = TibDocumentEdits.sortListBy(text, "Var", index);
+							} else
+							{
+								res = TibDocumentEdits.sortListBy(text, x);		 //сортируем
+							}
+
+							res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");	 //форматируем xml
+
+
+							applyChanges(editor.selection, res, editor, true).then(() =>
+							{
+								CurrentStatus.removeCurrentMessage();
+								resolve();
+							});	  //заменяем текст
+						}
+						else resolve();
+					});
+				} catch (error)
+				{
+					logError("Ошибка при сортировке листа", true);
+					resolve();
+				}
+				x.dispose();
+			});
 		});
 	});
 
 	//преобразовать в список c возрастом
 	registerCommand('tib.transform.ToAgeList', () =>
 	{
-		let editor = vscode.window.activeTextEditor;
-
-		try
+		return new Promise<void>((resolve, reject) =>
 		{
-			let text = editor.document.getText(editor.selection);
-			let res = TibDocumentEdits.ToAgeList(text);
-			// TODO: убрать, когда появится принудительное форматирование многострочности
-			res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");
-			applyChanges(editor.selection, res, editor, true);
-		} catch (error)
-		{
-			logError("Ошибка в преобразовании возрастного списка", true);
-		}
+			let editor = vscode.window.activeTextEditor;
+			try
+			{
+				let text = editor.document.getText(editor.selection);
+				let res = TibDocumentEdits.ToAgeList(text);
+				// TODO: убрать, когда появится принудительное форматирование многострочности
+				res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");
+				applyChanges(editor.selection, res, editor, true).then(() => { resolve(); });
+			} catch (error)
+			{
+				logError("Ошибка в преобразовании возрастного списка", true);
+				resolve();
+			}
+		});
 	});
 
 	// комментирование блока
@@ -538,7 +584,7 @@ function registerCommands()
 		{
 			return editor.document.offsetAt(b.active) - editor.document.offsetAt(a.active);
 		});
-		commentAllBlocks(selections);
+		return commentAllBlocks(selections);
 	});
 
 	// комментирование строки
@@ -566,54 +612,61 @@ function registerCommands()
 		});
 		// для каждого выделения
 		//InProcess = true;
-		commentAllBlocks(selections);
+		return commentAllBlocks(selections);
 	});
 
 	registerCommand('tib.paste', () => 
 	{
-		InProcess = true;
-		let txt = getFromClioboard();
-		if (txt.match(/[\s\S]*\n$/)) txt = txt.replace(/\n$/, '');
-		let pre = txt.split("\n");
-		let lines = [];
-		let editor = vscode.window.activeTextEditor;
+		return new Promise<void>((resolve, reject) =>
+		{
+			InProcess = true;
+			let txt = getFromClioboard();
+			if (txt.match(/[\s\S]*\n$/)) txt = txt.replace(/\n$/, '');
+			let pre = txt.split("\n");
+			let lines = [];
+			let editor = vscode.window.activeTextEditor;
 
-		if (pre.length != editor.selections.length)
-		{
-			for (let i = 0; i < editor.selections.length; i++)
+			if (pre.length != editor.selections.length)
 			{
-				lines.push(txt);
-			}
-			multiLinePaste(editor, lines);
-		}
-		else
-		{
-			lines = pre.map(s => { return s.trim() });
-			if (lines.filter(l => { return l.indexOf("\t") > -1; }).length == lines.length)
-			{
-				vscode.window.showQuickPick(["Да", "Нет"], { placeHolder: "Разделить запятыми?" }).then(x =>
+				for (let i = 0; i < editor.selections.length; i++)
 				{
-					multiLinePaste(editor, lines, x == "Да");
-				});
+					lines.push(txt);
+				}
+				multiLinePaste(editor, lines).then(() => { resolve(); });
 			}
-			else multiLinePaste(editor, lines);
-		}
+			else
+			{
+				lines = pre.map(s => { return s.trim() });
+				if (lines.filter(l => { return l.indexOf("\t") > -1; }).length == lines.length)
+				{
+					vscode.window.showQuickPick(["Да", "Нет"], { placeHolder: "Разделить запятыми?" }).then(x =>
+					{
+						multiLinePaste(editor, lines, x == "Да").then(() => { resolve(); });
+					});
+				}
+				else multiLinePaste(editor, lines).then(() => { resolve(); });
+			}
+		});
 	});
 
 	registerCommand('tib.demo', () => 
 	{
-		//vscode.commands.executeCommand("vscode.open", vscode.Uri.file(_DemoPath));
-		let path = Settings.Item("demoPath");
-		if (!path)
+		return new Promise<void>((resolve, reject) =>
 		{
-			logError("Невозможно получить доступ к файлу демки", true);
-			return;
-		}
-		CurrentStatus.setProcessMessage("Открывается демка...").then(x =>
-		{
-			openFileText(path).then(() => CurrentStatus.removeCurrentMessage()).then(() =>
+			//vscode.commands.executeCommand("vscode.open", vscode.Uri.file(_DemoPath));
+			let path = Settings.Item("demoPath");
+			if (!path)
 			{
-				x.dispose();
+				logError("Невозможно получить доступ к файлу демки", true);
+				return resolve();
+			}
+			CurrentStatus.setProcessMessage("Открывается демка...").then(x =>
+			{
+				openFileText(path).then(() => CurrentStatus.removeCurrentMessage()).then(() =>
+				{
+					x.dispose();
+					resolve();
+				});
 			});
 		});
 	});
@@ -621,31 +674,39 @@ function registerCommands()
 	//Создание tibXML шаблона
 	registerCommand('tib.template', () =>
 	{
-		let templatePathFolder = Settings.Item("templatePathFolder") + '\\';
-		if (!templatePathFolder)
+		return new Promise<void>((resolve, reject) =>
 		{
-			logError("Невозможно получить доступ к папке", true);
-			return;
-		}
+			let templatePathFolder = Settings.Item("templatePathFolder") + '\\';
+			if (!templatePathFolder)
+			{
+				logError("Невозможно получить доступ к папке", true);
+				return resolve();
+			}
 
-		let tibXMLFiles = fs.readdirSync(templatePathFolder).filter(x =>
-		{
-			let state = fs.statSync(templatePathFolder + x);
-			return !state.isDirectory();
-		})
+			let tibXMLFiles = fs.readdirSync(templatePathFolder).filter(x =>
+			{
+				let state = fs.statSync(templatePathFolder + x);
+				return !state.isDirectory();
+			})
 
-		vscode.window.showQuickPick(tibXMLFiles, { placeHolder: "Выберите шаблон" }).then(x =>
-		{
-			openFileText(templatePathFolder + x);
+			vscode.window.showQuickPick(tibXMLFiles, { placeHolder: "Выберите шаблон" }).then(x =>
+			{
+				openFileText(templatePathFolder + x);
+				resolve();
+			});
 		});
 	});
 
 	// переключение Linq
 	registerCommand('tib.linqToggle', () => 
 	{
-		_useLinq = !_useLinq;
-		vscode.window.showInformationMessage("Подстановка Linq " + (_useLinq ? "включена" : "отключена"))
-	});
+		return new Promise<void>((resolve, reject) =>
+		{
+			_useLinq = !_useLinq;
+			vscode.window.showInformationMessage("Подстановка Linq " + (_useLinq ? "включена" : "отключена"));
+			resolve();
+		});
+	}, false);
 
 	vscode.languages.registerDocumentFormattingEditProvider('tib', {
 		provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[]
@@ -821,13 +882,12 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 				}
 			}
 		});
-    }
+	}
 
-    Promise.all(res).then(() =>
-    {
-        let doc = ClientServerTransforms.ToServer.Document(vscode.window.activeTextEditor.document);
-        updateDocumentOnServer(doc);
-    });
+	Promise.all(res).then(() =>
+	{
+		updateDocumentOnServer();
+	});
 
 	return res;
 }
@@ -1123,14 +1183,16 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 
 
 /** Последовательное комментирование выделенных фрагментов */
-function commentAllBlocks(selections: vscode.Selection[]): void
+function commentAllBlocks(selections: vscode.Selection[]): Promise<any>
 {
 	let editor = vscode.window.activeTextEditor;
 	editor.selections = selections;
-	selections.forEachAsync(selection =>
+	let result = selections.forEachAsync(selection =>
 	{
 		return commentBlock(editor, selection);
-	}).then(results => { multiPaste(editor, editor.selections, results) });
+	});
+	result.then(results => { multiPaste(editor, editor.selections, results) });
+	return result;
 }
 
 
@@ -1506,7 +1568,7 @@ async function createRequest<T, R>(name: string, data: T, waitForServerIsReady =
 
 async function sendNotification<T>(name: string, data: T, waitForServerIsReady = false)
 {
-    if (!ClientIsReady)
+	if (!ClientIsReady)
 	{
 		if (waitForServerIsReady) await _client.onReady();
 		else return undefined;
@@ -1540,7 +1602,7 @@ interface CodeActionCallback
 type ArgumentsInvoker = ((document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext) => CodeActionCallback);
 
 /** Создаёт комманду и CodeAction для неё */
-async function createCommandActionPair(cmdName: string, actionTitle: string, commandFunction: Function, argumentInvoker: ArgumentsInvoker): Promise<void>
+async function createCommandActionPair(cmdName: string, actionTitle: string, commandFunction: (...args) => Promise<any>, argumentInvoker: ArgumentsInvoker): Promise<void>
 {
 	registerCommand(cmdName, commandFunction);
 	createCodeAction(actionTitle, cmdName, argumentInvoker);
@@ -1576,7 +1638,7 @@ async function registerActionCommands()
 
 	// транслитерация
 	createCommandActionPair("tib.translateRange", "Транслитерация",
-		(range: vscode.Range) => 
+		(range: vscode.Range) => new Promise<void>((resolve, reject) =>
 		{
 			let editor = vscode.window.activeTextEditor;
 			let text = editor.document.getText(range);
@@ -1584,8 +1646,8 @@ async function registerActionCommands()
 			editor.edit(builder =>
 			{
 				builder.replace(range, res);
-			});
-		},
+			}).then(() => { resolve(); });
+		}),
 		(doc, range, cont) =>
 		{
 			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == "wrongIds";
@@ -1599,7 +1661,7 @@ async function registerActionCommands()
 
 	// убираем _ из констант
 	createCommandActionPair("tib.replace_", "Назвать константу нормально",
-		(range: vscode.Range) => 
+		(range: vscode.Range) => new Promise<void>((resolve, reject) =>
 		{
 			let editor = vscode.window.activeTextEditor;
 			let text = editor.document.getText(range);
@@ -1619,8 +1681,8 @@ async function registerActionCommands()
 			editor.edit(builder =>
 			{
 				builder.replace(range, res);
-			});
-		},
+			}).then(() => { resolve(); });
+		}),
 		(doc, range, cont) =>
 		{
 			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == "delimitedConstant";
@@ -1636,9 +1698,26 @@ async function registerActionCommands()
 
 
 /** Отправка документа на сервер */
-function updateDocumentOnServer(data: IServerDocument)
+function updateDocumentOnServer(document?: vscode.TextDocument)
 {
-    sendNotification('forceDocumentUpdate', data);
+	let doc = !!document ? document : vscode.window.activeTextEditor.document;
+	sendNotification('forceDocumentUpdate', ClientServerTransforms.ToServer.Document(doc));
+}
+
+
+
+/** Создаёт команду только для языка tib */
+async function registerCommand(name: string, command: (...args) => Promise<any>, updateDocument = true): Promise<void>
+{
+	await vscode.commands.registerCommand(name, (...argArray: any[]) => 
+	{
+		if (!isTib()) return;
+		let result = command(...argArray);
+		if (updateDocument) result.then(() =>
+		{
+			updateDocumentOnServer();
+		});
+	});
 }
 
 
