@@ -183,6 +183,7 @@ export function activate(context: vscode.ExtensionContext)
 			tibEdit([insertAutoCloseTags, insertSpecialSnippets, upcaseFirstLetter], data).then(() =>
 			{
 				InProcess = false;
+				updateDocumentOnServer();
 			});
 
 			reload();
@@ -883,11 +884,6 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 			}
 		});
 	}
-
-	Promise.all(res).then(() =>
-	{
-		updateDocumentOnServer();
-	});
 
 	return res;
 }
