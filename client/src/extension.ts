@@ -405,7 +405,7 @@ function registerCommands()
 		});
 	});
 
-	registerCommand('tib.commentBlock', () => 
+	registerCommand('tib.surveyBlock', () => 
 	{
 		return new Promise<void>((resolve, reject) =>
 		{

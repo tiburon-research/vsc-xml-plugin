@@ -104,7 +104,7 @@
         "category": "tib"
       },
       {
-        "command": "tib.commentBlock",
+        "command": "tib.surveyBlock",
         "title": "Обернуть в сворачиваемый блок",
         "category": "tib"
       },
@@ -165,7 +165,7 @@
       },
       {
         "key": "ctrl+alt+b",
-        "command": "tib.commentBlock"
+        "command": "tib.surveyBlock"
       },
       {
         "key": "ctrl+shift+v",
