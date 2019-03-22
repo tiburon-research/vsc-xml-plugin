@@ -167,6 +167,12 @@ connection.onRequest('anotherDocument', (data: IServerDocument) =>
 })
 
 
+connection.onNotification('forceDocumentUpdate', (data: IServerDocument) =>
+{
+    documents.add(data);
+});
+
+
 //#endregion
 
 

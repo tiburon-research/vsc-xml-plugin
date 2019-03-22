@@ -821,7 +821,13 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 				}
 			}
 		});
-	}
+    }
+
+    Promise.all(res).then(() =>
+    {
+        let doc = ClientServerTransforms.ToServer.Document(vscode.window.activeTextEditor.document);
+        updateDocumentOnServer(doc);
+    });
 
 	return res;
 }
@@ -1498,6 +1504,17 @@ async function createRequest<T, R>(name: string, data: T, waitForServerIsReady =
 }
 
 
+async function sendNotification<T>(name: string, data: T, waitForServerIsReady = false)
+{
+    if (!ClientIsReady)
+	{
+		if (waitForServerIsReady) await _client.onReady();
+		else return undefined;
+	}
+	return _client.sendNotification(name, data);
+}
+
+
 function createServerDocument(document: vscode.TextDocument): server.TextDocument;
 function createServerDocument(data: IServerDocument): server.TextDocument;
 
@@ -1615,6 +1632,13 @@ async function registerActionCommands()
 	);
 
 
+}
+
+
+/** Отправка документа на сервер */
+function updateDocumentOnServer(data: IServerDocument)
+{
+    sendNotification('forceDocumentUpdate', data);
 }
 
 
