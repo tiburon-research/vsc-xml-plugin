@@ -1364,7 +1364,7 @@ export function getCurrentLineText(document: server.TextDocument, position: serv
 
 
 /** Возвращает диапазон для слова в позиции `index` строки `line` */
-function getWordRange(document: server.TextDocument, index: number, line: string, regex?: RegExp): { from: number, to: number }
+function getWordRange(index: number, line: string, regex?: RegExp): { from: number, to: number }
 {
 	if (!regex) regex = /[\w]/;
 	let from = index;
@@ -1394,7 +1394,7 @@ function getWordRange(document: server.TextDocument, index: number, line: string
 export function getWordAtPosition(document: server.TextDocument, position: server.Position, regex?: RegExp): string
 {
 	let line = getCurrentLineText(document, position);
-	let range = getWordRange(document, position.character, line, regex);
+	let range = getWordRange(position.character, line, regex);
 	return line.slice(range.from, range.to);
 }
 
@@ -1406,7 +1406,7 @@ export function getWordAtPosition(document: server.TextDocument, position: serve
 export function getWordRangeAtPosition(document: server.TextDocument, position: server.Position, regex?: RegExp): server.Range
 {
 	let line = getCurrentLineText(document, position);
-	let range = getWordRange(document, position.character, line, regex);
+	let range = getWordRange(position.character, line, regex);
 	return server.Range.create(server.Position.create(position.line, range.from), server.Position.create(position.line, range.to));
 }
 
