@@ -1108,7 +1108,7 @@ function selectLines(document: vscode.TextDocument, selection: vscode.Selection)
 }
 
 
-/** Комментирование выделенного фрагмента */
+/** Возвращает закомментированный выделенный фрагмент */
 async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selection): Promise<string>
 {
 	let document = editor.document;
@@ -1118,14 +1118,14 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 	if (!tagFrom || !tagTo)
 	{
 		logError("Ошибка получения границ выделения", false);
-		return null;
+		return text;
 	}
 	let langFrom = tagFrom.GetLaguage();
 	let langTo = tagTo.GetLaguage();
 	if (langFrom != langTo)
 	{
 		showWarning("Начало и конец выделенного фрагмента лежат в разных языковых областях. Команда отменена.");
-		return null;
+		return text;
 	}
 
 	let cStart = "<!--";
@@ -1163,26 +1163,18 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 	if (!valid)
 	{
 		showWarning("Внутри выделенной области уже есть комментарии. Команда отменена.");
-		return null;
+		return text;
 	}
 
 	return newText;
-
-	/* editor.edit((editBuilder) =>
-	{
-		editBuilder.replace(selection, newText);
-	}, { undoStopAfter: false, undoStopBefore: false }).then(() =>
-	{
-		callback(true);
-	}); */
 }
 
 
 /** Последовательное комментирование выделенных фрагментов */
-function commentAllBlocks(selections: vscode.Selection[]): Promise<any>
+function commentAllBlocks(selections: vscode.Selection[]): Promise<string[]>
 {
 	let editor = vscode.window.activeTextEditor;
-	editor.selections = selections;
+	editor.selections = selections; // это изменённые выделения
 	let result = selections.forEachAsync(selection =>
 	{
 		return commentBlock(editor, selection);
