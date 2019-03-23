@@ -183,6 +183,7 @@ export class ServerDocumentStore
 {
 	private _docs = new KeyedCollection<DocumentBuffer>();
 
+	/** Возвращает server.TextDocument по uri */
 	public get(uri: string): server.TextDocument
 	{
 		let buffer = this._docs.Item(uri);
@@ -210,6 +211,12 @@ export class ServerDocumentStore
 		let doc = this._docs.Item(uri);
 		doc.update(version, contentChanges);
 		return doc.document;
+	}
+
+	/** Удаляет документ из колекции */
+	public remove(uri: string): void
+	{
+		this._docs.Remove(uri);
 	}
 
 }

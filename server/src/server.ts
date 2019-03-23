@@ -28,6 +28,7 @@ var _SurveyData = new SurveyData();
 
 
 
+
 connection.onInitialize(() =>
 {
 	getAutoComleteList();
@@ -72,6 +73,16 @@ connection.onDidOpenTextDocument(event =>
 		content: event.textDocument.text
 	}
 	anotherDocument(data);
+})
+
+
+connection.onDidCloseTextDocument(event =>
+{
+	// убиваем diagnostic
+	let doc = documents.get(event.textDocument.uri);
+	if (!!doc) disposeDiagnostic(doc);
+	// выкидываем document
+	documents.remove(event.textDocument.uri);
 })
 
 
@@ -180,7 +191,7 @@ connection.onNotification('forceDocumentUpdate', (data: IServerDocument) =>
 
 
 
-function sendDiagnostic(connection: server.Connection, document: server.TextDocument, settings: KeyedCollection<any>)
+function sendDiagnostic(document: server.TextDocument, settings: KeyedCollection<any>)
 {
 	getDiagnosticElements(document, settings).then(diagnostics =>
 	{
@@ -190,6 +201,17 @@ function sendDiagnostic(connection: server.Connection, document: server.TextDocu
 		};
 		connection.sendDiagnostics(clientDiagnostic);
 	})
+}
+
+
+/** Очищает элементы diagnostic */
+function disposeDiagnostic(document: server.TextDocument)
+{
+	let clientDiagnostic: server.PublishDiagnosticsParams = {
+		diagnostics: [],
+		uri: document.uri
+	};
+	connection.sendDiagnostics(clientDiagnostic);
 }
 
 
@@ -219,7 +241,7 @@ function anotherDocument(data: IServerDocument)
 function anyChangeHandler(document: server.TextDocument)
 {
 	updateSurveyData(document);
-	sendDiagnostic(connection, document, _Settings);
+	sendDiagnostic(document, _Settings);
 }
 
 
