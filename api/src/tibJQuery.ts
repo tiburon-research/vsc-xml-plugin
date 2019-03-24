@@ -2,7 +2,7 @@
 
 import { JSDOM } from 'jsdom'
 import * as _JQuery from 'jquery'
-import { KeyedCollection } from './index'
+import { KeyedCollection } from './customs'
 import * as Encoding from './encoding'
 import { ReplaceXMLDeclaration } from './parsing';
 

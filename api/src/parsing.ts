@@ -1,6 +1,8 @@
 'use strict'
 
-import { TextRange, safeString, TagInfo, Language, positiveMin, KeyedCollection, CurrentTag } from "./index";
+import { Language } from "./index";
+import {TextRange, TagInfo, CurrentTag } from './currentTag'
+import { safeString, positiveMin, KeyedCollection } from './customs'
 import { clearXMLComments } from "./encoding"
 import { RegExpPatterns } from './constants'
 import * as charDetect from 'charset-detector'

@@ -297,104 +297,87 @@ export class Path
 }
 
 
-interface UserInfo
+export class UserData
 {
 	Name: string;
 	Id: string;
 	IP: string;
 }
 
-// переменная для кэширования информации о пользователе
-var userInfo: UserInfo =
+
+/** Получает всю нужную информацию о пользователе */
+export function getUserData(): UserData
 {
-	Name: null,
-	Id: null,
-	IP: null
-}
-
-
-/** Возвращаетмя пользователя */
-export function getUserName()
-{
-	if (!!userInfo.Name) return userInfo.Name;
-	return (userInfo.Name = os.userInfo().username);
-}
-
-
-/** Возвращает machineId */
-export function getUserId()
-{
-	if (!!userInfo.Id) return userInfo.Id;
-	return (userInfo.Id = machineIdSync());
-}
-
-
-/** Возвращает external Ipv4 */
-export function getUserIP()
-{
-	if (!!userInfo.IP) return userInfo.IP;
+	let Name = os.userInfo().username;
+	let Id = machineIdSync();
+	let IP = null;
+	
 	let ifs = os.networkInterfaces();
 	for (const key in ifs)
 	{
-		if (!userInfo.IP && ifs.hasOwnProperty(key))
+		if (!IP && ifs.hasOwnProperty(key))
 		{
 			ifs[key].forEach(n =>
 			{
-				if (!userInfo.IP && 'IPv4' == n.family && !n.internal)
+				if (!IP && 'IPv4' == n.family && !n.internal)
 				{
-					userInfo.IP = n.address;
+					IP = n.address;
 				}
 			});
 		}
 	}
-	return userInfo.IP || "not found";
+
+	return { IP, Id, Name };
 }
 
 
-class ILogData
+interface UserLogDataFields
 {
-	FileName?: string;
 	FullText?: string;
 	Date?: string;
 	Postion?: vscode.Position;
 	CacheEnabled?: boolean;
 	Version?: string;
-	SurveyData?: Object;
 	StackTrace?: string;
 	Data?: Object;
 	VSCVerion?: string;
 	ActiveExtensions?: string[];
-	UserData?: {
-		UserIP?: string;
-		UserId?: string;
-	}
+}
+
+
+class ILogData implements UserLogDataFields
+{
+	FileName: string;
+	UserData: UserData;
+
+	FullText?: string;
+	Date?: string;
+	Postion?: vscode.Position;
+	CacheEnabled?: boolean;
+	Version?: string;
+	StackTrace?: string;
+	Data?: Object;
+	VSCVerion?: string;
+	ActiveExtensions?: string[];
 }
 
 /** Данные для хранения логов */
 export class LogData 
 {
-
 	constructor(data: ILogData)
 	{
 		if (!!data)
 			for (let key in data)
 				this.Data[key] = data[key];
 		// дополнительно
-		if (!this.Data) this.Data = {};
-		if (!this.UserName) this.UserName = getUserName();
 		if (!this.Data.Version) this.Data.Version = getTibVersion();
 		this.Data.VSCVerion = vscode.version;
-		this.Data.UserData =
-			{
-				UserId: getUserId(),
-				UserIP: getUserIP()
-			};
 		this.Data.Date = (new Date()).toLocaleString('ru');
 		this.Data.ActiveExtensions = vscode.extensions.all.filter(x => x.isActive && !x.id.startsWith('vscode.')).map(x => x.id);
 	}
 
-	/** добавляет элемент в отчёт */
-	public add(items: ILogData): void
+	/** Lобавляет элемент в отчёт */
+	public add(items: UserLogDataFields): void
 	{
 		for (let key in items)
 			this.Data[key] = items[key];
@@ -466,10 +449,9 @@ export function logToOutput(message: string, prefix = " > "): void
 export function saveError(text: string, data: LogData)
 {
 	logToOutput(text, "ERROR: ");
-	if (!data) data = new LogData({ Data: { Error: "Ошибка без данных" } });
 	if (!pathExists(_LogPath))
 	{
-		sendLogMessage("У пользователя `" + data.UserName + "` не найден путь для логов:\n`" + _LogPath + "`");
+		sendLogMessage("У пользователя `" + data.UserName + "` не найден путь для логов:\n`" + _LogPath + "`", data.UserName);
 		return;
 	}
 	// генерируем имя файла из текста ошибки и сохраняем в папке с именем пользователя
@@ -481,8 +463,8 @@ export function saveError(text: string, data: LogData)
 	data.ErrorMessage = text;
 	fs.writeFile(filename, data.toString(), (err) =>
 	{
-		if (!!err) sendLogMessage(JSON.stringify(err));
-		sendLogMessage("Добавлена ошибка:\n`" + text + "`\n\nПуть:\n`" + filename + "`");
+		if (!!err) sendLogMessage(JSON.stringify(err), data.UserName);
+		sendLogMessage("Добавлена ошибка:\n`" + text + "`\n\nПуть:\n`" + filename + "`", data.UserName);
 	});
 }
 
@@ -502,9 +484,9 @@ export function tibError(text: string, data: LogData, error: any, showerror: boo
 }
 
 
-function sendLogMessage(text: string)
+function sendLogMessage(text: string, userName: string)
 {
-	if (!!bot && bot.active) bot.sendLog(text);
+	if (!!bot && bot.active) bot.sendLog(text, userName);
 }
 
 
@@ -553,13 +535,13 @@ function showFile(path: string)
 
 
 /** Сохраняет файл с данными о блокировке */
-export function createLockInfoFile(path: Path)
+export function createLockInfoFile(path: Path, userData: UserData)
 {
 	if (!pathExists(path.FullPath)) return;
 	let fileName = getLockFilePath(path);
 	let data: LockData = {
-		User: getUserName(),
-		Id: getUserId()
+		User: userData.Name,
+		Id: userData.Id
 	};
 	if (fs.existsSync(fileName)) fs.unlinkSync(fileName);
 	fs.writeFileSync(fileName, JSON.stringify(data));
@@ -610,159 +592,6 @@ export function showWarning(text: string)
 
 
 
-
-class TelegramResult
-{
-	constructor(data?: string)
-	{
-		if (!!data) this.update(data);
-	}
-
-	/** добавление/обновлени данных */
-	public update(data: string)
-	{
-		let obj = JSON.parse(data);
-		if (!obj) return;
-		for (let key in obj)
-			this[key] = obj[key];
-	}
-
-	public ok: boolean = false;
-	public result: Object = {};
-}
-
-
-export class TelegramBotData
-{
-	constructor(obj)
-	{
-		for (let key in obj)
-			this[key] = obj[key];
-	}
-
-	public logIds: string[];
-	public ignoreUsers: string[];
-	public secret: string;
-	public redirect: string;
-}
-
-
-export class TelegramBot
-{
-	constructor(obj: Object, callback?: (active: boolean) => any)
-	{
-		this.http = require('https');
-		this.Data = new TelegramBotData(obj);
-
-		this.check().then(res =>
-		{
-			this.active = res;
-			callback(this.active);
-		}).catch(res =>
-		{
-			this.active = false;
-			callback(this.active);
-		});
-	}
-
-	public check(): Promise<boolean>
-	{
-		return new Promise<boolean>((resolve, reject) =>
-		{
-			this.request('check').then(res =>
-			{
-				resolve(res.ok);
-			}).catch(res =>
-			{
-				reject(false);
-			})
-		})
-	}
-
-	public sendLog(text: string): void
-	{
-		let curUser = getUserName();
-		if (!!curUser && !!this.Data.ignoreUsers && this.Data.ignoreUsers.contains(curUser)) return;
-		this.Data.logIds.forEach(id =>
-		{
-			this.sendMessage(id, text);
-		});
-	}
-
-	public sendMessage(user: string, text: string): void
-	{
-		if (this.active)
-		{
-			let params = new KeyedCollection<string>();
-			params.AddPair('to', user);
-			params.AddPair('error', text);
-			this.request('log', params).catch(res =>
-			{
-				showError("Ошибка при отправке сообщения");
-			})
-		}
-	}
-
-	private request(method: string, args?: KeyedCollection<string>): Promise<TelegramResult>
-	{
-		let result = new TelegramResult();
-		return new Promise<TelegramResult>((resolve, reject) =>
-		{
-			try
-			{
-				let url = this.buildURL(method, args);
-				this.http.get(url, (res) =>
-				{
-					res.setEncoding("utf8");
-					let body = "";
-					res.on("data", data =>
-					{
-						body += data;
-					});
-					res.on("end", () =>
-					{
-						result.update(body);
-						if (!result.ok)
-						{
-							reject(result);
-						}
-						else resolve(result);
-					});
-				}).on('error', (e) =>
-				{
-					reject(result);
-					// комментируем пока Telegram не восстановят
-					//showError("Ошибка при отправке отчёта об ошибке =)");
-				});
-			}
-			catch (error)
-			{
-				reject(result);
-				showError("Ошибка обработки запроса");
-			}
-		});
-	}
-
-	/** url для запроса */
-	private buildURL(method: string, args?: KeyedCollection<string>): string
-	{
-		let res = this.Data.redirect + method;
-		if (!args) args = new KeyedCollection<string>();
-		args.AddPair("secret", this.Data.secret);
-		let params = args.Select((key, value) => encodeURIComponent(key) + '=' + encodeURIComponent(value));
-		res += "?" + params.join('&');
-		return res;
-	}
-
-	private http;
-	/** прошла ли инициализация */
-	public active = false;
-	private Data: TelegramBotData;
-}
-
-
-
-
 /** Открыть файл в VSCode */
 /* function execute(link: string)
 {
@@ -787,12 +616,7 @@ export function openUrl(url: string): Promise<string>
 			});
 		}).on('error', (e) =>
 		{
-			let data = new LogData({
-				Data: { Url: url },
-				StackTrace: e
-			});
-			tibError("Не удалось открыть ссылку", data, e, true);
-			reject();
+			reject("Не удалось открыть ссылку");
 		});
 	});
 }

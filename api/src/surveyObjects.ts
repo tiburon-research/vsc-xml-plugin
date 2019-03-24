@@ -1,10 +1,12 @@
 'use strict';
-
-import * as vscode from 'vscode';
-
+// МОДЕЛИ XML-ЭЛЕМЕНТОВ
 
 
-import { KeyedCollection, InlineAttribute, OrderedCollection } from 'tib-api';
+
+
+import { InlineAttribute } from './currentTag';
+import { KeyedCollection, OrderedCollection } from './customs'
+
 
 
 export enum SurveyElementType { Item, ListItem, Answer, List, Question, Page };
@@ -41,11 +43,12 @@ export class SurveyElement
         let res = new SurveyElement(this.TagName);
 
         res = Object.assign(res, this);
-        
+
         res.Children.Clear();
         this.Children.ForEach((value) =>
         {
-            value.Value.forEach(element => {
+            value.Value.forEach(element =>
+            {
                 res.AddChild(element.Clone());
             });
         });
@@ -70,13 +73,6 @@ export class SurveyElement
             else res += this.Text;
         }
         res += "</" + this.TagName + ">";
-        return res;
-    }
-
-    public ToSnippet(): vscode.SnippetString
-    {
-        let res = new vscode.SnippetString();
-        res.value = this.ToXML();
         return res;
     }
 
@@ -379,7 +375,7 @@ export class SurveyQuestion extends SurveyElement
 {
     /** Элементы Item */
     public Answers = new OrderedCollection<SurveyAnswer>();
-    
+
     /** Заголовок вопроса */
     public Header: string;
 

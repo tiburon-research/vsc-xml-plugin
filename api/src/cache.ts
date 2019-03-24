@@ -1,8 +1,9 @@
 'use  strict'
 
 import * as server from 'vscode-languageserver';
-import { CurrentTag, SimpleTag, Parse, getPreviousText, CurrentTagGetFields } from './index'
-import { comparePositions } from './index';
+import { CurrentTag, SimpleTag, CurrentTagGetFields } from './currentTag'
+import * as Parse from './parsing'
+import { comparePositions, getPreviousText } from './index';
 
 
 class CacheItem<T>

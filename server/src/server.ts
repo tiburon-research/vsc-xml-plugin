@@ -1,16 +1,19 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, SurveyNodes, TibMethods, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, getDocumentMethods, getDocumentNodeIds, getMixIds, IErrorLogData } from 'tib-api';
-import { TibAutoCompleteItem, getCompletions, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition, getIncludePaths, SurveyData } from './classes';
+import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData } from 'tib-api';
+import { TibAutoCompleteItem, getCompletions, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition } from './classes';
 import * as AutoCompleteArray from './autoComplete';
-import { CacheSet } from 'tib-api/lib/cache';
 import { _NodeStoreNames, _pack } from 'tib-api/lib/constants';
 import { getDiagnosticElements } from './diagnostic';
+import { CacheSet } from 'tib-api/lib/cache';
+import { SurveyData, TibMethods, SurveyNodes, getDocumentMethods, getDocumentNodeIds, getMixIds, getIncludePaths } from 'tib-api/lib/surveyData';
+
 
 
 
 //#region --------------------------- Инициализация
+
 
 var connection = server.createConnection();
 var _Settings = new KeyedCollection<any>();
@@ -187,6 +190,7 @@ connection.onNotification('forceDocumentUpdate', (data: IServerDocument) =>
 //#endregion
 
 
+
 //#region --------------------------- Функции
 
 
@@ -351,9 +355,9 @@ async function updateSurveyData(document: server.TextDocument)
 		{
 			// либо этот, либо надо открыть
 			let doc = docs[i] == document.uri ? document : await getDocument(docs[i]);
-			let mets = await getDocumentMethods(doc, _Settings);
-			let nods = await getDocumentNodeIds(doc, _Settings, _NodeStoreNames);
-			let mixs = await getMixIds(doc, _Settings);
+			let mets = await getDocumentMethods(doc);
+			let nods = await getDocumentNodeIds(doc, _NodeStoreNames);
+			let mixs = await getMixIds(doc);
 			methods.AddRange(mets);
 			nodes.AddRange(nods);
 			mixIds = mixIds.concat(mixs);

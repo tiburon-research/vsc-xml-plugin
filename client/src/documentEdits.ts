@@ -1,10 +1,9 @@
 'use strict'
 
-import { SurveyElementType, SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage } from './surveyObjects';
-import { OrderedCollection, Parse, safeString } from 'tib-api'
+import { OrderedCollection, Parse, safeString, JQuery } from 'tib-api'
+import { SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElementType } from 'tib-api/lib/surveyObjects'
 import * as vscode from 'vscode'
 import { QuestionTypes } from 'tib-api/lib/constants';
-import { init as initJQuery } from 'tib-api/lib/tibJQuery';
 
 
 export function AnswersToItems(text: string): string
@@ -19,7 +18,7 @@ export function ItemsToAnswers(text: string): string
 
 function TransformElement(text: string, from: string, to: string): string
 {
-	let $ = initJQuery();
+	let $ = JQuery.init();
 	let $dom = $.XMLDOM(text);
 	let $fromItems = $dom.find(from);
 	if ($fromItems.length == 0) return text;
@@ -49,7 +48,7 @@ function TransformElement(text: string, from: string, to: string): string
 
 export function ToAgeList(text: string): string
 {
-	let $ = initJQuery();
+	let $ = JQuery.init();
 	let ageLimits = text.match(/\d+/g);
 	let $dom = $.XMLDOM("<List></List>");
 	let $list = $dom.find("List");
@@ -86,7 +85,7 @@ export function ToAgeList(text: string): string
 
 export function RemoveQuestionIds(text: string): string
 {
-	let $ = initJQuery();
+	let $ = JQuery.init();
 	let $dom = $.XMLDOM(text);
 	let $question = $dom.find("Question");
 
@@ -107,7 +106,7 @@ export function RemoveQuestionIds(text: string): string
 export function getVarCountFromList(list: string): number
 {
 
-	let $ = initJQuery();
+	let $ = JQuery.init();
 	let res = 99999;
 	let varCount = 0;									   //количество Var'ов в List'е
 	let $dom = $.XMLDOM(list);
@@ -148,7 +147,7 @@ export function getVarCountFromList(list: string): number
 
 export function sortListBy(text: string, attrName: string, attrIndex?: number): string
 {
-	let $ = initJQuery();
+	let $ = JQuery.init();
 	let $dom = $.XMLDOM(text);																		  //берём xml текст
 	let $lists = $dom.find("List");																	 //ищем List'ы
 	let $listItems = [];																				//массив Item массивов
@@ -274,7 +273,7 @@ export function createElements(text: string, type: SurveyElementType): vscode.Sn
 					q.Header = questionResult.Text.trim();
 					let p = new SurveyPage(id);
 					p.AddChild(q);
-					res = p.ToSnippet();
+					res = new vscode.SnippetString(p.ToXML());
 				}
 				else res.value = items.ToArray(pair => pair.Value.ToXML()).join("\n");
 				break;
@@ -289,7 +288,7 @@ export function createElements(text: string, type: SurveyElementType): vscode.Sn
 				});
 				let q = new SurveyList("$1");
 				q.Items = items;
-				res = q.ToSnippet();
+				res = new vscode.SnippetString(q.ToXML());
 				break;
 			}
 	}

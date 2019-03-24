@@ -4,19 +4,16 @@ import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
 import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData } from "tib-api";
-
-import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, LogData, saveError, showWarning, TelegramBot, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, getUserName, StatusBar, getUserId, ClientServerTransforms, isTib } from "./classes";
-
+import { SurveyElementType } from 'tib-api/lib/surveyObjects'
+import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, LogData, saveError, showWarning, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData } from "./classes";
 import * as Formatting from './formatting'
 import * as fs from 'fs';
-
 import * as debug from './debug'
 import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix } from 'tib-api/lib/constants'
-import { SurveyElementType } from './surveyObjects';
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
-
+import { TelegramBot } from 'tib-api/lib/telegramBot';
 
 
 export { bot, CSFormatter, logError, OutChannel, _LogPath, Settings };
@@ -64,6 +61,8 @@ var LockedFiles: string[] = [];
 
 
 var CurrentStatus = new StatusBar();
+
+var _userInfo = new UserData();
 
 //#endregion
 
@@ -225,6 +224,8 @@ function getStaticData()
 {
 	try 
 	{
+		// получаем информацию о пользователе
+		_userInfo = getUserData();
 		// сохраняем нужные значения
 		Settings = new ExtensionSettings();
 		_LogPath = Settings.Item("logPath");
@@ -1259,18 +1260,12 @@ function getLogData(edt?: vscode.TextEditor): LogData
 	{
 		let editor = edt || vscode.window.activeTextEditor;
 		res = new LogData({
+			UserData: _userInfo,
 			FileName: editor.document.fileName,
 			Postion: editor.selection.active,
 			FullText: editor.document.getText(),
 			CacheEnabled: !!Settings.Item("enableCache")
 		});
-		let survObj = {
-			/* Methods: Methods.Keys(),
-			NodesLength: CurrentNodes.Keys().map(x => x + ": " + (CurrentNodes.Item(x).length || 0)),
-			MixIds: MixIds,
-			Includes: Includes */
-		};
-		res.add({ SurveyData: survObj });
 	} catch (error)
 	{
 		let data = new LogData(null);
@@ -1371,7 +1366,7 @@ function lockDocument(document: vscode.TextDocument, log = false, force = false)
 	{
 		if (!!noLock && noLock.contains(docPath)) return;
 		lockFile(docPath);
-		createLockInfoFile(path);
+		createLockInfoFile(path, _userInfo);
 		if (!LockedFiles.contains(docPath)) LockedFiles.push(docPath);
 		if (log) logToOutput(`Файл "${path.FileName}" заблокирован для других пользователей.`);
 	}
@@ -1424,9 +1419,9 @@ function showLockInfo(document: vscode.TextDocument)
 		if (!!data && !!data.User)
 		{
 			user = data.User;
-			if (data.User == getUserName())
+			if (data.User == _userInfo.Name)
 			{
-				if (data.Id == getUserId()) return lockDocument(document, true, true);
+				if (data.Id == _userInfo.Id) return lockDocument(document, true, true);
 				yesNoHelper(`Файл ${strPath} занят пользователем ${user}. Возможно, он остался заблокированным после прерывания работы расширения. Разблокировать?`).then(res => { if (res) lockDocument(document, true, true) });
 				return;
 			}

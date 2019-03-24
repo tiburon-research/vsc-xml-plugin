@@ -1,14 +1,14 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, TibMethods, SurveyNodes, comparePositions, IServerDocument, TibAttribute, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition, applyConstants, Encoding, pathExists, uriFromName } from 'tib-api';
-import { getDiagnosticElements } from './diagnostic';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition, applyConstants, Encoding, pathExists, uriFromName } from 'tib-api';
+import { ISurveyData, TibAttribute } from 'tib-api/lib/surveyData';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
 import { logError } from './server';
 
 
-
+/** Возвращает все автозавершения для текущего места */
 export function getCompletions(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData, tibAutoCompleteList: KeyedCollection<TibAutoCompleteItem[]>, settings: KeyedCollection<any>, classTypes: string[], char: string)
 {
 	let TibAC = new TibAutoCompletes(tag, document, position, surveyData, tibAutoCompleteList, settings, classTypes, char);
@@ -62,28 +62,6 @@ export class TibAutoCompleteItem
 	}
 }
 
-
-
-export class SurveyData implements ISurveyData
-{
-	/** Список методов */
-	Methods: TibMethods;
-	/** Список Id */
-	CurrentNodes: SurveyNodes;
-	/** Список MixId (подставляется в значениях атрибутов) */
-	MixIds: string[];
-	/** Список путей Include */
-	Includes: string[]
-
-	/** Очистка */
-	public Clear()
-	{
-		this.Methods = new TibMethods();
-		this.CurrentNodes = new SurveyNodes();
-		this.MixIds = [];
-		this.Includes = [];
-	}
-}
 
 
 
@@ -223,20 +201,6 @@ export class ServerDocumentStore
 
 
 
-//#region --------------------------- функции для получения элементов
-
-export interface ISurveyData
-{
-	/** Список методов */
-	Methods: TibMethods;
-	/** Список Id */
-	CurrentNodes: SurveyNodes;
-	/** Список MixId (подставляется в значениях атрибутов) */
-	MixIds: string[];
-	/** Список путей Include */
-	Includes: string[]
-}
-
 /** Класс для работы с {{Elements}} в строках */
 class ElementExtractor
 {
@@ -318,8 +282,6 @@ class ElementExtractor
 	private Data: ISurveyData;
 }
 
-
-//#endregion
 
 
 
@@ -763,6 +725,7 @@ export interface LanguageString
 	value: string
 };
 
+
 /** Подсказки при наведении */
 export function getHovers(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData, codeAutoCompleteArray: TibAutoCompleteItem[]): LanguageString[]
 {
@@ -1074,21 +1037,4 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
 		logError("Ошибка выделения открывающегося тега", false);
 	}
 	return null;
-}
-
-/** Получает URI ко всем <Include> */
-export function getIncludePaths(text: string): string[]
-{
-	let res: string[] = [];
-	try
-	{
-		let reg = /<Include[\s\S]*?FileName=(("[^"]+")|('[^']+'))/;
-		let txt = text;
-		txt = Encoding.clearXMLComments(txt);
-		res = txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x)).map(x => uriFromName(x));
-	} catch (error)
-	{
-		logError('Ошибка получения информации о подключённых файлах', true);
-	}
-	return res;
 }

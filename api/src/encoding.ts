@@ -1,7 +1,7 @@
 'use strict'
 
 import * as shortHash from "short-hash"
-import { KeyedCollection, safeString } from "./index"
+import { KeyedCollection, safeString } from "./customs"
 import { RegExpPatterns } from './constants'
 
 

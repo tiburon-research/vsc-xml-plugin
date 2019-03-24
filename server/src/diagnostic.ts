@@ -1,7 +1,6 @@
+'use strict'
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, translatePosition } from 'tib-api';
-import { DocumentElement, getDocumentElements, getDuplicatedElementsIds } from 'tib-api/lib/parsing';
-import { clearCDATA, clearXMLComments } from 'tib-api/lib/encoding';
+import { KeyedCollection, translatePosition, Encoding, Parse } from 'tib-api';
 import { RegExpPatterns } from 'tib-api/lib/constants';
 import { logError } from './server';
 
@@ -43,7 +42,7 @@ interface IDiagnosticType
 	/** Тип диагностики */
 	Type: server.DiagnosticSeverity;
 	/** Массив функций для этого типа диагностики */
-	Functions: KeyedCollection<(document: server.TextDocument, preparedText: string) => Promise<DocumentElement[]>>;
+	Functions: KeyedCollection<(document: server.TextDocument, preparedText: string) => Promise<Parse.DocumentElement[]>>;
 }
 
 
@@ -64,8 +63,8 @@ export async function getDiagnosticElements(document: server.TextDocument, Setti
 	{
 		let stack = [];
 		let text = document.getText();
-		text = clearXMLComments(text);
-		text = clearCDATA(text);
+		text = Encoding.clearXMLComments(text);
+		text = Encoding.clearCDATA(text);
 
 		for (const diagnosticType of _AllDiagnostics) 
 		{
@@ -84,7 +83,6 @@ export async function getDiagnosticElements(document: server.TextDocument, Setti
 
 
 
-
 //#endregion
 
 
@@ -94,9 +92,9 @@ export async function getDiagnosticElements(document: server.TextDocument, Setti
 
 
 /** Id с недопустимым набором символов */
-async function getWrongIds(document: server.TextDocument, prepearedText: string): Promise<DocumentElement[]>
+async function getWrongIds(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
-	let res = await getDocumentElements(document, /(\sId=("|'))(\w*[^\w'"\n@\-\(\)]\w*)+(\2)/, "Вот таким Id быть не может", prepearedText);
+	let res = await Parse.getDocumentElements(document, /(\sId=("|'))(\w*[^\w'"\n@\-\(\)]\w*)+(\2)/, "Вот таким Id быть не может", prepearedText);
 	for (let i = 0; i < res.length; i++)
 	{
 		res[i].Range = server.Range.create(translatePosition(document, res[i].Range.start, res[i].Value[1].length), translatePosition(document, res[i].Range.end, -1));
@@ -106,28 +104,28 @@ async function getWrongIds(document: server.TextDocument, prepearedText: string)
 
 
 /** слишком длинные Id */
-async function getLongIds(document: server.TextDocument, prepearedText: string): Promise<DocumentElement[]>
+async function getLongIds(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
-	let res = await getDocumentElements(document, new RegExp("<(Page|Answer|Block)(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{25,}('|\"))"), "Слишком много букв", prepearedText);
-	res = res.concat(await getDocumentElements(document, new RegExp("<Question(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{33,}('|\"))"), "Слишком много букв", prepearedText));
+	let res = await Parse.getDocumentElements(document, new RegExp("<(Page|Answer|Block)(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{25,}('|\"))"), "Слишком много букв", prepearedText);
+	res = res.concat(await Parse.getDocumentElements(document, new RegExp("<Question(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{33,}('|\"))"), "Слишком много букв", prepearedText));
 	return res;
 }
 
 
 /** проверка недопустимых символов XML */
-async function getWrongXML(document: server.TextDocument, prepearedText: string): Promise<DocumentElement[]>
+async function getWrongXML(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
-	let res: DocumentElement[] = [];
-	res = res.concat(await getDocumentElements(document, /(&(?!(lt|gt|amp|quot|apos))(\w*);?)+/, "Такое надо прикрывать посредством CDATA", prepearedText)); // &
-	res = res.concat(await getDocumentElements(document, /<((?![?\/!]|\w)(.*))/, "Тут, вроде, CDATA надо", prepearedText)); // <
+	let res: Parse.DocumentElement[] = [];
+	res = res.concat(await Parse.getDocumentElements(document, /(&(?!(lt|gt|amp|quot|apos))(\w*);?)+/, "Такое надо прикрывать посредством CDATA", prepearedText)); // &
+	res = res.concat(await Parse.getDocumentElements(document, /<((?![?\/!]|\w)(.*))/, "Тут, вроде, CDATA надо", prepearedText)); // <
 	return res;
 }
 
 
 /** проверка уникальности Id */
-async function getDuplicatedIds(document: server.TextDocument, prepearedText: string): Promise<DocumentElement[]>
+async function getDuplicatedIds(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
-	return await getDuplicatedElementsIds(document, prepearedText);
+	return await Parse.getDuplicatedElementsIds(document, prepearedText);
 }
 
 
@@ -139,10 +137,10 @@ async function getDuplicatedIds(document: server.TextDocument, prepearedText: st
 
 
 /** Константы, начинающиеся не с того */
-async function dangerousConstandIds(document: server.TextDocument, prepearedText: string): Promise<DocumentElement[]>
+async function dangerousConstandIds(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
-	let res: DocumentElement[] = [];
-	let constants = await getDocumentElements(document, /(<Constants[^>]*>)([\s\S]+?)<\/Constants[^>]*>/, "", prepearedText);
+	let res: Parse.DocumentElement[] = [];
+	let constants = await Parse.getDocumentElements(document, /(<Constants[^>]*>)([\s\S]+?)<\/Constants[^>]*>/, "", prepearedText);
 	const itemsGroup = 2;
 	const constTagGroup = 1;
 	const regStart = /^(ID|Text|Pure|Itera|Var|AnswerExists)/;
@@ -164,7 +162,7 @@ async function dangerousConstandIds(document: server.TextDocument, prepearedText
 					if (!!match)
 					{
 						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length;
-						let wrongItem = new DocumentElement(document, {
+						let wrongItem = new Parse.DocumentElement(document, {
 							Value: match,
 							Message: `Не стоит начинать Id константы с "${match[0]}"`,
 							From: from,
@@ -176,7 +174,7 @@ async function dangerousConstandIds(document: server.TextDocument, prepearedText
 					if (_ > -1)
 					{
 						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length;
-						let wrongItem = new DocumentElement(document, {
+						let wrongItem = new Parse.DocumentElement(document, {
 							Value: ["_"],
 							Message: "Константы с '_' не распознаются в расширении как константы",
 							From: from,
@@ -207,7 +205,7 @@ async function dangerousConstandIds(document: server.TextDocument, prepearedText
 
 
 /** универсальная функция для преобразования `DocumentElement[]` в `Diagnostic[]` */
-async function _diagnosticElements(document: server.TextDocument, type: server.DiagnosticSeverity, preparedText: string, func: (document: server.TextDocument, prepearedText: string) => Promise<DocumentElement[]>, diagnosticId: number | string): Promise<server.Diagnostic[]>
+async function _diagnosticElements(document: server.TextDocument, type: server.DiagnosticSeverity, preparedText: string, func: (document: server.TextDocument, prepearedText: string) => Promise<Parse.DocumentElement[]>, diagnosticId: number | string): Promise<server.Diagnostic[]>
 {
 	let res: server.Diagnostic[] = [];
 	let elements = await func(document, preparedText);
