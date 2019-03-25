@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 
 import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
-import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, LogData, saveError, showWarning, logToOutput, tibError, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData } from "./classes";
+import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, lockFile, unlockFile, fileIsLocked, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData } from "./classes";
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
@@ -14,9 +14,10 @@ import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
+import { TibOutput, showWarning, LogData, TibErrors } from './errors';
 
 
-export { bot, CSFormatter, logError, OutChannel, _LogPath, Settings };
+export { CSFormatter, _LogPath, _settings as Settings };
 
 
 /*---------------------------------------- глобальные переменные ----------------------------------------*/
@@ -25,15 +26,15 @@ export { bot, CSFormatter, logError, OutChannel, _LogPath, Settings };
 
 var _client: client.LanguageClient;
 
-var ClientIsReady = false;
+var _clientIsReady = false;
 
 /** объект для управления ботом */
-var bot: TelegramBot;
+var _bot: TelegramBot;
 
 // константы
 
 /** Во избежание рекурсивыных изменений */
-var InProcess = false;
+var _inProcess = false;
 
 /** Путь для сохранения логов */
 var _LogPath: string;
@@ -42,26 +43,29 @@ var _LogPath: string;
 var CSFormatter: (text: string) => Promise<string>;
 
 /** Настройки расширения */
-var Settings: ExtensionSettings;
+var _settings: ExtensionSettings;
 
 /** флаг использования Linq */
 var _useLinq = true;
 
 /** Канал вывода */
-var OutChannel = vscode.window.createOutputChannel("tib");
+var _outChannel = new TibOutput('tib');
+
+var _errors: TibErrors;
 
 /** Объект для хранения пользовательских выборов */
-var Refused = {
+var _refused = {
 	/** Отказ от включения кэша */
 	enableCache: false
 }
 
 /** Пути к заблокированным файлам */
-var LockedFiles: string[] = [];
+var _lockedFiles: string[] = [];
 
 
-var CurrentStatus = new StatusBar();
+var _currentStatus = new StatusBar();
 
+/** Данные о пользователе */
 var _userInfo = new UserData();
 
 //#endregion
@@ -73,14 +77,14 @@ var _userInfo = new UserData();
 
 export function activate(context: vscode.ExtensionContext)
 {
-	logToOutput("Начало активации");
+	_outChannel.logToOutput("Начало активации");
 	createClientConnection(context);
 	let editor = vscode.window.activeTextEditor;
 
 	// обновляем настройки при сохранении
 	vscode.workspace.onDidChangeConfiguration(() =>
 	{
-		Settings.Update();
+		_settings.Update();
 	})
 
 	/** Обновление документа */
@@ -109,7 +113,7 @@ export function activate(context: vscode.ExtensionContext)
 		}
 		checkDocument(editor);
 		if (needReload) reload();
-		InProcess = false;
+		_inProcess = false;
 	}
 
 	// общие дествия при старте расширения
@@ -131,7 +135,7 @@ export function activate(context: vscode.ExtensionContext)
 	// редактирование документа
 	vscode.workspace.onDidChangeTextDocument(event =>
 	{
-		if (InProcess || !editor || event.document.languageId != "tib") return;
+		if (_inProcess || !editor || event.document.languageId != "tib") return;
 
 		// преобразования текста
 		if (!event || !event.contentChanges.length) return;
@@ -178,10 +182,10 @@ export function activate(context: vscode.ExtensionContext)
 				text,
 				editor
 			};
-			InProcess = true;
+			_inProcess = true;
 			tibEdit([insertAutoCloseTags, insertSpecialSnippets, upcaseFirstLetter], data).then(() =>
 			{
-				InProcess = false;
+				_inProcess = false;
 				updateDocumentOnServer();
 			});
 
@@ -207,8 +211,8 @@ export function activate(context: vscode.ExtensionContext)
 		unlockDocument(x, true);
 	})
 
-	logToOutput("Активация завершена");
-	CurrentStatus.setInfoMessage("Tiburon XML Helper запущен!", 3000);
+	_outChannel.logToOutput("Активация завершена");
+	_currentStatus.setInfoMessage("Tiburon XML Helper запущен!", 3000);
 }
 
 
@@ -227,10 +231,10 @@ function getStaticData()
 		// получаем информацию о пользователе
 		_userInfo = getUserData();
 		// сохраняем нужные значения
-		Settings = new ExtensionSettings();
-		_LogPath = Settings.Item("logPath");
-		if (!pathExists(_LogPath)) logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
-		_useLinq = Settings.Item("useLinq");
+		_settings = new ExtensionSettings();
+		_LogPath = _settings.Item("logPath");
+		if (!pathExists(_LogPath)) _outChannel.logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
+		_useLinq = _settings.Item("useLinq");
 
 		// получаем фунцию форматирования C#
 		let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
@@ -242,7 +246,7 @@ function getStaticData()
 			});
 			else getCSFormatter(csharpfixformat);
 		}
-		else logToOutput("Расширение 'Leopotam.csharpfixformat' не установлено, C# будет форматироваться, как простой текст", _WarningLogPrefix);
+		else _outChannel.logToOutput("Расширение 'Leopotam.csharpfixformat' не установлено, C# будет форматироваться, как простой текст", _WarningLogPrefix);
 
 		// запускаем бота
 		let dataPath = _LogPath + "\\data.json";
@@ -251,12 +255,15 @@ function getStaticData()
 			let data = JSON.parse(fs.readFileSync(dataPath).toString());
 			if (!!data)
 			{
-				bot = new TelegramBot(data, function (res)
+				_bot = new TelegramBot(data, function (res)
 				{
-					if (!res) logToOutput("Отправка логов недоступна", _WarningLogPrefix);
+					if (!res) _outChannel.logToOutput("Отправка логов недоступна", _WarningLogPrefix);
 				});
 			}
 		}
+
+		// инициализируем errors
+		_errors = new TibErrors(_bot, _outChannel);
 	} catch (er)
 	{
 		logError("Ошибка при инициализации расширения", true)
@@ -372,12 +379,12 @@ function registerCommands()
 	// оборачивание в [тег]
 	registerCommand('tib.insertTag', () => 
 	{
-		InProcess = true;
+		_inProcess = true;
 		return new Promise<void>((resolve, reject) =>
 		{
 			vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]")).then(() => 
 			{
-				InProcess = false;
+				_inProcess = false;
 				resolve();
 			});
 		});
@@ -389,13 +396,13 @@ function registerCommands()
 		{
 			try
 			{
-				InProcess = true;
+				_inProcess = true;
 				let multi = vscode.window.activeTextEditor.document.getText(vscode.window.activeTextEditor.selection).indexOf("\n") > -1;
 				let pre = multi ? "\n" : " ";
 				let post = multi ? "\n" : " ";
 				vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<![CDATA[" + pre + "$TM_SELECTED_TEXT" + post + "]]>")).then(() => 
 				{
-					InProcess = false;
+					_inProcess = false;
 					resolve();
 				});
 			} catch (error)
@@ -410,12 +417,12 @@ function registerCommands()
 	{
 		return new Promise<void>((resolve, reject) =>
 		{
-			InProcess = true;
+			_inProcess = true;
 			let newSel = selectLines(vscode.window.activeTextEditor.document, vscode.window.activeTextEditor.selection);
 			if (!!newSel) vscode.window.activeTextEditor.selection = newSel;
 			vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<!--#block $1 -->\n\n$0$TM_SELECTED_TEXT\n\n<!--#endblock-->")).then(() => 
 			{
-				InProcess = false;
+				_inProcess = false;
 				resolve();
 			});
 		});
@@ -427,7 +434,7 @@ function registerCommands()
 		return new Promise<void>((resolve, reject) =>
 		{
 			let editor = vscode.window.activeTextEditor;
-			CurrentStatus.setProcessMessage("Удаление Id из заголовков...").then(x =>
+			_currentStatus.setProcessMessage("Удаление Id из заголовков...").then(x =>
 			{
 				try
 				{
@@ -435,12 +442,12 @@ function registerCommands()
 					let res = TibDocumentEdits.RemoveQuestionIds(text);
 					applyChanges(getFullRange(editor.document), res, editor).then(() =>
 					{
-						CurrentStatus.removeCurrentMessage();
+						_currentStatus.removeCurrentMessage();
 						resolve();
 					});
 				} catch (error)
 				{
-					CurrentStatus.removeCurrentMessage();
+					_currentStatus.removeCurrentMessage();
 					logError("Ошибка при удалении Id вопроса из заголовка", true)
 					resolve();
 				}
@@ -504,7 +511,7 @@ function registerCommands()
 		return new Promise<void>((resolve, reject) =>
 		{
 			let editor = vscode.window.activeTextEditor;
-			CurrentStatus.setProcessMessage("Сортировка списка...").then(x =>
+			_currentStatus.setProcessMessage("Сортировка списка...").then(x =>
 			{
 				try
 				{
@@ -539,7 +546,7 @@ function registerCommands()
 
 							applyChanges(editor.selection, res, editor, true).then(() =>
 							{
-								CurrentStatus.removeCurrentMessage();
+								_currentStatus.removeCurrentMessage();
 								resolve();
 							});	  //заменяем текст
 						}
@@ -621,7 +628,7 @@ function registerCommands()
 	{
 		return new Promise<void>((resolve, reject) =>
 		{
-			InProcess = true;
+			_inProcess = true;
 			let txt = getFromClioboard();
 			if (txt.match(/[\s\S]*\n$/)) txt = txt.replace(/\n$/, '');
 			let pre = txt.split("\n");
@@ -656,15 +663,15 @@ function registerCommands()
 		return new Promise<void>((resolve, reject) =>
 		{
 			//vscode.commands.executeCommand("vscode.open", vscode.Uri.file(_DemoPath));
-			let path = Settings.Item("demoPath");
+			let path = _settings.Item("demoPath");
 			if (!path)
 			{
 				logError("Невозможно получить доступ к файлу демки", true);
 				return resolve();
 			}
-			CurrentStatus.setProcessMessage("Открывается демка...").then(x =>
+			_currentStatus.setProcessMessage("Открывается демка...").then(x =>
 			{
-				openFileText(path).then(() => CurrentStatus.removeCurrentMessage()).then(() =>
+				openFileText(path).then(() => _currentStatus.removeCurrentMessage()).then(() =>
 				{
 					x.dispose();
 					resolve();
@@ -678,7 +685,7 @@ function registerCommands()
 	{
 		return new Promise<void>((resolve, reject) =>
 		{
-			let templatePathFolder = Settings.Item("templatePathFolder") + '\\';
+			let templatePathFolder = _settings.Item("templatePathFolder") + '\\';
 			if (!templatePathFolder)
 			{
 				logError("Невозможно получить доступ к папке", true);
@@ -713,8 +720,8 @@ function registerCommands()
 	vscode.languages.registerDocumentFormattingEditProvider('tib', {
 		provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[]
 		{
-			if (!ClientIsReady) return [];
-			CurrentStatus.setProcessMessage("Форматирование...").then(x => 
+			if (!_clientIsReady) return [];
+			_currentStatus.setProcessMessage("Форматирование...").then(x => 
 			{
 				let editor = vscode.window.activeTextEditor;
 				let range;
@@ -744,7 +751,7 @@ function registerCommands()
 				}).then(() =>
 				{
 					let text = document.getText(range);
-					Formatting.format(text, Language.XML, Settings, "\t", indent).then(
+					Formatting.format(text, Language.XML, _settings, "\t", indent).then(
 						(res) => 
 						{
 							vscode.window.activeTextEditor.edit(builder =>
@@ -952,7 +959,7 @@ function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 {
 	let res: Thenable<any>[] = [];
 	// если хоть одна позиция такова, то нафиг
-	if (!data.tag || !data.changes || data.changes.length == 0 || !Settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return res;
+	if (!data.tag || !data.changes || data.changes.length == 0 || !_settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return res;
 	let tagRegex = /(<\/?)(\w+)$/;
 	let nullPosition = new vscode.Position(0, 0);
 	try
@@ -1046,7 +1053,7 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 function tagFromServerTag(tag: CurrentTag): CurrentTag
 {
 	let newTag = ClientServerTransforms.FromServer.Tag(tag);
-	if (!!Settings.Item("showTagInfo")) CurrentStatus.setTagInfo(newTag);
+	if (!!_settings.Item("showTagInfo")) _currentStatus.setTagInfo(newTag);
 	return newTag;
 }
 
@@ -1248,7 +1255,7 @@ function logError(text: string, showErrror: boolean)
 	let error = new Error().stack;
 	let editor = vscode.window.activeTextEditor;
 	let data = getLogData(editor);
-	tibError(text, data, error, showErrror);
+	_errors.logError(text, data, error, showErrror);
 }
 
 
@@ -1264,13 +1271,13 @@ function getLogData(edt?: vscode.TextEditor): LogData
 			FileName: editor.document.fileName,
 			Postion: editor.selection.active,
 			FullText: editor.document.getText(),
-			CacheEnabled: !!Settings.Item("enableCache")
+			CacheEnabled: !!_settings.Item("enableCache")
 		});
 	} catch (error)
 	{
 		let data = new LogData(null);
 		data.add({ StackTrace: error });
-		saveError("Ошибка при сборе сведений", data);
+		_errors.saveError("Ошибка при сборе сведений", data);
 	}
 	return res;
 }
@@ -1298,7 +1305,7 @@ function getCSFormatter(ext: vscode.Extension<any>): (source: string) => Promise
 /** Заменяет `range` на `text` */
 export async function applyChanges(range: vscode.Range, text: string, editor: vscode.TextEditor, format = false): Promise<string>
 {
-	InProcess = true;
+	_inProcess = true;
 	let res = text;
 	// вставляем
 	await editor.edit(builder =>
@@ -1314,7 +1321,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 			editor.selection = sel;
 			let tag = await getCurrentTag(editor.document, sel.start);
 			let ind = !!tag ? tag.GetIndent() : 0;
-			res = await Formatting.format(res, Language.XML, Settings, "\t", ind);
+			res = await Formatting.format(res, Language.XML, _settings, "\t", ind);
 			return applyChanges(sel, res, editor, false);
 		}
 		catch (error)
@@ -1322,7 +1329,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 			logError("Ошибка при обновлении текста документа", false);
 		}
 	}
-	InProcess = false;
+	_inProcess = false;
 	return res;
 }
 
@@ -1331,12 +1338,12 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 /** Проверки документа */
 function checkDocument(editor: vscode.TextEditor)
 {
-	if (!Refused.enableCache && !Settings.Item("enableCache") && editor.document.lineCount > 5000)
+	if (!_refused.enableCache && !_settings.Item("enableCache") && editor.document.lineCount > 5000)
 	{
 		yesNoHelper("Включить кэширование? Кеширование позволяет ускорить работу с большими документами таких функций расширения, как автозавершение, подсказки при вводе и т.д.").then((res) => 
 		{
-			if (res) Settings.Set("enableCache", true).then(null, (er) => { logError("Ошибка при изменении конфигурации", true) });
-			else Refused.enableCache = true;
+			if (res) _settings.Set("enableCache", true).then(null, (er) => { logError("Ошибка при изменении конфигурации", true) });
+			else _refused.enableCache = true;
 		})
 	}
 }
@@ -1346,7 +1353,7 @@ function yesNoHelper(text: string): Promise<boolean>
 {
 	return new Promise<boolean>((resolve) =>
 	{
-		if (Settings.Item("showHelpMessages")) vscode.window.showInformationMessage(text, "Да", "Нет").then((res) =>
+		if (_settings.Item("showHelpMessages")) vscode.window.showInformationMessage(text, "Да", "Нет").then((res) =>
 		{
 			resolve(res == "Да");
 		});
@@ -1358,8 +1365,8 @@ function yesNoHelper(text: string): Promise<boolean>
 /** Запрещает редактирование */
 function lockDocument(document: vscode.TextDocument, log = false, force = false)
 {
-	if (!Settings.Item("enableFileLock")) return;
-	let noLock = (Settings.Item("doNotLockFiles") as string[]);
+	if (!_settings.Item("enableFileLock")) return;
+	let noLock = (_settings.Item("doNotLockFiles") as string[]);
 	let path = new Path(document.fileName);
 	let docPath = path.FullPath;
 	if (document.languageId == "tib" && (!fileIsLocked(docPath) || force))
@@ -1367,8 +1374,8 @@ function lockDocument(document: vscode.TextDocument, log = false, force = false)
 		if (!!noLock && noLock.contains(docPath)) return;
 		lockFile(docPath);
 		createLockInfoFile(path, _userInfo);
-		if (!LockedFiles.contains(docPath)) LockedFiles.push(docPath);
-		if (log) logToOutput(`Файл "${path.FileName}" заблокирован для других пользователей.`);
+		if (!_lockedFiles.contains(docPath)) _lockedFiles.push(docPath);
+		if (log) _outChannel.logToOutput(`Файл "${path.FileName}" заблокирован для других пользователей.`);
 	}
 }
 
@@ -1378,12 +1385,12 @@ function unlockDocument(document: vscode.TextDocument, log = false)
 {
 	let path = new Path(document.fileName);
 	let docPath = path.FullPath;
-	if (document.languageId == "tib" && LockedFiles.contains(docPath))
+	if (document.languageId == "tib" && _lockedFiles.contains(docPath))
 	{
 		unlockFile(docPath);
 		removeLockInfoFile(path);
-		if (log) logToOutput(`Файл "${path.FileName}" разблокирован`);
-		LockedFiles.remove(docPath);
+		if (log) _outChannel.logToOutput(`Файл "${path.FileName}" разблокирован`);
+		_lockedFiles.remove(docPath);
 	}
 }
 
@@ -1391,14 +1398,14 @@ function unlockDocument(document: vscode.TextDocument, log = false)
 function isLocked(document: vscode.TextDocument): boolean
 {
 	let docPath = new Path(document.fileName).FullPath;
-	return !LockedFiles.contains(docPath) && fileIsLocked(docPath);
+	return !_lockedFiles.contains(docPath) && fileIsLocked(docPath);
 }
 
 
 /** разрешает редактирование всех активных документов */
 function unlockAllDocuments()
 {
-	LockedFiles.forEach(file =>
+	_lockedFiles.forEach(file =>
 	{
 		unlockFile(file);
 		removeLockInfoFile(new Path(file));
@@ -1433,7 +1440,11 @@ function showLockInfo(document: vscode.TextDocument)
 	{
 		yesNoHelper(`Файл ${strPath} защищён от записи. Разрешить запись?`).then(res =>
 		{
-			if (res) unlockFile(document.fileName, true);
+			if (res)
+			{
+				unlockFile(document.fileName);
+				_outChannel.logToOutput(`Запись в файл ${strPath} разрешена`);
+			}
 		});
 	}
 }
@@ -1443,7 +1454,7 @@ function showLockInfo(document: vscode.TextDocument)
 function getFilePathForMessage(path: string)
 {
 	let res = path;
-	if (!Settings.Item("showFullPath")) res = new Path(path).FileName;
+	if (!_settings.Item("showFullPath")) res = new Path(path).FileName;
 	return `"${res}"`;
 }
 
@@ -1459,13 +1470,13 @@ async function createElements(elementType: SurveyElementType)
 	let text = editor.document.getText(editor.selection);
 	let res = TibDocumentEdits.createElements(text, elementType);
 
-	InProcess = true;
+	_inProcess = true;
 	let tag = await getCurrentTag(editor.document, editor.selection.active);
 	let indent = !!tag ? tag.GetIndent() : 1;
-	Formatting.format(res.value, Language.XML, Settings, "\t", indent).then(x =>
+	Formatting.format(res.value, Language.XML, _settings, "\t", indent).then(x =>
 	{
 		res.value = x;
-		vscode.window.activeTextEditor.insertSnippet(res).then(() => { InProcess = false });
+		vscode.window.activeTextEditor.insertSnippet(res).then(() => { _inProcess = false });
 	});
 }
 
@@ -1501,8 +1512,8 @@ async function createClientConnection(context: vscode.ExtensionContext)
 
 		_client.onNotification("client.out", data =>
 		{
-			if (typeof data != 'string') logToOutput('Неправильный тип данных для логов с сервера', _WarningLogPrefix);
-			logToOutput(data);
+			if (typeof data != 'string') _outChannel.logToOutput('Неправильный тип данных для логов с сервера', _WarningLogPrefix);
+			_outChannel.logToOutput(data);
 		});
 
 		_client.onNotification("console.log", data =>
@@ -1515,7 +1526,7 @@ async function createClientConnection(context: vscode.ExtensionContext)
 		{
 			let logData = getLogData(vscode.window.activeTextEditor);
 			logData.add({ StackTrace: data.Error });
-			tibError(data.Message, logData, null, !data.Silent);
+			_errors.logError(data.Message, logData, null, !data.Silent);
 		});
 
 		// запрос документа с ссервера
@@ -1531,7 +1542,7 @@ async function createClientConnection(context: vscode.ExtensionContext)
 		})
 
 
-		ClientIsReady = true;
+		_clientIsReady = true;
 
 	});
 }
@@ -1540,7 +1551,7 @@ async function createClientConnection(context: vscode.ExtensionContext)
 /** Запрос к серверу */
 async function createRequest<T, R>(name: string, data: T, waitForServerIsReady = false): Promise<R>
 {
-	if (!ClientIsReady)
+	if (!_clientIsReady)
 	{
 		if (waitForServerIsReady) await _client.onReady();
 		else return undefined;
@@ -1551,7 +1562,7 @@ async function createRequest<T, R>(name: string, data: T, waitForServerIsReady =
 
 async function sendNotification<T>(name: string, data: T, waitForServerIsReady = false)
 {
-	if (!ClientIsReady)
+	if (!_clientIsReady)
 	{
 		if (waitForServerIsReady) await _client.onReady();
 		else return undefined;

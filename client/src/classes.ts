@@ -1,15 +1,13 @@
 import * as vscode from 'vscode';
 import * as server from 'vscode-languageserver';
-import * as dateFormat from 'dateFormat';
 import * as os from 'os'
 import * as fs from 'fs'
 import * as iconv from 'iconv-lite'
-import * as shortHash from 'short-hash'
 import * as winattr from 'winattr'
 import { machineIdSync } from "node-machine-id"
-import { bot, _LogPath, OutChannel, } from './extension'
+import { _LogPath } from './extension'
 import { _LockInfoFilePrefix, _pack } from 'tib-api/lib/constants'
-import { CurrentTag, Language, KeyedCollection, Parse, pathExists, createDir, IServerDocument } from 'tib-api';
+import { CurrentTag, Language, KeyedCollection, Parse, pathExists, IServerDocument } from 'tib-api';
 
 
 
@@ -331,165 +329,6 @@ export function getUserData(): UserData
 }
 
 
-interface UserLogDataFields
-{
-	FullText?: string;
-	Date?: string;
-	Postion?: vscode.Position;
-	CacheEnabled?: boolean;
-	Version?: string;
-	StackTrace?: string;
-	Data?: Object;
-	VSCVerion?: string;
-	ActiveExtensions?: string[];
-}
-
-
-class ILogData implements UserLogDataFields
-{
-	FileName: string;
-	UserData: UserData;
-
-	FullText?: string;
-	Date?: string;
-	Postion?: vscode.Position;
-	CacheEnabled?: boolean;
-	Version?: string;
-	StackTrace?: string;
-	Data?: Object;
-	VSCVerion?: string;
-	ActiveExtensions?: string[];
-}
-
-/** Данные для хранения логов */
-export class LogData 
-{
-	constructor(data: ILogData)
-	{
-		if (!!data)
-			for (let key in data)
-				this.Data[key] = data[key];
-		// дополнительно
-		if (!this.Data.Version) this.Data.Version = getTibVersion();
-		this.Data.VSCVerion = vscode.version;
-		this.Data.Date = (new Date()).toLocaleString('ru');
-		this.Data.ActiveExtensions = vscode.extensions.all.filter(x => x.isActive && !x.id.startsWith('vscode.')).map(x => x.id);
-	}
-
-	/** Lобавляет элемент в отчёт */
-	public add(items: UserLogDataFields): void
-	{
-		for (let key in items)
-			this.Data[key] = items[key];
-	}
-
-	/** преобразует все данные в строку */
-	public toString(): string
-	{
-		let res = `Error: ${this.ErrorMessage}\r\nUser: ${this.UserName}\r\n`;
-		for (let key in this.Data)
-		{
-			switch (key)
-			{
-				case "FullText":
-					// текст уберём в конец	
-					break;
-				case "SurveyData":
-				case "Data":
-					// разносим на отдельные строки
-					let dt = ""
-					for (let dataKey in this.Data[key])
-					{
-						dt += this.stringifyData(dataKey, this.Data[key]);
-					}
-					if (!!dt)
-					{
-						res += "-------- " + key + " --------\r\n";
-						res += dt;
-						res += "------------------------\r\n";
-					}
-					break;
-				default:
-					res += this.stringifyData(key, this.Data);
-			}
-		}
-		if (!!this.Data.FullText)
-		{
-			res += "______________ TEXT START _______________\r\n"
-			res += this.Data.FullText;
-			res += "\r\n______________ TEXT END _______________\r\n"
-		}
-		return res;
-	}
-
-	private stringifyData(key: string, data): string
-	{
-		return key + ": " + (typeof data[key] != "string" ? JSON.stringify(data[key]) : ("\"" + data[key] + "\"")) + "\r\n";
-	}
-
-	public UserName: string;
-	public ErrorMessage: string;
-	private Data = new ILogData();
-}
-
-
-
-/** Лог в outputChannel */
-export function logToOutput(message: string, prefix = " > "): void
-{
-	let timeLog = "[" + dateFormat(new Date(), "hh:MM:ss.l") + "]";
-	OutChannel.appendLine(timeLog + prefix + message);
-}
-
-/**
- * Создаёт лог (файл) об ошибке 
- * @param text Текст ошибки
- * @param data Данные для лога
- */
-export function saveError(text: string, data: LogData)
-{
-	logToOutput(text, "ERROR: ");
-	if (!pathExists(_LogPath))
-	{
-		sendLogMessage("У пользователя `" + data.UserName + "` не найден путь для логов:\n`" + _LogPath + "`", data.UserName);
-		return;
-	}
-	// генерируем имя файла из текста ошибки и сохраняем в папке с именем пользователя
-	let hash = "" + shortHash(text);
-	let dir = Path.Concat(_LogPath, data.UserName);
-	if (!pathExists(dir)) createDir(dir);
-	let filename = Path.Concat(dir, hash + ".log");
-	if (pathExists(filename)) return;
-	data.ErrorMessage = text;
-	fs.writeFile(filename, data.toString(), (err) =>
-	{
-		if (!!err) sendLogMessage(JSON.stringify(err), data.UserName);
-		sendLogMessage("Добавлена ошибка:\n`" + text + "`\n\nПуть:\n`" + filename + "`", data.UserName);
-	});
-}
-
-
-/** Показ и сохранение ошибки */
-export function tibError(text: string, data: LogData, error: any, showerror: boolean)
-{
-	if (_pack == "debug")
-	{
-		showerror = true;
-		text = "debug: " + text;
-		if (!!error) console.log(error);
-	}
-	if (showerror) showError(text);
-	if (!!error) data.add({ StackTrace: error });
-	if (_pack != "debug") saveError(text, data);
-}
-
-
-function sendLogMessage(text: string, userName: string)
-{
-	if (!!bot && bot.active) bot.sendLog(text, userName);
-}
-
-
 
 export function getTibVersion()
 {
@@ -498,10 +337,9 @@ export function getTibVersion()
 
 
 /** Задаёт файлу режим readonly */
-export function unlockFile(path: string, log = false)
+export function unlockFile(path: string)
 {
 	winattr.setSync(path, { readonly: false });
-	if (log) logToOutput(`Запись в файл ${path} разрешена`);
 }
 
 
@@ -574,20 +412,6 @@ export function getLockData(fileName: string): LockData
 	let data = fs.readFileSync(fileName).toString();
 	hideFile(fileName);
 	return JSON.parse(data);
-}
-
-
-/** Показывает сообщение об ошибке */
-export function showError(text: string)
-{
-	vscode.window.showErrorMessage(text);
-}
-
-
-/** Показывает предупреждение */
-export function showWarning(text: string)
-{
-	vscode.window.showWarningMessage(text);
 }
 
 

@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "Launch Extension",
+            "name": "Client",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -18,8 +18,9 @@
         {
 			"type": "node",
 			"request": "launch",
-			"name": "Attach to Server",
-			"port": 6009,
+			"name": "Server",
+            "port": 6009,
+            "restart": true,
 			"outFiles": [
                 "${workspaceRoot}/server/out/*.js"
             ]
@@ -28,7 +29,7 @@
     "compounds": [
 		{
 			"name": "Client + Server",
-			"configurations": ["Launch Extension", "Attach to Server"]
+			"configurations": ["Client", "Server"]
 		}
 	]
 
