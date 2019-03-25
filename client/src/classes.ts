@@ -3,11 +3,10 @@ import * as server from 'vscode-languageserver';
 import * as os from 'os'
 import * as fs from 'fs'
 import * as iconv from 'iconv-lite'
-import * as winattr from 'winattr'
 import { machineIdSync } from "node-machine-id"
 import { _LogPath } from './extension'
 import { _LockInfoFilePrefix, _pack } from 'tib-api/lib/constants'
-import { CurrentTag, Language, KeyedCollection, Parse, pathExists, IServerDocument } from 'tib-api';
+import { CurrentTag, Language, KeyedCollection, Parse, pathExists, IServerDocument, hideFile, showFile } from 'tib-api';
 
 
 
@@ -333,42 +332,6 @@ export function getUserData(): UserData
 export function getTibVersion()
 {
 	return vscode.extensions.getExtension("TiburonResearch.tiburonscripter").packageJSON.version;
-}
-
-
-/** Задаёт файлу режим readonly */
-export function unlockFile(path: string)
-{
-	winattr.setSync(path, { readonly: false });
-}
-
-
-/** Снимает с файла режим readonly */
-export function lockFile(path: string)
-{
-	if (!pathExists(path)) return;
-	winattr.setSync(path, { readonly: true });
-}
-
-/** Файл в режиме readonly */
-export function fileIsLocked(path: string): boolean
-{
-	if (!pathExists(path)) return false;
-	let props = winattr.getSync(path);
-	return !!props && !!props.readonly;
-}
-
-
-/** Делает файл hidden */
-function hideFile(path: string)
-{
-	winattr.setSync(path, { hidden: true });
-}
-
-/** Делает файл hidden */
-function showFile(path: string)
-{
-	winattr.setSync(path, { hidden: false });
 }
 
 

@@ -6,6 +6,7 @@
 import * as fs from 'fs'
 import Uri from 'vscode-uri'
 import * as clipboard from "clipboardy"
+import * as winattr from 'winattr'
 
 
 
@@ -25,6 +26,42 @@ export function createDir(path: string)
 export function uriFromName(path: string): string
 {
 	return Uri.file(path).toString()
+}
+
+
+/** Задаёт файлу режим readonly */
+export function unlockFile(path: string)
+{
+	winattr.setSync(path, { readonly: false });
+}
+
+
+/** Снимает с файла режим readonly */
+export function lockFile(path: string)
+{
+	if (!pathExists(path)) return;
+	winattr.setSync(path, { readonly: true });
+}
+
+/** Файл в режиме readonly */
+export function fileIsLocked(path: string): boolean
+{
+	if (!pathExists(path)) return false;
+	let props = winattr.getSync(path);
+	return !!props && !!props.readonly;
+}
+
+
+/** Делает файл hidden */
+export function hideFile(path: string)
+{
+	winattr.setSync(path, { hidden: true });
+}
+
+/** Делает файл hidden */
+export function showFile(path: string)
+{
+	winattr.setSync(path, { hidden: false });
 }
 
 
