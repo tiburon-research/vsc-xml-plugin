@@ -195,7 +195,7 @@ export function activate(context: vscode.ExtensionContext)
 
 	vscode.workspace.onWillSaveTextDocument(x =>
 	{
-		if (x.document.isDirty) // сохранение изменённого документа
+		if (x.document.languageId == 'tib' && x.document.isDirty) // сохранение изменённого документа
 		{
 			unlockDocument(x.document);
 		}
@@ -203,12 +203,12 @@ export function activate(context: vscode.ExtensionContext)
 
 	vscode.workspace.onDidSaveTextDocument(x =>
 	{
-		lockDocument(x);
+		if (x.languageId == 'tib') lockDocument(x);
 	});
 
 	vscode.workspace.onDidCloseTextDocument(x =>
 	{
-		unlockDocument(x, true);
+		if (x.languageId == 'tib') unlockDocument(x, true);
 	})
 
 	_outChannel.logToOutput("Активация завершена");
