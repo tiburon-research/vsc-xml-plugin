@@ -1633,8 +1633,8 @@ raw.Items.forEach(function (e)
                 tmp.push(e[key]["Attr"])
             }
             else tmp = tmp.concat(e[key]["Attr"]);
-			tmp.forEach(function(item)
-			{
+            tmp.forEach(function (item)
+            {
                 item["Type"] = key;
             });
             ar = ar.concat(tmp);

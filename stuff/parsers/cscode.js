@@ -1394,7 +1394,7 @@ var res = raw.match(/((public)|(private)|(protected))\s+([^\s]+)\s+((\w+)(\(.*\)
 
 var ar = [];
 
-res.forEach(function(e)
+res.forEach(function (e)
 {
     var obj = {};
     var parse = e.match(/((public)|(private)|(protected))\s+([^\s]+)\s+((\w+)(\(.*\))?)/);

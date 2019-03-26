@@ -204,12 +204,12 @@ export class TibErrors
 /** Показывает сообщение об ошибке */
 export function showError(text: string)
 {
-	vscode.window.showErrorMessage(text);
+    vscode.window.showErrorMessage(text);
 }
 
 
 /** Показывает предупреждение */
 export function showWarning(text: string)
 {
-	vscode.window.showWarningMessage(text);
+    vscode.window.showWarningMessage(text);
 }

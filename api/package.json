@@ -1,16 +1,16 @@
 {
-  "description": "Custom classes, used in both client and server side of tib app",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/tiburon-research/vsc-xml-plugin"
-  },
-  "name": "tib-api",
-  "version": "1.0.0",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
-  "author": "TiburonResearch",
-  "scripts": {
-    "compile": "tsc -p ./"
-  }
+    "description": "Custom classes, used in both client and server side of tib app",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tiburon-research/vsc-xml-plugin"
+    },
+    "name": "tib-api",
+    "version": "1.0.0",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "author": "TiburonResearch",
+    "scripts": {
+        "compile": "tsc -p ./"
+    }
 }

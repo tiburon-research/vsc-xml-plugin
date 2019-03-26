@@ -17,7 +17,7 @@ function snippetString(name: string, snippet: Object): string
 export function getAllSnippets(directory: string): string
 {
     let res = "";
-    let files = fs.readdirSync(directory).map(x => directory + "\\" + x );
+    let files = fs.readdirSync(directory).map(x => directory + "\\" + x);
     files.forEach(file => 
     {
         let obj = getSnippet(file);

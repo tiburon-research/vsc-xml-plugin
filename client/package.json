@@ -1,16 +1,16 @@
 {
-	"description": "Client side of Tiburon XML helper",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/tiburon-research/vsc-xml-plugin"
-	},
-	"author": "TiburonResearch",
-	"engines": {
-		"vscode": "^1.30.0",
-		"node": "*"
-	},
-	"scripts": {
-		"compile": "tsc -p ./"
-	}
+    "description": "Client side of Tiburon XML helper",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tiburon-research/vsc-xml-plugin"
+    },
+    "author": "TiburonResearch",
+    "engines": {
+        "vscode": "^1.30.0",
+        "node": "*"
+    },
+    "scripts": {
+        "compile": "tsc -p ./"
+    }
 }

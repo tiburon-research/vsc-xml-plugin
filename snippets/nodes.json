@@ -1,43 +1,43 @@
 {
-	"PageFull": {
-		"prefix": "<Page",
-		"body": [
+    "PageFull": {
+        "prefix": "<Page",
+        "body": [
             "<Page Id=\"${1:Id}\">",
-                "\t<Question Id=\"${1:Id}\" Type=\"${2|RadioButton,CheckBox,Text,Memo,Integer,Number,File,Date|}\">",
-                    "\t\t<Header>$3</Header>",
-                    "\t\t$0",
-                "\t</Question>",
+            "\t<Question Id=\"${1:Id}\" Type=\"${2|RadioButton,CheckBox,Text,Memo,Integer,Number,File,Date|}\">",
+            "\t\t<Header>$3</Header>",
+            "\t\t$0",
+            "\t</Question>",
             "</Page>\n"
-		],
-		"description": "Полная структура Page"
+        ],
+        "description": "Полная структура Page"
     },
     "PageShort": {
-		"prefix": "<Page",
-		"body": [
+        "prefix": "<Page",
+        "body": [
             "<Page Id=\"${1:Id}\">",
-                "\t<Header>$0</Header>",
+            "\t<Header>$0</Header>",
             "</Page>\n"
-		],
-		"description": "Краткая структура Page"
+        ],
+        "description": "Краткая структура Page"
     },
-    "Question":{
+    "Question": {
         "prefix": "<Question",
-		"body": [
+        "body": [
             "<Question Id=\"${1:Id}\" Type=\"${2|RadioButton,CheckBox,Text,Memo,Integer,Number,File,Date|}\">",
-                "\t<Header>$3</Header>",
-                "\t$0",
+            "\t<Header>$3</Header>",
+            "\t$0",
             "</Question>"
-		],
-		"description": "Структура Question"
+        ],
+        "description": "Структура Question"
     },
-    "Block":{
+    "Block": {
         "prefix": "<Block",
-        "body":[
+        "body": [
             "<Block Items=\"$1\"/>"
         ],
         "description": "Структура Block"
     },
-    "List":{
+    "List": {
         "prefix": "<List",
         "body": [
             "<List Id=\"${1:Id}\">",
@@ -46,7 +46,7 @@
         ],
         "description": "Структура List"
     },
-    "RedirectCode":{
+    "RedirectCode": {
         "prefix": "<Redirect",
         "body": [
             "<Redirect><![CDATA[",
@@ -56,21 +56,21 @@
         ],
         "description": "Структура Redirect"
     },
-    "RedirectStatus":{
+    "RedirectStatus": {
         "prefix": "<Redirect",
         "body": [
             "<Redirect Status=\"${1:19}\">return $0;</Redirect>"
         ],
         "description": "Структура Redirect со статусом"
     },
-    "Redirect18":{
+    "Redirect18": {
         "prefix": "<Redirect",
         "body": [
             "<Redirect Status=\"18\"/>"
         ],
         "description": "Финальный Redirect"
     },
-    "Validate":{
+    "Validate": {
         "prefix": "<Validate",
         "body": [
             "<Validate Message=\"Проверьте правильность введённых данных\" PinAnswer=\"\" PinQuestion=\"\"><![CDATA[",
@@ -81,12 +81,12 @@
     },
     "Filter": {
         "prefix": "<Filter>",
-        "body":[
+        "body": [
             "<Filter>return $0;</Filter>"
         ],
         "description": "Структура Filter"
     },
-    "CDATA":{
+    "CDATA": {
         "prefix": "<![CDATA[",
         "body": [
             "<![CDATA[",
@@ -95,7 +95,7 @@
         ],
         "description": "CDATA"
     },
-    "CustomText1":{
+    "CustomText1": {
         "prefix": "<CustomText1",
         "body": [
             "<CustomText1 Action=\"Append\"><![CDATA[",
@@ -104,7 +104,7 @@
         ],
         "description": "CustomText1"
     },
-    "CustomText2":{
+    "CustomText2": {
         "prefix": "<CustomText2",
         "body": [
             "<CustomText2 Action=\"Append\"><![CDATA[",
@@ -115,16 +115,16 @@
         ],
         "description": "CustomText2 (+style)"
     },
-    "Quota":{
+    "Quota": {
         "prefix": "<Quota",
-        "body":[
+        "body": [
             "<Quota Id=\"$1\" Apply=\"$2\" Limit=\"$3\">",
             "\t$0",
             "</Quota>"
         ],
         "description": "Структура Quota"
     },
-    "Methods":{
+    "Methods": {
         "prefix": "<Methods",
         "body": [
             "<Methods><![CDATA[",

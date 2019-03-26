@@ -140,12 +140,12 @@ export function init(): any
         return res;
     }
 
-    
+
     //--------- техническое
 
 
     /** Возвращает разделитель. Если его нет, то задаёт изходя из переданного XML */
-    JQuery._delimiter = function(el): string
+    JQuery._delimiter = function (el): string
     {
         if (!JQuery.SurveyData.Delimiter)
         {
@@ -155,7 +155,7 @@ export function init(): any
     }
 
     /** Сохраняет данные кодирования */
-    JQuery._saveData = function(data: Encoding.XMLencodeResult, isInitial = false): void
+    JQuery._saveData = function (data: Encoding.XMLencodeResult, isInitial = false): void
     {
         if (isInitial)
         {
@@ -167,13 +167,13 @@ export function init(): any
     }
 
     /** Возвращает originalXML */
-    JQuery.decode = function(text: string)
+    JQuery.decode = function (text: string)
     {
         if (!text) return text;
         if (!JQuery.SurveyData || !JQuery.SurveyData.Delimiter)
         {
             throw "JQuery инициализирована неправильно";
-        }       
+        }
         return Encoding.originalXML(text, JQuery.SurveyData.toXMLencodeResult())
     }
 
