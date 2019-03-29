@@ -54,6 +54,7 @@ export class TelegramBot
         this.check().then(res =>
         {
             this.active = res;
+            if (res) this.sendQueue();
             callback(this.active);
         }).catch(res =>
         {
@@ -104,6 +105,17 @@ export class TelegramBot
                 throw "Ошибка при отправке сообщения";
             })
         }
+        else // добавляем в очередь
+        {
+            this.queue.push({ user, text });
+        }
+    }
+
+    private sendQueue()
+    {
+        this.queue.forEach(msg => {
+            this.sendMessage(msg.user, msg.text);
+        });
     }
 
     /** Запрос к telegram API */
@@ -161,4 +173,5 @@ export class TelegramBot
     /** прошла ли инициализация */
     public active = false;
     private Data: TelegramBotData;
+    private queue: { user: string, text: string }[] = [];
 }

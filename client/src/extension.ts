@@ -78,7 +78,16 @@ var _userInfo = new UserData();
 export function activate(context: vscode.ExtensionContext)
 {
     _outChannel.logToOutput("Начало активации");
+
+    // общие дествия при старте расширения
+    getStaticData();
     createClientConnection(context);
+
+    makeIndent();
+    registerCommands();
+    registerActionCommands();
+
+
     let editor = vscode.window.activeTextEditor;
 
     // обновляем настройки при сохранении
@@ -115,12 +124,6 @@ export function activate(context: vscode.ExtensionContext)
         if (needReload) reload();
         _inProcess = false;
     }
-
-    // общие дествия при старте расширения
-    getStaticData();
-    makeIndent();
-    registerCommands();
-    registerActionCommands();
 
     // для каждого дукумента свои
     anotherDocument(true, editor);

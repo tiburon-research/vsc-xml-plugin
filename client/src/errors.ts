@@ -193,7 +193,7 @@ export class TibErrors
     /** Отправляет лог в Telegram */
     sendLogMessage(text: string, userName: string)
     {
-        if (!!this.bot && this.bot.active) this.bot.sendLog(text, userName);
+        if (!!this.bot) this.bot.sendLog(text, userName);
     }
 
 }
