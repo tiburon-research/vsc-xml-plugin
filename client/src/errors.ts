@@ -187,7 +187,7 @@ export class TibErrors
         }
         if (showerror) showError(text);
         if (!!error) data.add({ StackTrace: error });
-        if (_pack != "debug") this.saveError(text, data);
+        this.saveError(text, data);
     }
 
     /** Отправляет лог в Telegram */

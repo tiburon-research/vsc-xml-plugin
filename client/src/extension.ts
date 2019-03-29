@@ -1273,6 +1273,7 @@ function getLogData(edt?: vscode.TextEditor): LogData
             FullText: editor.document.getText(),
             CacheEnabled: !!_settings.Item("enableCache")
         });
+        res.UserName = _userInfo.Name;
     } catch (error)
     {
         let data = new LogData(null);
