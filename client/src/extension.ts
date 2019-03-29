@@ -96,21 +96,8 @@ export function activate(context: vscode.ExtensionContext)
         _settings.Update();
     })
 
-    /** Обновление документа */
-    function reload()
-    {
-        if (!editor || editor.document.languageId != "tib") return;
-        try
-        {
-            //getSurveyData(editor.document);
-        } catch (er)
-        {
-            logError("Ошибка при сборе информации", false);
-        }
-    }
-
     /** Документ сменился */
-    function anotherDocument(needReload: boolean, editor: vscode.TextEditor)
+    function anotherDocument(editor: vscode.TextEditor)
     {
         if (!editor || editor.document.languageId != 'tib') return;
         let documentData = ClientServerTransforms.ToServer.Document(editor.document);
@@ -121,18 +108,17 @@ export function activate(context: vscode.ExtensionContext)
             else lockDocument(editor.document, true);
         }
         checkDocument(editor);
-        if (needReload) reload();
         _inProcess = false;
     }
 
     // для каждого дукумента свои
-    anotherDocument(true, editor);
+    anotherDocument(editor);
 
     // смена документа
     vscode.window.onDidChangeActiveTextEditor(neweditor =>
     {
         editor = neweditor;
-        anotherDocument(true, neweditor);
+        anotherDocument(neweditor);
     });
 
     // редактирование документа
@@ -191,8 +177,6 @@ export function activate(context: vscode.ExtensionContext)
                 _inProcess = false;
                 updateDocumentOnServer();
             });
-
-            reload();
         });
     });
 
