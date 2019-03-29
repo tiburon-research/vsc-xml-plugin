@@ -68,7 +68,7 @@ export async function getDiagnosticElements(document: server.TextDocument, Setti
 
         for (const diagnosticType of _AllDiagnostics) 
         {
-            diagnosticType.Functions.forEach((name, func) =>
+            diagnosticType.Functions.ForEach((name, func) =>
             {
                 stack.push(_diagnosticElements(document, diagnosticType.Type, text, func, name).then(x => res = res.concat(x)));
             });

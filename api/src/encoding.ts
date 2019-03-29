@@ -86,7 +86,7 @@ export function getElementsBack(text: string, encodeResult: XMLencodeResult): st
 {
     if (!encodeResult.Delimiter || encodeResult.EncodedCollection.Count() == 0) return text;
     let newText = text;
-    encodeResult.EncodedCollection.forEach(function (i, e)
+    encodeResult.EncodedCollection.ForEach(function (i, e)
     {
         newText = newText.replace(new RegExp(safeString(encodeResult.Delimiter + i + encodeResult.Delimiter), "g"), e);
     })
@@ -139,7 +139,7 @@ export function encodeXMLComments(text: string, delimiter: string): EncodeResult
     return encodeElements(text, RegExpPatterns.XMLComment, delimiter);
 }
 
-// получаем разделитель, для временной замены вставок
+/** Получает разделитель, для временной замены вставок */
 export function getReplaceDelimiter(text: string, length?: number): string
 {
     let dels = ["_", "!", "#"];
@@ -152,7 +152,7 @@ export function getReplaceDelimiter(text: string, length?: number): string
         let mt = text.match(new RegExp(safeString(curDel) + RegExpPatterns.DelimiterContent + safeString(curDel), "g"));
         if (!mt || mt.length == 0) return curDel;
     }
-
+    if (!del) throw 'Подходящий разделитель не найден';
     return del;
 }
 
@@ -190,6 +190,7 @@ export function originalXML(text: string, data: XMLencodeResult): string
 /** Заменяет на пробелы */
 function replaceWithSpaces(text: string, sub: RegExp): string
 {
+    if (!text) return '';
     let mt = text.match(new RegExp(sub, "g"));
     let res = text;
     let rep = "";
@@ -224,14 +225,14 @@ export function clearCDATA(txt: string): string
 /** Заменяет содержимое CS-тегов пробелами */
 export function clearCSContents(text: string): string
 {
+    if (!text) return '';
     let res = text;
-    let rep = "";
     let tCount = RegExpPatterns.AllowCodeTags.match(/\(/g).length;
 
     // Очищаем полные теги
     let reg = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*?)(<\\/\\2\\s*>)");
 
-    let resCS = text.matchAll(reg);
+    let resCS = res.matchAll(reg);
     resCS.forEach(element =>
     {
         let open = element[1];

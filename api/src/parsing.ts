@@ -24,7 +24,7 @@ export interface ParsedElementObject
 {
     Id: string;
     Text: string;
-    Prefix?: string;
+    Delimiter?: string;
 }
 
 
@@ -180,7 +180,7 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 /** Тег, не требующий закрывающего */
 export function isSelfClosedTag(tag: string): boolean
 {
-    return !!tag.match("^(" + RegExpPatterns.SelfClosedTags + ")$");
+    return !!tag && !!tag.match("^(" + RegExpPatterns.SelfClosedTags + ")$");
 }
 
 
@@ -330,6 +330,7 @@ export function parseElements(strings: string[]): ParsedElementObject[]
 }
 
 
+/** Вычленяет вопрос из строки */
 export function parseQuestion(text: string): ParsedElementObject
 {
     let res = { Id: "", Text: text, Prefix: "" };
@@ -378,9 +379,9 @@ export function getParentRanges(document: server.TextDocument, prevText: string,
 
 /** Поиск позиции следующего незакрытого тега 
  * 
- * Возвращает Range открывающего или `null` если больше нет
+ * Возвращает Range открывающего или `null` если больше нет.
  * 
- * теги JS, CSS и PlainText не парсятся
+ * Теги JS, CSS и PlainText не парсятся.
 */
 function getNextParent(document: server.TextDocument, text: string, fullPrevText?: string): ParentSearchResult
 {
@@ -428,6 +429,7 @@ export function tagNeedToBeParsed(tagName: string): boolean
 }
 
 
+/** Удаляет из `text` объявление xml */
 export function ReplaceXMLDeclaration(text: string): { Result: string, Declaration: string }
 {
     let mt = text.match(/^\s*<\?xml[^>]*\?>/i);
@@ -449,7 +451,7 @@ export interface IDocumentElement
     From: number;
     To: number;
     Message: string;
-    /** Если задан используется для преобразования в `DiagnosticElement` */
+    /** Если задан, используется для преобразования в `DiagnosticElement` */
     DiagnosticProperties?:
     {
         Type?: server.DiagnosticSeverity;
@@ -531,7 +533,7 @@ export function getDuplicatedElementsIds(document: server.TextDocument, prepeare
         {
             $dom = $.XMLDOM(prepearedText);
         } catch (error)
-        { return resolve(null) }
+        { return resolve(res) }
         if (!$dom) return resolve(res);
 
         let ids = new KeyedCollection<string[]>();
@@ -544,7 +546,7 @@ export function getDuplicatedElementsIds(document: server.TextDocument, prepeare
             ids.AddPair(element, ar);
         });
 
-        ids.forEach((key, value) =>
+        ids.ForEach((key, value) =>
         {
             // находим Range для дублирующихся
             let duplicated: string[] = value.reduce(function (acc, el, i, arr)

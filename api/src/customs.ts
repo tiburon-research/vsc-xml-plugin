@@ -58,7 +58,7 @@ export function hideFile(path: string)
     winattr.setSync(path, { hidden: true });
 }
 
-/** Делает файл hidden */
+/** Снимает свойство hidden с файла */
 export function showFile(path: string)
 {
     winattr.setSync(path, { hidden: false });
@@ -97,6 +97,7 @@ export function getFromClioboard(): string
 /** Подготовленная для RegExp строка */
 export function safeString(text: string): string
 {
+    if (!text) return '';
     return text.replace(/[\|\\\{\}\(\)\[\]\^\$\+\*\?\.\/]/g, "\\$&");
 }
 
@@ -135,7 +136,7 @@ export class KeyedCollection<T>
     /** Создаёт коллекцию из массивов ключей и значений */
     public static FromArrays<T>(keys: string[], values: T[]): KeyedCollection<T>
     {
-        if (keys.length != values.length) return null;
+        if (keys.length != values.length) throw "Количества ключей и значений отличаются";
         let res = new KeyedCollection<T>();
         for (let i = 0; i < keys.length; i++)
         {
@@ -233,7 +234,7 @@ export class KeyedCollection<T>
     }
 
     /** обход элементов */
-    public forEach(callback: (key: string, val: T) => any)
+    public ForEach(callback: (key: string, val: T) => any)
     {
         for (let key in this.items)
             callback(key, this.Item(key));
@@ -246,7 +247,7 @@ export class KeyedCollection<T>
     public Select(filter: (key: string, value: T) => any, clearNull = false): any[]
     {
         let res = [];
-        this.forEach((key, value) =>
+        this.ForEach((key, value) =>
         {
             let item = filter(key, value);
             if (!clearNull || !!item) res.push(item);
@@ -258,7 +259,7 @@ export class KeyedCollection<T>
     protected Filter(filter: (key: string, value: T) => boolean): KeyedCollection<T>
     {
         let res = new KeyedCollection<T>();
-        this.forEach((key, value) =>
+        this.ForEach((key, value) =>
         {
             if (filter(key, value)) res.AddPair(key, value);
         });
@@ -274,7 +275,7 @@ export class KeyedCollection<T>
     /** Добавляет диапазон значений */
     public AddRange(range: KeyedCollection<T>): void
     {
-        range.forEach((key, value) =>
+        range.ForEach((key, value) =>
         {
             this.AddPair(key, value);
         })
@@ -284,7 +285,7 @@ export class KeyedCollection<T>
     public Map(func: (key: string, value: T) => KeyValuePair<any>): KeyedCollection<T>
     {
         let res = new KeyedCollection<T>();
-        this.forEach((key, value) =>
+        this.ForEach((key, value) =>
         {
             res.AddElement(func(key, value));
         });
@@ -295,7 +296,7 @@ export class KeyedCollection<T>
     public ToArray(func: (element: KeyValuePair<T>) => any): any[]
     {
         let ar: KeyValuePair<T>[] = [];
-        this.forEach((key, value) => { ar.push(new KeyValuePair(key, value)); });
+        this.ForEach((key, value) => { ar.push(new KeyValuePair(key, value)); });
         return ar.map(func);
     }
 
@@ -374,6 +375,7 @@ export class OrderedCollection<T>
         return this._getIndex(key) > -1;
     }
 
+    /** Обновляет старое значение `val` по ключу `key` */
     public UpdateValue(key: string, func: (val: T) => T)
     {
         let ind = this._getIndex(key);

@@ -1046,7 +1046,7 @@ function tagFromServerTag(tag: CurrentTag): CurrentTag
 
 
 /** Самое главное в этом расширении */
-export async function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): Promise<CurrentTag>
+async function getCurrentTag(document: vscode.TextDocument, position: vscode.Position, txt?: string, force = false): Promise<CurrentTag>
 {
     if (_pack == "debug") return await __getCurrentTag(document, position, txt, force);
 
@@ -1471,68 +1471,74 @@ async function createElements(elementType: SurveyElementType)
 
 async function createClientConnection(context: vscode.ExtensionContext)
 {
-    let serverModule = context.asAbsolutePath(path.join('server', 'out', 'server.js'));
-    let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
-
-    let serverOptions: client.ServerOptions = {
-        run: { module: serverModule, transport: client.TransportKind.ipc },
-        debug: {
-            module: serverModule,
-            transport: client.TransportKind.ipc,
-            options: debugOptions
-        }
-    };
-
-    let clientOptions: client.LanguageClientOptions = {
-        documentSelector: [{ scheme: 'file', language: 'tib' }, { scheme: 'untitled', language: 'tib' }]
-    };
-
-    // Create the language client and start the client.
-    _client = new client.LanguageClient(
-        'tib server',
-        serverOptions,
-        clientOptions
-    );
-
-    _client.start();
-    _client.onReady().then(() =>
+    try
     {
+        let serverModule = context.asAbsolutePath(path.join('server', 'out', 'server.js'));
+        let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
 
-        _client.onNotification("client.out", data =>
-        {
-            if (typeof data != 'string') _outChannel.logToOutput('Неправильный тип данных для логов с сервера', _WarningLogPrefix);
-            _outChannel.logToOutput(data);
-        });
+        let serverOptions: client.ServerOptions = {
+            run: { module: serverModule, transport: client.TransportKind.ipc },
+            debug: {
+                module: serverModule,
+                transport: client.TransportKind.ipc,
+                options: debugOptions
+            }
+        };
 
-        _client.onNotification("console.log", data =>
-        {
-            console.log(data);
-        });
+        let clientOptions: client.LanguageClientOptions = {
+            documentSelector: [{ scheme: 'file', language: 'tib' }, { scheme: 'untitled', language: 'tib' }]
+        };
 
-        // отчёт об ошибках
-        _client.onNotification("logError", (data: IErrorLogData) =>
-        {
-            let logData = getLogData(vscode.window.activeTextEditor);
-            logData.add({ StackTrace: data.Error });
-            _errors.logError(data.Message, logData, null, !data.Silent);
-        });
+        // Create the language client and start the client.
+        _client = new client.LanguageClient(
+            'tib server',
+            serverOptions,
+            clientOptions
+        );
 
-        // запрос документа с ссервера
-        _client.onRequest('getDocument', (uri: string) =>
+        _client.start();
+        _client.onReady().then(() =>
         {
-            return new Promise<IServerDocument>((resolve, reject) =>
+
+            _client.onNotification("client.out", data =>
             {
-                vscode.workspace.openTextDocument(vscode.Uri.parse(uri)).then(doc =>
-                {
-                    resolve(ClientServerTransforms.ToServer.Document(doc));
-                }, err => { reject(err) });
+                if (typeof data != 'string') _outChannel.logToOutput('Неправильный тип данных для логов с сервера', _WarningLogPrefix);
+                _outChannel.logToOutput(data);
             });
-        })
+
+            _client.onNotification("console.log", data =>
+            {
+                console.log(data);
+            });
+
+            // отчёт об ошибках
+            _client.onNotification("logError", (data: IErrorLogData) =>
+            {
+                let logData = getLogData(vscode.window.activeTextEditor);
+                logData.add({ StackTrace: data.Error });
+                _errors.logError(data.Message, logData, null, !data.Silent);
+            });
+
+            // запрос документа с ссервера
+            _client.onRequest('getDocument', (uri: string) =>
+            {
+                return new Promise<IServerDocument>((resolve, reject) =>
+                {
+                    vscode.workspace.openTextDocument(vscode.Uri.parse(uri)).then(doc =>
+                    {
+                        resolve(ClientServerTransforms.ToServer.Document(doc));
+                    }, err => { reject(err) });
+                });
+            })
 
 
-        _clientIsReady = true;
+            _clientIsReady = true;
 
-    });
+        });
+    } catch (error)
+    {
+        logError(error, true);
+    }
 }
 
 

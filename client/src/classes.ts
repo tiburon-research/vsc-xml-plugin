@@ -79,26 +79,20 @@ export class ContextChange
 export function getContextChanges(document: vscode.TextDocument, selections: vscode.Selection[], changes: vscode.TextDocumentContentChangeEvent[], isBefore = false): ContextChange[]
 {
     let res: ContextChange[] = [];
-    try
+    selections.forEach(selection =>
     {
-        selections.forEach(selection =>
+        for (let i = 0; i < changes.length; i++)
         {
-            for (let i = 0; i < changes.length; i++)
+            //let afterChange = isBefore ?  changes[i].range.start : translatePosition(document, changes[i].range.start, changes[i].text.length);
+            let afterChange = isBefore ? changes[i].range.start : document.positionAt(document.offsetAt(changes[i].range.start) + changes[i].text.length);
+            if (selection.active.character == afterChange.character &&
+                selection.active.line == afterChange.line)
             {
-                //let afterChange = isBefore ?  changes[i].range.start : translatePosition(document, changes[i].range.start, changes[i].text.length);
-                let afterChange = isBefore ? changes[i].range.start : document.positionAt(document.offsetAt(changes[i].range.start) + changes[i].text.length);
-                if (selection.active.character == afterChange.character &&
-                    selection.active.line == afterChange.line)
-                {
-                    res.push(new ContextChange(changes[i], selection));
-                    continue;
-                }
+                res.push(new ContextChange(changes[i], selection));
+                continue;
             }
-        });
-    } catch (error)
-    {
-        throw error;
-    }
+        }
+    });
     return res;
 }
 
@@ -158,7 +152,7 @@ export function isTib()
 }
 
 
-
+/** Выделинный дебажный вывод */
 export function logString(a?: string | number | boolean)
 {
     let text = a;
@@ -217,6 +211,7 @@ export class StatusBar
         else this.statusMessage('');
     }
 
+    // TODO: вот это говно надо переделать
     private statusMessage(text: string, after?: number): Promise<vscode.Disposable>
     {
         return new Promise<vscode.Disposable>((resolve, reject) =>
@@ -384,7 +379,9 @@ export function getLockData(fileName: string): LockData
 {
 	vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(link));
 } */
-export function openUrl(url: string): Promise<string>
+
+
+/*export function openUrl(url: string): Promise<string>
 {
     return new Promise<string>((resolve, reject) =>
     {
@@ -406,12 +403,13 @@ export function openUrl(url: string): Promise<string>
             reject("Не удалось открыть ссылку");
         });
     });
-}
+}*/
 
 
 export namespace ClientServerTransforms
 {
 
+    /** Преобразования Server->Client */
     export namespace FromServer
     {
         export function Document(document: vscode.TextDocument): server.TextDocument
@@ -447,7 +445,7 @@ export namespace ClientServerTransforms
         }
     }
 
-
+    /** Преобразования Client->Server */
     export namespace ToServer
     {
         export function Document(document: vscode.TextDocument): IServerDocument

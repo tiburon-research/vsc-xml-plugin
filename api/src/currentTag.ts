@@ -215,7 +215,7 @@ export class CurrentTag
     {
         this.Attributes = [];
         let parent = this;
-        attrs.forEach(function (key, val)
+        attrs.ForEach(function (key, val)
         {
             parent.Attributes.push(new InlineAttribute(key, val));
         });
@@ -317,8 +317,8 @@ export class CurrentTag
     /** возвращает коллекцию атрибутов из переданной строки */
     public static GetAttributesArray(str: string): KeyedCollection<string>
     {
-        let mt = str.match(Constants.RegExpPatterns.Attributes);
         let res: KeyedCollection<string> = new KeyedCollection<string>();
+        let mt = str.match(Constants.RegExpPatterns.Attributes);
         if (mt)
         {
             let reg = new RegExp(Constants.RegExpPatterns.SingleAttribute);

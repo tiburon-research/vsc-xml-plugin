@@ -221,9 +221,16 @@ function disposeDiagnostic(document: server.TextDocument)
 
 function getServerTag(data: CurrentTagGetFields): CurrentTag
 {
-    let tag = getCurrentTag(data, _Cache);
-    _Cache.Tag.Set(tag);
-    return tag;
+    try
+    {
+        let tag = getCurrentTag(data, _Cache);
+        _Cache.Tag.Set(tag);
+        return tag;
+    } catch (error)
+    {
+        logError(error, true);
+        return null;
+    }
 }
 
 

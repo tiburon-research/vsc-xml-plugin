@@ -102,7 +102,7 @@ export class TibMethods extends KeyedCollection<TibMethod>
     {
         super();
         if (!!collection)
-            collection.forEach((key, value) =>
+            collection.ForEach((key, value) =>
             {
                 this.Add(value);
             })
@@ -213,7 +213,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
     /** Добавляет к нужным элементам, не заменяя */
     AddRange(range: KeyedCollection<SurveyNode[]>): void
     {
-        range.forEach((key, value) =>
+        range.ForEach((key, value) =>
         {
             if (!this.Contains(key))
                 this.AddPair(key, value);
@@ -279,7 +279,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
     FilterNodes(filter: (node: SurveyNode) => boolean): SurveyNodes
     {
         let res = new SurveyNodes();
-        this.forEach((key, value) =>
+        this.ForEach((key, value) =>
         {
             let nodes = value.filter(x => filter(x));
             if (nodes.length) res.AddPair(key, nodes);

@@ -229,7 +229,7 @@ class ElementExtractor
                 }
             });
             let i = 1;
-            res.forEach((key, value) =>
+            res.ForEach((key, value) =>
             {
                 resultStr = resultStr.replace(new RegExp("{{" + key + "}}", "g"), "${" + i + "|" + value.join(",") + "|}");
                 i++;
