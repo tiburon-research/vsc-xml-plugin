@@ -10,6 +10,8 @@ import { CurrentTag, Language, KeyedCollection, Parse, pathExists, IServerDocume
 
 
 
+export type ICSFormatter = (text: string) => Promise<string>;
+
 
 /** Настройки расширения */
 export class ExtensionSettings extends KeyedCollection<any>

@@ -81,18 +81,30 @@ connection.onDidOpenTextDocument(event =>
 
 connection.onDidCloseTextDocument(event =>
 {
-    // убиваем diagnostic
     let doc = documents.get(event.textDocument.uri);
-    if (!!doc) disposeDiagnostic(doc);
-    // выкидываем document
-    documents.remove(event.textDocument.uri);
+    if (!!doc)
+    {
+        // убиваем diagnostic
+        disposeDiagnostic(doc);
+        // выкидываем document
+        documents.remove(event.textDocument.uri);
+    }
 })
 
 
 connection.onCompletion(context =>
 {
     let document = documents.get(context.textDocument.uri);
-    let tag = _Cache.Tag.Get();
+    if (!document)
+    {
+        logError("Данные о документе отсутствуют на сервере", false);
+        return [];
+    }
+    let tag = getServerTag({
+        document,
+        position: context.position,
+        force: false
+    });
     let items = getCompletions(tag, document, context.position, _SurveyData, TibAutoCompleteList, _Settings, ClassTypes, context.context.triggerCharacter);
     // костыль для понимания в каком документе произошло onCompletionResolve
     items = items.map(x => Object.assign(x, { data: document.uri }));
@@ -103,6 +115,11 @@ connection.onCompletion(context =>
 connection.onSignatureHelp(data =>
 {
     let document = documents.get(data.textDocument.uri);
+    if (!document)
+    {
+        logError("Данные о документе отсутствуют на сервере", false);
+        return { signatures: [] } as server.SignatureHelp;
+    }
     let tag = getServerTag({
         document,
         position: data.position,
@@ -115,6 +132,11 @@ connection.onSignatureHelp(data =>
 connection.onHover(data =>
 {
     let document = documents.get(data.textDocument.uri);
+    if (!document)
+    {
+        logError("Данные о документе отсутствуют на сервере", false);
+        return { contents: [] };
+    }
     let tag = getServerTag({
         document,
         position: data.position,
@@ -128,6 +150,11 @@ connection.onHover(data =>
 connection.onDocumentHighlight(data =>
 {
     let document = documents.get(data.textDocument.uri);
+    if (!document)
+    {
+        logError("Данные о документе отсутствуют на сервере", false);
+        return [];
+    }
     let tag = getServerTag({
         document,
         position: data.position,
@@ -141,6 +168,11 @@ connection.onDocumentHighlight(data =>
 connection.onDefinition(data =>
 {
     let document = documents.get(data.textDocument.uri);
+    if (!document)
+    {
+        logError("Данные о документе отсутствуют на сервере", false);
+        return [];
+    }
     let tag = getServerTag({
         document,
         position: data.position,
@@ -149,6 +181,7 @@ connection.onDefinition(data =>
     return getDefinition(tag, document, data.position, _SurveyData);
 })
 
+// это событие дёргаем руками, чтобы передавать все нужные данные
 connection.onRequest('onDidChangeTextDocument', (data: OnDidChangeDocumentData) =>
 {
     return new Promise<CurrentTag>((resolve) =>
@@ -195,21 +228,19 @@ connection.onNotification('forceDocumentUpdate', (data: IServerDocument) =>
 
 
 
-function sendDiagnostic(document: server.TextDocument, settings: KeyedCollection<any>)
+async function sendDiagnostic(document: server.TextDocument, settings: KeyedCollection<any>)
 {
-    getDiagnosticElements(document, settings).then(diagnostics =>
-    {
-        let clientDiagnostic: server.PublishDiagnosticsParams = {
-            diagnostics,
-            uri: document.uri
-        };
-        connection.sendDiagnostics(clientDiagnostic);
-    })
+    let diagnostics = await getDiagnosticElements(document, settings);
+    let clientDiagnostic: server.PublishDiagnosticsParams = {
+        diagnostics,
+        uri: document.uri
+    };
+    connection.sendDiagnostics(clientDiagnostic);
 }
 
 
 /** Очищает элементы diagnostic */
-function disposeDiagnostic(document: server.TextDocument)
+async function disposeDiagnostic(document: server.TextDocument)
 {
     let clientDiagnostic: server.PublishDiagnosticsParams = {
         diagnostics: [],
@@ -228,7 +259,7 @@ function getServerTag(data: CurrentTagGetFields): CurrentTag
         return tag;
     } catch (error)
     {
-        logError(error, true);
+        logError(error, false);
         return null;
     }
 }

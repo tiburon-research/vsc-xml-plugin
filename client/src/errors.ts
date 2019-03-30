@@ -155,6 +155,7 @@ export class TibErrors
      */
     public saveError(text: string, data: LogData)
     {
+        if (!data) data = new LogData({ FileName: '-no-', UserData: { IP: '-no-', Id: '-no-', Name: '-no-' } });
         this.outChannel.logToOutput(text, "ERROR: ");
         if (!pathExists(_LogPath))
         {
@@ -186,7 +187,7 @@ export class TibErrors
             if (!!error) console.log(error);
         }
         if (showerror) showError(text);
-        if (!!error) data.add({ StackTrace: error });
+        if (!!error && !!data) data.add({ StackTrace: error });
         this.saveError(text, data);
     }
 

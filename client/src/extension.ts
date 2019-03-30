@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 
 import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
-import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData } from "./classes";
+import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter } from "./classes";
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
@@ -40,7 +40,7 @@ var _inProcess = false;
 var _LogPath: string;
 
 /** функция для форматирования C# из расширения Leopotam.csharpfixformat */
-var CSFormatter: (text: string) => Promise<string>;
+var CSFormatter: ICSFormatter;
 
 /** Настройки расширения */
 var _settings: ExtensionSettings;
@@ -79,13 +79,15 @@ export function activate(context: vscode.ExtensionContext)
 {
     _outChannel.logToOutput("Начало активации");
 
-    // общие дествия при старте расширения
-    getStaticData();
-    createClientConnection(context);
+    let waitFor: Promise<any>[] = [];
 
-    makeIndent();
-    registerCommands();
-    registerActionCommands();
+    // общие дествия при старте расширения
+    waitFor.push(getStaticData());
+    createClientConnection(context); // этого не ждём
+
+    waitFor.push(makeIndent());
+    waitFor.push(registerCommands());
+    waitFor.push(registerActionCommands());
 
 
     let editor = vscode.window.activeTextEditor;
@@ -97,7 +99,7 @@ export function activate(context: vscode.ExtensionContext)
     })
 
     /** Документ сменился */
-    function anotherDocument(editor: vscode.TextEditor)
+    async function anotherDocument(editor: vscode.TextEditor)
     {
         if (!editor || editor.document.languageId != 'tib') return;
         let documentData = ClientServerTransforms.ToServer.Document(editor.document);
@@ -111,8 +113,7 @@ export function activate(context: vscode.ExtensionContext)
         _inProcess = false;
     }
 
-    // для каждого дукумента свои
-    anotherDocument(editor);
+    waitFor.push(anotherDocument(editor));
 
     // смена документа
     vscode.window.onDidChangeActiveTextEditor(neweditor =>
@@ -198,7 +199,11 @@ export function activate(context: vscode.ExtensionContext)
         if (x.languageId == 'tib') unlockDocument(x, true);
     })
 
-    _outChannel.logToOutput("Активация завершена");
+    Promise.all(waitFor).then(() => 
+    {
+        _outChannel.logToOutput("Активация клиентской части завершена");
+    });
+
     _currentStatus.setInfoMessage("Tiburon XML Helper запущен!", 3000);
 }
 
@@ -211,7 +216,7 @@ export function deactivate()
 
 
 /** Сбор необходимых данных */
-function getStaticData()
+async function getStaticData()
 {
     try 
     {
@@ -225,14 +230,7 @@ function getStaticData()
 
         // получаем фунцию форматирования C#
         let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
-        if (!!csharpfixformat)
-        {
-            if (!csharpfixformat.isActive) csharpfixformat.activate().then(function ()
-            {
-                CSFormatter = getCSFormatter(csharpfixformat);
-            });
-            else getCSFormatter(csharpfixformat);
-        }
+        if (!!csharpfixformat) getCSFormatter(csharpfixformat).then(formatter => { CSFormatter = formatter });
         else _outChannel.logToOutput("Расширение 'Leopotam.csharpfixformat' не установлено, C# будет форматироваться, как простой текст", _WarningLogPrefix);
 
         // запускаем бота
@@ -267,7 +265,7 @@ function getStaticData()
 //#region
 
 
-function registerCommands()
+async function registerCommands()
 {
 	/*vscode.commands.registerCommand('tib.debug', () => 
 	{
@@ -763,7 +761,7 @@ function registerCommands()
 
 
 /** добавление отступов при нажатии enter между > и < */
-function makeIndent(): void
+async function makeIndent()
 {
     vscode.languages.setLanguageConfiguration('tib', {
         wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
@@ -1135,7 +1133,8 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 
     //проверяем на наличие комментов внутри
     let inComReg = new RegExp("(" + safeString(cStart) + ")|(" + safeString(cEnd) + ")");
-    let checkInnerComments = function (text: string): boolean
+
+    function checkInnerComments(text: string): boolean
     {
         return !text.match(inComReg);
     }
@@ -1273,8 +1272,9 @@ function getLogData(edt?: vscode.TextEditor): LogData
 
 
 /** получаем функцию для форматирования C# */
-function getCSFormatter(ext: vscode.Extension<any>): (source: string) => Promise<string>
+async function getCSFormatter(ext: vscode.Extension<any>): Promise<ICSFormatter>
 {
+    if (!ext.isActive) await ext.activate();
     const getOptions = ext.exports['getOptions'];
     const format: (txt: string, opts?) => Promise<string> = ext.exports['process'];
     if (getOptions == undefined || format == undefined)
@@ -1314,7 +1314,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
         }
         catch (error)
         {
-            logError("Ошибка при обновлении текста документа", false);
+            logError("Ошибка при форматировании изменённого фрагмента", false);
         }
     }
     _inProcess = false;
@@ -1353,32 +1353,45 @@ function yesNoHelper(text: string): Promise<boolean>
 /** Запрещает редактирование */
 function lockDocument(document: vscode.TextDocument, log = false, force = false)
 {
-    if (!_settings.Item("enableFileLock")) return;
-    let noLock = (_settings.Item("doNotLockFiles") as string[]);
-    let path = new Path(document.fileName);
-    let docPath = path.FullPath;
-    if (document.languageId == "tib" && (!fileIsLocked(docPath) || force))
+    try
     {
-        if (!!noLock && noLock.contains(docPath)) return;
-        lockFile(docPath);
-        createLockInfoFile(path, _userInfo);
-        if (!_lockedFiles.contains(docPath)) _lockedFiles.push(docPath);
-        if (log) _outChannel.logToOutput(`Файл "${path.FileName}" заблокирован для других пользователей.`);
+        if (!_settings.Item("enableFileLock")) return;
+        let noLock = (_settings.Item("doNotLockFiles") as string[]);
+        let path = new Path(document.fileName);
+        let docPath = path.FullPath;
+        if (document.languageId == "tib" && (!fileIsLocked(docPath) || force))
+        {
+            if (!!noLock && noLock.contains(docPath)) return;
+            lockFile(docPath);
+            createLockInfoFile(path, _userInfo);
+            if (!_lockedFiles.contains(docPath)) _lockedFiles.push(docPath);
+            if (log) _outChannel.logToOutput(`Файл "${path.FileName}" заблокирован для других пользователей.`);
+        }
+    } catch (error)
+    {
+        logError("Не удалось заблокировать документ", true);
     }
+
 }
 
 
 /** Разрешает редактирование */
 function unlockDocument(document: vscode.TextDocument, log = false)
 {
-    let path = new Path(document.fileName);
-    let docPath = path.FullPath;
-    if (document.languageId == "tib" && _lockedFiles.contains(docPath))
+    try
     {
-        unlockFile(docPath);
-        removeLockInfoFile(path);
-        if (log) _outChannel.logToOutput(`Файл "${path.FileName}" разблокирован`);
-        _lockedFiles.remove(docPath);
+        let path = new Path(document.fileName);
+        let docPath = path.FullPath;
+        if (document.languageId == "tib" && _lockedFiles.contains(docPath))
+        {
+            unlockFile(docPath);
+            removeLockInfoFile(path);
+            if (log) _outChannel.logToOutput(`Файл "${path.FileName}" разблокирован`);
+            _lockedFiles.remove(docPath);
+        }
+    } catch (error)
+    {
+        logError("Не удалось разблокировать документ", true);
     }
 }
 
@@ -1417,6 +1430,7 @@ function showLockInfo(document: vscode.TextDocument)
             if (data.User == _userInfo.Name)
             {
                 if (data.Id == _userInfo.Id) return lockDocument(document, true, true);
+                _outChannel.logToOutput(`Файл ${path.FileName} занят пользователем с таким же именем (${data.User}).`);
                 yesNoHelper(`Файл ${strPath} занят пользователем ${user}. Возможно, он остался заблокированным после прерывания работы расширения. Разблокировать?`).then(res => { if (res) lockDocument(document, true, true) });
                 return;
             }
@@ -1426,12 +1440,13 @@ function showLockInfo(document: vscode.TextDocument)
     }
     else
     {
+        _outChannel.logToOutput(`Файл ${path.FileName} открыт в режиме только для чтения. Информация не найдена.`);
         yesNoHelper(`Файл ${strPath} защищён от записи. Разрешить запись?`).then(res =>
         {
             if (res)
             {
                 unlockFile(document.fileName);
-                _outChannel.logToOutput(`Запись в файл ${strPath} разрешена`);
+                _outChannel.logToOutput(`Запись в файл ${path.FileName} разрешена`);
             }
         });
     }
@@ -1447,28 +1462,36 @@ function getFilePathForMessage(path: string)
 }
 
 
+/** Заменяет выделенный текст на Answers/Items */
 async function createElements(elementType: SurveyElementType)
 {
-    let editor = vscode.window.activeTextEditor;
-    if (editor.selections.length > 1)
+    try
     {
-        showWarning('Данная команда не поддерживает мультикурсор');
-        return;
-    }
-    let text = editor.document.getText(editor.selection);
-    let res = TibDocumentEdits.createElements(text, elementType);
+        let editor = vscode.window.activeTextEditor;
+        if (editor.selections.length > 1)
+        {
+            showWarning('Данная команда не поддерживает мультикурсор');
+            return;
+        }
+        let text = editor.document.getText(editor.selection);
+        let res = TibDocumentEdits.createElements(text, elementType);
 
-    _inProcess = true;
-    let tag = await getCurrentTag(editor.document, editor.selection.active);
-    let indent = !!tag ? tag.GetIndent() : 1;
-    Formatting.format(res.value, Language.XML, _settings, "\t", indent).then(x =>
+        _inProcess = true;
+        let tag = await getCurrentTag(editor.document, editor.selection.active);
+        let indent = !!tag ? tag.GetIndent() : 1;
+        Formatting.format(res.value, Language.XML, _settings, "\t", indent).then(x =>
+        {
+            res.value = x;
+            vscode.window.activeTextEditor.insertSnippet(res).then(() => { _inProcess = false });
+        });
+    } catch (error)
     {
-        res.value = x;
-        vscode.window.activeTextEditor.insertSnippet(res).then(() => { _inProcess = false });
-    });
+        logError("Ошибка преобразования текста в XML-элементы", true);
+    }
 }
 
 
+/** Настройка соединения с сервером */
 async function createClientConnection(context: vscode.ExtensionContext)
 {
     try
@@ -1537,7 +1560,7 @@ async function createClientConnection(context: vscode.ExtensionContext)
         });
     } catch (error)
     {
-        logError(error, true);
+        logError("Ошибка при подключении к серверной части расширения", true);
     }
 }
 
@@ -1554,6 +1577,7 @@ async function createRequest<T, R>(name: string, data: T, waitForServerIsReady =
 }
 
 
+/** Отправка данных на сервер */
 async function sendNotification<T>(name: string, data: T, waitForServerIsReady = false)
 {
     if (!_clientIsReady)
@@ -1597,7 +1621,8 @@ async function createCommandActionPair(cmdName: string, actionTitle: string, com
 }
 
 
-function createCodeAction(actionTitle: string, commandName: string, argumentInvoker: ArgumentsInvoker)
+/** Создаёт команду для быстрых исправлений (жёлтая лампочка) */
+async function createCodeAction(actionTitle: string, commandName: string, argumentInvoker: ArgumentsInvoker)
 {
     vscode.languages.registerCodeActionsProvider('tib', {
         provideCodeActions(document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext)
@@ -1686,10 +1711,10 @@ async function registerActionCommands()
 
 
 /** Отправка документа на сервер */
-function updateDocumentOnServer(document?: vscode.TextDocument)
+async function updateDocumentOnServer(document?: vscode.TextDocument)
 {
     let doc = !!document ? document : vscode.window.activeTextEditor.document;
-    sendNotification('forceDocumentUpdate', ClientServerTransforms.ToServer.Document(doc));
+    return sendNotification('forceDocumentUpdate', ClientServerTransforms.ToServer.Document(doc));
 }
 
 
