@@ -39,7 +39,6 @@ class ILogData implements UserLogDataFields
     FullText?: string;
     Date?: string;
     Postion?: vscode.Position;
-    CacheEnabled?: boolean;
     Version?: string;
     StackTrace?: string;
     Data?: Object;

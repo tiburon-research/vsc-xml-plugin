@@ -53,12 +53,6 @@ var _outChannel = new TibOutput('tib');
 
 var _errors: TibErrors;
 
-/** Объект для хранения пользовательских выборов */
-var _refused = {
-    /** Отказ от включения кэша */
-    enableCache: false
-}
-
 /** Пути к заблокированным файлам */
 var _lockedFiles: string[] = [];
 
@@ -1256,8 +1250,7 @@ function getLogData(edt?: vscode.TextEditor): LogData
             UserData: _userInfo,
             FileName: editor.document.fileName,
             Postion: editor.selection.active,
-            FullText: editor.document.getText(),
-            CacheEnabled: !!_settings.Item("enableCache")
+            FullText: editor.document.getText()
         });
         res.UserName = _userInfo.Name;
     } catch (error)
@@ -1326,14 +1319,14 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 /** Проверки документа */
 function checkDocument(editor: vscode.TextEditor)
 {
-    if (!_refused.enableCache && !_settings.Item("enableCache") && editor.document.lineCount > 5000)
+    /* if (!_refused.enableCache && !_settings.Item("enableCache") && editor.document.lineCount > 5000)
     {
         yesNoHelper("Включить кэширование? Кеширование позволяет ускорить работу с большими документами таких функций расширения, как автозавершение, подсказки при вводе и т.д.").then((res) => 
         {
             if (res) _settings.Set("enableCache", true).then(null, (er) => { logError("Ошибка при изменении конфигурации", true) });
             else _refused.enableCache = true;
         })
-    }
+    } */
 }
 
 
