@@ -459,6 +459,12 @@ export namespace ClientServerTransforms
                 content: document.getText()
             }
         }
+
+        export function Position(position: vscode.Position): server.Position
+        {
+            if (!position) return null;
+            return server.Position.create(position.line, position.character);
+        }
     }
 
 }

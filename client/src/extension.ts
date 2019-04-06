@@ -1547,6 +1547,14 @@ async function createClientConnection(context: vscode.ExtensionContext)
                 });
             })
 
+            // получен tag
+            _client.onNotification("currentTag", (data: CurrentTag) =>
+            {
+                if (!data) return;
+                // собственно, просто показываем инфу
+                tagFromServerTag(data);
+            });
+
 
             _clientIsReady = true;
 
@@ -1704,10 +1712,25 @@ async function registerActionCommands()
 
 
 /** Отправка документа на сервер */
-async function updateDocumentOnServer(document?: vscode.TextDocument)
+async function updateDocumentOnServer()
 {
-    let doc = !!document ? document : vscode.window.activeTextEditor.document;
-    return sendNotification('forceDocumentUpdate', ClientServerTransforms.ToServer.Document(doc));
+    let editor = vscode.window.activeTextEditor;
+    let doc = editor.document;
+    let documentData = ClientServerTransforms.ToServer.Document(doc);
+    let position = ClientServerTransforms.ToServer.Position(editor.selection.active);
+    let text = getPreviousText(createServerDocument(doc), position);
+    
+    let changeData: OnDidChangeDocumentData = {
+        document: documentData,
+        currentPosition: position,
+        previousText: text
+    };
+
+    createRequest<OnDidChangeDocumentData, CurrentTag>('onDidChangeTextDocument', changeData).then(serverTag =>
+    {
+        tagFromServerTag(serverTag);
+    });
+    return sendNotification('forceDocumentUpdate', documentData);
 }
 
 

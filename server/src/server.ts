@@ -142,6 +142,9 @@ connection.onHover(data =>
         position: data.position,
         force: false
     });
+    
+    sendTagToClient(tag);
+
     return {
         contents: getHovers(tag, document, data.position, _SurveyData, CodeAutoCompleteArray)
     };
@@ -161,6 +164,7 @@ connection.onDocumentHighlight(data =>
         force: false
     });
     let higlights = new TibDocumentHighLights(tag, document, data.position);
+    sendTagToClient(tag);
     return higlights.getAll();
 })
 
@@ -178,6 +182,7 @@ connection.onDefinition(data =>
         position: data.position,
         force: false
     });
+    sendTagToClient(tag);
     return getDefinition(tag, document, data.position, _SurveyData);
 })
 
@@ -436,5 +441,11 @@ export function logError(text: string, showError: boolean)
     connection.sendNotification('logError', log);
 }
 
+
+/** Отправляет `tag` клиенту */
+function sendTagToClient(tag: CurrentTag): void
+{
+    connection.sendNotification('currentTag', tag);
+}
 
 //#endregion
