@@ -7,7 +7,7 @@ import * as fs from 'fs'
 import Uri from 'vscode-uri'
 import * as clipboard from "clipboardy"
 //import * as winattr from 'winattr'
-import * as hideFileLib from 'hidefile'
+import * as process from 'child_process'
 
 
 
@@ -34,7 +34,8 @@ export function uriFromName(path: string): string
 export function unlockFile(path: string)
 {
     //winattr.setSync(path, { readonly: false });
-    fs.chmodSync(path, '666');
+    //fs.chmodSync(path, '666');
+    process.execSync(`attrib -r "${path}"`);
 }
 
 
@@ -43,30 +44,33 @@ export function lockFile(path: string)
 {
     if (!pathExists(path)) return;
     //winattr.setSync(path, { readonly: true });
-    fs.chmodSync(path, '444');
+    //fs.chmodSync(path, '444');
+    process.execSync(`attrib +r "${path}"`);
 }
 
 /** Файл в режиме readonly */
 export function fileIsLocked(path: string): boolean
 {
     if (!pathExists(path)) return false;
-    /*let props = winattr.getSync(path);
-    return !!props && !!props.readonly;*/
-    return hideFileLib.isHiddenSync(path);
+    //let props = winattr.getSync(path);
+    let a = fs.statSync(path);
+    let readOnly = (a.mode & parseInt('777', 8)).toString(8) == '444';
+    return readOnly;
+    //return !!props && !!props.readonly;
 }
 
 
 /** Делает файл hidden */
 export function hideFile(path: string)
 {
-    hideFileLib.hideSync(path);
+    process.execSync(`attrib +h "${path}"`);
     //winattr.setSync(path, { hidden: true });
 }
 
 /** Снимает свойство hidden с файла */
 export function showFile(path: string)
 {
-    hideFileLib.revealSync(path);
+    process.execSync(`attrib -h "${path}"`);
     //winattr.setSync(path, { hidden: false });
 }
 
