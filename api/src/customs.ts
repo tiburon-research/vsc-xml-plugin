@@ -6,7 +6,8 @@
 import * as fs from 'fs'
 import Uri from 'vscode-uri'
 import * as clipboard from "clipboardy"
-import * as winattr from 'winattr'
+//import * as winattr from 'winattr'
+import * as hideFileLib from 'hidefile'
 
 
 
@@ -32,7 +33,8 @@ export function uriFromName(path: string): string
 /** Задаёт файлу режим readonly */
 export function unlockFile(path: string)
 {
-    winattr.setSync(path, { readonly: false });
+    //winattr.setSync(path, { readonly: false });
+    fs.chmodSync(path, '666');
 }
 
 
@@ -40,28 +42,32 @@ export function unlockFile(path: string)
 export function lockFile(path: string)
 {
     if (!pathExists(path)) return;
-    winattr.setSync(path, { readonly: true });
+    //winattr.setSync(path, { readonly: true });
+    fs.chmodSync(path, '444');
 }
 
 /** Файл в режиме readonly */
 export function fileIsLocked(path: string): boolean
 {
     if (!pathExists(path)) return false;
-    let props = winattr.getSync(path);
-    return !!props && !!props.readonly;
+    /*let props = winattr.getSync(path);
+    return !!props && !!props.readonly;*/
+    return hideFileLib.isHiddenSync(path);
 }
 
 
 /** Делает файл hidden */
 export function hideFile(path: string)
 {
-    winattr.setSync(path, { hidden: true });
+    hideFileLib.hideSync(path);
+    //winattr.setSync(path, { hidden: true });
 }
 
 /** Снимает свойство hidden с файла */
 export function showFile(path: string)
 {
-    winattr.setSync(path, { hidden: false });
+    hideFileLib.revealSync(path);
+    //winattr.setSync(path, { hidden: false });
 }
 
 
