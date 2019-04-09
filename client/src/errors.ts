@@ -9,9 +9,8 @@ import * as dateFormat from 'dateFormat';
 import { pathExists, createDir } from "tib-api";
 import { Path, UserData, getTibVersion } from "./classes";
 import * as fs from 'fs'
-import { _LogPath } from "./extension";
 import * as shortHash from 'short-hash'
-import { _pack } from "tib-api/lib/constants";
+import { _pack, LogPath } from "tib-api/lib/constants";
 
 
 
@@ -156,14 +155,14 @@ export class TibErrors
     {
         if (!data) data = new LogData({ FileName: '-no-', UserData: { IP: '-no-', Id: '-no-', Name: '-no-' } });
         this.outChannel.logToOutput(text, "ERROR: ");
-        if (!pathExists(_LogPath))
+        if (!pathExists(LogPath))
         {
-            this.sendLogMessage("У пользователя `" + data.UserName + "` не найден путь для логов:\n`" + _LogPath + "`", data.UserName);
+            this.sendLogMessage("У пользователя `" + data.UserName + "` не найден путь для логов:\n`" + LogPath + "`", data.UserName);
             return;
         }
         // генерируем имя файла из текста ошибки и сохраняем в папке с именем пользователя
         let hash = "" + shortHash(text);
-        let dir = Path.Concat(_LogPath, data.UserName);
+        let dir = Path.Concat(LogPath, data.UserName);
         if (!pathExists(dir)) createDir(dir);
         let filename = Path.Concat(dir, hash + ".log");
         if (pathExists(filename)) return;

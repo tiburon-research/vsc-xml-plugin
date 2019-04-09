@@ -75,3 +75,6 @@ export const PreDifinedConstants =
         { Scripts: "\\\\tib-srv-debug.corp.tiburon-research.ru\\scripts" },
         { StoreUrl: "S:" }
     ];
+
+
+export const LogPath = "G:\\Разное\\TiburonXMLHelper\\Logs\\_insiders";

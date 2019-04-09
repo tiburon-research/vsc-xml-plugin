@@ -9,7 +9,7 @@ import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSetti
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
-import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, LogPath } from 'tib-api/lib/constants'
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
@@ -17,7 +17,7 @@ import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors } from './errors';
 
 
-export { CSFormatter, _LogPath, _settings as Settings };
+export { CSFormatter, _settings as Settings };
 
 
 /*---------------------------------------- глобальные переменные ----------------------------------------*/
@@ -35,9 +35,6 @@ var _bot: TelegramBot;
 
 /** Во избежание рекурсивыных изменений */
 var _inProcess = false;
-
-/** Путь для сохранения логов */
-var _LogPath: string;
 
 /** функция для форматирования C# из расширения Leopotam.csharpfixformat */
 var CSFormatter: ICSFormatter;
@@ -218,8 +215,7 @@ async function getStaticData()
         _userInfo = getUserData();
         // сохраняем нужные значения
         _settings = new ExtensionSettings();
-        _LogPath = _settings.Item("logPath");
-        if (!pathExists(_LogPath)) _outChannel.logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
+        if (!pathExists(LogPath)) _outChannel.logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
         _useLinq = _settings.Item("useLinq");
 
         // получаем фунцию форматирования C#
@@ -228,7 +224,7 @@ async function getStaticData()
         else _outChannel.logToOutput("Расширение 'Leopotam.csharpfixformat' не установлено, C# будет форматироваться, как простой текст", _WarningLogPrefix);
 
         // запускаем бота
-        let dataPath = _LogPath + "\\data.json";
+        let dataPath = LogPath + "\\data.json";
         if (pathExists(dataPath))
         {
             let data = JSON.parse(fs.readFileSync(dataPath).toString());
@@ -1424,7 +1420,7 @@ function showLockInfo(document: vscode.TextDocument)
             {
                 if (data.Id == _userInfo.Id) return lockDocument(document, true, true);
                 _outChannel.logToOutput(`Файл ${path.FileName} занят пользователем с таким же именем (${data.User}).`);
-                yesNoHelper(`Файл ${strPath} занят пользователем ${user}. Возможно, он остался заблокированным после прерывания работы расширения. Разблокировать?`).then(res => { if (res) lockDocument(document, true, true) });
+                yesNoHelper(`Файл ${strPath} занят пользователем ${user}. Возможно, он остался заблокированным после прерывания работы расширения. Разблокировать?`).then(res => { if (res) lockDocument(document, true, true); });
                 return;
             }
         }
@@ -1436,11 +1432,7 @@ function showLockInfo(document: vscode.TextDocument)
         _outChannel.logToOutput(`Файл ${path.FileName} открыт в режиме только для чтения. Информация не найдена.`);
         yesNoHelper(`Файл ${strPath} защищён от записи. Разрешить запись?`).then(res =>
         {
-            if (res)
-            {
-                unlockFile(document.fileName);
-                _outChannel.logToOutput(`Запись в файл ${path.FileName} разрешена`);
-            }
+            if (res) lockDocument(document, true, true);
         });
     }
 }
@@ -1719,7 +1711,7 @@ async function updateDocumentOnServer()
     let documentData = ClientServerTransforms.ToServer.Document(doc);
     let position = ClientServerTransforms.ToServer.Position(editor.selection.active);
     let text = getPreviousText(createServerDocument(doc), position);
-    
+
     let changeData: OnDidChangeDocumentData = {
         document: documentData,
         currentPosition: position,

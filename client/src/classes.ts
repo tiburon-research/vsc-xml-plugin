@@ -4,7 +4,6 @@ import * as os from 'os'
 import * as fs from 'fs'
 import * as iconv from 'iconv-lite'
 import { machineIdSync } from "node-machine-id"
-import { _LogPath } from './extension'
 import { _LockInfoFilePrefix, _pack } from 'tib-api/lib/constants'
 import { CurrentTag, Language, KeyedCollection, Parse, pathExists, IServerDocument, hideFile, showFile } from 'tib-api';
 
