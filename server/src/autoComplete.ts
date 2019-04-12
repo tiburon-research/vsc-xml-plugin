@@ -2008,6 +2008,11 @@ export const Attributes = {
             "Name": "Operator",
             "Default": "And",
             "Type": "LogicalOperator"
+        },
+        {
+            "Name": "Counter",
+            "Default": "false",
+            "Type": "Boolean"
         }
     ],
     "Block": [
