@@ -208,8 +208,7 @@
       "[tib]": {
         "editor.quickSuggestions": {
           "strings": true
-        },
-        "editor.snippetSuggestions": "bottom"
+        }
       }
     },
     "configuration": {
