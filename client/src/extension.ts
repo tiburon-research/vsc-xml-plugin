@@ -878,7 +878,7 @@ function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
     if (!data.tag || !data.editor || !data.changes || data.changes.length == 0) return res;
 
     let change = data.changes[0].Change.text;
-    let positions = data.editor.selections.map(x => new vscode.Position(x.active.line, x.active.character + 1));
+    let positions = data.editor.selections.map(x => new vscode.Position(x.active.line, x.active.character));
     let lang = data.tag.GetLaguage();
 
 
