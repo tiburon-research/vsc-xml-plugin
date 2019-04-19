@@ -1017,7 +1017,7 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 
         createRequest<IProtocolTagFields, CurrentTag>('currentTag', fields).then(data =>
         {
-            if (!data) return;
+            if (!data) return resolve(data);
             let tag = tagFromServerTag(data);
             resolve(tag);
         });
