@@ -130,7 +130,7 @@ export function activate(context: vscode.ExtensionContext)
             changes = getContextChanges(event.document, editor.selections, event.contentChanges, true);
         } catch (error)
         {
-            logError("Ошибка в getContextChanges", false)
+            logError("Ошибка в getContextChanges", false, error)
         }
 
         let originalPosition: vscode.Position;
@@ -241,7 +241,7 @@ async function getStaticData()
         _errors = new TibErrors(_bot, _outChannel);
     } catch (er)
     {
-        logError("Ошибка при инициализации расширения", true)
+        logError("Ошибка при инициализации расширения", true, er)
     }
 }
 
@@ -382,7 +382,7 @@ async function registerCommands()
                 });
             } catch (error)
             {
-                logError("Ошибка при оборачивании в CDATA", true);
+                logError("Ошибка при оборачивании в CDATA", true, error);
                 resolve();
             }
         });
@@ -423,7 +423,7 @@ async function registerCommands()
                 } catch (error)
                 {
                     _currentStatus.removeCurrentMessage();
-                    logError("Ошибка при удалении Id вопроса из заголовка", true)
+                    logError("Ошибка при удалении Id вопроса из заголовка", true, error)
                     resolve();
                 }
                 x.dispose();
@@ -449,7 +449,7 @@ async function registerCommands()
             }
             catch (error)
             {
-                logError("Ошибка преобразования AnswersToItems", true);
+                logError("Ошибка преобразования AnswersToItems", true, error);
                 resolve();
             }
         });
@@ -473,7 +473,7 @@ async function registerCommands()
             }
             catch (error)
             {
-                logError("Ошибка преобразования ItemsToAnswers", true);
+                logError("Ошибка преобразования ItemsToAnswers", true, error);
                 resolve();
             }
         });
@@ -529,7 +529,7 @@ async function registerCommands()
                     });
                 } catch (error)
                 {
-                    logError("Ошибка при сортировке листа", true);
+                    logError("Ошибка при сортировке листа", true, error);
                     resolve();
                 }
                 x.dispose();
@@ -552,7 +552,7 @@ async function registerCommands()
                 applyChanges(editor.selection, res, editor, true).then(() => { resolve(); });
             } catch (error)
             {
-                logError("Ошибка в преобразовании возрастного списка", true);
+                logError("Ошибка в преобразовании возрастного списка", true, error);
                 resolve();
             }
         });
@@ -641,7 +641,7 @@ async function registerCommands()
             let path = _settings.Item("demoPath");
             if (!path)
             {
-                logError("Невозможно получить доступ к файлу демки", true);
+                logError("Невозможно получить доступ к файлу демки", true, undefined);
                 return resolve();
             }
             _currentStatus.setProcessMessage("Открывается демка...").then(x =>
@@ -663,7 +663,7 @@ async function registerCommands()
             let templatePathFolder = _settings.Item("templatePathFolder") + '\\';
             if (!templatePathFolder)
             {
-                logError("Невозможно получить доступ к папке", true);
+                logError("Невозможно получить доступ к папке", true, undefined);
                 return resolve();
             }
 
@@ -737,7 +737,7 @@ async function registerCommands()
                         },
                         (er) =>
                         {
-                            logError(er, true);
+                            logError(er, true, er);
                             x.dispose();
                         }
                     )
@@ -967,7 +967,7 @@ function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 
     } catch (error)
     {
-        logError("Ошибка при добавлении заглавной буквы", true);
+        logError("Ошибка при добавлении заглавной буквы", true, error);
     }
     return res;
 }
@@ -997,7 +997,7 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
         return server.Range.create(startPos, endPos);
     } catch (error)
     {
-        logError("Ошибка выделения закрывающегося тега", false);
+        logError("Ошибка выделения закрывающегося тега", false, error);
     }
     return null;
 }
@@ -1045,7 +1045,7 @@ async function getCurrentTag(document: vscode.TextDocument, position: vscode.Pos
     }
     catch (error)
     {
-        logError("Ошибка определения положения в XML", false);
+        logError("Ошибка определения положения в XML", false, error);
         return null;
     }
     return tag;
@@ -1062,7 +1062,7 @@ function getCurrentLineText(document: vscode.TextDocument, position: vscode.Posi
         return document.getText(new vscode.Range(start, end));
     } catch (error)
     {
-        logError("Ошибка получения текста текущей строки", false);
+        logError("Ошибка получения текста текущей строки", false, error);
         return null;
     }
 
@@ -1081,7 +1081,7 @@ function selectLines(document: vscode.TextDocument, selection: vscode.Selection)
 {
     if (!selection)
     {
-        logError("Ошибка при выделении элемента", false);
+        logError("Ошибка при выделении элемента", false, undefined);
         return null;
     }
     return new vscode.Selection(
@@ -1100,7 +1100,7 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
     let tagTo = await getCurrentTag(document, selection.end);
     if (!tagFrom || !tagTo)
     {
-        logError("Ошибка получения границ выделения", false);
+        logError("Ошибка получения границ выделения", false, undefined);
         return text;
     }
     let langFrom = tagFrom.GetLaguage();
@@ -1183,7 +1183,7 @@ function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text:
         }
         catch (error)
         {
-            logError("Ошибка замены текста в выделении", true);
+            logError("Ошибка замены текста в выделении", true, error);
         }
     }, { undoStopAfter: false, undoStopBefore: false })
 }
@@ -1226,12 +1226,12 @@ async function multiLinePaste(editor: vscode.TextEditor, lines: string[], separa
 
 
 /** сообщение (+ отчёт) об ошибке */
-function logError(text: string, showErrror: boolean)
+function logError(text: string, showErrror: boolean, errorMessage: string)
 {
-    let error = new Error().stack;
+    let stackTrace = new Error().stack;
     let editor = vscode.window.activeTextEditor;
     let data = getLogData(editor);
-    _errors.logError(text, data, error, showErrror);
+    _errors.logError(text, data, stackTrace, showErrror, errorMessage);
 }
 
 
@@ -1303,7 +1303,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
         }
         catch (error)
         {
-            logError("Ошибка при форматировании изменённого фрагмента", false);
+            logError("Ошибка при форматировании изменённого фрагмента", false, error);
         }
     }
     _inProcess = false;
@@ -1358,7 +1358,7 @@ function lockDocument(document: vscode.TextDocument, log = false, force = false)
         }
     } catch (error)
     {
-        logError("Не удалось заблокировать документ", true);
+        logError("Не удалось заблокировать документ", true, error);
     }
 
 }
@@ -1380,7 +1380,7 @@ function unlockDocument(document: vscode.TextDocument, log = false)
         }
     } catch (error)
     {
-        logError("Не удалось разблокировать документ", true);
+        logError("Не удалось разблокировать документ", true, error);
     }
 }
 
@@ -1471,7 +1471,7 @@ async function createElements(elementType: SurveyElementType)
         });
     } catch (error)
     {
-        logError("Ошибка преобразования текста в XML-элементы", true);
+        logError("Ошибка преобразования текста в XML-элементы", true, error);
     }
 }
 
@@ -1523,8 +1523,7 @@ async function createClientConnection(context: vscode.ExtensionContext)
             _client.onNotification("logError", (data: IErrorLogData) =>
             {
                 let logData = getLogData(vscode.window.activeTextEditor);
-                logData.add({ StackTrace: data.StackTrace, ErrorMessage: data.Message });
-                _errors.logError(data.MessageFriendly, logData, null, !data.Silent);
+                _errors.logError(data.MessageFriendly, logData, data.StackTrace, !data.Silent, data.Message);
             });
 
             // запрос документа с ссервера
@@ -1553,7 +1552,7 @@ async function createClientConnection(context: vscode.ExtensionContext)
         });
     } catch (error)
     {
-        logError("Ошибка при подключении к серверной части расширения", true);
+        logError("Ошибка при подключении к серверной части расширения", true, error);
     }
 }
 

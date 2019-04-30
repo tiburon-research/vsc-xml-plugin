@@ -73,8 +73,9 @@ export class LogData
     /** преобразует все данные в строку */
     public toString(): string
     {
-        let res = `Error: ${this.ErrorMessage}\r\n`;
+        let res = `Error: ${this.MessageFriendly}\r\n`;
         if (!!this.Data.ErrorMessage) res += `Message: ${this.Data.ErrorMessage}\r\n`;
+        if (!!this.Data.StackTrace) res += `StackTrace: ${this.Data.StackTrace}\r\n`;
         res += `User: ${this.UserName}\r\n`;
         for (let key in this.Data)
         {
@@ -82,6 +83,7 @@ export class LogData
             {
                 case "FullText":
                 case "ErrorMessage":
+                case "StackTrace":
                     // текст уберём в конец, а ошибку в начало
                     break;
                 case "SurveyData":
@@ -118,7 +120,7 @@ export class LogData
     }
 
     public UserName: string;
-    public ErrorMessage: string;
+    public MessageFriendly: string;
     private Data = new ILogData();
 }
 
@@ -171,7 +173,7 @@ export class TibErrors
         if (!pathExists(dir)) createDir(dir);
         let filename = Path.Concat(dir, hash + ".log");
         if (pathExists(filename)) return;
-        data.ErrorMessage = text;
+        data.MessageFriendly = text;
         fs.writeFile(filename, data.toString(), (err) =>
         {
             if (!!err) this.sendLogMessage(JSON.stringify(err), data.UserName);
@@ -181,7 +183,7 @@ export class TibErrors
 
 
     /** Показ и сохранение ошибки */
-    logError(text: string, data: LogData, stackTrace: any, showerror: boolean)
+    logError(text: string, data: LogData, stackTrace: any, showerror: boolean, errorMessage: string)
     {
         if (_pack == "debug")
         {
@@ -190,7 +192,7 @@ export class TibErrors
             if (!!stackTrace) console.log(stackTrace);
         }
         if (showerror) showError(text);
-        if (!!stackTrace && !!data) data.add({ StackTrace: stackTrace });
+        data.add({ StackTrace: stackTrace, ErrorMessage: errorMessage });
         this.saveError(text, data);
     }
 
