@@ -264,7 +264,7 @@ function getServerTag(data: CurrentTagGetFields): CurrentTag
         return tag;
     } catch (error)
     {
-        logError(error, false);
+        logError(error, false, error);
         return null;
     }
 }
@@ -365,7 +365,7 @@ async function getAutoComleteList()
         });
     } catch (error)
     {
-        logError('Ошибка инициализации Autocomplete', false);
+        logError('Ошибка инициализации Autocomplete', false, error);
     }
 
 }
@@ -410,7 +410,7 @@ async function updateSurveyData(document: server.TextDocument)
         _SurveyData.MixIds = mixIds;
     } catch (error)
     {
-        logError("Ошибка при сборе сведений о документе", false);
+        logError("Ошибка при сборе сведений о документе", false, error);
     }
 }
 
@@ -430,13 +430,14 @@ function getDocument(uri: string): Promise<server.TextDocument>
 }
 
 
-export function logError(text: string, showError: boolean)
+export function logError(text: string, showError: boolean, errorMessage?)
 {
     let data = new Error().stack;
     let log: IErrorLogData = {
-        Message: text,
+        MessageFriendly: text,
+        Message: !!errorMessage && !!errorMessage.message ? errorMessage.message : undefined,
         Silent: !showError && _pack != "debug",
-        Error: !!data ? ('SERVER: ' + data) : undefined
+        StackTrace: !!data ? ('SERVER: ' + data) : undefined
     };
     connection.sendNotification('logError', log);
 }

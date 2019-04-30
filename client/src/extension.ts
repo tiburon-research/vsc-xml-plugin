@@ -1523,8 +1523,8 @@ async function createClientConnection(context: vscode.ExtensionContext)
             _client.onNotification("logError", (data: IErrorLogData) =>
             {
                 let logData = getLogData(vscode.window.activeTextEditor);
-                logData.add({ StackTrace: data.Error });
-                _errors.logError(data.Message, logData, null, !data.Silent);
+                logData.add({ StackTrace: data.StackTrace, ErrorMessage: data.Message });
+                _errors.logError(data.MessageFriendly, logData, null, !data.Silent);
             });
 
             // запрос документа с ссервера

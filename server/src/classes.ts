@@ -5,7 +5,7 @@ import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePosition
 import { ISurveyData, TibAttribute } from 'tib-api/lib/surveyData';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
-import { logError } from './server';
+import { logError, consoleLog } from './server';
 
 
 /** Возвращает все автозавершения для текущего места */
@@ -138,7 +138,7 @@ export class DocumentBuffer
             });
         } catch (error)
         {
-            logError('Ошибка применения изменений к документу', true);
+            logError('Ошибка применения изменений к документу', true, error);
         }
         return res;
     }
@@ -150,7 +150,7 @@ export class DocumentBuffer
             this.document = server.TextDocument.create(this._uri, 'tib', version, content);
         } catch (error)
         {
-            logError('Ошибка создания нового документа', true);
+            logError('Ошибка создания нового документа', true, error);
         }
     }
 
@@ -237,7 +237,7 @@ class ElementExtractor
         }
         catch (error)
         {
-            logError('Ошибка получения элементов', false);
+            logError('Ошибка получения элементов', false, error);
         }
 
         return resultStr;
@@ -418,7 +418,7 @@ export class TibAutoCompletes
         }
         catch (error)
         {
-            logError('Ошибка получения XML Features Autocomplete', false);
+            logError('Ошибка получения XML Features Autocomplete', false, error);
         }
         return completionItems;
     }
@@ -453,7 +453,7 @@ export class TibAutoCompletes
             }
         } catch (error)
         {
-            logError('Ошибка получения XML Attrs Autocomplete', false);
+            logError('Ошибка получения XML Attrs Autocomplete', false, error);
         }
 
         return completionItems;
@@ -498,7 +498,7 @@ export class TibAutoCompletes
             });
         } catch (error)
         {
-            logError('Ошибка получения XML AttrValues Autocomplete', false);
+            logError('Ошибка получения XML AttrValues Autocomplete', false, error);
         }
 
         return completionItems;
@@ -628,7 +628,7 @@ export class TibAutoCompletes
             }
         } catch (error)
         {
-            logError('Ошибка получения Main C# Autocomplete', false);
+            logError('Ошибка получения Main C# Autocomplete', false, error);
         }
 
         return completionItems;
@@ -669,7 +669,7 @@ export class TibAutoCompletes
             }
         } catch (error)
         {
-            logError('Ошибка получения C# Fields Autocomplete', false);
+            logError('Ошибка получения C# Fields Autocomplete', false, error);
         }
         return completionItems;
     }
@@ -712,7 +712,7 @@ export function getSignatureHelpers(tag: CurrentTag, document: server.TextDocume
         });
     } catch (error)
     {
-        logError('Ошибка получения SignatureHelpers', false);
+        logError('Ошибка получения SignatureHelpers', false, error);
     }
 
     return sign;
@@ -770,7 +770,7 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
         if (customMethods) res = res.concat(customMethods);
     } catch (error)
     {
-        logError('Ошибка получения Hovers', false);
+        logError('Ошибка получения Hovers', false, error);
     }
     return res;
 }
@@ -886,7 +886,7 @@ export class TibDocumentHighLights
             }
         } catch (error)
         {
-            logError('Ошибка получения Tags Highlights', false);
+            logError('Ошибка получения Tags Highlights', false, error);
         }
 
         return res;
@@ -942,7 +942,7 @@ export class TibDocumentHighLights
             res.push(server.DocumentHighlight.create(nextRange));
         } catch (error)
         {
-            logError('Ошибка получения Blocks Highlights', false);
+            logError('Ошибка получения Blocks Highlights', false, error);
         }
 
         return res;
@@ -992,7 +992,7 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
         }
     } catch (error)
     {
-        logError('Ошибка получения определения', true);
+        logError('Ошибка получения определения', true, error);
     }
 
     return res;
@@ -1016,7 +1016,7 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
         return server.Range.create(startPos, endPos);
     } catch (error)
     {
-        logError("Ошибка выделения закрывающегося тега", false);
+        logError("Ошибка выделения закрывающегося тега", false, error);
     }
     return null;
 }
@@ -1034,7 +1034,7 @@ function findOpenTag(opBracket: string, tagName: string, clBracket: string, docu
         return server.Range.create(startPos, endPos);
     } catch (error)
     {
-        logError("Ошибка выделения открывающегося тега", false);
+        logError("Ошибка выделения открывающегося тега", false, error);
     }
     return null;
 }

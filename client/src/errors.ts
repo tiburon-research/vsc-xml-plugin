@@ -18,6 +18,7 @@ import { _pack, LogPath } from "tib-api/lib/constants";
 
 interface UserLogDataFields
 {
+    ErrorMessage?: string;
     FullText?: string;
     Date?: string;
     Postion?: vscode.Position;
@@ -35,6 +36,7 @@ class ILogData implements UserLogDataFields
     FileName: string;
     UserData: UserData;
 
+    ErrorMessage?: string;
     FullText?: string;
     Date?: string;
     Postion?: vscode.Position;
@@ -71,13 +73,16 @@ export class LogData
     /** преобразует все данные в строку */
     public toString(): string
     {
-        let res = `Error: ${this.ErrorMessage}\r\nUser: ${this.UserName}\r\n`;
+        let res = `Error: ${this.ErrorMessage}\r\n`;
+        if (!!this.Data.ErrorMessage) res += `Message: ${this.Data.ErrorMessage}\r\n`;
+        res += `User: ${this.UserName}\r\n`;
         for (let key in this.Data)
         {
             switch (key)
             {
                 case "FullText":
-                    // текст уберём в конец	
+                case "ErrorMessage":
+                    // текст уберём в конец, а ошибку в начало
                     break;
                 case "SurveyData":
                 case "Data":
@@ -176,16 +181,16 @@ export class TibErrors
 
 
     /** Показ и сохранение ошибки */
-    logError(text: string, data: LogData, error: any, showerror: boolean)
+    logError(text: string, data: LogData, stackTrace: any, showerror: boolean)
     {
         if (_pack == "debug")
         {
             showerror = true;
             text = "debug: " + text;
-            if (!!error) console.log(error);
+            if (!!stackTrace) console.log(stackTrace);
         }
         if (showerror) showError(text);
-        if (!!error && !!data) data.add({ StackTrace: error });
+        if (!!stackTrace && !!data) data.add({ StackTrace: stackTrace });
         this.saveError(text, data);
     }
 
