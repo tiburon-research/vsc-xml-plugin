@@ -18,6 +18,7 @@ import { _pack, LogPath } from "tib-api/lib/constants";
 
 interface UserLogDataFields
 {
+    ErrorMessage?: string;
     FullText?: string;
     Date?: string;
     Postion?: vscode.Position;
@@ -35,6 +36,7 @@ class ILogData implements UserLogDataFields
     FileName: string;
     UserData: UserData;
 
+    ErrorMessage?: string;
     FullText?: string;
     Date?: string;
     Postion?: vscode.Position;
@@ -71,13 +73,18 @@ export class LogData
     /** преобразует все данные в строку */
     public toString(): string
     {
-        let res = `Error: ${this.ErrorMessage}\r\nUser: ${this.UserName}\r\n`;
+        let res = `Error: ${this.MessageFriendly}\r\n`;
+        if (!!this.Data.ErrorMessage) res += `Message: ${this.Data.ErrorMessage}\r\n`;
+        if (!!this.Data.StackTrace) res += `StackTrace: ${this.Data.StackTrace}\r\n`;
+        res += `User: ${this.UserName}\r\n`;
         for (let key in this.Data)
         {
             switch (key)
             {
                 case "FullText":
-                    // текст уберём в конец	
+                case "ErrorMessage":
+                case "StackTrace":
+                    // текст уберём в конец, а ошибку в начало
                     break;
                 case "SurveyData":
                 case "Data":
@@ -113,7 +120,7 @@ export class LogData
     }
 
     public UserName: string;
-    public ErrorMessage: string;
+    public MessageFriendly: string;
     private Data = new ILogData();
 }
 
@@ -147,7 +154,7 @@ export class TibErrors
     { }
 
     /**
-     * Создаёт лог (файл) об ошибке 
+     * Создаёт лог (файл) об ошибке и отправляет уведомление
      * @param text Текст ошибки
      * @param data Данные для лога
      */
@@ -166,7 +173,7 @@ export class TibErrors
         if (!pathExists(dir)) createDir(dir);
         let filename = Path.Concat(dir, hash + ".log");
         if (pathExists(filename)) return;
-        data.ErrorMessage = text;
+        data.MessageFriendly = text;
         fs.writeFile(filename, data.toString(), (err) =>
         {
             if (!!err) this.sendLogMessage(JSON.stringify(err), data.UserName);
@@ -176,16 +183,16 @@ export class TibErrors
 
 
     /** Показ и сохранение ошибки */
-    logError(text: string, data: LogData, error: any, showerror: boolean)
+    logError(text: string, data: LogData, stackTrace: any, showerror: boolean, errorMessage: string)
     {
         if (_pack == "debug")
         {
             showerror = true;
             text = "debug: " + text;
-            if (!!error) console.log(error);
+            if (!!stackTrace) console.log(stackTrace);
         }
         if (showerror) showError(text);
-        if (!!error && !!data) data.add({ StackTrace: error });
+        data.add({ StackTrace: stackTrace, ErrorMessage: errorMessage });
         this.saveError(text, data);
     }
 

@@ -28,10 +28,13 @@ export { JQuery, Parse, Encoding, KeyValuePair, KeyedCollection, safeString, IPa
 /** Для передачи ошибки на клиента */
 export interface IErrorLogData
 {
-    Message: string;
+    /** Описание для пользователя */
+    MessageFriendly: string;
+    /** Текст ошибки */
+    Message?: string
     /** Ошибка не будет показана */
     Silent: boolean;
-    Error?: any;
+    StackTrace?: any;
 }
 
 
