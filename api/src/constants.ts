@@ -77,4 +77,4 @@ export const PreDifinedConstants =
     ];
 
 
-export const LogPath = "G:\\Разное\\TiburonXMLHelper\\Logs\\_insiders";
+export const LogPath = "G:\\Разное\\TiburonXMLHelper\\Logs";
