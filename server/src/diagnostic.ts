@@ -20,7 +20,8 @@ const _AllDiagnostics: IDiagnosticType[] =
                     { Key: "wrongIds", Value: getWrongIds },
                     { Key: "longIds", Value: getLongIds },
                     { Key: "wrongXML", Value: getWrongXML },
-                    { Key: "duplicatedId", Value: getDuplicatedIds }
+                    { Key: "duplicatedId", Value: getDuplicatedIds },
+                    { Key: "wrongMixes", Value: getWrongMixes }
                 ]
             )
         },
@@ -128,6 +129,12 @@ async function getDuplicatedIds(document: server.TextDocument, prepearedText: st
     return await Parse.getDuplicatedElementsIds(document, prepearedText);
 }
 
+/** временная проверка миксов в Repeat и родителях */
+async function getWrongMixes(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+{
+    return await Parse.getWrongMixedElements(document, prepearedText);
+}
+
 
 //#endregion
 
@@ -216,7 +223,7 @@ async function _diagnosticElements(document: server.TextDocument, type: server.D
             let t = !!element.DiagnosticProperties.Type ? element.DiagnosticProperties.Type : type;
             let code = !!element.DiagnosticProperties.Code ? element.DiagnosticProperties.Code : diagnosticId;
             let diagItem = server.Diagnostic.create(element.Range, element.Message, t);
-            diagItem.code = code;
+            //diagItem.code = code;
             res.push(diagItem);
         });
     }
