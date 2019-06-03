@@ -223,7 +223,7 @@ async function _diagnosticElements(document: server.TextDocument, type: server.D
             let t = !!element.DiagnosticProperties.Type ? element.DiagnosticProperties.Type : type;
             let code = !!element.DiagnosticProperties.Code ? element.DiagnosticProperties.Code : diagnosticId;
             let diagItem = server.Diagnostic.create(element.Range, element.Message, t);
-            diagItem.code = code;
+            //diagItem.code = code;
             res.push(diagItem);
         });
     }
