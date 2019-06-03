@@ -589,3 +589,30 @@ export function getDuplicatedElementsIds(document: server.TextDocument, prepeare
     });
 
 }
+
+export function getWrongMixedElements(document: server.TextDocument, prepearedText: string): Promise<DocumentElement[]>
+{
+    return new Promise<DocumentElement[]>((resolve, reject) =>
+    {
+        let res: DocumentElement[] = [];
+        let parentRegex = /<(Question|Page)\s[^>]*Mix(Id)?=[^>]*>[\s\S]*?<\/\1/;
+        let repeatRegex = /(<Repeat\s[^>]*)(Mix(Id)?)=/;
+        let parents = prepearedText.matchAll(parentRegex);
+        parents.forEach(parent =>
+        {
+            let repeat = parent[0].find(repeatRegex);
+            if (!!repeat.Result && repeat.Result.length > 0)
+            {
+                let resultIndex = parent.index + repeat.Index + repeat.Result[1].length;
+                let endIndex = resultIndex + repeat.Result[2].length;
+                res.push(new DocumentElement(document, {
+                    From: resultIndex,
+                    To: endIndex,
+                    Value: repeat.Result,
+                    Message: `${repeat.Result[2]} уже указан в теге ${parent[1]}: проблем при перемешивании не избежать`
+                }));
+            }
+        });
+        resolve(res);
+    });
+}

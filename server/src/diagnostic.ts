@@ -20,7 +20,8 @@ const _AllDiagnostics: IDiagnosticType[] =
                     { Key: "wrongIds", Value: getWrongIds },
                     { Key: "longIds", Value: getLongIds },
                     { Key: "wrongXML", Value: getWrongXML },
-                    { Key: "duplicatedId", Value: getDuplicatedIds }
+                    { Key: "duplicatedId", Value: getDuplicatedIds },
+                    { Key: "wrongMixes", Value: getWrongMixes }
                 ]
             )
         },
@@ -126,6 +127,12 @@ async function getWrongXML(document: server.TextDocument, prepearedText: string)
 async function getDuplicatedIds(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
     return await Parse.getDuplicatedElementsIds(document, prepearedText);
+}
+
+/** временная проверка миксов в Repeat и родителях */
+async function getWrongMixes(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+{
+    return await Parse.getWrongMixedElements(document, prepearedText);
 }
 
 
