@@ -595,31 +595,22 @@ export function getWrongMixedElements(document: server.TextDocument, prepearedTe
     return new Promise<DocumentElement[]>((resolve, reject) =>
     {
         let res: DocumentElement[] = [];
-        let parentRegexQuestion = /<(Question)\s[^>]*Mix(Id)?=[^>]*>[\s\S]*?<\/\1/;
-        let parentRegexPage = /<(Page)\s[^>]*Mix(Id)?=[^>]*>[\s\S]*?<\/\1/;
-        let repeatRegex = /(<Repeat\s[^>]*)(Mix(Id)?)=/;
-        let parents = prepearedText.matchAll(parentRegexQuestion).concat(prepearedText.matchAll(parentRegexPage));
+        let mixRegex = /((<(Page|Question|Repeat)\s[^>]*)(Mix(Id)?)=[^>]*>)([\s\S]*?)<\/\3/;
+        let parents = prepearedText.matchAll(mixRegex);
 
         parents.forEach(parent =>
         {
-            let repeat = parent[0].find(repeatRegex);
-            if (!!repeat.Result && repeat.Result.length > 0)
-            {                    
-                let resultIndex = parent.index + repeat.Index + repeat.Result[1].length;
-                let endIndex = resultIndex + repeat.Result[2].length;
-
-                // надо проверить, что это ближайший родитель (допустим, просто нету Question)
-                if (parent[1] == "Page")
-                {
-                    let preRepeat = parent[0].slice(10, repeat.Index);
-                    if (preRepeat.indexOf("<Question") > -1) return;   
-                }
-
+            let child = parent[6].find(mixRegex);
+            if (!!child.Result && child.Result.length > 0)
+            {
+                let resultIndex = parent.index + parent[1].length + child.Index + child.Result[2].length;
+                let endIndex = resultIndex + child.Result[4].length;
+                let parentString = document.positionAt(parent.index).line + 1;
                 res.push(new DocumentElement(document, {
                     From: resultIndex,
                     To: endIndex,
-                    Value: repeat.Result,
-                    Message: `${repeat.Result[2]} уже указан в теге ${parent[1]}: проблем при перемешивании не избежать`
+                    Value: child.Result,
+                    Message: `В родительском ${parent[3]} (строка ${parentString}) указан ${parent[4]}. Вложенные Mix/MixId надо оборачивать в <Block />`
                 }));
             }
         });
