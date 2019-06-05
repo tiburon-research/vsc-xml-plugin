@@ -737,6 +737,7 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
         if (!text || !tag || tag.GetLaguage() != Language.CSharp) return res;
         let parent = null;
         let lastText = getPreviousText(document, position);
+        if (!lastText) throw "пустой lastText";
         let reg = lastText.match(/(\w+)\.\w*$/);
         if (!!reg)
         {
