@@ -32,7 +32,7 @@ export function getCurrentLineText(document: server.TextDocument, position: serv
 /** Возвращает диапазон для слова в позиции `index` строки `line` */
 function getWordRange(index: number, line: string, regex?: RegExp): { from: number, to: number }
 {
-    if (!regex) regex = /[\w]/;
+    if (!regex) regex = /\w/;
     let from = index;
     let to = from + 1;
     for (let i = index; i < line.length; i++)
@@ -114,4 +114,11 @@ export function translatePosition(document: server.TextDocument, p: server.Posit
 export function comparePositions(document: server.TextDocument, p1: server.Position, p2: server.Position): number
 {
     return document.offsetAt(p1) - document.offsetAt(p2);
+}
+
+/** Проверяет есть ли в `document` такая `position` */
+export function isValidDocumentPosition(document: server.TextDocument, position: server.Position):boolean
+{
+    let offset = document.offsetAt(position);
+    return comparePositions(document, position, document.positionAt(offset)) === 0;
 }
