@@ -433,9 +433,15 @@ function getDocument(uri: string): Promise<server.TextDocument>
 export function logError(text: string, showError: boolean, errorMessage?)
 {
     let data = new Error().stack;
+    let msg: string = undefined;
+    if (!!errorMessage)
+    {
+        if (typeof errorMessage == 'string') msg = errorMessage;
+        else if (!!errorMessage.message) msg = errorMessage.message;
+    }
     let log: IErrorLogData = {
         MessageFriendly: text,
-        Message: !!errorMessage && !!errorMessage.message ? errorMessage.message : undefined,
+        Message: msg,
         Silent: !showError && _pack != "debug",
         StackTrace: !!data ? ('SERVER: ' + data) : undefined
     };
