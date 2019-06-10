@@ -12,46 +12,47 @@ import { Language } from './index';
 /** Текст всей строки для `position` */
 export function getCurrentLineText(document: server.TextDocument, position: server.Position): string
 {
-    try
-    {
-        let start = server.Position.create(position.line, 0);
-        let from = document.offsetAt(start);
-        let fullText = document.getText();
-        let res = fullText.slice(from);
-        let lastIndex = res.indexOf('\n');
-        if (lastIndex > -1) res = res.slice(0, lastIndex);
-        return res;
-    } catch (error)
-    {
-		/*logError("Ошибка получения текста текущей строки", error);
-		return null;*/
-    }
+    let start = server.Position.create(position.line, 0);
+    let from = document.offsetAt(start);
+    let fullText = document.getText();
+    let res = fullText.slice(from);
+    let lastIndex = res.indexOf('\n');
+    if (lastIndex > -1) res = res.slice(0, lastIndex);
+    return res;
 }
 
 
 /** Возвращает диапазон для слова в позиции `index` строки `line` */
 function getWordRange(index: number, line: string, regex?: RegExp): { from: number, to: number }
 {
-    if (!regex) regex = /\w/;
-    let from = index;
-    let to = from + 1;
-    for (let i = index; i < line.length; i++)
+    let emptyRange = { from: index, to: index };
+    if (!line) return emptyRange;
+    
+    try
     {
-        if (!line[i].match(regex))
+        if (!regex) regex = /\w/;
+        let from = index;
+        let to = from + 1;
+        for (let i = index; i < line.length; i++)
         {
-            to = i;
-            break;
+            if (!line[i].match(regex))
+            {
+                to = i;
+                break;
+            }
         }
-    }
-    for (let i = index; i > 0; i--)
-    {
-        if (!line[i - 1].match(regex))
+        for (let i = index; i > 0; i--)
         {
-            from = i;
-            break;
-        }
+            if (!line[i - 1].match(regex))
+            {
+                from = i;
+                break;
+            }
+        }   
+        return { from, to };
+    } catch (error) {
+        return emptyRange;
     }
-    return { from, to };
 }
 
 
