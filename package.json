@@ -305,6 +305,6 @@
     "watch": "tsc -b -w",
     "compile-api": "cd api && npm run compile && cd ../",
     "install-vsc": "node node_modules/vscode/bin/install",
-    "postinstall": "npm run install-vsc && npm run compile-api && cd server && npm i && cd ../client && npm i && cd .. && npm run compile"
+    "postinstall": "npm run install-vsc && npm run compile-api && cd .. && npm run compile"
   }
 }
