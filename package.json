@@ -275,7 +275,6 @@
     }
   },
   "dependencies": {
-    "@types/dateformat": "^1.0.1",
     "charset-detector": "^0.0.2",
     "clipboardy": "^1.2.3",
     "cssbeautify": "^0.3.1",
@@ -292,8 +291,9 @@
     "vscode-languageserver": "^5.2.1"
   },
   "devDependencies": {
-    "typescript": "^3.2.2",
     "vscode": "^1.1.26",
+    "typescript": "^3.2.2",
+    "@types/dateformat": "^1.0.1",
     "@types/jsdom": "^12.2.1",
     "@types/jquery": "^3.3.29",
     "@types/mocha": "^5.2.5",
@@ -305,6 +305,6 @@
     "watch": "tsc -b -w",
     "compile-api": "cd api && npm run compile && cd ../",
     "install-vsc": "node node_modules/vscode/bin/install",
-    "postinstall": "npm run install-vsc && npm run compile-api && cd .. && npm run compile"
+    "postinstall": "npm run install-vsc && npm run compile-api && npm run compile"
   }
 }
