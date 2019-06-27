@@ -19,3 +19,12 @@
 - Проверить, что всё необходимое добавлено в `README.md`.
 
 Данные для аутентификации лежат в `G:\Разное\TiburonXMLHelper\data.txt`
+
+## Обновление token
+
+- Заходим в https://gulyaevruslan.visualstudio.com/_usersSettings/tokens
+- Создаём новый токен:
+  - ВАЖНО: Organization - `All accessible organizations`
+  - ВАЖНО: `Full access`
+  - на год
+- в консоли: `vsce login TiburonResearch` и вводим этот token
