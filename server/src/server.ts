@@ -276,7 +276,7 @@ function getServerTag(data: CurrentTagGetFields): CurrentTag
         return tag;
     } catch (error)
     {
-        logError(error, false, error);
+        logError("Ошибка получения текущего тега", false, error);
         return null;
     }
 }
