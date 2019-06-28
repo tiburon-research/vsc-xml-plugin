@@ -249,6 +249,7 @@ String.prototype.findLast = function (search: string): SearchResult
 String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
 {
     let res: RegExpMatchArray[] = [];
+    if (typeof search == 'undefined') return res;
     let mat: RegExpExecArray;
     let text = this;
     let reg = new RegExp(search, "g");
