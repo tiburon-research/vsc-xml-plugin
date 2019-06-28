@@ -22,7 +22,7 @@
 
 ## Обновление token
 
-- Заходим в https://gulyaevruslan.visualstudio.com/_usersSettings/tokens
+- Заходим в https://dev.azure.com/TiburonResearch/_usersSettings/tokens
 - Создаём новый токен:
   - ВАЖНО: Organization - `All accessible organizations`
   - ВАЖНО: `Full access`
