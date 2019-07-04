@@ -169,8 +169,8 @@ export class TibErrors
         }
         // генерируем имя файла из текста ошибки и сохраняем в папке с именем пользователя
         let hash = "" + shortHash(text);
-        let dir = Path.Concat(LogPath, data.UserName);
-        if (!pathExists(dir)) createDir(dir);
+        let dir = Path.Concat(LogPath, getTibVersion(), data.UserName);
+        if (!pathExists(dir)) createDir(dir, true);
         let filename = Path.Concat(dir, hash + ".log");
         if (pathExists(filename)) return;
         data.MessageFriendly = text;

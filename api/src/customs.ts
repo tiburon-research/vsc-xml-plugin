@@ -18,9 +18,22 @@ export function pathExists(path: string): boolean
 }
 
 /** создаёт папку */
-export function createDir(path: string)
+export function createDir(path: string, createWholePath = false)
 {
-    fs.mkdirSync(path);
+    if (createWholePath)
+    {
+        let delimiter = '\\';
+        if (path.indexOf(delimiter) < 0) delimiter = '/';
+        let folders = path.split(delimiter);
+        if (folders.length == 0) throw "Не удалось распознать путь";
+        let prevPath = '';
+        folders.forEach(f =>
+        {
+            prevPath += f + delimiter;
+            if (!pathExists(prevPath)) fs.mkdirSync(prevPath);
+        });
+    }
+    else fs.mkdirSync(path);
 }
 
 /** Преобразует путь в URI */
