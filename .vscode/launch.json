@@ -11,7 +11,7 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [ 
-                "${workspaceRoot}/api/lib/*.js",
+                "${workspaceRoot}/node_modules/tib-api/lib/*.js",
                 "${workspaceRoot}/client/out/*.js"
             ]
         },

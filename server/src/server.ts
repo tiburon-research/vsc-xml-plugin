@@ -1,8 +1,8 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData } from 'tib-api';
-import { TibAutoCompleteItem, getCompletions, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition } from './classes';
+import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData, isValidDocumentPosition } from 'tib-api';
+import { TibAutoCompleteItem, getCompletions, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition, LanguageString } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { _NodeStoreNames, _pack } from 'tib-api/lib/constants';
 import { getDiagnosticElements } from './diagnostic';
@@ -132,22 +132,34 @@ connection.onSignatureHelp(data =>
 connection.onHover(data =>
 {
     let document = documents.get(data.textDocument.uri);
-    if (!document)
-    {
-        logError("Данные о документе отсутствуют на сервере", false);
-        return { contents: [] };
-    }
-    let tag = getServerTag({
-        document,
-        position: data.position,
-        force: false
-    });
+    let contents: LanguageString[] = [];
     
-    sendTagToClient(tag);
+    if (!!document)
+    {
+        if (isValidDocumentPosition(document, data.position))
+        {
+            let tag = getServerTag({
+                document,
+                position: data.position,
+                force: false
+            });
+            
+            sendTagToClient(tag);
+        
+            contents = getHovers(tag, document, data.position, _SurveyData, CodeAutoCompleteArray);
+        }
+        else
+        {
+            let positionFrom = server.Position.create(data.position.line, 0);
+            let errorData = {
+                message: `Position: ${data.position.line}:${data.position.character}, Line: "${document.getText(server.Range.create(positionFrom, data.position))}"`
+            };
+            logError("Кривой position", false, errorData);
+        }
+    }
+    else logError("Данные о документе отсутствуют на сервере", false);
 
-    return {
-        contents: getHovers(tag, document, data.position, _SurveyData, CodeAutoCompleteArray)
-    };
+    return { contents };
 })
 
 connection.onDocumentHighlight(data =>
@@ -264,7 +276,7 @@ function getServerTag(data: CurrentTagGetFields): CurrentTag
         return tag;
     } catch (error)
     {
-        logError(error, false, error);
+        logError("Ошибка получения текущего тега", false, error);
         return null;
     }
 }
@@ -433,9 +445,15 @@ function getDocument(uri: string): Promise<server.TextDocument>
 export function logError(text: string, showError: boolean, errorMessage?)
 {
     let data = new Error().stack;
+    let msg: string = undefined;
+    if (!!errorMessage)
+    {
+        if (typeof errorMessage == 'string') msg = errorMessage;
+        else if (!!errorMessage.message) msg = errorMessage.message;
+    }
     let log: IErrorLogData = {
         MessageFriendly: text,
-        Message: !!errorMessage && !!errorMessage.message ? errorMessage.message : undefined,
+        Message: msg,
         Silent: !showError && _pack != "debug",
         StackTrace: !!data ? ('SERVER: ' + data) : undefined
     };

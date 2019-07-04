@@ -731,12 +731,16 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
 {
     let res: LanguageString[] = [];
 
+    let testVar = undefined;
+
     try
     {
         let text = getWordAtPosition(document, position);
+        testVar = 10;
         if (!text || !tag || tag.GetLaguage() != Language.CSharp) return res;
         let parent = null;
         let lastText = getPreviousText(document, position);
+        if (!lastText) throw "пустой lastText";
         let reg = lastText.match(/(\w+)\.\w*$/);
         if (!!reg)
         {
@@ -770,7 +774,8 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
         if (customMethods) res = res.concat(customMethods);
     } catch (error)
     {
-        logError('Ошибка получения Hovers', false, error);
+        if (!testVar) logError('Ошибка в getWordAtPosition', false, error);
+        else logError('Ошибка получения Hovers', false, error);
     }
     return res;
 }

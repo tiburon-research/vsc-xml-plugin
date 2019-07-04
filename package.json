@@ -2,7 +2,7 @@
   "name": "tiburonscripter",
   "displayName": "Tiburon XML Helper",
   "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-  "version": "2.0.2",
+  "version": "2.0.7",
   "publisher": "TiburonResearch",
   "author": {
     "name": "GuRu",
@@ -15,7 +15,7 @@
     "type": "git",
     "url": "https://github.com/tiburon-research/vsc-xml-plugin"
   },
-  "icon": "stuff/icon.png",
+  "icon": "icon.png",
   "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/blob/master/README.md",
   "license": "MIT",
   "engines": {
@@ -275,14 +275,13 @@
     }
   },
   "dependencies": {
-    "@types/dateformat": "^1.0.1",
     "charset-detector": "^0.0.2",
     "clipboardy": "^1.2.3",
     "cssbeautify": "^0.3.1",
     "dateformat": "^3.0.3",
     "iconv-lite": "^0.4.24",
     "install-local": "^0.6.2",
-    "jquery": "^3.3.1",
+    "jquery": "^3.4.1",
     "js-beautify": "^1.7.5",
     "jsdom": "^11.6.2",
     "node-machine-id": "^1.1.10",
@@ -292,11 +291,12 @@
     "vscode-languageserver": "^5.2.1"
   },
   "devDependencies": {
-    "@types/jquery": "^3.3.29",
+    "typescript": "^3.2.2",
+    "@types/dateformat": "^1.0.1",
     "@types/jsdom": "^12.2.1",
+    "@types/jquery": "^3.3.29",
     "@types/mocha": "^5.2.5",
     "@types/node": "^10.12.18",
-    "typescript": "^3.2.2",
     "vscode": "^1.1.33"
   },
   "scripts": {
@@ -305,6 +305,6 @@
     "watch": "tsc -b -w",
     "compile-api": "cd api && npm run compile && cd ../",
     "install-vsc": "node node_modules/vscode/bin/install",
-    "postinstall": "npm run install-vsc && npm run compile-api && cd server && npm i && cd ../client && npm i && cd .. && npm run compile"
+    "postinstall": "npm run install-vsc && npm run compile-api && npm run compile && npm install -g vsce"
   }
 }

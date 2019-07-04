@@ -230,7 +230,7 @@ export function clearCSContents(text: string): string
     let tCount = RegExpPatterns.AllowCodeTags.match(/\(/g).length;
 
     // Очищаем полные теги
-    let reg = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*?)(<\\/\\2\\s*>)");
+    let reg = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]*)?(<\\/\\2\\s*>)");
 
     let resCS = res.matchAll(reg);
     resCS.forEach(element =>
