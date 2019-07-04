@@ -45,7 +45,11 @@ export class TibAutoCompleteItem
         let kind: keyof typeof server.CompletionItemKind = this.Kind;
         let item = server.CompletionItem.create(this.Name);
         item.kind = server.CompletionItemKind[kind];
-        //if (addBracket && (this.Kind == "Function" || this.Kind == "Method")) item.insertText = new server.SnippetString(this.Name + "($0)");
+        if (addBracket && (this.Kind == "Function" || this.Kind == "Method"))
+        {
+            item.insertText = this.Name + "($0)";
+            item.insertTextFormat = server.InsertTextFormat.Snippet;
+        }
         let mds: server.MarkedString = { language: 'xml', value: '' };
         if (this.Description) mds.value = this.Description;
         else if (this.Documentation) mds.value = this.Documentation;
