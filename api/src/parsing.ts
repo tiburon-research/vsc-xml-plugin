@@ -542,7 +542,7 @@ export function getDuplicatedElementsIds(document: server.TextDocument, prepeare
         tagNames.forEach(element =>
         {
             let ar: string[] = [];
-            $dom.find(element).each((i, e) => ar.push($(e).attr('Id')));
+            $dom.find(element).each((i, e) => ar.push($(e).attr('Id').toLocaleLowerCase()));
             ids.AddPair(element, ar);
         });
 
@@ -558,7 +558,7 @@ export function getDuplicatedElementsIds(document: server.TextDocument, prepeare
             {
                 duplicated.forEach(d =>
                 {
-                    let reg = new RegExp('(<' + key + ")(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")" + d + "('|\"))");
+                    let reg = new RegExp('(<' + key + ")(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")" + d + "('|\"))", "i");
                     let matches = prepearedText.matchAll(reg);
                     if (!!matches)
                     {

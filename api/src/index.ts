@@ -252,7 +252,7 @@ String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
     if (typeof search == 'undefined') return res;
     let mat: RegExpExecArray;
     let text = this;
-    let reg = new RegExp(search, "g");
+    let reg = new RegExp(search, search.flags + "g");
     while ((mat = reg.exec(text)) !== null)
     {
         res.push(mat);
