@@ -1164,6 +1164,11 @@ export const Attributes = {
             "Default": "false",
             "DbValue": "true",
             "Type": "Boolean"
+        },
+        {
+            "Name": "UseQuotasv3",
+            "Default": "false",
+            "Type": "Boolean"
         }
     ],
     "CustomText1": [
@@ -1172,11 +1177,6 @@ export const Attributes = {
             "Default": "Replace",
             "Type": "String",
             Auto: "Append"
-        },
-        {
-            "Name": "UseQuotasv3",
-            "Default": "false",
-            "Type": "Boolean"
         }
     ],
     "CustomText2": [
