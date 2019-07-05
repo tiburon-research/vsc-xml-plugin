@@ -4,6 +4,49 @@ raw = {
             "String": {
                 "Attr": [
                     {
+                        "Id": "VarDelimiter",
+                        "Default": "."
+                    },
+                    {
+                        "Id": "Statuses",
+                        "Default": "all"
+                    }
+                ]
+            },
+            "Boolean": {
+                "Attr": [
+                    {
+                        "Id": "Utf8",
+                        "Default": "false"
+                    },
+                    {
+                        "Id": "CheckBoxMultiple",
+                        "Default": "true"
+                    },
+                    {
+                        "Id": "CheckBoxBinary",
+                        "Default": "false"
+                    },
+                    {
+                        "Id": "CutLabels",
+                        "Default": "false"
+                    },
+                    {
+                        "Id": "WriteCsvLabels",
+                        "Default": "true"
+                    },
+                    {
+                        "Id": "ExportPageTime",
+                        "Default": "true"
+                    }
+                ]
+            },
+            "Id": "ExportDataSettings"
+        },
+        {
+            "String": {
+                "Attr": [
+                    {
                         "Id": "LogoText"
                     },
                     {
@@ -111,6 +154,10 @@ raw = {
                     },
                     {
                         "Id": "UseNewQuotas",
+                        "Default": "false"
+                    },
+                    {
+                        "Id": "UseQuotasv3",
                         "Default": "false"
                     }
                 ]
@@ -419,6 +466,14 @@ raw = {
                     {
                         "Id": "HintMaxDiffMobile",
                         "Default": "Сделайте жест влево для варианта ответа, который Вам @labelleast, и жест вправо для варианта ответа, который Вам @labelmost"
+                    },
+                    {
+                        "Id": "HintScaleOrderDesktop",
+                        "Default": "Проставьте ранг каждому элементу"
+                    },
+                    {
+                        "Id": "HintScaleOrderMobile",
+                        "Default": "Проставьте ранг каждому элементу"
                     }
                 ]
             },
@@ -1276,30 +1331,6 @@ raw = {
         },
         {
             "String": {
-                "Attr": {
-                    "Id": "Text"
-                }
-            },
-            "Id": "QuotaGrid"
-        },
-        {
-            "String": {
-                "Attr": {
-                    "Id": "Items"
-                }
-            },
-            "Id": "QuotaGridRow"
-        },
-        {
-            "String": {
-                "Attr": {
-                    "Id": "Items"
-                }
-            },
-            "Id": "QuotaGridCol"
-        },
-        {
-            "String": {
                 "Attr": [
                     {
                         "Id": "Items"
@@ -1619,6 +1650,16 @@ raw = {
 
 var obj = {};
 
+function restructAttrObj(obj)
+{
+    let res = {};
+    for (let key in obj)
+    {
+        res[key == "Id" ? "Name" : key] = obj[key];
+    }
+    return res;
+}
+
 raw.Items.forEach(function (e)
 {
     var ar = [];
@@ -1630,9 +1671,9 @@ raw.Items.forEach(function (e)
             if (!Array.isArray(e[key]["Attr"]))
             {
                 tmp = [];
-                tmp.push(e[key]["Attr"])
+                tmp.push(restructAttrObj(e[key]["Attr"]));
             }
-            else tmp = tmp.concat(e[key]["Attr"]);
+            else tmp = tmp.concat(e[key]["Attr"].map(a => restructAttrObj(a)));
             tmp.forEach(function (item)
             {
                 item["Type"] = key;
@@ -1645,5 +1686,3 @@ raw.Items.forEach(function (e)
 });
 
 console.log(JSON.stringify(obj));
-
-// после этого надо переименовать Id в Name

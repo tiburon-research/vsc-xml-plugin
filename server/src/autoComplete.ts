@@ -1029,6 +1029,48 @@ export const Code = ManualCode.concat(KnownCode);
 
 
 export const Attributes = {
+    "ExportDataSettings": [
+        {
+            "Name": "VarDelimiter",
+            "Default": ".",
+            "Type": "String"
+        },
+        {
+            "Name": "Statuses",
+            "Default": "all",
+            "Type": "String"
+        },
+        {
+            "Name": "Utf8",
+            "Default": "false",
+            "Type": "Boolean"
+        },
+        {
+            "Name": "CheckBoxMultiple",
+            "Default": "true",
+            "Type": "Boolean"
+        },
+        {
+            "Name": "CheckBoxBinary",
+            "Default": "false",
+            "Type": "Boolean"
+        },
+        {
+            "Name": "CutLabels",
+            "Default": "false",
+            "Type": "Boolean"
+        },
+        {
+            "Name": "WriteCsvLabels",
+            "Default": "true",
+            "Type": "Boolean"
+        },
+        {
+            "Name": "ExportPageTime",
+            "Default": "true",
+            "Type": "Boolean"
+        }
+    ],
     "Settings": [
         {
             "Name": "LogoText",
@@ -1113,12 +1155,6 @@ export const Attributes = {
             "Type": "String"
         },
         {
-            "Name": "PrefferedDelimiter",
-            "Default": "@",
-            "Type": "String",
-            Auto: "."
-        },
-        {
             "Name": "Utf8",
             "Default": "false",
             "Type": "Boolean"
@@ -1136,6 +1172,11 @@ export const Attributes = {
             "Default": "Replace",
             "Type": "String",
             Auto: "Append"
+        },
+        {
+            "Name": "UseQuotasv3",
+            "Default": "false",
+            "Type": "Boolean"
         }
     ],
     "CustomText2": [
