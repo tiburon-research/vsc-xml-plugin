@@ -299,18 +299,17 @@ export function parseElements(strings: string[]): ParsedElementObject[]
     {
         const reg = regTests[i];
         res = [];
-        let found = true;
+        let found = false;
         for (let j = 0; j < strings.length; j++)
         {
+            found = false;
             const str = strings[j];
             let match = str.match(reg.Regex);
-            if (!match)
-            {
-                found = false;
-                break;
-            }
+            if (!match) break;
+            else found = true;
             res.push({ Id: match[reg.IdGroup], Text: match[reg.TextGroup] });
         }
+        found = found && res.length == strings.length;
         if (found)
         {
             withIds = true;
@@ -318,13 +317,7 @@ export function parseElements(strings: string[]): ParsedElementObject[]
         }
     }
 
-    if (!withIds)
-    {
-        for (let i = 0; i < strings.length; i++)
-        {
-            res.push({ Id: '' + (i + 1), Text: strings[i] });
-        }
-    }
+    if (!withIds) res = strings.map((s, i) => { return { Id: '' + (i + 1), Text: s } });
 
     return res;
 }
