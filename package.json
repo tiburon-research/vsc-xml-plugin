@@ -144,6 +144,11 @@
         "category": "tib"
       },
       {
+        "command": "tib.getFullPage",
+        "title": "Преобразовать в Page",
+        "category": "tib"
+      },
+      {
         "command": "tib.getAnswers",
         "title": "Преобразовать в Answers",
         "category": "tib"
@@ -197,6 +202,10 @@
       },
       {
         "key": "ctrl+alt+a",
+        "command": "tib.getFullPage"
+      },
+      {
+        "key": "ctrl+alt+shift+a",
         "command": "tib.getAnswers"
       },
       {

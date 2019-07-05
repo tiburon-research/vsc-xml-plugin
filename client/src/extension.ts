@@ -275,6 +275,12 @@ async function registerCommands()
         });
     }, false);
 
+    // выделение полного Question+Page из текста
+    registerCommand('tib.getFullPage', () => 
+    {
+        return createElements(SurveyElementType.Page);
+    });
+
     // выделение Answer из текста
     registerCommand('tib.getAnswers', () => 
     {
@@ -1460,14 +1466,19 @@ async function createElements(elementType: SurveyElementType)
         }
         let text = editor.document.getText(editor.selection);
         let res = TibDocumentEdits.createElements(text, elementType);
+        if (!res.Ok)
+        {
+            showWarning(res.Message);
+            return;
+        }
 
         _inProcess = true;
         let tag = await getCurrentTag(editor.document, editor.selection.active);
         let indent = !!tag ? tag.GetIndent() : 1;
-        Formatting.format(res.value, Language.XML, _settings, "\t", indent).then(x =>
+        Formatting.format(res.Result.value, Language.XML, _settings, "\t", indent).then(x =>
         {
-            res.value = x;
-            vscode.window.activeTextEditor.insertSnippet(res).then(() => { _inProcess = false });
+            res.Result.value = x;
+            vscode.window.activeTextEditor.insertSnippet(res.Result).then(() => { _inProcess = false });
         });
     } catch (error)
     {

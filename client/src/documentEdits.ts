@@ -1,6 +1,6 @@
 'use strict'
 
-import { OrderedCollection, Parse, safeString, JQuery } from 'tib-api'
+import { OrderedCollection, Parse, safeString, JQuery, translate } from 'tib-api'
 import { SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElementType } from 'tib-api/lib/surveyObjects'
 import * as vscode from 'vscode'
 import { QuestionTypes } from 'tib-api/lib/constants';
@@ -237,58 +237,84 @@ export function sortListBy(text: string, attrName: string, attrIndex?: number): 
     return $dom.xml();
 }
 
-export function createElements(text: string, type: SurveyElementType): vscode.SnippetString
+export class XMLElementCreationResult
+{
+    public Ok: boolean = false;
+    public Message: string = null;
+    public Result: vscode.SnippetString = null;
+
+    public Error(message)
+    {
+        this.Message = message;
+        return this;
+    }
+
+    public Fill(snippetString: string)
+    {
+        this.Result = new vscode.SnippetString(snippetString);
+        this.Ok = true;
+    }
+}
+
+export function createElements(text: string, type: SurveyElementType): XMLElementCreationResult
 {
     let strings = text.split("\n");
-    let insertPage = false;
     let questionResult: Parse.ParsedElementObject;
-    if (type == SurveyElementType.Answer && strings.length > 1)
+    let res = new XMLElementCreationResult();
+
+    if (type == SurveyElementType.Page && strings.length > 1)
     { // пробуем найти Question
-        questionResult = Parse.parseQuestion(strings[0]);
-        if (!!questionResult.Id)
-        {
-            strings.shift();
-            insertPage = true;
-        }
+        questionResult = Parse.parseQuestion(strings[0], true);
+        strings.shift();
     }
     let elements = Parse.parseElements(strings);
-    if (!elements || elements.length == 0) new vscode.SnippetString(text);
+    if (!elements || elements.length == 0) return res.Error("Не удалось найти элементы");
 
-    let res = new vscode.SnippetString();
+    let answerItems = new OrderedCollection<SurveyAnswer>();
+    let itemItems = new OrderedCollection<SurveyListItem>();
+    if (type == SurveyElementType.ListItem)
+    {
+        elements.forEach(element =>
+        {
+            itemItems.Add(element.Id, new SurveyListItem(element.Id, element.Text));
+        });
+    }
+    else
+    {
+        elements.forEach(element =>
+        {
+            answerItems.Add(element.Id, new SurveyAnswer(element.Id, element.Text));
+        });
+    }
+
     switch (type)
     {
+        case SurveyElementType.Page:
+            {
+                let parsedId = !!questionResult.Id ? translate(questionResult.Id) : 'Q1';
+                let id = "${1:" + parsedId + "}";
+                let q = new SurveyQuestion(parsedId, "${2|" + QuestionTypes.join(',') + "|}");
+                q.Answers = answerItems;
+                q.SetAttr("Id", id);
+                q.Header = questionResult.Text.trim();
+                let p = new SurveyPage(id);
+                p.AddChild(q);
+                res.Fill(p.ToXML());
+                break;
+            }
+
         case SurveyElementType.Answer:
             {
-                let items = new OrderedCollection<SurveyAnswer>();
-                elements.forEach(element =>
-                {
-                    items.Add(element.Id, new SurveyAnswer(element.Id, element.Text));
-                });
-                if (insertPage)
-                {
-                    let id = "${1:" + questionResult.Id + "}";
-                    let q = new SurveyQuestion(questionResult.Id, "${2|" + QuestionTypes.join(',') + "|}");
-                    q.Answers = items;
-                    q.SetAttr("Id", id);
-                    q.Header = questionResult.Text.trim();
-                    let p = new SurveyPage(id);
-                    p.AddChild(q);
-                    res = new vscode.SnippetString(p.ToXML());
-                }
-                else res.value = items.ToArray(pair => pair.Value.ToXML()).join("\n");
+                res.Fill(answerItems.ToArray(pair => pair.Value.ToXML()).join("\n"));
                 break;
             }
 
         case SurveyElementType.ListItem:
             {
-                let items = new OrderedCollection<SurveyListItem>();
-                elements.forEach(element =>
-                {
-                    items.Add(element.Id, new SurveyListItem(element.Id, element.Text));
-                });
+
                 let q = new SurveyList("$1");
-                q.Items = items;
-                res = new vscode.SnippetString(q.ToXML());
+                q.Items = itemItems;
+                res.Fill(q.ToXML());
                 break;
             }
     }

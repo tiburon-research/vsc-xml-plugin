@@ -330,15 +330,33 @@ export function parseElements(strings: string[]): ParsedElementObject[]
 }
 
 
-/** Вычленяет вопрос из строки */
-export function parseQuestion(text: string): ParsedElementObject
+/** Вычленяет вопрос из строки 
+ * 
+ * `force` - искать русские буквы и числовой Id
+ *  */
+export function parseQuestion(text: string, force = false): ParsedElementObject
 {
     let res = { Id: "", Text: text, Prefix: "" };
-    let match = text.match(/^([A-Za-z]+\w+)(\.?\s*)(.*)/);
+    let regex = /^([a-zA-Z]\w+)(\.?\s*)(.*)/;
+    let indexes = {
+        id: 1,
+        prefix: 2,
+        text: 3
+    }
+    if (force)
+    {
+        regex = /^((\d+)|([A-Za-zА-Яа-я][А-Яа-я\w]+))(\.?\s*)(.*)/;
+        indexes = {
+            id: 1,
+            prefix: 4,
+            text: 5
+        }
+    }
+    let match = text.match(regex);
     if (!match) return res;
-    res.Id = match[1];
-    res.Prefix = match[2];
-    res.Text = match[3];
+    res.Id = match[indexes.id];
+    res.Prefix = match[indexes.prefix];
+    res.Text = match[indexes.text];
     return res;
 }
 
