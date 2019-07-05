@@ -607,7 +607,7 @@ async function registerCommands()
 
     registerCommand('tib.paste', () => 
     {
-        return new Promise<void>((resolve, reject) =>
+        let prom = new Promise<void>((resolve, reject) =>
         {
             _inProcess = true;
             let txt = getFromClioboard();
@@ -637,6 +637,8 @@ async function registerCommands()
                 else multiLinePaste(editor, lines).then(() => { resolve(); });
             }
         });
+        prom.then(() => { _inProcess = false; });
+        return prom;
     });
 
     registerCommand('tib.demo', () => 
