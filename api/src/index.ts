@@ -216,7 +216,7 @@ declare global
         //** Возвращает массив уникальных значений */
         distinct(): T[]
         /** Содержит элемент */
-        contains(element: T): boolean;
+        contains(element: T, compareFunc?: (elem1: T, elem2: T) => boolean): boolean;
         /** Удаляет элемент из массива и возвращает этот элемент */
         remove(element: T): T;
         /** Преобразует массив в коллекцию */
@@ -227,6 +227,8 @@ declare global
         forEachAsync<R>(func: (x: T, i?: number) => Promise<R>): Promise<R[]>
         /** Сортировка массива с сохранением порядка индексов (аналогично `sort`) */
         orderBy<T>(func: (a: T, b: T) => number): SortedArrayResult<T>
+        /** Находит повторяющиеся значения */
+        findDuplicates<T>(compareFunc?: (elem1: T, elem2: T) => boolean): T[]
     }
 
 }
@@ -318,10 +320,12 @@ Array.prototype.distinct = function <T>(this: T[]): T[]
 }
 
 
-Array.prototype.contains = function <T>(this: T[], element: T): boolean
+Array.prototype.contains = function <T>(this: T[], element: T, compareFunc?: (elem1: T, elem2: T) => boolean): boolean
 {
-    return this.indexOf(element) > -1;
+    if (!compareFunc) return this.indexOf(element) > -1;
+    return this.findIndex(x => { return compareFunc(x, element); }) > -1;
 }
+
 
 Array.prototype.remove = function <T>(this: T[], element: T): T
 {
@@ -377,5 +381,22 @@ Array.prototype.orderBy = function <T>(this: Array<T>, func: (a: T, b: T) => num
         IndexOrder: res.map(x => x.Index)
     }
 }
+
+
+Array.prototype.findDuplicates = function <T>(this: Array<T>, compareFunc?: (elem1: T, elem2: T) => boolean): T[]
+{
+    let res: T[] = [];
+    let func = compareFunc || ((elem1: T, elem2: T) => { return elem1 == elem2; });
+    for (let i = 0; i < this.length; i++)
+    {
+        const currentElement = this[i];
+        if (!res.contains(currentElement, func) && this.slice(i + 1).findIndex(x => { return func(x, currentElement); }) > -1)
+        {
+            res.push(currentElement);
+        }
+    }
+    return res;
+}
+
 
 //#endregion

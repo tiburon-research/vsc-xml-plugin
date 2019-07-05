@@ -268,6 +268,12 @@ export function createElements(text: string, type: SurveyElementType): XMLElemen
         strings.shift();
     }
     let elements = Parse.parseElements(strings);
+    let duplicatedIs = elements.map(x => x.Id).findDuplicates();
+    if (duplicatedIs.length > 0)
+    {
+        return res.Error("Следующие Id повторяются: " + duplicatedIs.join(','));
+    }
+
     if (!elements || elements.length == 0) return res.Error("Не удалось найти элементы");
 
     let answerItems = new OrderedCollection<SurveyAnswer>();
