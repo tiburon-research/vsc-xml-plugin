@@ -189,8 +189,8 @@ export class TibErrors
         {
             showerror = true;
             text = "debug: " + text;
-            if (!!stackTrace) console.log(stackTrace);
         }
+        if (!!stackTrace) console.log(stackTrace);
         if (showerror) showError(text);
         data.add({ StackTrace: stackTrace, ErrorMessage: errorMessage });
         this.saveError(text, data);

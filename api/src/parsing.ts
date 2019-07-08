@@ -549,52 +549,62 @@ export function getDuplicatedElementsIds(document: server.TextDocument, prepeare
 
         let ids = new KeyedCollection<string[]>();
 
-        // собираем все Id
-        tagNames.forEach(element =>
+        try
         {
-            let ar: string[] = [];
-            $dom.find(element).each((i, e) => ar.push($(e).attr('Id').toLocaleLowerCase()));
-            ids.AddPair(element, ar);
-        });
-
-        ids.ForEach((key, value) =>
-        {
-            // находим Range для дублирующихся
-            let duplicated: string[] = value.reduce(function (acc, el, i, arr)
+            // собираем все Id
+            tagNames.forEach(element =>
             {
-                if (arr.indexOf(el) !== i && acc.indexOf(el) < 0) acc.push(el);
-                return acc;
-            }, []);
-            if (duplicated.length > 0)
-            {
-                duplicated.forEach(d =>
+                let ar: string[] = [];
+                $dom.find(element).each((i, e) =>
                 {
-                    let reg = new RegExp('(<' + key + ")(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")" + d + "('|\"))", "i");
-                    let matches = prepearedText.matchAll(reg);
-                    if (!!matches)
-                    {
-                        matches.forEach(mt =>
-                        {
-                            if (!!mt.index)
-                            {
-                                let full = mt[0];
-                                let idAttr = mt[mt.length - 3];
-                                let from = mt.index + full.length - idAttr.length;
-                                let to = mt.index + full.length;
-                                let isWarning = d.contains("@");
-                                res.push(new DocumentElement(document, {
-                                    Value: null,
-                                    From: from,
-                                    To: to,
-                                    Message: isWarning ? "Возможно Id дублируются" : "Найдены дублирующиеся Id",
-                                    DiagnosticProperties: { Type: isWarning ? server.DiagnosticSeverity.Warning : server.DiagnosticSeverity.Error }
-                                }));
-                            }
-                        });
-                    }
+                    let attr = $(e).attr('Id');
+                    if (!!attr) ar.push(attr.toLowerCase());
                 });
-            }
-        });
+                ids.AddPair(element, ar);
+            });
+
+            ids.ForEach((key, value) =>
+            {
+                // находим Range для дублирующихся
+                let duplicated: string[] = value.reduce(function (acc, el, i, arr)
+                {
+                    if (arr.indexOf(el) !== i && acc.indexOf(el) < 0) acc.push(el);
+                    return acc;
+                }, []);
+                if (duplicated.length > 0)
+                {
+                    duplicated.forEach(d =>
+                    {
+                        let reg = new RegExp('(<' + key + ")(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")" + d + "('|\"))", "i");
+                        let matches = prepearedText.matchAll(reg);
+                        if (!!matches)
+                        {
+                            matches.forEach(mt =>
+                            {
+                                if (!!mt.index)
+                                {
+                                    let full = mt[0];
+                                    let idAttr = mt[mt.length - 3];
+                                    let from = mt.index + full.length - idAttr.length;
+                                    let to = mt.index + full.length;
+                                    let isWarning = d.contains("@");
+                                    res.push(new DocumentElement(document, {
+                                        Value: null,
+                                        From: from,
+                                        To: to,
+                                        Message: isWarning ? "Возможно Id дублируются" : "Найдены дублирующиеся Id",
+                                        DiagnosticProperties: { Type: isWarning ? server.DiagnosticSeverity.Warning : server.DiagnosticSeverity.Error }
+                                    }));
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        } catch (error)
+        {
+            reject(error);
+        }
 
         resolve(res);
     });
