@@ -275,7 +275,7 @@ export function win1251Avaliabe(buf: Buffer)
 /** Разбирает текст на `Id` + `Text` */
 export function parseElements(strings: string[]): ParsedElementObject[]
 {
-    let res: ParsedElementObject[];
+    let res: ParsedElementObject[] = [];
     if (strings.length == 0) return res;
     strings = strings.map(x => x.trim()).filter(x => x.length > 0);
 
