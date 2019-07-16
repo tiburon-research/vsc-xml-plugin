@@ -237,6 +237,12 @@ connection.onNotification('forceDocumentUpdate', (data: IServerDocument) =>
 });
 
 
+connection.onNotification('updateSettings', (data: Object) =>
+{
+    _Settings = KeyedCollection.FromObject(data);
+});
+
+
 //#endregion
 
 
@@ -245,9 +251,9 @@ connection.onNotification('forceDocumentUpdate', (data: IServerDocument) =>
 
 
 
-async function sendDiagnostic(document: server.TextDocument, settings: KeyedCollection<any>)
+async function sendDiagnostic(document: server.TextDocument)
 {
-    let diagnostics = await getDiagnosticElements(document, settings);
+    let diagnostics = await getDiagnosticElements(document);
     let clientDiagnostic: server.PublishDiagnosticsParams = {
         diagnostics,
         uri: document.uri
@@ -300,7 +306,7 @@ function anotherDocument(data: IServerDocument)
 function anyChangeHandler(document: server.TextDocument)
 {
     updateSurveyData(document);
-    sendDiagnostic(document, _Settings);
+    sendDiagnostic(document);
 }
 
 

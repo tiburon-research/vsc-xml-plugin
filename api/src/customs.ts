@@ -156,6 +156,22 @@ export class KeyedCollection<T>
     {
     }
 
+    public ToSimpleObject(): Object
+    {
+        let res = {};
+        this.ForEach((key, value) => { res[key] = value });
+        return res;
+    }
+
+    public static FromObject(obj: Object): KeyedCollection<any>
+    {
+        let res = new KeyedCollection<any>();
+        for (let key in obj) {
+            if (obj.hasOwnProperty(key)) res.AddPair(key, obj[key]);
+        }
+        return res;
+    }
+
     /** Создаёт коллекцию из массивов ключей и значений */
     public static FromArrays<T>(keys: string[], values: T[]): KeyedCollection<T>
     {

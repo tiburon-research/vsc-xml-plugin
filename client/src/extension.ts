@@ -87,6 +87,7 @@ export function activate(context: vscode.ExtensionContext)
     vscode.workspace.onDidChangeConfiguration(() =>
     {
         _settings.Update();
+        sendNotification<Object>("updateSettings", _settings.ToSimpleObject());
     })
 
     /** Документ сменился */
@@ -1559,6 +1560,7 @@ async function createClientConnection(context: vscode.ExtensionContext)
                 tagFromServerTag(data);
             });
 
+            sendNotification<Object>("updateSettings", _settings.ToSimpleObject(), true);
 
             _clientIsReady = true;
 

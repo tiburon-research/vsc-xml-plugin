@@ -57,7 +57,7 @@ interface IDiagnosticType
 
 
 /** Возвращает все найденные предупреждения/ошибки */
-export async function getDiagnosticElements(document: server.TextDocument, Settings: KeyedCollection<any>): Promise<server.Diagnostic[]>
+export async function getDiagnosticElements(document: server.TextDocument): Promise<server.Diagnostic[]>
 {
     let res: server.Diagnostic[] = [];
     try
