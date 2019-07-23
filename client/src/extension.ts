@@ -80,7 +80,6 @@ export function activate(context: vscode.ExtensionContext)
     waitFor.push(registerCommands());
     waitFor.push(registerActionCommands());
 
-
     let editor = vscode.window.activeTextEditor;
 
     // обновляем настройки при сохранении
@@ -275,6 +274,11 @@ async function registerCommands()
             resolve();
         });
     }, false);
+
+    registerCommand('tib.ChooseGeo', () =>
+    {
+        return chooseGeo();
+    })
 
     // выделение полного Question+Page из текста
     registerCommand('tib.getFullPage', () => 
@@ -1753,6 +1757,12 @@ async function registerCommand(name: string, command: (...args) => Promise<any>,
             updateDocumentOnServer();
         });
     });
+}
+
+
+async function chooseGeo()
+{
+    
 }
 
 

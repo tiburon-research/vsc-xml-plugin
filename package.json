@@ -1,319 +1,325 @@
 {
-  "name": "tiburonscripter",
-  "displayName": "Tiburon XML Helper",
-  "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-  "version": "2.1.4",
-  "publisher": "TiburonResearch",
-  "author": {
-    "name": "GuRu",
-    "email": "gulyaev@tiburon-research.ru"
-  },
-  "bugs": {
-    "url": "https://github.com/tiburon-research/vsc-xml-plugin/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/tiburon-research/vsc-xml-plugin"
-  },
-  "icon": "icon.png",
-  "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/blob/master/README.md",
-  "license": "MIT",
-  "engines": {
-    "vscode": "^1.30.0",
-    "node": "*"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onLanguage:tib"
-  ],
-  "main": "./client/out/extension",
-  "contributes": {
-    "languages": [
-      {
-        "id": "tib",
-        "aliases": [
-          "Tiburon XML script",
-          "tib"
-        ],
-        "extensions": [
-          "xml"
-        ],
-        "configuration": "./language-configuration.json"
-      }
-    ],
-    "themes": [
-      {
-        "label": "Tiburon Dark",
-        "path": "./themes/tib-dark.json",
-        "uiTheme": "vs-dark"
-      }
-    ],
-    "grammars": [
-      {
-        "language": "tib",
-        "scopeName": "source.tib",
-        "path": "./syntaxes/tib.tmLanguage.json"
-      }
-    ],
-    "snippets": [
-      {
-        "language": "tib",
-        "path": "./snippets/nodes.json"
-      },
-      {
-        "language": "tib",
-        "path": "./snippets/features.json"
-      }
-    ],
-    "commands": [
-      {
-        "command": "tib.transform.AnswersToItems",
-        "title": "Answers -> Items",
-        "category": "tib"
-      },
-      {
-        "command": "tib.transform.ItemsToAnswers",
-        "title": "Items -> Answers",
-        "category": "tib"
-      },
-      {
-        "command": "tib.transform.SortList",
-        "title": "Сортировка списка",
-        "category": "tib"
-      },
-      {
-        "command": "tib.transform.ToAgeList",
-        "title": "-> AgeList",
-        "category": "tib"
-      },
-      {
-        "command": "tib.remove.QuestionIds",
-        "title": "Удалить Id вопросов из заголовков",
-        "category": "tib"
-      },
-      {
-        "command": "tib.insertTag",
-        "title": "Обернуть текст в тег",
-        "category": "tib"
-      },
-      {
-        "command": "tib.cdata",
-        "title": "Обернуть в CDATA",
-        "category": "tib"
-      },
-      {
-        "command": "tib.surveyBlock",
-        "title": "Обернуть в сворачиваемый блок",
-        "category": "tib"
-      },
-      {
-        "command": "tib.paste",
-        "title": "Мультистрочная ставка",
-        "category": "tib"
-      },
-      {
-        "command": "tib.demo",
-        "title": "Открыть код демки",
-        "category": "tib"
-      },
-      {
-        "command": "tib.template",
-        "title": "Открыть шаблон tibXML",
-        "category": "tib"
-      },
-      {
-        "command": "tib.selectTag.closest",
-        "title": "Выделить текущий тег",
-        "category": "tib"
-      },
-      {
-        "command": "tib.selectTag.global",
-        "title": "Выделить родительский тег",
-        "category": "tib"
-      },
-      {
-        "command": "tib.linqToggle",
-        "title": "Переключение подстановки Linq (вкл/выкл)",
-        "category": "tib"
-      },
-      {
-        "command": "tib.debugTestCommand",
-        "title": "Отладочная комманда",
-        "category": "tib"
-      },
-      {
-        "command": "tib.getFullPage",
-        "title": "Преобразовать в Page",
-        "category": "tib"
-      },
-      {
-        "command": "tib.getAnswers",
-        "title": "Преобразовать в Answers",
-        "category": "tib"
-      },
-      {
-        "command": "tib.getItems",
-        "title": "Преобразовать в Items",
-        "category": "tib"
-      }
-    ],
-    "keybindings": [
-      {
-        "key": "ctrl+alt+t",
-        "command": "tib.insertTag"
-      },
-      {
-        "key": "ctrl+alt+c",
-        "command": "tib.cdata"
-      },
-      {
-        "key": "ctrl+alt+b",
-        "command": "tib.surveyBlock"
-      },
-      {
-        "key": "ctrl+shift+v",
-        "command": "tib.paste"
-      },
-      {
-        "key": "ctrl+alt+d",
-        "command": "tib.demo"
-      },
-      {
-        "key": "ctrl+alt+shift+n",
-        "command": "tib.template"
-      },
-      {
-        "key": "ctrl+alt+p",
-        "command": "tib.selectTag.closest"
-      },
-      {
-        "key": "ctrl+alt+g",
-        "command": "tib.selectTag.global"
-      },
-      {
-        "key": "ctrl+alt+l",
-        "command": "tib.linqToggle"
-      },
-      {
-        "key": "ctrl+alt+shift+d",
-        "command": "tib.debugTestCommand"
-      },
-      {
-        "key": "ctrl+alt+a",
-        "command": "tib.getFullPage"
-      },
-      {
-        "key": "ctrl+alt+shift+a",
-        "command": "tib.getAnswers"
-      },
-      {
-        "key": "ctrl+alt+i",
-        "command": "tib.getItems"
-      }
-    ],
-    "configurationDefaults": {
-      "[tib]": {
-        "editor.quickSuggestions": {
-          "strings": true
-        }
-      }
+    "name": "tiburonscripter",
+    "displayName": "Tiburon XML Helper",
+    "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
+    "version": "2.1.4",
+    "publisher": "TiburonResearch",
+    "author": {
+        "name": "GuRu",
+        "email": "gulyaev@tiburon-research.ru"
     },
-    "configuration": {
-      "title": "Tiburon XML Helper",
-      "properties": {
-        "tib.demoPath": {
-          "description": "Путь к скрипту демонстрационной анкеты",
-          "type": "string",
-          "default": "T:\\=Tiburon_NEW\\!!!Проекты\\=OWN\\Deman\\Adaptive\\deman_adaptive.xml"
+    "bugs": {
+        "url": "https://github.com/tiburon-research/vsc-xml-plugin/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tiburon-research/vsc-xml-plugin"
+    },
+    "icon": "icon.png",
+    "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/blob/master/README.md",
+    "license": "MIT",
+    "engines": {
+        "vscode": "^1.30.0",
+        "node": "*"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onLanguage:tib"
+    ],
+    "main": "./client/out/extension",
+    "contributes": {
+        "languages": [
+            {
+                "id": "tib",
+                "aliases": [
+                    "Tiburon XML script",
+                    "tib"
+                ],
+                "extensions": [
+                    "xml"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "themes": [
+            {
+                "label": "Tiburon Dark",
+                "path": "./themes/tib-dark.json",
+                "uiTheme": "vs-dark"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "tib",
+                "scopeName": "source.tib",
+                "path": "./syntaxes/tib.tmLanguage.json"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "tib",
+                "path": "./snippets/nodes.json"
+            },
+            {
+                "language": "tib",
+                "path": "./snippets/features.json"
+            }
+        ],
+        "commands": [
+            {
+                "command": "tib.ChooseGeo",
+                "title": "Выбрать географию",
+                "category": "tib"
+            },
+            {
+                "command": "tib.transform.AnswersToItems",
+                "title": "Answers -> Items",
+                "category": "tib"
+            },
+            {
+                "command": "tib.transform.ItemsToAnswers",
+                "title": "Items -> Answers",
+                "category": "tib"
+            },
+            {
+                "command": "tib.transform.SortList",
+                "title": "Сортировка списка",
+                "category": "tib"
+            },
+            {
+                "command": "tib.transform.ToAgeList",
+                "title": "-> AgeList",
+                "category": "tib"
+            },
+            {
+                "command": "tib.remove.QuestionIds",
+                "title": "Удалить Id вопросов из заголовков",
+                "category": "tib"
+            },
+            {
+                "command": "tib.insertTag",
+                "title": "Обернуть текст в тег",
+                "category": "tib"
+            },
+            {
+                "command": "tib.cdata",
+                "title": "Обернуть в CDATA",
+                "category": "tib"
+            },
+            {
+                "command": "tib.surveyBlock",
+                "title": "Обернуть в сворачиваемый блок",
+                "category": "tib"
+            },
+            {
+                "command": "tib.paste",
+                "title": "Мультистрочная ставка",
+                "category": "tib"
+            },
+            {
+                "command": "tib.demo",
+                "title": "Открыть код демки",
+                "category": "tib"
+            },
+            {
+                "command": "tib.template",
+                "title": "Открыть шаблон tibXML",
+                "category": "tib"
+            },
+            {
+                "command": "tib.selectTag.closest",
+                "title": "Выделить текущий тег",
+                "category": "tib"
+            },
+            {
+                "command": "tib.selectTag.global",
+                "title": "Выделить родительский тег",
+                "category": "tib"
+            },
+            {
+                "command": "tib.linqToggle",
+                "title": "Переключение подстановки Linq (вкл/выкл)",
+                "category": "tib"
+            },
+            {
+                "command": "tib.debugTestCommand",
+                "title": "Отладочная комманда",
+                "category": "tib"
+            },
+            {
+                "command": "tib.getFullPage",
+                "title": "Преобразовать в Page",
+                "category": "tib"
+            },
+            {
+                "command": "tib.getAnswers",
+                "title": "Преобразовать в Answers",
+                "category": "tib"
+            },
+            {
+                "command": "tib.getItems",
+                "title": "Преобразовать в Items",
+                "category": "tib"
+            }
+        ],
+        "keybindings": [
+            {
+                "key": "ctrl+alt+t",
+                "command": "tib.insertTag"
+            },
+            {
+                "key": "ctrl+alt+c",
+                "command": "tib.cdata"
+            },
+            {
+                "key": "ctrl+alt+b",
+                "command": "tib.surveyBlock"
+            },
+            {
+                "key": "ctrl+shift+v",
+                "command": "tib.paste"
+            },
+            {
+                "key": "ctrl+alt+d",
+                "command": "tib.demo"
+            },
+            {
+                "key": "ctrl+alt+shift+n",
+                "command": "tib.template"
+            },
+            {
+                "key": "ctrl+alt+p",
+                "command": "tib.selectTag.closest"
+            },
+            {
+                "key": "ctrl+alt+g",
+                "command": "tib.selectTag.global"
+            },
+            {
+                "key": "ctrl+alt+l",
+                "command": "tib.linqToggle"
+            },
+            {
+                "key": "ctrl+alt+shift+d",
+                "command": "tib.debugTestCommand"
+            },
+            {
+                "key": "ctrl+alt+a",
+                "command": "tib.getFullPage"
+            },
+            {
+                "key": "ctrl+alt+shift+a",
+                "command": "tib.getAnswers"
+            },
+            {
+                "key": "ctrl+alt+i",
+                "command": "tib.getItems"
+            }
+        ],
+        "configurationDefaults": {
+            "[tib]": {
+                "editor.quickSuggestions": {
+                    "strings": true
+                }
+            }
         },
-        "tib.templatePathFolder": {
-          "description": "Путь к шаблону tibXML",
-          "type": "string",
-          "default": "G:\\Разное\\TiburonXMLHelper\\Templates"
-        },
-        "tib.useLinq": {
-          "description": "Подставлять методы из библиотеки System.Linq",
-          "type": "boolean",
-          "default": true
-        },
-        "tib.formatSettings": {
-          "description": "Настройки форматирования",
-          "type": "object",
-          "default": {
-            "braceStyle": "expand"
-          }
-        },
-        "tib.showTagInfo": {
-          "description": "Показывать информацию о текущем теге",
-          "type": "boolean",
-          "default": true
-        },
-        "tib.showHelpMessages": {
-          "description": "Предлагать подсказки по оптимизации",
-          "type": "boolean",
-          "default": true
-        },
-        "tib.doNotLockFiles": {
-          "description": "Файлы, для которых не устанавливается режим 'Только чтение' на время редактирования",
-          "type": "array",
-          "default": []
-        },
-        "tib.showFullPath": {
-          "description": "Всегда показывать полные пути к файлам (во всплывающих окошках)",
-          "type": "boolean",
-          "default": false
-        },
-        "tib.upcaseFirstLetter": {
-          "description": "Автоматически заменять первую букву тегов на заглавную",
-          "type": "boolean",
-          "default": true
-        },
-        "tib.enableDiagnostic": {
-          "description": "Включить диагностику",
-          "type": "boolean",
-          "default": true
-        },
-        "tib.enableFileLock": {
-          "description": "Включить блокировку файлов при редактировании",
-          "type": "boolean",
-          "default": true
+        "configuration": {
+            "title": "Tiburon XML Helper",
+            "properties": {
+                "tib.demoPath": {
+                    "description": "Путь к скрипту демонстрационной анкеты",
+                    "type": "string",
+                    "default": "T:\\=Tiburon_NEW\\!!!Проекты\\=OWN\\Deman\\Adaptive\\deman_adaptive.xml"
+                },
+                "tib.templatePathFolder": {
+                    "description": "Путь к шаблону tibXML",
+                    "type": "string",
+                    "default": "G:\\Разное\\TiburonXMLHelper\\Templates"
+                },
+                "tib.useLinq": {
+                    "description": "Подставлять методы из библиотеки System.Linq",
+                    "type": "boolean",
+                    "default": true
+                },
+                "tib.formatSettings": {
+                    "description": "Настройки форматирования",
+                    "type": "object",
+                    "default": {
+                        "braceStyle": "expand"
+                    }
+                },
+                "tib.showTagInfo": {
+                    "description": "Показывать информацию о текущем теге",
+                    "type": "boolean",
+                    "default": true
+                },
+                "tib.showHelpMessages": {
+                    "description": "Предлагать подсказки по оптимизации",
+                    "type": "boolean",
+                    "default": true
+                },
+                "tib.doNotLockFiles": {
+                    "description": "Файлы, для которых не устанавливается режим 'Только чтение' на время редактирования",
+                    "type": "array",
+                    "default": []
+                },
+                "tib.showFullPath": {
+                    "description": "Всегда показывать полные пути к файлам (во всплывающих окошках)",
+                    "type": "boolean",
+                    "default": false
+                },
+                "tib.upcaseFirstLetter": {
+                    "description": "Автоматически заменять первую букву тегов на заглавную",
+                    "type": "boolean",
+                    "default": true
+                },
+                "tib.enableDiagnostic": {
+                    "description": "Включить диагностику",
+                    "type": "boolean",
+                    "default": true
+                },
+                "tib.enableFileLock": {
+                    "description": "Включить блокировку файлов при редактировании",
+                    "type": "boolean",
+                    "default": true
+                }
+            }
         }
-      }
+    },
+    "dependencies": {
+        "charset-detector": "^0.0.2",
+        "clipboardy": "^1.2.3",
+        "cssbeautify": "^0.3.1",
+        "dateformat": "^3.0.3",
+        "iconv-lite": "^0.4.24",
+        "install-local": "^0.6.2",
+        "jquery": "^3.4.1",
+        "js-beautify": "^1.7.5",
+        "jsdom": "^11.6.2",
+        "node-machine-id": "^1.1.10",
+        "read-excel-file": "^4.0.1",
+        "short-hash": "^1.0.0",
+        "tib-api": "file:api",
+        "vscode-languageclient": "^5.2.1",
+        "vscode-languageserver": "^5.2.1"
+    },
+    "devDependencies": {
+        "typescript": "^3.2.2",
+        "@types/dateformat": "^1.0.1",
+        "@types/jsdom": "^12.2.1",
+        "@types/jquery": "^3.3.29",
+        "@types/mocha": "^5.2.5",
+        "@types/node": "^10.12.18",
+        "vscode": "^1.1.33"
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -b",
+        "watch": "tsc -b -w",
+        "compile-api": "cd api && npm run compile && cd ../",
+        "install-vsc": "node node_modules/vscode/bin/install",
+        "postinstall": "npm run install-vsc && npm run compile-api && npm run compile && npm install -g vsce"
     }
-  },
-  "dependencies": {
-    "charset-detector": "^0.0.2",
-    "clipboardy": "^1.2.3",
-    "cssbeautify": "^0.3.1",
-    "dateformat": "^3.0.3",
-    "iconv-lite": "^0.4.24",
-    "install-local": "^0.6.2",
-    "jquery": "^3.4.1",
-    "js-beautify": "^1.7.5",
-    "jsdom": "^11.6.2",
-    "node-machine-id": "^1.1.10",
-    "short-hash": "^1.0.0",
-    "tib-api": "file:api",
-    "vscode-languageclient": "^5.2.1",
-    "vscode-languageserver": "^5.2.1"
-  },
-  "devDependencies": {
-    "typescript": "^3.2.2",
-    "@types/dateformat": "^1.0.1",
-    "@types/jsdom": "^12.2.1",
-    "@types/jquery": "^3.3.29",
-    "@types/mocha": "^5.2.5",
-    "@types/node": "^10.12.18",
-    "vscode": "^1.1.33"
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -b",
-    "watch": "tsc -b -w",
-    "compile-api": "cd api && npm run compile && cd ../",
-    "install-vsc": "node node_modules/vscode/bin/install",
-    "postinstall": "npm run install-vsc && npm run compile-api && npm run compile && npm install -g vsce"
-  }
 }
