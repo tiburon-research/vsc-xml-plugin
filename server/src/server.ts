@@ -350,7 +350,7 @@ async function getAutoComleteList()
 
             CodeAutoCompleteArray.push(new TibAutoCompleteItem(element)); // сюда добавляем всё
             // если такого типа ещё нет, то добавляем
-            if (!TibAutoCompleteList.Contains(item.Kind)) TibAutoCompleteList.AddPair(item.Kind, [item])
+            if (!TibAutoCompleteList.ContainsKey(item.Kind)) TibAutoCompleteList.AddPair(item.Kind, [item])
             else // если есть то добавляем в массив с учётом перегрузок
             {
                 // ищем индекс элемента с таким же типом, именем и родителем

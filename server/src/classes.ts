@@ -227,7 +227,7 @@ class ElementExtractor
             let parent = this._ElementFunctions;
             match.forEach(element =>
             {
-                if (!!parent[element[1]] && !res.Contains(element[1]))
+                if (!!parent[element[1]] && !res.ContainsKey(element[1]))
                 {
                     res.AddPair(element[1], parent[element[1]].call(this)); // почему-то при вызове GeAll* this'ом считается _ElementFunctions
                 }
@@ -972,7 +972,7 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 
         if (tag.GetLaguage() == Language.CSharp && !tag.InCSString()) // C#
         {
-            if (surveyData.Methods.Contains(word)) res = surveyData.Methods.Item(word).GetLocation();
+            if (surveyData.Methods.ContainsKey(word)) res = surveyData.Methods.Item(word).GetLocation();
         }
         else // XML узлы
         {

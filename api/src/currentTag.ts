@@ -103,7 +103,7 @@ export class SimpleTag
     {
         if (this.Name != "Repeat") return null;
         let attrs = this.getAttributes();
-        return ["List", "Length", "Range", "Source"].find(x => attrs.Contains(x));
+        return ["List", "Length", "Range", "Source"].find(x => attrs.ContainsKey(x));
     }
 
     /** Закрыт ли открывающий тег */

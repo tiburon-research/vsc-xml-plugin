@@ -165,7 +165,7 @@ export function translate(input: string, allowIterators = true): string
     {
         if (!char.match(reg))
         {
-            if (_translation.Contains(char))
+            if (_translation.ContainsKey(char))
                 res += _translation.Item(char);
             else res += "_";
         }

@@ -196,7 +196,7 @@ export class KeyedCollection<T>
     }
 
     /** Проверяет наличие ключа */
-    public Contains(key: string): boolean
+    public ContainsKey(key: string): boolean
     {
         return this.items.hasOwnProperty(key);
     }

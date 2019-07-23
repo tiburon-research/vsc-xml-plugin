@@ -90,7 +90,7 @@ export class SurveyElement
     /** проверяет существование атрибута */
     public AttrExists(name: string): boolean
     {
-        return this.Attributes.Contains(name);
+        return this.Attributes.ContainsKey(name);
     }
 
     /** возвращает значение атрибута */
