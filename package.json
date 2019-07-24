@@ -166,6 +166,10 @@
         ],
         "keybindings": [
             {
+                "key": "ctrl+alt+e",
+                "command": "tib.ChooseGeo"
+            },
+            {
                 "key": "ctrl+alt+t",
                 "command": "tib.insertTag"
             },
