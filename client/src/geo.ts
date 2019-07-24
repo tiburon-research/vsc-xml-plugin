@@ -85,7 +85,8 @@ async function parseGeoList(data: [][]): Promise<GeoFileData>
 	let res = new GeoFileData();
 	lines.forEach(line =>
     {
-        if (line.length != cellNames.length) return;
+        // либо все, либо без мегафона
+        if (line.length != cellNames.length && line.length != cellNames.length - 2) return;
 	    let lineData = new GeoFileLineData();
 	    for (let i = 0; i < cellNames.length; i++)
 	    {
@@ -134,11 +135,7 @@ export async function readGeoFile(): Promise<GeoFileData>
 {
     let path = getGeoPath();
     if (!path) throw "Путь к файлу с георафией не найден";
-    console.log('start read');
-    let geoList = await readGeoFileList("T:\\=Tiburon_NEW\\Geo\\test.xlsx");
-    console.log('start parse');
+    let geoList = await readGeoFileList(path);
     let res = await parseGeoList(geoList);
-    console.log('stop');
-    console.log(res);
 	return res;
 }
