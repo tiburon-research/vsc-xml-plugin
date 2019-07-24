@@ -4,14 +4,14 @@
 		"target": "es6",
 		"rootDir": "src",
 		"outDir": "out",
-		"sourceMap": true,
+        "sourceMap": true,
+        "watch": true,
 		"composite": true
 	},
 	"include": [ "src" ],
 	"exclude": [
-		"node_modules", 
+		"node_modules",
 		".vscode-test",
 		"ignore"
-	],
-	"compileOnSave": true
+    ]
 }
