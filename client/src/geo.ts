@@ -12,21 +12,47 @@ interface IdName
 	Name: String;
 }
 
-class GeoFileLineData extends Object
+
+class IGeoFileLineData
 {
-	CountryId: number;
-	CountryName: string;
+    CountryId: number;
 	CityId: number;
+	DistrictId: number;
+	StrataId: number;
+	SubjectId: number;
+	FilMegafonId: number;
+}
+
+
+class GeoFileLineData extends IGeoFileLineData
+{
+	CountryName: string;
 	CityName: string;
 	CityPopulation: number;
-	DistrictId: number;
 	DistrictName: string;
-	StrataId: number;
 	StrataName: string;
-	SubjectId: number;
 	SubjectName: string;
-	FilMegafonId: number;
-	FilMegafonName: string;
+    FilMegafonName: string;
+
+    public reduce(): IGeoFileLineData
+    {
+        let { 
+            CountryId,
+            CityId,
+            DistrictId,
+            StrataId,
+            SubjectId,
+            FilMegafonId
+        } = this;
+        return {
+            CountryId,
+            CityId,
+            DistrictId,
+            StrataId,
+            SubjectId,
+            FilMegafonId
+        }
+    }
 }
 
 function getGeoPath(): string
@@ -58,13 +84,12 @@ async function parseGeoList(data: [][]): Promise<GeoFileData>
 	let cellNames = lines.shift();
 	let res = new GeoFileData();
 	lines.forEach(line =>
-	{
-	    if (line.length != cellNames.length) return;
+    {
+        if (line.length != cellNames.length) return;
 	    let lineData = new GeoFileLineData();
 	    for (let i = 0; i < cellNames.length; i++)
 	    {
-	        let name = cellNames[i];
-	        if (lineData.hasOwnProperty(name)) lineData[name] = line[i];
+	        lineData[cellNames[i]] = line[i];
 	    }
 	    res.AddLine(lineData);
 	});
@@ -76,29 +101,30 @@ interface CityData extends IdName
 	Population: number;
 }
 
+
 class GeoFileData
 {
-	Geo: GeoFileLineData[] = [];
-	City: CityData[];
-	Country: IdName[];
-	Subject: IdName[];
-	District: IdName[];
-    Starta: IdName[];
+	Geo: IGeoFileLineData[] = [];
+	City: CityData[] = [];
+	Country: IdName[] = [];
+	Subject: IdName[] = [];
+	District: IdName[] = [];
+    Strata: IdName[] = [];
     
     private _propertyList = ["Country", "Subject", "District", "Strata"];
 
 	public AddLine(data: GeoFileLineData)
 	{
-        this.Geo.push(data);
+        this.Geo.push(data.reduce());
         
-        if (!!data.CityId && !this.City.find(value => { value.Id == data.CityId })) this.City.push({ Id: data.CityId, Name: data.CityName, Population: data.CityPopulation });
+        if (!!data.CityId && !this.City.find(value => value.Id == data.CityId )) this.City.push({ Id: data.CityId, Name: data.CityName, Population: data.CityPopulation });
         
         this._propertyList.forEach(prefix =>
         {
             let thisProp = this[prefix] as IdName[];
             let dataPropId = data[prefix + "Id"] as number;
             
-            if (!!dataPropId && !thisProp.find(x => { x.Id == dataPropId })) thisProp.push({ Id: dataPropId, Name:  data[prefix + "Name"] });
+            if (!!dataPropId && !thisProp.find(x => x.Id == dataPropId)) thisProp.push({ Id: dataPropId, Name:  data[prefix + "Name"] });
         });
 	}
 }
@@ -106,10 +132,11 @@ class GeoFileData
 
 export async function readGeoFile(): Promise<GeoFileData>
 {
-	let path = getGeoPath();
+    let path = getGeoPath();
     if (!path) throw "Путь к файлу с георафией не найден";
+    console.log('start read');
     let geoList = await readGeoFileList("T:\\=Tiburon_NEW\\Geo\\test.xlsx");
-    console.log('start');
+    console.log('start parse');
     let res = await parseGeoList(geoList);
     console.log('stop');
     console.log(res);

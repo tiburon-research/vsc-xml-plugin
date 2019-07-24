@@ -265,20 +265,21 @@ async function registerCommands()
 
 	// команда для тестирования на отладке
 	registerCommand('tib.debugTestCommand', () => 
-	{
+    {
 	    return new Promise<void>((resolve, reject) =>
-	    {
-	        if (_pack != "debug") return;
+        {
+            console.log(111);
+            if (_pack != "debug") return;
 	        // выполняем дебажный тест
 	        debug.test();
 	        resolve();
 	    });
 	}, false);
 
-	registerCommand('tib.ChooseGeo', () =>
-	{
-	    return chooseGeo();
-	})
+    registerCommand('tib.ChooseGeo', () =>
+    {
+        return chooseGeo();
+    });
 
 	// выделение полного Question+Page из текста
 	registerCommand('tib.getFullPage', () => 
