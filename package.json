@@ -299,7 +299,7 @@
         "js-beautify": "^1.7.5",
         "jsdom": "^11.6.2",
         "node-machine-id": "^1.1.10",
-        "read-excel-file": "^4.0.1",
+        "node-xlsx": "^0.15.0",
         "short-hash": "^1.0.0",
         "tib-api": "file:api",
         "vscode-languageclient": "^5.2.1",
