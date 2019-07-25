@@ -15,7 +15,7 @@ import * as client from 'vscode-languageclient';
 import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors } from './errors';
-import { readGeoFile, GeoFileLineData, GeoConstants, createGeolists } from './geo';
+import { readGeoFile, GeoFileLineData, GeoConstants, createGeolists, createGeoPage } from './geo';
 
 
 export { CSFormatter, _settings as Settings };
@@ -279,7 +279,22 @@ async function registerCommands()
 
 	registerCommand('tib.ChooseGeo', () =>
 	{
-		return chooseGeo();
+		return new Promise<void>((resolve, reject) =>
+		{
+			chooseGeo().then(geoXML =>
+			{
+				_inProcess = true;
+				Formatting.format(geoXML, Language.XML, _settings, "\t", 1).then(formatted =>
+				{
+					vscode.window.activeTextEditor.edit(builder =>
+					{
+						builder.insert(vscode.window.activeTextEditor.selection.active, formatted);
+						_inProcess = false;
+						resolve();
+					})
+				});
+			});			
+		});
 	});
 
 	// выделение полного Question+Page из текста
@@ -1810,6 +1825,8 @@ async function chooseGeo()
 	let q = new CustomQuickPick(options);
 	let groupBy = await q.execute();
 	let lists = await createGeolists(geoData, groupBy);
+	let page = await createGeoPage(groupBy);
+	return lists + page;
 }
 
 

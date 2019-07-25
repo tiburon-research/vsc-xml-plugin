@@ -139,11 +139,11 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 	cityList.VarsAsTags = false;
 	cities.forEach(city =>
 	{
-		cityList.AddItem({ Id: city.CityId, Text: city.CityName, Vars: [city.SubjectId, city.StrataId, city.DistrictId] });
+		cityList.AddItem({ Id: city.CityId, Text: city.CityName, Vars: [city.DistrictId, city.StrataId, city.SubjectId] });
 	});
 
 	res += `
-	<!--**
+	<!--*
 		Var[0] - ФО (District/Регион)
 		Var[1] - Страта
 		Var[2] - Область (Subject)
@@ -156,26 +156,30 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 }
 
 
-export async function ceateGeoPage(groupBy: string[]): Promise<string>
+export async function createGeoPage(groupBy: string[]): Promise<string>
 {
 	let pageName = "Geo";
 	let res = `<Page Id="${pageName}">\n`;
 	let resetId = "999999";
+	let cityAnswerFilter = '';
+	let gropByDistrict = groupBy.contains(GeoConstants.GroupBy.District);
+	let gropBySubject = groupBy.contains(GeoConstants.GroupBy.Subject);
+	let cityQuestionFilter = '';
 
 	// ФО (District)
-	if (groupBy.contains(GeoConstants.GroupBy.District))
+	if (gropByDistrict)
 	{
 		res += `
 		<Question Id="${GeoConstants.QuestionNames.District}" Type="RadioButton">
 			<Header>В каком регионе Вы проживаете?</Header>
 			<Repeat List="${GeoConstants.ListNames.District}">
 				<Answer Id="@ID">
-					<Filter Side="Client">return AnswerExists("${GeoConstants.QuestionNames.District}","@ID") || AnswerExists("${GeoConstants.QuestionNames.District}","${resetId}") || AnswerCount("${pageName}","${GeoConstants.QuestionNames.District}") == 0;</Filter>
+					<Filter Side="Client"><![CDATA[ return AnswerExists("${GeoConstants.QuestionNames.District}","@ID") || AnswerExists("${GeoConstants.QuestionNames.District}","${resetId}") || AnswerCount("${pageName}","${GeoConstants.QuestionNames.District}") == 0; ]]></Filter>
 					<Text>@Text</Text>
 				</Answer>
 			</Repeat>
 			<Answer Id="${resetId}">
-				<Filter Side="Client">return AnswerExistsAny("${GeoConstants.QuestionNames.District}","$repeat(${GeoConstants.ListNames.District}){@ID[,]}");</Filter>
+				<Filter Side="Client"><![CDATA[ return AnswerExistsAny("${GeoConstants.QuestionNames.District}","$repeat(${GeoConstants.ListNames.District}){@ID[,]}"); ]]></Filter>
 				<Ui Isolate="1"/>
 				<Text>Изменить регион</Text>
 			</Answer>
@@ -184,20 +188,26 @@ export async function ceateGeoPage(groupBy: string[]): Promise<string>
 	}
 
 	// Область (Subject)
-	if (groupBy.contains(GeoConstants.GroupBy.Subject))
+	if (gropBySubject)
 	{
-		let answerDistrictFilter = groupBy.contains(GeoConstants.GroupBy.District) ? `AnswerExists("${GeoConstants.QuestionNames.District}","@Var(0)") && ` : '';
+		let answerDistrictFilter = '';
+		let questionDistrictFilter = '';
+		if (gropByDistrict)
+		{
+			answerDistrictFilter = `AnswerExists("${GeoConstants.QuestionNames.District}","@Var(0)") && `;
+			questionDistrictFilter = `\n<Filter Side="Client"><![CDATA[ return AnswerExistsAny("${GeoConstants.QuestionNames.District}","$repeat(${GeoConstants.ListNames.District}){@ID[,]}"); ]]></Filter>`;
+		}
 		res += `
-		<Question Id="${GeoConstants.QuestionNames.Subject}" Type="RadioButton">
+		<Question Id="${GeoConstants.QuestionNames.Subject}" Type="RadioButton">${questionDistrictFilter}
 			<Header>В какой области Вы проживаете?</Header>
 			<Repeat List="${GeoConstants.ListNames.Subject}">
 				<Answer Id="@ID">
-					<Filter Side="Client">return ${answerDistrictFilter}(AnswerExists("${GeoConstants.QuestionNames.Subject}","@ID") || AnswerExists("${GeoConstants.QuestionNames.Subject}","${resetId}") || AnswerCount("${pageName}","${GeoConstants.QuestionNames.Subject}") == 0);</Filter>
+					<Filter Side="Client"><![CDATA[ return ${answerDistrictFilter}(AnswerExists("${GeoConstants.QuestionNames.Subject}","@ID") || AnswerExists("${GeoConstants.QuestionNames.Subject}","${resetId}") || AnswerCount("${pageName}","${GeoConstants.QuestionNames.Subject}") == 0); ]]></Filter>
 					<Text>@Text</Text>
 				</Answer>
 			</Repeat>
 			<Answer Id="${resetId}">
-				<Filter Side="Client">return AnswerExistsAny("${GeoConstants.QuestionNames.Subject}","$repeat(${GeoConstants.ListNames.Subject}){@ID[,]}");</Filter>
+				<Filter Side="Client"><![CDATA[ return AnswerExistsAny("${GeoConstants.QuestionNames.Subject}","$repeat(${GeoConstants.ListNames.Subject}){@ID[,]}"); ]]></Filter>
 				<Ui Isolate="1"/>
 				<Text>Изменить область</Text>
 			</Answer>
@@ -205,13 +215,23 @@ export async function ceateGeoPage(groupBy: string[]): Promise<string>
 		`;
 	}
 
+	if (gropBySubject)
+	{
+		cityAnswerFilter = `<Filter Side="Client">@AnswerExists("${GeoConstants.QuestionNames.Subject}","@Var(2)");</Filter>`;
+		cityQuestionFilter = `<Filter Side="Client">return AnswerExistsAny("${GeoConstants.QuestionNames.Subject}","$repeat(${GeoConstants.ListNames.Subject}){@ID[,]}");</Filter>`;
+	}
+	else if (gropByDistrict)
+	{
+		cityAnswerFilter = `<Filter Side="Client">@AnswerExists("${GeoConstants.QuestionNames.District}","@Var(0)");</Filter>`;
+		cityQuestionFilter = `<Filter Side="Client">return AnswerExistsAny("${GeoConstants.QuestionNames.District}","$repeat(${GeoConstants.ListNames.District}){@ID[,]}");</Filter>`;
+	}		
+
 	// Город
 	res += `
-	<Question Id="${GeoConstants.QuestionNames.City}" Type="RadioButton">
-		<Filter Side="Client">return AnswerExistsAny("${GeoConstants.QuestionNames.District}","$repeat(${GeoConstants.QuestionNames.City}){@ID[,]}");</Filter>
+	<Question Id="${GeoConstants.QuestionNames.City}" Type="RadioButton">${cityQuestionFilter}
 		<Header>В каком городе Вы проживаете?</Header>
 		<Repeat List="${GeoConstants.ListNames.City}">
-			<Answer Id="@ID"><Text>@Text</Text><Filter Side="Client">@AnswerExists("${GeoConstants.QuestionNames.District}","@Var(0)");</Filter></Answer>
+			<Answer Id="@ID"><Text>@Text</Text>${cityAnswerFilter}</Answer>
 		</Repeat>
 		<Answer Id="${resetId}"><Text>Другой</Text></Answer>
 	</Question>
@@ -222,6 +242,11 @@ export async function ceateGeoPage(groupBy: string[]): Promise<string>
 	<Redirect Status="19">
 		string city = AnswerID("${GeoConstants.QuestionNames.City}");
 		if (city == "${resetId}") return true;
+		/*
+		string district = GetSurveyListVar("${GeoConstants.ListNames.City}",city,0); // ФО
+		string strata = GetSurveyListVar("${GeoConstants.ListNames.City}",city,1); // страта
+		string subject = GetSurveyListVar("${GeoConstants.ListNames.City}",city,2); // Область
+		*/
 		return false;
 	</Redirect>
 	`;
