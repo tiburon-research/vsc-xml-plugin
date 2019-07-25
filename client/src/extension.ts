@@ -15,7 +15,7 @@ import * as client from 'vscode-languageclient';
 import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors } from './errors';
-import { readGeoFile, GeoFileLineData } from './geo';
+import { readGeoFile, GeoFileLineData, GeoConstants, createGeolists } from './geo';
 
 
 export { CSFormatter, _settings as Settings };
@@ -1797,7 +1797,7 @@ async function chooseGeo()
 	await nextStep("DistrictName", "Федеральный округ:", ["Центральный", "Северо-Западный", "Сибирский", "Уральский", "Приволжский", "Южный", "Дальневосточный"]);
 	await nextStep("StrataName", "Население:", ["1млн +", "500тыс.-1 млн.", "250тыс.-500тыс."]);
 
-	let grouping = [{ label: "Федеральный округ" }, { label: "Область" }];
+	let grouping = [{ label: GeoConstants.GroupBy.Subject }, { label: GeoConstants.GroupBy.District }];
 	let options: CustomQuickPickOptions = {
 		canSelectMany: true,
 		ignoreFocusOut,
@@ -1809,7 +1809,7 @@ async function chooseGeo()
 	}
 	let q = new CustomQuickPick(options);
 	let groupBy = await q.execute();
-
+	let lists = await createGeolists(geoData, groupBy);
 }
 
 

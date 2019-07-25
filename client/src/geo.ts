@@ -1,26 +1,31 @@
 import * as fs from 'fs';
-import { pathExists } from 'tib-api';
+import { pathExists, KeyValuePair, KeyedCollection } from 'tib-api';
 import { Path } from './classes';
 import xlsx from 'node-xlsx';
+import { SurveyList } from 'tib-api/lib/surveyObjects';
 
 
 const GeoPath = "T:\\=Tiburon_NEW\\Geo";
 
-interface IdName
-{
-	Id: number;
-	Name: string;
+
+export const GeoConstants = {
+	/** Названия компоновки географии */
+	GroupBy: {
+		Subject: "Федеральный округ",
+		District: "Область"
+	}
 }
 
 
+/** Структура одной строки в файле географии */
 export class GeoFileLineData
 {
-	CountryId: number;
-	CityId: number;
-	DistrictId: number;
-	StrataId: number;
-	SubjectId: number;
-	FilMegafonId: number;
+	CountryId: string;
+	CityId: string;
+	DistrictId: string;
+	StrataId: string;
+	SubjectId: string;
+	FilMegafonId: string;
 
 	CountryName: string;
 	CityName: string;
@@ -31,6 +36,7 @@ export class GeoFileLineData
 	FilMegafonName: string;
 }
 
+/** Возвращает путь к самому свежему файлу `*-geo.xlsx` */
 function getGeoPath(): string
 {
 	let res: string = null;
@@ -54,6 +60,7 @@ async function readGeoFileList(path: string): Promise<[][]>
 	return xlsx.parse(path)[0].data;
 }
 
+/** Преобразование записей файла в структуру */
 async function parseGeoList(data: [][]): Promise<GeoFileLineData[]>
 {
 	let lines = data.concat([]);
@@ -74,6 +81,7 @@ async function parseGeoList(data: [][]): Promise<GeoFileLineData[]>
 }
 
 
+/** Возвращает все города */
 export async function readGeoFile(): Promise<GeoFileLineData[]>
 {
 	let path = getGeoPath();
@@ -82,3 +90,51 @@ export async function readGeoFile(): Promise<GeoFileLineData[]>
 	let res = await parseGeoList(geoList);
 	return res;
 }
+
+
+/** Создаёт все нужные списки для географии */
+export async function createGeolists(cities: GeoFileLineData[], groupBy: string[]): Promise<string>
+{
+	let res = '\n\n';
+
+	// ФО
+	if (groupBy.contains(GeoConstants.GroupBy.District))
+	{
+		let districtList = new SurveyList("districtList");
+		districtList.VarsAsTags = false;
+		let filteredDistricts = KeyedCollection.FromPairs(cities.map(x => { return { Key: x.DistrictId, Value: x.DistrictName } }));
+		filteredDistricts.ForEach((key, value) =>
+		{
+			districtList.AddItem({ Id: key, Text: value });
+		});
+		res += districtList.ToXML() + '\n\n';
+	}
+
+	// Области
+	if (groupBy.contains(GeoConstants.GroupBy.Subject))
+	{
+		let subjectList = new SurveyList("subjectList");
+		subjectList.VarsAsTags = false;
+		let filteredSubjects = KeyedCollection.FromPairs(cities.map(x => { return { Key: x.SubjectId, Value: x.SubjectName } }));
+		filteredSubjects.ForEach((key, value) =>
+		{
+			let subjectDistrict = cities.find(x => x.SubjectId == key).DistrictId;
+			subjectList.AddItem({ Id: key, Text: value, Vars: [subjectDistrict] });
+		});
+		res += subjectList.ToXML() + '\n\n';
+	}
+
+	// города
+	let cityList = new SurveyList("cityList");
+	cityList.VarsAsTags = false;
+	cities.forEach(city =>
+	{
+		cityList.AddItem({ Id: city.CityId, Text: city.CityName, Vars: [city.SubjectId, city.StrataId, city.DistrictId] });
+	});
+
+	res += cityList.ToXML() + '\n\n';
+
+	return res;
+}
+
+
