@@ -467,3 +467,40 @@ export namespace ClientServerTransforms
 	}
 
 }
+
+
+export interface CustomQuickPickOptions
+{
+	canSelectMany?: boolean;
+	ignoreFocusOut?: boolean;
+	totalSteps?: number;
+	step?: number;
+	placeHolder?: string;
+	items?: vscode.QuickPickItem[];
+	selectedItems?: vscode.QuickPickItem[];
+}
+
+
+export class CustomQuickPick
+{
+	private qickPick: vscode.QuickPick<vscode.QuickPickItem>;
+
+	constructor(options: CustomQuickPickOptions)
+	{
+		this.qickPick = vscode.window.createQuickPick();
+		Object.assign(this.qickPick, options);
+	}
+
+	public execute(): Promise<string[]>
+	{
+		return new Promise<string[]>((resolve, reject) =>
+		{
+			this.qickPick.show();
+			this.qickPick.onDidAccept(() =>
+			{
+				resolve(this.qickPick.selectedItems.map(x => x.label));
+				this.qickPick.hide();
+			})
+		});
+	}
+}

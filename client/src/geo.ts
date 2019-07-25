@@ -15,20 +15,20 @@ interface IdName
 
 export class GeoFileLineData
 {
-    CountryId: number;
+	CountryId: number;
 	CityId: number;
 	DistrictId: number;
 	StrataId: number;
 	SubjectId: number;
 	FilMegafonId: number;
 
-    CountryName: string;
+	CountryName: string;
 	CityName: string;
 	CityPopulation: number;
 	DistrictName: string;
 	StrataName: string;
 	SubjectName: string;
-    FilMegafonName: string;
+	FilMegafonName: string;
 }
 
 function getGeoPath(): string
@@ -60,9 +60,9 @@ async function parseGeoList(data: [][]): Promise<GeoFileLineData[]>
 	let cellNames = lines.shift();
 	let res: GeoFileLineData[] = [];
 	lines.forEach(line =>
-    {
-        // либо все, либо без мегафона
-        if (line.length != cellNames.length && line.length != cellNames.length - 2) return;
+	{
+	    // либо все, либо без мегафона
+	    if (line.length != cellNames.length && line.length != cellNames.length - 2) return;
 	    let lineData = new GeoFileLineData();
 	    for (let i = 0; i < cellNames.length; i++)
 	    {
@@ -76,9 +76,9 @@ async function parseGeoList(data: [][]): Promise<GeoFileLineData[]>
 
 export async function readGeoFile(): Promise<GeoFileLineData[]>
 {
-    let path = getGeoPath();
-    if (!path) throw "Путь к файлу с георафией не найден";
-    let geoList = await readGeoFileList(path);
-    let res = await parseGeoList(geoList);
+	let path = getGeoPath();
+	if (!path) throw "Путь к файлу с георафией не найден";
+	let geoList = await readGeoFileList(path);
+	let res = await parseGeoList(geoList);
 	return res;
 }
