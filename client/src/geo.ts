@@ -11,8 +11,8 @@ const GeoPath = "T:\\=Tiburon_NEW\\Geo";
 export const GeoConstants = {
 	/** Названия компоновки географии */
 	GroupBy: {
-		Subject: "Федеральный округ",
-		District: "Область"
+		District: "Федеральный округ",
+		Subject: "Область"
 	},
 	ListNames: {
 		City: "cityList",
@@ -243,9 +243,9 @@ export async function createGeoPage(groupBy: string[]): Promise<string>
 		string city = AnswerID("${GeoConstants.QuestionNames.City}");
 		if (city == "${resetId}") return true;
 		/*
-		string district = GetSurveyListVar("${GeoConstants.ListNames.City}",city,0); // ФО
-		string strata = GetSurveyListVar("${GeoConstants.ListNames.City}",city,1); // страта
-		string subject = GetSurveyListVar("${GeoConstants.ListNames.City}",city,2); // Область
+		string district = GetListItemVar("${GeoConstants.ListNames.City}",city,0); // ФО
+		string strata = GetListItemVar("${GeoConstants.ListNames.City}",city,1); // страта
+		string subject = GetListItemVar("${GeoConstants.ListNames.City}",city,2); // Область
 		*/
 		return false;
 	</Redirect>

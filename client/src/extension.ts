@@ -1812,7 +1812,7 @@ async function chooseGeo()
 	await nextStep("DistrictName", "Федеральный округ:", ["Центральный", "Северо-Западный", "Сибирский", "Уральский", "Приволжский", "Южный", "Дальневосточный"]);
 	await nextStep("StrataName", "Население:", ["1млн +", "500тыс.-1 млн.", "250тыс.-500тыс."]);
 
-	let grouping = [{ label: GeoConstants.GroupBy.Subject }, { label: GeoConstants.GroupBy.District }];
+	let grouping = [{ label: GeoConstants.GroupBy.District }, { label: GeoConstants.GroupBy.Subject }];
 	let options: CustomQuickPickOptions = {
 		canSelectMany: true,
 		ignoreFocusOut,
