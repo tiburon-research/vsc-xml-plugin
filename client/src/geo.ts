@@ -5,7 +5,6 @@ import xlsx from 'node-xlsx';
 import { SurveyList } from 'tib-api/lib/surveyObjects';
 
 
-const GeoPath = "T:\\=Tiburon_NEW\\Geo";
 
 
 export const GeoConstants = {
@@ -23,7 +22,8 @@ export const GeoConstants = {
 		District: "District",
 		Subject: "Subject",
 		City: "City"
-	}
+	},
+	FilePath: "T:\\=Tiburon_NEW\\Geo"
 }
 
 
@@ -50,16 +50,16 @@ export class GeoFileLineData
 function getGeoPath(): string
 {
 	let res: string = null;
-	if (pathExists(GeoPath))
+	if (pathExists(GeoConstants.FilePath))
 	{
-	    let files = fs.readdirSync(GeoPath).map(f =>
+	    let files = fs.readdirSync(GeoConstants.FilePath).map(f =>
 	    {
 	        let res: number;
 	        let match = f.match(/^(\d+)-geo\.xlsx$/);
 	        if (!!match) res = Number(match[1]);
 	        return res;
 	    }).filter(f => !!f).sort((a, b) => { return b - a; });
-	    if (files.length > 0) res = Path.Concat(GeoPath, files[0] + "-geo.xlsx");
+	    if (files.length > 0) res = Path.Concat(GeoConstants.FilePath, files[0] + "-geo.xlsx");
 	}
 	return res;
 }
