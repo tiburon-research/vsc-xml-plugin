@@ -164,38 +164,48 @@ connection.onHover(data =>
 
 connection.onDocumentHighlight(data =>
 {
-	let document = documents.get(data.textDocument.uri);
-	if (!document)
-	{
-	    logError("Данные о документе отсутствуют на сервере", false);
-	    return [];
+    let document = documents.get(data.textDocument.uri);
+    if (!document)
+    {
+        logError("Данные о документе отсутствуют на сервере", false);
+        return [];
 	}
-	let tag = getServerTag({
-	    document,
-	    position: data.position,
-	    force: false
-	});
-	let higlights = new TibDocumentHighLights(tag, document, data.position);
-	sendTagToClient(tag);
-	return higlights.getAll();
+	if (!data.position)
+	{
+		logError("Нет данных о положении курсора", false);
+        return [];
+	}
+    let tag = getServerTag({
+        document,
+        position: data.position,
+        force: false
+    });
+    let higlights = new TibDocumentHighLights(tag, document, data.position);
+    sendTagToClient(tag);
+    return higlights.getAll();
 })
 
 
 connection.onDefinition(data =>
 {
-	let document = documents.get(data.textDocument.uri);
-	if (!document)
-	{
-	    logError("Данные о документе отсутствуют на сервере", false);
-	    return [];
+    let document = documents.get(data.textDocument.uri);
+    if (!document)
+    {
+        logError("Данные о документе отсутствуют на сервере", false);
+        return [];
 	}
-	let tag = getServerTag({
-	    document,
-	    position: data.position,
-	    force: false
-	});
-	sendTagToClient(tag);
-	return getDefinition(tag, document, data.position, _SurveyData);
+	if (!data.position)
+	{
+		logError("Нет данных о положении курсора", false);
+        return [];
+	}
+    let tag = getServerTag({
+        document,
+        position: data.position,
+        force: false
+    });
+    sendTagToClient(tag);
+    return getDefinition(tag, document, data.position, _SurveyData);
 })
 
 // это событие дёргаем руками, чтобы передавать все нужные данные
