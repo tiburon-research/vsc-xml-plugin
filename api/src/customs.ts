@@ -372,7 +372,6 @@ export class OrderedCollection<T>
 	private items: KeyValuePair<T>[] = [];
 	private keys: string[] = [];
 
-
 	constructor()
 	{ }
 
@@ -386,8 +385,6 @@ export class OrderedCollection<T>
 	    return this.keys.indexOf(key);
 	}
 
-
-
 	public Get(key: string): T
 	{
 	    let ind = this._getIndex(key);
@@ -395,13 +392,19 @@ export class OrderedCollection<T>
 	    return this.items[ind].Value;
 	}
 
-
-	public Add(key: string, item: T)
+	public Add(key: string, item: T, ignoreDuplicates = false)
 	{
-	    let ind = this._getIndex(key);
-	    if (ind > -1) throw `Ключ ${key} уже присутствует в коллекции`;
-	    this._addKey(key)
-	    this.items.push(new KeyValuePair(key, item));
+		let ind = this._getIndex(key);
+		if (ind > -1)
+		{
+			if (!ignoreDuplicates) throw `Ключ ${key} уже присутствует в коллекции`;
+			this.items[ind] = new KeyValuePair(key, item);
+		}
+		else
+		{
+			this._addKey(key)
+			this.items.push(new KeyValuePair(key, item));	
+		}
 	}
 
 	public get Count(): number
@@ -417,12 +420,56 @@ export class OrderedCollection<T>
 
 	public ForEach(callbackfn: (value: KeyValuePair<T>, index: number, array: KeyValuePair<T>[]) => void, thisArg?: any)
 	{
-	    this.items.forEach(callbackfn, thisArg);
+		this.items.forEach(callbackfn, thisArg);
 	}
 
 	public Contains(key: string): boolean
 	{
 	    return this._getIndex(key) > -1;
+	}
+
+
+	/** 
+	 * преобразует набор 
+	 * @param clearNull очищать ли по проверке (!!element)
+	*/
+	public Select<Q>(filter: (element: KeyValuePair<T>) => Q, clearNull = false): Q[]
+	{
+	    let res = [];
+	    this.ForEach(pair =>
+	    {
+	        let item = filter(pair);
+	        if (!clearNull || !!item) res.push(item);
+	    });
+	    return res;
+	}
+
+
+	/**
+	 * Создаёт коллекцию из массива `IPair`
+	 * 
+	 * Повторы игнорируются
+	*/
+	public static FromPairs<T>(pairs: IPair<T>[]): OrderedCollection<T>
+	{
+	    let res = new OrderedCollection<T>();
+	    pairs.forEach(pair =>
+	    {
+	        res.Add(pair.Key, pair.Value, true);
+	    });
+	    return res;
+	}
+
+	/** Возвращает новый отсортированный OrderedCollection */
+	public OrderBy(func: (item: KeyValuePair<T>) => string | number): OrderedCollection<T>
+	{
+		let res = new OrderedCollection<T>();
+		let sortingResult = this.Select(x => func(x)).orderBy();
+		sortingResult.IndexOrder.forEach(oldIndex =>
+		{
+			res.Add(this.keys[oldIndex], this.items[oldIndex].Value);
+		});
+		return res;
 	}
 
 	/** Обновляет старое значение `val` по ключу `key` */

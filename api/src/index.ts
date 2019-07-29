@@ -118,39 +118,39 @@ function _getCurrentTag(document: server.TextDocument, position: server.Position
 	// сначала пытаемся вытащить из кэша (сначала обновить, если позиция изменилась)
 	if (!force)
 	{
-	    if (cache.Active())
-	    {
-	        cache.Update(document, position, text);
-	        tag = cache.Tag.Get();
-	    }
+		if (cache.Active())
+		{
+			cache.Update(document, position, text);
+			tag = cache.Tag.Get();
+		}
 	}
 
 	if (!tag)
 	{
-	    // собираем тег заново
-	    let pure: string;
-	    if (!pure) pure = CurrentTag.PrepareXML(text);
-	    let ranges = Parse.getParentRanges(document, pure);
-	    // где-то вне
-	    if (ranges.length == 0) tag = null;//new CurrentTag("XML");
-	    else
-	    {
-	        let parents = ranges.map(range => new SimpleTag(document, range))
+		// собираем тег заново
+		let pure: string;
+		if (!pure) pure = CurrentTag.PrepareXML(text);
+		let ranges = Parse.getParentRanges(document, pure);
+		// где-то вне
+		if (ranges.length == 0) tag = null;//new CurrentTag("XML");
+		else
+		{
+			let parents = ranges.map(range => new SimpleTag(document, range))
 
-	        /** Последний незакрытый тег */
-	        let current = parents.pop();
-	        tag = new CurrentTag(current, parents);
+			/** Последний незакрытый тег */
+			let current = parents.pop();
+			tag = new CurrentTag(current, parents);
 
-	        // Заполняем поля
-	        let lastRange = ranges.last();
-	        tag.SetFields({
-	            StartPosition: current.OpenTagRange.start,
-	            StartIndex: document.offsetAt(current.OpenTagRange.start),
-	            PreviousText: text,
-	            Body: tag.OpenTagIsClosed ? document.getText(server.Range.create(lastRange.end, position)) : undefined,
-	            LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
-	        });
-	    }
+			// Заполняем поля
+			let lastRange = ranges.last();
+			tag.SetFields({
+				StartPosition: current.OpenTagRange.start,
+				StartIndex: document.offsetAt(current.OpenTagRange.start),
+				PreviousText: text,
+				Body: tag.OpenTagIsClosed ? document.getText(server.Range.create(lastRange.end, position)) : undefined,
+				LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
+			});
+		}
 	}
 	return tag;
 }
@@ -163,13 +163,13 @@ export function translate(input: string, allowIterators = true): string
 	let reg = allowIterators ? /[\dA-Za-z_@\-\(\)]/ : /[\dA-Za-z_]/;
 	for (const char of input)
 	{
-	    if (!char.match(reg))
-	    {
-	        if (_translation.ContainsKey(char))
-	            res += _translation.Item(char);
-	        else res += "_";
-	    }
-	    else res += char;
+		if (!char.match(reg))
+		{
+			if (_translation.ContainsKey(char))
+				res += _translation.Item(char);
+			else res += "_";
+		}
+		else res += char;
 	}
 	return res;
 }
@@ -190,45 +190,47 @@ declare global
 {
 	interface String
 	{
-	    /** Продвинутый indexOf */
-	    find(search: string | RegExp): SearchResult;
-	    /** Продвинутый lastIndexOf string=Regexp */
-	    //findLast(search: string): SearchResult;
+		/** Продвинутый indexOf */
+		find(search: string | RegExp): SearchResult;
+		/** Продвинутый lastIndexOf string=Regexp */
+		//findLast(search: string): SearchResult;
 		/** Поиск с группами по всей строке 
 		 *  
 		 * Нельзя использовать флаг `g`!
 		*/
-	    matchAll(search: RegExp): RegExpMatchArray[];
-	    /** Замена, начиная с `from` длиной `subsr` символов (если string, то берётся длина строки) */
-	    replaceRange(from: number, substr: string | number, newValue: string): string;
-	    /** Заменяет все Key (отсортированные) на Value */
-	    replaceValues(items: KeyedCollection<string>): string
-	    /** Проверяет вхождение */
-	    contains(search: string): boolean
+		matchAll(search: RegExp): RegExpMatchArray[];
+		/** Замена, начиная с `from` длиной `subsr` символов (если string, то берётся длина строки) */
+		replaceRange(from: number, substr: string | number, newValue: string): string;
+		/** Заменяет все Key (отсортированные) на Value */
+		replaceValues(items: KeyedCollection<string>): string
+		/** Проверяет вхождение */
+		contains(search: string): boolean
 	}
 
 	interface Array<T>
 	{
-	    /** Возвращает последний элемент */
-	    last(): T;
-	    /** Проверяет, что все элементы совпадают, независимо от порядка */
-	    equalsTo(ar: Array<T>): boolean;
-	    //** Возвращает массив уникальных значений */
-	    distinct(): T[]
-	    /** Содержит элемент */
-	    contains(element: T, compareFunc?: (elem1: T, elem2: T) => boolean): boolean;
-	    /** Удаляет элемент из массива и возвращает этот элемент */
-	    remove(element: T): T;
-	    /** Преобразует массив в коллекцию */
-	    toKeyedCollection(func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
-	    /** Преjбразует массив в коллекцию T */
-	    toKeyedCollection(func: (x: T) => Object): KeyedCollection<any>
-	    /** Асинхронный forEach */
-	    forEachAsync<R>(func: (x: T, i?: number) => Promise<R>): Promise<R[]>
-	    /** Сортировка массива с сохранением порядка индексов (аналогично `sort`) */
-	    orderBy<T>(func: (a: T, b: T) => number): SortedArrayResult<T>
-	    /** Находит повторяющиеся значения */
-	    findDuplicates<T>(compareFunc?: (elem1: T, elem2: T) => boolean): T[]
+		/** Возвращает последний элемент */
+		last(): T;
+		/** Проверяет, что все элементы совпадают, независимо от порядка */
+		equalsTo(ar: Array<T>): boolean;
+		//** Возвращает массив уникальных значений */
+		distinct(): T[]
+		/** Содержит элемент */
+		contains(element: T, compareFunc?: (elem1: T, elem2: T) => boolean): boolean;
+		/** Удаляет элемент из массива и возвращает этот элемент */
+		remove(element: T): T;
+		/** Преобразует массив в коллекцию */
+		toKeyedCollection(func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
+		/** Преjбразует массив в коллекцию T */
+		toKeyedCollection(func: (x: T) => Object): KeyedCollection<any>
+		/** Асинхронный forEach */
+		forEachAsync<R>(func: (x: T, i?: number) => Promise<R>): Promise<R[]>
+		/** Сортировка массива с сохранением порядка индексов (аналогично `sort`) */
+		orderBy<T>(func?: (a: T, b: T) => number): SortedArrayResult<T>
+		/** Сортировка преобразованного массива */
+		orderByValue<T>(this: Array<T>, func: (a: T) => string | number, desc?: boolean): T[]
+		/** Находит повторяющиеся значения */
+		findDuplicates<T>(compareFunc?: (elem1: T, elem2: T) => boolean): T[]
 	}
 
 }
@@ -257,7 +259,7 @@ String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
 	let reg = new RegExp(search, search.flags + "g");
 	while ((mat = reg.exec(text)) !== null)
 	{
-	    res.push(mat);
+		res.push(mat);
 	}
 	return res;
 }
@@ -278,7 +280,7 @@ String.prototype.replaceValues = function (elements: KeyedCollection<string>): s
 	let sorted: KeyValuePair<string>[] = elements.OrderBy(x => x.Key.length);
 	sorted.forEach(x =>
 	{
-	    res = res.replace(new RegExp(safeString(x.Key), "g"), x.Value);
+		res = res.replace(new RegExp(safeString(x.Key), "g"), x.Value);
 	});
 	return res;
 }
@@ -305,9 +307,9 @@ Array.prototype.equalsTo = function <T>(this: T[], ar: Array<T>): boolean
 	let tmp = ar;
 	for (let index = 0; index < this.length; index++)
 	{
-	    let ind = tmp.indexOf(this[index]);
-	    if (ind < 0) return false;
-	    tmp = tmp.filter((x, i) => i != ind);
+		let ind = tmp.indexOf(this[index]);
+		if (ind < 0) return false;
+		tmp = tmp.filter((x, i) => i != ind);
 	}
 	return true;
 }
@@ -332,7 +334,7 @@ Array.prototype.remove = function <T>(this: T[], element: T): T
 	let index = this.indexOf(element);
 	let res: T;
 	if (index > -1)
-	    res = this.splice(index, 1)[0];
+		res = this.splice(index, 1)[0];
 	return res;
 }
 
@@ -341,7 +343,7 @@ Array.prototype.toKeyedCollection = function <T>(this: T[], func: (x: T) => KeyV
 	let res = new KeyedCollection<any>();
 	this.forEach(element =>
 	{
-	    res.AddElement(func(element));
+		res.AddElement(func(element));
 	});
 	return res;
 }
@@ -352,9 +354,9 @@ Array.prototype.toKeyedCollection = function <T>(this: T[], func: (x: T) => Obje
 	let res = new KeyedCollection<any>();
 	this.forEach(element =>
 	{
-	    let obj = func(element);
-	    let key = Object.keys(obj)[0];
-	    res.AddPair(key, obj[key] as T);
+		let obj = func(element);
+		let key = Object.keys(obj)[0];
+		res.AddPair(key, obj[key] as T);
 	});
 	return res;
 }
@@ -366,20 +368,38 @@ Array.prototype.forEachAsync = function <T, R>(this: T[], func: (x: T, i?: numbe
 	let index = 0;
 	this.forEach(element =>
 	{
-	    promises.push(func(element, index));
-	    index++;
+		promises.push(func(element, index));
+		index++;
 	});
 	return Promise.all(promises);
 }
 
 
-Array.prototype.orderBy = function <T>(this: Array<T>, func: (a: T, b: T) => number): SortedArrayResult<T>
+Array.prototype.orderBy = function <T>(this: Array<T>, func?: (a: T, b: T) => number): SortedArrayResult<T>
 {
-	let res: ArraySortingData<T>[] = this.map((x, i) => { return { Element: x, Index: i } as ArraySortingData<T> }).sort((a, b) => func(a.Element, b.Element));
-	return {
-	    Array: res.map(x => x.Element),
-	    IndexOrder: res.map(x => x.Index)
+	let sortFunction = !!func ? func : (a: T, b: T) => {
+		if (a > b) return 1;
+		if (b > a) return -1;
+		return 0;
 	}
+	let res: ArraySortingData<T>[] = this.map((x, i) => { return { Element: x, Index: i } as ArraySortingData<T> }).sort((a, b) => sortFunction(a.Element, b.Element));
+	return {
+		Array: res.map(x => x.Element),
+		IndexOrder: res.map(x => x.Index)
+	}
+}
+
+
+Array.prototype.orderByValue = function <T>(this: Array<T>, func: (a: T) => string | number, desc = false): T[]
+{
+	// стандартная функция сортировки
+	let sortingData = this.map(x => func(x)).orderBy((a, b) =>
+	{
+		if (a > b) return desc? -1 : 1;
+		if (b > a) return desc ? 1 : -1;
+		return 0;
+	})
+	return sortingData.IndexOrder.map(i => this[i]);
 }
 
 
@@ -389,11 +409,11 @@ Array.prototype.findDuplicates = function <T>(this: Array<T>, compareFunc?: (ele
 	let func = compareFunc || ((elem1: T, elem2: T) => { return elem1 == elem2; });
 	for (let i = 0; i < this.length; i++)
 	{
-	    const currentElement = this[i];
-	    if (!res.contains(currentElement, func) && this.slice(i + 1).findIndex(x => { return func(x, currentElement); }) > -1)
-	    {
-	        res.push(currentElement);
-	    }
+		const currentElement = this[i];
+		if (!res.contains(currentElement, func) && this.slice(i + 1).findIndex(x => { return func(x, currentElement); }) > -1)
+		{
+			res.push(currentElement);
+		}
 	}
 	return res;
 }

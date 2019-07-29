@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { pathExists, KeyValuePair, KeyedCollection } from 'tib-api';
+import { pathExists, OrderedCollection } from 'tib-api';
 import { Path } from './classes';
 import xlsx from 'node-xlsx';
 import { SurveyList } from 'tib-api/lib/surveyObjects';
@@ -112,10 +112,10 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 	{
 		let districtList = new SurveyList(GeoConstants.ListNames.District);
 		districtList.VarsAsTags = false;
-		let filteredDistricts = KeyedCollection.FromPairs(cities.map(x => { return { Key: x.DistrictId, Value: x.DistrictName } }));
-		filteredDistricts.ForEach((key, value) =>
+		let filteredDistricts = OrderedCollection.FromPairs(cities.map(x => { return { Key: x.DistrictId, Value: x.DistrictName } }));
+		filteredDistricts.OrderBy(x => x.Value).ForEach(pair =>
 		{
-			districtList.AddItem({ Id: key, Text: value });
+			districtList.AddItem({ Id: pair.Key, Text: pair.Value });
 		});
 		res += districtList.ToXML() + '\n\n';
 	}
@@ -125,11 +125,11 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 	{
 		let subjectList = new SurveyList(GeoConstants.ListNames.Subject);
 		subjectList.VarsAsTags = false;
-		let filteredSubjects = KeyedCollection.FromPairs(cities.map(x => { return { Key: x.SubjectId, Value: x.SubjectName } }));
-		filteredSubjects.ForEach((key, value) =>
+		let filteredSubjects = OrderedCollection.FromPairs(cities.map(x => { return { Key: x.SubjectId, Value: x.SubjectName } }));
+		filteredSubjects.OrderBy(x => x.Value).ForEach(pair =>
 		{
-			let subjectDistrict = cities.find(x => x.SubjectId == key).DistrictId;
-			subjectList.AddItem({ Id: key, Text: value, Vars: [subjectDistrict] });
+			let subjectDistrict = cities.find(x => x.SubjectId == pair.Key).DistrictId;
+			subjectList.AddItem({ Id: pair.Key, Text: pair.Value, Vars: [subjectDistrict] });
 		});
 		res += subjectList.ToXML() + '\n\n';
 	}
@@ -137,8 +137,7 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 	// города
 	let cityList = new SurveyList(GeoConstants.ListNames.City);
 	cityList.VarsAsTags = false;
-	cities.forEach(city =>
-	{
+	cities.orderByValue(x => x.CityName).forEach(city => {
 		cityList.AddItem({ Id: city.CityId, Text: city.CityName, Vars: [city.DistrictId, city.StrataId, city.SubjectId] });
 	});
 

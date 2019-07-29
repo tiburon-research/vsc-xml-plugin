@@ -293,7 +293,7 @@ async function registerCommands()
 						resolve();
 					})
 				});
-			});			
+			}).catch(er => { logError("Ошибка получения географии", true, er) });
 		});
 	});
 

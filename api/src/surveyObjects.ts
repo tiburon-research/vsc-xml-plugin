@@ -330,7 +330,7 @@ export class SurveyList extends SurveyElement
 	    if (!!item.Text) res.Text = item.Text;
 	    // предупреждаем о перезаписи
 	    if (this.Items.Contains(id)) console.warn("Элемент '" + id + "' уже существует в листе '" + this.AttrValue("Id") + "', он будет заменён.");
-	    this.Items.Add(id, res);
+	    this.Items.Add(id, res, true);
 	    return id;
 	}
 
@@ -410,7 +410,7 @@ export class SurveyQuestion extends SurveyElement
 	    if (!!answer.Text) res.Text = answer.Text;
 	    // предупреждаем о перезаписи
 	    if (this.Answers.Contains(id)) console.warn("Ответ '" + id + "' уже существует в вопросе '" + this.AttrValue("Id") + "', он будет заменён.");
-	    this.Answers.Add(id, res);
+	    this.Answers.Add(id, res, true);
 	    return id;
 	}
 
