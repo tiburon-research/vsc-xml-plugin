@@ -1,163 +1,29 @@
 {
-  "name": "tiburonscripter",
-  "displayName": "Tiburon XML Helper",
-  "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-  "version": "2.2.0",
-  "publisher": "TiburonResearch",
-  "author": {
-    "name": "GuRu",
-    "email": "gulyaev@tiburon-research.ru"
-  },
-  "bugs": {
-    "url": "https://github.com/tiburon-research/vsc-xml-plugin/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/tiburon-research/vsc-xml-plugin"
-  },
-  "icon": "icon.png",
-  "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/blob/master/README.md",
-  "license": "MIT",
-  "engines": {
-    "vscode": "^1.30.0",
-    "node": "*"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onLanguage:tib"
-  ],
-  "main": "./client/out/extension",
-  "contributes": {
-    "languages": [
-      {
-        "id": "tib",
-        "aliases": [
-          "Tiburon XML script",
-          "tib"
-        ],
-        "extensions": [
-          "xml"
-        ],
-        "configuration": "./language-configuration.json"
-      }
-    ],
-    "themes": [
-      {
-        "label": "Tiburon Dark",
-        "path": "./themes/tib-dark.json",
-        "uiTheme": "vs-dark"
-      }
-    ],
-    "grammars": [
-      {
-        "language": "tib",
-        "scopeName": "source.tib",
-        "path": "./syntaxes/tib.tmLanguage.json"
-      }
-    ],
-    "snippets": [
-      {
-        "language": "tib",
-        "path": "./snippets/nodes.json"
-      },
-      {
-        "language": "tib",
-        "path": "./snippets/features.json"
-      }
-    ],
-    "commands": [
-      {
-        "command": "tib.transform.AnswersToItems",
-        "title": "Answers -> Items",
-        "category": "tib"
-      },
-      {
-        "command": "tib.transform.ItemsToAnswers",
-        "title": "Items -> Answers",
-        "category": "tib"
-      },
-      {
-        "command": "tib.transform.SortList",
-        "title": "Сортировка списка",
-        "category": "tib"
-      },
-      {
-        "command": "tib.transform.ToAgeList",
-        "title": "-> AgeList",
-        "category": "tib"
-      },
-      {
-        "command": "tib.remove.QuestionIds",
-        "title": "Удалить Id вопросов из заголовков",
-        "category": "tib"
-      },
-      {
-        "command": "tib.insertTag",
-        "title": "Обернуть текст в тег",
-        "category": "tib"
-      },
-      {
-        "command": "tib.cdata",
-        "title": "Обернуть в CDATA",
-        "category": "tib"
-      },
-      {
-        "command": "tib.surveyBlock",
-        "title": "Обернуть в сворачиваемый блок",
-        "category": "tib"
-      },
-      {
-        "command": "tib.paste",
-        "title": "Мультистрочная ставка",
-        "category": "tib"
-      },
-      {
-        "command": "tib.demo",
-        "title": "Открыть код демки",
-        "category": "tib"
-      },
-      {
-        "command": "tib.template",
-        "title": "Открыть шаблон tibXML",
-        "category": "tib"
-      },
-      {
-        "command": "tib.selectTag.closest",
-        "title": "Выделить текущий тег",
-        "category": "tib"
-      },
-      {
-        "command": "tib.selectTag.global",
-        "title": "Выделить родительский тег",
-        "category": "tib"
-      },
-      {
-        "command": "tib.linqToggle",
-        "title": "Переключение подстановки Linq (вкл/выкл)",
-        "category": "tib"
-      },
-      {
-        "command": "tib.debugTestCommand",
-        "title": "Отладочная комманда",
-        "category": "tib"
-      },
-      {
-        "command": "tib.getFullPage",
-        "title": "Преобразовать в Page",
-        "category": "tib"
-      },
-      {
-        "command": "tib.getAnswers",
-        "title": "Преобразовать в Answers",
-        "category": "tib"
-      },
-      {
-        "command": "tib.getItems",
-        "title": "Преобразовать в Items",
-        "category": "tib"
-      }
+    "name": "tiburonscripter",
+    "displayName": "Tiburon XML Helper",
+    "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
+    "version": "2.2.0",
+    "publisher": "TiburonResearch",
+    "author": {
+        "name": "GuRu",
+        "email": "gulyaev@tiburon-research.ru"
+    },
+    "bugs": {
+        "url": "https://github.com/tiburon-research/vsc-xml-plugin/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tiburon-research/vsc-xml-plugin"
+    },
+    "icon": "icon.png",
+    "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/blob/master/README.md",
+    "license": "MIT",
+    "engines": {
+        "vscode": "^1.30.0",
+        "node": "*"
+    },
+    "categories": [
+        "Other"
     ],
     "activationEvents": [
         "onLanguage:tib"
