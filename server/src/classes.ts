@@ -971,7 +971,7 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
         if (!tag) return res;
 
         if (tag.GetLaguage() == Language.CSharp && !tag.InCSString()) // C#
-        {
+		{
             if (surveyData.Methods.Contains(word)) res = surveyData.Methods.Item(word).GetLocation();
         }
         else // XML узлы

@@ -169,7 +169,12 @@ connection.onDocumentHighlight(data =>
     {
         logError("Данные о документе отсутствуют на сервере", false);
         return [];
-    }
+	}
+	if (!data.position)
+	{
+		logError("Нет данных о положении курсора", false);
+        return [];
+	}
     let tag = getServerTag({
         document,
         position: data.position,
@@ -188,7 +193,12 @@ connection.onDefinition(data =>
     {
         logError("Данные о документе отсутствуют на сервере", false);
         return [];
-    }
+	}
+	if (!data.position)
+	{
+		logError("Нет данных о положении курсора", false);
+        return [];
+	}
     let tag = getServerTag({
         document,
         position: data.position,
