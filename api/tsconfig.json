@@ -2,16 +2,15 @@
     "compilerOptions": {
         "module": "commonjs",
         "target": "es6",
-        "declaration": true,
         "rootDir": "src",
-        "sourceMap": true,
         "outDir": "lib",
+        "sourceMap": true,
+        "watch": true,
         "composite": true,
+        "declaration": true,
         "declarationMap": true
     },
-    "include": [
-        "src"
-    ],
+    "include": [ "src" ],
     "exclude": [
         "node_modules",
         ".vscode-test",
