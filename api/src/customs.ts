@@ -149,7 +149,7 @@ export class KeyValuePair<T> implements IPair<T>
 
 // TODO: 
 // - добавить индексацию
-// - переделать все callback на KeyValuePair
+// - переделать все callback на key + value
 // - выкинуть OrderedCollection
 export class KeyedCollection<T>
 {
@@ -366,18 +366,18 @@ export class KeyedCollection<T>
 
 
 	/** Возвращает отсортированный массив пар */
-	public OrderBy(func: (x: KeyValuePair<T>) => number): KeyValuePair<T>[]
+	public OrderBy(func: (key: string, value: T) => number): KeyedCollection<T>
 	{
-		let res: KeyValuePair<T>[] = [];
-		let sortedAr: KeyValuePair<T>[] = this.ToArray(x => x);
-		sortedAr = sortedAr.sort(x => func(x));
+		let res = new KeyedCollection<T>();
+		let sortedAr: KeyValuePair<T>[] = this.ToArray((key, value) => { return new KeyValuePair(key, value) });
+		sortedAr = sortedAr.sort(x => func(x.Key, x.Value));
 		sortedAr.forEach(element =>
 		{
-			res.push(element);
+			res.AddElement(element);
 		});
 		return res;
 	}
-
+	
 }
 
 
