@@ -220,9 +220,9 @@ declare global
 		/** Удаляет элемент из массива и возвращает этот элемент */
 		remove(element: T): T;
 		/** Преобразует массив в коллекцию */
-		toKeyedCollection(func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
-		/** Преjбразует массив в коллекцию T */
-		toKeyedCollection(func: (x: T) => Object): KeyedCollection<any>
+		toKeyedCollection<Q>(func: (x: T) => KeyValuePair<Q>): KeyedCollection<Q>
+		/** Преобразует массив в коллекцию T */
+		toKeyedCollection<Q>(func: (x: T) => Q): KeyedCollection<Q>
 		/** Асинхронный forEach */
 		forEachAsync<R>(func: (x: T, i?: number) => Promise<R>): Promise<R[]>
 		/** Сортировка массива с сохранением порядка индексов (аналогично `sort`) */
@@ -338,9 +338,9 @@ Array.prototype.remove = function <T>(this: T[], element: T): T
 	return res;
 }
 
-Array.prototype.toKeyedCollection = function <T>(this: T[], func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
+Array.prototype.toKeyedCollection = function <Q, T>(this: T[], func: (x: T) => KeyValuePair<Q>): KeyedCollection<Q>
 {
-	let res = new KeyedCollection<any>();
+	let res = new KeyedCollection<Q>();
 	this.forEach(element =>
 	{
 		res.AddElement(func(element));
@@ -349,14 +349,14 @@ Array.prototype.toKeyedCollection = function <T>(this: T[], func: (x: T) => KeyV
 }
 
 
-Array.prototype.toKeyedCollection = function <T>(this: T[], func: (x: T) => Object): KeyedCollection<any>
+Array.prototype.toKeyedCollection = function <Q, T>(this: T[], func: (x: T) => Q): KeyedCollection<Q>
 {
-	let res = new KeyedCollection<any>();
+	let res = new KeyedCollection<Q>();
 	this.forEach(element =>
 	{
 		let obj = func(element);
 		let key = Object.keys(obj)[0];
-		res.AddPair(key, obj[key] as T);
+		res.AddPair(key, obj[key] as Q);
 	});
 	return res;
 }
