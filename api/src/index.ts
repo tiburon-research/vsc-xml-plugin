@@ -99,7 +99,7 @@ const _translation = KeyedCollection.FromArrays(translationArray.rus, translatio
 /** Заменяет в строке все константы на значения */
 export function applyConstants(input: string): string
 {
-	let cons = PreDifinedConstants.toKeyedCollection(x => x).Map((key, value) => new KeyValuePair<string>('@' + key, value));
+	let cons = PreDifinedConstants.toKeyedCollection(x => x).Select((key, value) => new KeyValuePair<string>('@' + key, value));
 	return input.replaceValues(cons);
 }
 

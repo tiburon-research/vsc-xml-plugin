@@ -377,7 +377,7 @@ export class KeyedCollection<T>
 		});
 		return res;
 	}
-	
+
 }
 
 

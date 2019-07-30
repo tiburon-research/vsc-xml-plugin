@@ -254,7 +254,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 	    else
 	        names.forEach(element =>
 	        {
-	            this.items[element] = [];
+	            this.Values[element] = [];
 	        });
 	}
 
