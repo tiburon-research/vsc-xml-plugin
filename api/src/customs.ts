@@ -362,11 +362,11 @@ export class KeyedCollection<T>
 
 
 	/** Возвращает отсортированный массив пар */
-	public OrderBy(func: (key: string, value: T) => number): KeyedCollection<T>
+	public OrderBy(func: (key: string, value: T) => number | string): KeyedCollection<T>
 	{
 		let res = new KeyedCollection<T>();
 		let sortedAr: KeyValuePair<T>[] = this.ToArray((key, value) => { return new KeyValuePair(key, value) });
-		sortedAr = sortedAr.sort(x => func(x.Key, x.Value));
+		sortedAr = sortedAr.orderByValue(x => func(x.Key, x.Value));
 		sortedAr.forEach(element =>
 		{
 			res.AddElement(element);

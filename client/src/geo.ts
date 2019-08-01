@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { pathExists, OrderedCollection } from 'tib-api';
+import { pathExists, KeyedCollection } from 'tib-api';
 import { Path } from './classes';
 import xlsx from 'node-xlsx';
 import { SurveyList } from 'tib-api/lib/surveyObjects';
@@ -112,10 +112,10 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 	{
 		let districtList = new SurveyList(GeoConstants.ListNames.District);
 		districtList.VarsAsTags = false;
-		let filteredDistricts = OrderedCollection.FromPairs(cities.map(x => { return { Key: x.DistrictId, Value: x.DistrictName } }));
-		filteredDistricts.OrderBy(x => x.Value).ForEach(pair =>
+		let filteredDistricts = KeyedCollection.FromPairs(cities.map(x => { return { Key: x.DistrictId, Value: x.DistrictName } }));
+		filteredDistricts.OrderBy((key, value) => value).ForEach((key, value) =>
 		{
-			districtList.AddItem({ Id: pair.Key, Text: pair.Value });
+			districtList.AddItem({ Id: key, Text: value });
 		});
 		res += districtList.ToXML() + '\n\n';
 	}
@@ -125,11 +125,11 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 	{
 		let subjectList = new SurveyList(GeoConstants.ListNames.Subject);
 		subjectList.VarsAsTags = false;
-		let filteredSubjects = OrderedCollection.FromPairs(cities.map(x => { return { Key: x.SubjectId, Value: x.SubjectName } }));
-		filteredSubjects.OrderBy(x => x.Value).ForEach(pair =>
+		let filteredSubjects = KeyedCollection.FromPairs(cities.map(x => { return { Key: x.SubjectId, Value: x.SubjectName } }));
+		filteredSubjects.OrderBy((key, value) => value).ForEach((key, value) =>
 		{
-			let subjectDistrict = cities.find(x => x.SubjectId == pair.Key).DistrictId;
-			subjectList.AddItem({ Id: pair.Key, Text: pair.Value, Vars: [subjectDistrict] });
+			let subjectDistrict = cities.find(x => x.SubjectId == key).DistrictId;
+			subjectList.AddItem({ Id: key, Text: value, Vars: [subjectDistrict] });
 		});
 		res += subjectList.ToXML() + '\n\n';
 	}

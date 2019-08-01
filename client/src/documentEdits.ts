@@ -1,6 +1,6 @@
 'use strict'
 
-import { OrderedCollection, Parse, safeString, JQuery, translate } from 'tib-api'
+import { Parse, safeString, JQuery, translate, KeyedCollection } from 'tib-api'
 import { SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElementType } from 'tib-api/lib/surveyObjects'
 import * as vscode from 'vscode'
 import { QuestionTypes } from 'tib-api/lib/constants';
@@ -276,20 +276,20 @@ export function createElements(text: string, type: SurveyElementType): XMLElemen
 
 	if (!elements || elements.length == 0) return res.Error("Не удалось найти элементы");
 
-	let answerItems = new OrderedCollection<SurveyAnswer>();
-	let itemItems = new OrderedCollection<SurveyListItem>();
+	let answerItems = new KeyedCollection<SurveyAnswer>();
+	let itemItems = new KeyedCollection<SurveyListItem>();
 	if (type == SurveyElementType.ListItem)
 	{
 		elements.forEach(element =>
 		{
-			itemItems.Add(element.Id, new SurveyListItem(element.Id, element.Text));
+			itemItems.AddPair(element.Id, new SurveyListItem(element.Id, element.Text));
 		});
 	}
 	else
 	{
 		elements.forEach(element =>
 		{
-			answerItems.Add(element.Id, new SurveyAnswer(element.Id, element.Text));
+			answerItems.AddPair(element.Id, new SurveyAnswer(element.Id, element.Text));
 		});
 	}
 
@@ -311,7 +311,7 @@ export function createElements(text: string, type: SurveyElementType): XMLElemen
 
 		case SurveyElementType.Answer:
 			{
-				res.Fill(answerItems.ToArray(pair => pair.Value.ToXML()).join("\n"));
+				res.Fill(answerItems.ToArray((key, value) => value.ToXML()).join("\n"));
 				break;
 			}
 
