@@ -575,7 +575,7 @@ export class TibAutoCompletes
 	            if (!this.tag.InCSString())
 	            {
 	                let ar: TibAutoCompleteItem[] = this.tibAutoCompleteList.Item("Function").concat(this.tibAutoCompleteList.Item("Variable"), this.tibAutoCompleteList.Item("Enum"), this.tibAutoCompleteList.Item("Class"), this.tibAutoCompleteList.Item("Type"), this.tibAutoCompleteList.Item("Struct"));
-	                let adBracket = !str.match(/\w*\(/);
+	                let adBracket = !str.match(/^\w*\(/);
 	                ar.forEach(element =>
 	                {
 	                    if (element) completionItems.push(element.ToCompletionItem(adBracket));
