@@ -84,7 +84,7 @@ export class Encoder
 /** Возвращает в `text` закодированные элементы */
 export function getElementsBack(text: string, encodeResult: XMLencodeResult): string
 {
-	if (!encodeResult.Delimiter || encodeResult.EncodedCollection.Count() == 0) return text;
+	if (!encodeResult.Delimiter || encodeResult.EncodedCollection.Count == 0) return text;
 	let newText = text;
 	encodeResult.EncodedCollection.ForEach(function (i, e)
 	{

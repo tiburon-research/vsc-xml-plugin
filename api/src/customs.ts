@@ -22,16 +22,16 @@ export function createDir(path: string, createWholePath = false)
 {
 	if (createWholePath)
 	{
-	    let delimiter = '\\';
-	    if (path.indexOf(delimiter) < 0) delimiter = '/';
-	    let folders = path.split(delimiter);
-	    if (folders.length == 0) throw "Не удалось распознать путь";
-	    let prevPath = '';
-	    folders.forEach(f =>
-	    {
-	        prevPath += f + delimiter;
-	        if (!pathExists(prevPath)) fs.mkdirSync(prevPath);
-	    });
+		let delimiter = '\\';
+		if (path.indexOf(delimiter) < 0) delimiter = '/';
+		let folders = path.split(delimiter);
+		if (folders.length == 0) throw "Не удалось распознать путь";
+		let prevPath = '';
+		folders.forEach(f =>
+		{
+			prevPath += f + delimiter;
+			if (!pathExists(prevPath)) fs.mkdirSync(prevPath);
+		});
 	}
 	else fs.mkdirSync(path);
 }
@@ -95,11 +95,11 @@ export function positiveMin(a, b, negative: any = null)
 	if (typeof negative !== typeof null) neg = negative;
 
 	if (a < 0)
-	    if (b < 0) return neg;
-	    else return b;
+		if (b < 0) return neg;
+		else return b;
 	else
-	    if (b < 0) return a;
-	    else return Math.min(a, b);
+		if (b < 0) return a;
+		else return Math.min(a, b);
 }
 
 
@@ -138,8 +138,8 @@ export class KeyValuePair<T> implements IPair<T>
 {
 	constructor(key: string, value: T)
 	{
-	    this.Key = key;
-	    this.Value = value;
+		this.Key = key;
+		this.Value = value;
 	}
 
 	Key: string;
@@ -149,356 +149,232 @@ export class KeyValuePair<T> implements IPair<T>
 
 export class KeyedCollection<T>
 {
-	protected items: { [index: string]: T } = {};
-	private count: number = 0;
-
+	
 	constructor()
+	{ }
+
+	private _keys: string[] = [];
+	private _values: T[] = [];
+
+	private _getindex(key: string): number
 	{
+		return this._keys.indexOf(key);
 	}
 
-	public ToSimpleObject(): Object
-	{
-	    let res = {};
-	    this.ForEach((key, value) => { res[key] = value });
-	    return res;
-	}
 
-	public static FromObject(obj: Object): KeyedCollection<any>
-	{
-	    let res = new KeyedCollection<any>();
-	    for (let key in obj) {
-	        if (obj.hasOwnProperty(key)) res.AddPair(key, obj[key]);
-	    }
-	    return res;
-	}
+	/** Массив ключей */
+	public get Keys(): string[] { return this._keys; };
+	/** Массив значений */
+	public get Values(): T[] { return this._values; };
+	/** Количество элементов */
+	public get Count(): number { return this._keys.length; };
 
-	/** Создаёт коллекцию из массивов ключей и значений */
-	public static FromArrays<T>(keys: string[], values: T[]): KeyedCollection<T>
-	{
-	    if (keys.length != values.length) throw "Количества ключей и значений отличаются";
-	    let res = new KeyedCollection<T>();
-	    for (let i = 0; i < keys.length; i++)
-	    {
-	        res.AddPair(keys[i], values[i]);
-	    }
-	    return res;
-	}
 
-	/** Создаёт коллекцию из массива `IPair` */
-	public static FromPairs<T>(pairs: IPair<T>[]): KeyedCollection<T>
-	{
-	    let res = new KeyedCollection<T>();
-	    pairs.forEach(pair =>
-	    {
-	        res.AddPair(pair.Key, pair.Value);
-	    });
-	    return res;
-	}
-
-	/** Проверка поэлементно */
-	public Find(filter: (key: string, val: T) => boolean): KeyValuePair<T>
-	{
-	    let res: KeyValuePair<T>;
-	    this.ForEach((key, value) =>
-	    {
-	        if (filter(key, value)) return res = new KeyValuePair(key, value);
-	    });
-	    return res;
-	}
-
-	/** Проверяет наличие ключа */
-	public ContainsKey(key: string): boolean
-	{
-	    return this.items.hasOwnProperty(key);
-	}
-
-	public Count(): number
-	{
-	    return this.count;
-	}
-
-	public AddElement(element: KeyValuePair<T>)
-	{
-	    this.AddPair(element.Key, element.Value);
-	}
-
-	/** Добавляет или заменяет */
-	public AddPair(key: string, value: T)
-	{
-	    if (!this.items.hasOwnProperty(key))
-	        this.count++;
-
-	    this.items[key] = value;
-	}
-
-	public Remove(key: string): T
-	{
-	    let val = this.items[key];
-	    delete this.items[key];
-	    this.count--;
-	    return val;
-	}
-
+	/** Возвращает элемент по ключу */
 	public Item(key: string): T
 	{
-	    return this.items[key];
+		let res: T = undefined;
+		let ind = this._getindex(key);
+		if (ind > -1) res = this._values[ind];
+		return res;
 	}
 
-	/** массив ключей */
-	public Keys(): string[]
+
+	/** 
+	 * Добавляет или заменяет
+	 * 
+	 * `ignoreDuplicates` - заменять дублирующиеся элементы (если false, то будет ошибка)
+	*/
+	public AddPair(key: string, value: T, ignoreDuplicates = true)
 	{
-	    let keySet: string[] = [];
-
-	    for (let prop in this.items)
-	    {
-	        if (this.items.hasOwnProperty(prop))
-	        {
-	            keySet.push(prop);
-	        }
-	    }
-
-	    return keySet;
+		let index = this._getindex(key);
+		if (index > -1)
+		{
+			if (!ignoreDuplicates) throw "Элемент с таким ключом уже содержится в коллекции!";
+			this._values[index] = value;
+		}
+		else
+		{
+			this._keys.push(key);
+			this._values.push(value);	
+		}
 	}
 
-	/** массив значений */
-	public Values(): T[]
+
+	/** 
+	 * Добавляет или заменяет
+	 * 
+	 * `ignoreDuplicates` - заменять дублирующиеся элементы (если false, то будет ошибка)
+	*/
+	public AddElement(element: KeyValuePair<T>, ignoreDuplicates = false)
 	{
-	    let values: T[] = [];
-
-	    for (let prop in this.items)
-	    {
-	        if (this.items.hasOwnProperty(prop))
-	        {
-	            values.push(this.items[prop]);
-	        }
-	    }
-
-	    return values;
+		this.AddPair(element.Key, element.Value, ignoreDuplicates);
 	}
+
+
+	/** Удаляет элемент и возвращает его */
+	public Remove(key: string): T
+	{
+		let index = this._getindex(key);
+		let val: T;
+		if (index > -1)
+		{
+			this._keys.splice(index, 1);
+			val = this._values.splice(index, 1)[0];
+		}
+		return val;
+	}
+
 
 	/** Очищает всю коллекцию */
 	public Clear(): void
 	{
-	    this.items = {};
-	    this.count = 0;
+		this._keys = [];
+		this._values = [];
 	}
 
-	/** обход элементов */
+
+	/** Обход элементов */
 	public ForEach(callback: (key: string, val: T) => any)
 	{
-	    for (let key in this.items)
-	        callback(key, this.Item(key));
-	}
-
-	/** 
-	 * преобразует набор 
-	 * @param clearNull очищать ли по проверке (!!element)
-	*/
-	public Select(filter: (key: string, value: T) => any, clearNull = false): any[]
-	{
-	    let res = [];
-	    this.ForEach((key, value) =>
-	    {
-	        let item = filter(key, value);
-	        if (!clearNull || !!item) res.push(item);
-	    });
-	    return res;
-	}
-
-	/** Фильтрует набор */
-	protected Filter(filter: (key: string, value: T) => boolean): KeyedCollection<T>
-	{
-	    let res = new KeyedCollection<T>();
-	    this.ForEach((key, value) =>
-	    {
-	        if (filter(key, value)) res.AddPair(key, value);
-	    });
-	    return res;
-	}
-
-	/** Обновляет значение элемента по ключу */
-	public UpdateValue(key: string, transform: (value: T) => T): void
-	{
-	    this.AddPair(key, transform(this.Item(key)));
-	}
-
-	/** Добавляет диапазон значений */
-	public AddRange(range: KeyedCollection<T>): void
-	{
-	    range.ForEach((key, value) =>
-	    {
-	        this.AddPair(key, value);
-	    })
-	}
-
-	/** Преобразует коллекцию в новую */
-	public Map(func: (key: string, value: T) => KeyValuePair<any>): KeyedCollection<T>
-	{
-	    let res = new KeyedCollection<T>();
-	    this.ForEach((key, value) =>
-	    {
-	        res.AddElement(func(key, value));
-	    });
-	    return res;
-	}
-
-	/** Преобразует коллекцию в массив */
-	public ToArray(func: (element: KeyValuePair<T>) => any): any[]
-	{
-	    let ar: KeyValuePair<T>[] = [];
-	    this.ForEach((key, value) => { ar.push(new KeyValuePair(key, value)); });
-	    return ar.map(func);
-	}
-
-
-	/** Возвращает отсортированную массив пар */
-	public OrderBy(func: (x: KeyValuePair<T>) => number): KeyValuePair<T>[]
-	{
-	    let res: KeyValuePair<T>[] = [];
-	    let sortedAr: KeyValuePair<T>[] = this.ToArray(x => x);
-	    sortedAr = sortedAr.sort(x => func(x));
-	    sortedAr.forEach(element =>
-	    {
-	        res.push(element);
-	    });
-	    return res;
-	}
-
-}
-
-
-export class OrderedCollection<T>
-{
-	private items: KeyValuePair<T>[] = [];
-	private keys: string[] = [];
-
-	constructor()
-	{ }
-
-	private _addKey(key: string)
-	{
-	    this.keys.push(key);
-	}
-
-	protected _getIndex(key: string)
-	{
-	    return this.keys.indexOf(key);
-	}
-
-	public Get(key: string): T
-	{
-	    let ind = this._getIndex(key);
-	    if (ind < 0) throw `Ключ "${key}" отсутствует в коллекции`;
-	    return this.items[ind].Value;
-	}
-
-	public Add(key: string, item: T, ignoreDuplicates = false)
-	{
-		let ind = this._getIndex(key);
-		if (ind > -1)
-		{
-			if (!ignoreDuplicates) throw `Ключ ${key} уже присутствует в коллекции`;
-			this.items[ind] = new KeyValuePair(key, item);
-		}
-		else
-		{
-			this._addKey(key)
-			this.items.push(new KeyValuePair(key, item));	
+		for (let i = 0; i < this._keys.length; i++) {
+			callback(this._keys[i], this._values[i]);
 		}
 	}
 
-	public get Count(): number
-	{
-	    return this.items.length;
-	}
 
-	public Clear()
+	/** Преобразует коллекцию в объект */
+	public ToSimpleObject(): { [index: string]: T }
 	{
-	    this.items = [];
-	    this.keys = [];
-	}
-
-	public ForEach(callbackfn: (value: KeyValuePair<T>, index: number, array: KeyValuePair<T>[]) => void, thisArg?: any)
-	{
-		this.items.forEach(callbackfn, thisArg);
-	}
-
-	public Contains(key: string): boolean
-	{
-	    return this._getIndex(key) > -1;
+		let res: { [index: string]: T } = {};
+		this.ForEach((key, value) => { res[key] = value });
+		return res;
 	}
 
 
-	/** 
-	 * преобразует набор 
-	 * @param clearNull очищать ли по проверке (!!element)
-	*/
-	public Select<Q>(filter: (element: KeyValuePair<T>) => Q, clearNull = false): Q[]
+	/** Создаёт коллекцию из объекта */
+	public static FromObject<T>(obj: { [index: string]: T }): KeyedCollection<T>
 	{
-	    let res = [];
-	    this.ForEach(pair =>
-	    {
-	        let item = filter(pair);
-	        if (!clearNull || !!item) res.push(item);
-	    });
-	    return res;
-	}
-
-
-	/**
-	 * Создаёт коллекцию из массива `IPair`
-	 * 
-	 * Повторы игнорируются
-	*/
-	public static FromPairs<T>(pairs: IPair<T>[]): OrderedCollection<T>
-	{
-	    let res = new OrderedCollection<T>();
-	    pairs.forEach(pair =>
-	    {
-	        res.Add(pair.Key, pair.Value, true);
-	    });
-	    return res;
-	}
-
-	/** Возвращает новый отсортированный OrderedCollection */
-	public OrderBy(func: (item: KeyValuePair<T>) => string | number): OrderedCollection<T>
-	{
-		let res = new OrderedCollection<T>();
-		let sortingResult = this.Select(x => func(x)).orderBy();
-		sortingResult.IndexOrder.forEach(oldIndex =>
+		let res = new KeyedCollection<T>();
+		for (let key in obj)
 		{
-			res.Add(this.keys[oldIndex], this.items[oldIndex].Value);
+			if (obj.hasOwnProperty(key)) res.AddPair(key, obj[key]);
+		}
+		return res;
+	}
+
+
+	/** Создаёт коллекцию из массивов ключей и значений */
+	public static FromArrays<T>(keys: string[], values: T[]): KeyedCollection<T>
+	{
+		if (keys.length != values.length) throw "Количества ключей и значений отличаются";
+		let res = new KeyedCollection<T>();
+		res._keys = keys;
+		res._values = values;
+		return res;
+	}
+
+
+	/** Создаёт коллекцию из массива пар */
+	public static FromPairs<T>(pairs: IPair<T>[]): KeyedCollection<T>
+	{
+		let res = new KeyedCollection<T>();
+		pairs.forEach(pair =>
+		{
+			res.AddPair(pair.Key, pair.Value);
 		});
 		return res;
 	}
 
-	/** Обновляет старое значение `val` по ключу `key` */
-	public UpdateValue(key: string, func: (val: T) => T)
-	{
-	    let ind = this._getIndex(key);
-	    if (ind < 0) throw `Ключ "${key}" не найден в коллекции`;
-	    this.items[ind].Value = func(this.items[ind].Value);
-	}
 
-	public Remove(key: string): T
+	/** Проверка поэлементно */
+	public Find(filter: (key: string, val: T) => boolean): KeyValuePair<T>
 	{
-	    let ind = this._getIndex(key);
-	    if (ind < 0) return undefined;
-	    this.keys.remove(key);
-	    let val = this.items[ind].Value;
-	    this.items = this.items.splice(ind, 1);
-	    return val;
+		let res: KeyValuePair<T>;
+		this.ForEach((key, value) =>
+		{
+			if (filter(key, value)) return res = new KeyValuePair(key, value);
+		});
+		return res;
 	}
 
 
-	public Keys(): string[]
+	/** Проверяет наличие ключа */
+	public ContainsKey(key: string): boolean
 	{
-	    return this.keys;
+		return this._getindex(key) > -1;
+	}
+	
+
+	/** Фильтрует набор */
+	protected Filter(filter: (key: string, value: T) => boolean): KeyedCollection<T>
+	{
+		let res = new KeyedCollection<T>();
+		this.ForEach((key, value) =>
+		{
+			if (filter(key, value)) res.AddPair(key, value);
+		});
+		return res;
 	}
 
 
-	public ToArray(func: (T) => any): any[]
+	/** Обновляет значение элемента по ключу */
+	public UpdateValue(key: string, transform: (value: T) => T): void
 	{
-	    return this.items.map(x => func(x));
+		this.AddPair(key, transform(this.Item(key)), true);
 	}
+
+	
+	/** Добавляет диапазон значений */
+	public AddRange(range: KeyedCollection<T>): void
+	{
+		range.ForEach((key, value) =>
+		{
+			this.AddPair(key, value);
+		})
+	}
+
+
+	/** 
+	 * Преобразует коллекцию в массив
+	 * 
+	 * `clearNull` - очищать ли по проверке !!element
+	*/
+	public ToArray<Q>(filter: (key: string, value: T) => Q, clearNull = false): Q[]
+	{
+		let res: Q[] = [];
+		this.ForEach((key, value) =>
+		{
+			let item = filter(key, value);
+			if (!clearNull || !!item) res.push(item);
+		});
+		return res;
+	}
+
+
+	/** Преобразует коллекцию в новую */
+	public Select<Q>(func: (key: string, value: T) => KeyValuePair<Q>): KeyedCollection<Q>
+	{
+		let res = new KeyedCollection<Q>();
+		this.ForEach((key, value) =>
+		{
+			res.AddElement(func(key, value));
+		});
+		return res;
+	}
+
+
+	/** Возвращает отсортированный массив пар */
+	public OrderBy(func: (key: string, value: T) => number | string): KeyedCollection<T>
+	{
+		let res = new KeyedCollection<T>();
+		let sortedAr: KeyValuePair<T>[] = this.ToArray((key, value) => { return new KeyValuePair(key, value) });
+		sortedAr = sortedAr.orderByValue(x => func(x.Key, x.Value));
+		sortedAr.forEach(element =>
+		{
+			res.AddElement(element);
+		});
+		return res;
+	}
+
 }

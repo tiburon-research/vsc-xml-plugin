@@ -115,7 +115,7 @@ export class TibMethods extends KeyedCollection<TibMethod>
 
 	CompletionArray(): server.CompletionItem[]
 	{
-	    return this.Values().map(function (e)
+	    return this.Values.map(function (e)
 	    {
 	        return e.ToCompletionItem();
 	    }).filter(x => !!x);;
@@ -123,7 +123,7 @@ export class TibMethods extends KeyedCollection<TibMethod>
 
 	HoverArray(word: string): any[]
 	{
-	    return this.Values().map(function (e)
+	    return this.Values.map(function (e)
 	    {
 	        if (e.Name == word) return e.ToHoverItem();
 	    }).filter(x => !!x);
@@ -131,7 +131,7 @@ export class TibMethods extends KeyedCollection<TibMethod>
 
 	SignatureArray(word: string)
 	{
-	    return this.Values().map(function (e)
+	    return this.Values.map(function (e)
 	    {
 	        if (e.Name == word) return e.ToSignatureInformation();
 	    }).filter(x => !!x);
@@ -254,7 +254,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 	    else
 	        names.forEach(element =>
 	        {
-	            this.items[element] = [];
+	            this.Values[element] = [];
 	        });
 	}
 

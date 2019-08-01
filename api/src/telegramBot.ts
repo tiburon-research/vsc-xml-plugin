@@ -164,7 +164,7 @@ export class TelegramBot
 	    let res = this.Data.redirect + method;
 	    if (!args) args = new KeyedCollection<string>();
 	    args.AddPair("secret", this.Data.secret);
-	    let params = args.Select((key, value) => encodeURIComponent(key) + '=' + encodeURIComponent(value));
+	    let params = args.ToArray((key, value) => encodeURIComponent(key) + '=' + encodeURIComponent(value));
 	    res += "?" + params.join('&');
 	    return res;
 	}

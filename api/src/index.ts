@@ -5,7 +5,7 @@ import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as JQuery from './tibJQuery'
 import { CacheSet } from './cache'
-import { KeyValuePair, KeyedCollection, safeString, IPair, OrderedCollection, getFromClioboard, positiveMin, copyToClipboard, createDir, pathExists, uriFromName, unlockFile, showFile, fileIsLocked, lockFile, hideFile } from './customs'
+import { KeyValuePair, KeyedCollection, safeString, IPair, getFromClioboard, positiveMin, copyToClipboard, createDir, pathExists, uriFromName, unlockFile, showFile, fileIsLocked, lockFile, hideFile } from './customs'
 import { ISurveyData } from './surveyData'
 import { comparePositions, getCurrentLineText, getPreviousText, getWordAtPosition, getWordRangeAtPosition, isScriptLanguage, translatePosition, isValidDocumentPosition } from './vscodeDocument'
 import { CurrentTag, IProtocolTagFields, CurrentTagFields, TagInfo, TextRange, SimpleTag, ProtocolTagFields, InlineAttribute, ITextRange, CurrentTagGetFields } from './currentTag'
@@ -15,7 +15,7 @@ import { translationArray, PreDifinedConstants } from './constants';
 
 
 // проходной export, чтобы основное вызывать через import from 'tib-api'
-export { JQuery, Parse, Encoding, KeyValuePair, KeyedCollection, safeString, IPair, OrderedCollection, getFromClioboard, positiveMin, copyToClipboard, createDir, pathExists, uriFromName, ISurveyData, comparePositions, getCurrentLineText, getPreviousText, getWordAtPosition, getWordRangeAtPosition, isScriptLanguage, translatePosition, isValidDocumentPosition, CurrentTag, IProtocolTagFields, CurrentTagFields, TagInfo, TextRange, SimpleTag, ProtocolTagFields, InlineAttribute, ITextRange, CurrentTagGetFields, unlockFile, showFile, fileIsLocked, lockFile, hideFile };
+export { JQuery, Parse, Encoding, KeyValuePair, KeyedCollection, safeString, IPair, getFromClioboard, positiveMin, copyToClipboard, createDir, pathExists, uriFromName, ISurveyData, comparePositions, getCurrentLineText, getPreviousText, getWordAtPosition, getWordRangeAtPosition, isScriptLanguage, translatePosition, isValidDocumentPosition, CurrentTag, IProtocolTagFields, CurrentTagFields, TagInfo, TextRange, SimpleTag, ProtocolTagFields, InlineAttribute, ITextRange, CurrentTagGetFields, unlockFile, showFile, fileIsLocked, lockFile, hideFile };
 
 
 
@@ -99,7 +99,7 @@ const _translation = KeyedCollection.FromArrays(translationArray.rus, translatio
 /** Заменяет в строке все константы на значения */
 export function applyConstants(input: string): string
 {
-	let cons = PreDifinedConstants.toKeyedCollection(x => x).Map((key, value) => new KeyValuePair<string>('@' + key, value));
+	let cons = KeyedCollection.FromObject(PreDifinedConstants).Select((key, value) => new KeyValuePair<string>('@' + key, value));
 	return input.replaceValues(cons);
 }
 
@@ -220,9 +220,9 @@ declare global
 		/** Удаляет элемент из массива и возвращает этот элемент */
 		remove(element: T): T;
 		/** Преобразует массив в коллекцию */
-		toKeyedCollection(func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
-		/** Преjбразует массив в коллекцию T */
-		toKeyedCollection(func: (x: T) => Object): KeyedCollection<any>
+		toKeyedCollection<Q>(func: (x: T) => KeyValuePair<Q>): KeyedCollection<Q>
+		/** Преобразует массив в коллекцию T */
+		toKeyedCollection<Q>(func: (x: T) => Q): KeyedCollection<Q>
 		/** Асинхронный forEach */
 		forEachAsync<R>(func: (x: T, i?: number) => Promise<R>): Promise<R[]>
 		/** Сортировка массива с сохранением порядка индексов (аналогично `sort`) */
@@ -277,10 +277,9 @@ String.prototype.replaceRange = function (from: number, substr: string | number,
 String.prototype.replaceValues = function (elements: KeyedCollection<string>): string
 {
 	let res = this as string;
-	let sorted: KeyValuePair<string>[] = elements.OrderBy(x => x.Key.length);
-	sorted.forEach(x =>
+	elements.OrderBy((key, value) => key.length).ForEach((key, value) =>
 	{
-		res = res.replace(new RegExp(safeString(x.Key), "g"), x.Value);
+		res = res.replace(new RegExp(safeString(key), "g"), value);
 	});
 	return res;
 }
@@ -338,9 +337,9 @@ Array.prototype.remove = function <T>(this: T[], element: T): T
 	return res;
 }
 
-Array.prototype.toKeyedCollection = function <T>(this: T[], func: (x: T) => KeyValuePair<any>): KeyedCollection<any>
+Array.prototype.toKeyedCollection = function <Q, T>(this: T[], func: (x: T) => KeyValuePair<Q>): KeyedCollection<Q>
 {
-	let res = new KeyedCollection<any>();
+	let res = new KeyedCollection<Q>();
 	this.forEach(element =>
 	{
 		res.AddElement(func(element));
@@ -349,14 +348,14 @@ Array.prototype.toKeyedCollection = function <T>(this: T[], func: (x: T) => KeyV
 }
 
 
-Array.prototype.toKeyedCollection = function <T>(this: T[], func: (x: T) => Object): KeyedCollection<any>
+Array.prototype.toKeyedCollection = function <Q, T>(this: T[], func: (x: T) => Q): KeyedCollection<Q>
 {
-	let res = new KeyedCollection<any>();
+	let res = new KeyedCollection<Q>();
 	this.forEach(element =>
 	{
 		let obj = func(element);
 		let key = Object.keys(obj)[0];
-		res.AddPair(key, obj[key] as T);
+		res.AddPair(key, obj[key] as Q);
 	});
 	return res;
 }
