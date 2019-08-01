@@ -5,7 +5,7 @@ import * as fs from 'fs'
 import * as iconv from 'iconv-lite'
 import { machineIdSync } from "node-machine-id"
 import { _LockInfoFilePrefix, _pack } from 'tib-api/lib/constants'
-import { CurrentTag, Language, KeyedCollection, Parse, pathExists, IServerDocument, hideFile, showFile } from 'tib-api';
+import { CurrentTag, Language, KeyedCollection, Parse, pathExists, IServerDocument, hideFile, showFile, SimpleTag } from 'tib-api';
 
 
 
@@ -188,7 +188,13 @@ export class StatusBar
 	    {
 	        let lang = Language[tag.GetLaguage()];
 	        if (lang == "CSharp") lang = "C#";
-	        info = lang + ":\t" + tag.Parents.map(x => x.Name).concat([tag.Name]).join(" -> ");
+			info = lang + ":\t" + tag.Parents.map(x =>
+			{
+				let res = x.Name;
+				let id = x.getAttributes().Item("Id");
+				if (!!id) res += `['${id}']`;
+				return res;
+			}).concat([tag.Name]).join(" -> ");
 	        if (tag.Name == "Var")
 	        {
 	            let ind = tag.GetVarIndex();
@@ -435,13 +441,22 @@ export namespace ClientServerTransforms
 	    {
 	        if (!range) return null;
 	        return new vscode.Range(this.Position(range.start), this.Position(range.end));
-	    }
+		}
+		
+		function SimpleTagObject(tag: SimpleTag)
+		{
+			let res = new SimpleTag(null, null);
+			res.UpdateFrom(tag);
+			return res;
+		}
 
 	    export function Tag(tag: CurrentTag): CurrentTag
 	    {
-	        if (!tag) return null;
-	        let newTag = new CurrentTag(tag.Name, tag.Parents); // потому что методы с сервера не приходят
-	        Object.assign(newTag, tag);
+			if (!tag) return null;
+			let parents = tag.Parents.map(t => SimpleTagObject(t));
+			let newTag = new CurrentTag(tag.Name, parents); // потому что методы с сервера не приходят
+			delete tag.Parents; // оставьте родителей в покое
+			Object.assign(newTag, tag);
 	        return newTag;
 	    }
 	}

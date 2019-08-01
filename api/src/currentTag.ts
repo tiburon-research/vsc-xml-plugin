@@ -75,6 +75,7 @@ export class SimpleTag
 {
 	constructor(document: server.TextDocument, range: server.Range)
 	{
+		if (!document || !range) return;
 	    let raw = document.getText(range);
 	    let startPosition = translatePosition(document, range.start, raw.indexOf("<"));
 	    this.Raw = raw;
@@ -110,6 +111,15 @@ export class SimpleTag
 	public isClosed(): boolean
 	{
 	    return !!this.Raw.trim().match(Constants.RegExpPatterns.OpenTagFull);
+	}
+
+	public UpdateFrom(data: SimpleTag): void
+	{
+		for (const key in data) {
+			if (data.hasOwnProperty(key)) {
+				this[key] = data[key];
+			}
+		}
 	}
 
 	public readonly Name: string;
