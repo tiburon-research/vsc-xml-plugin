@@ -107,7 +107,7 @@ export function encodeElements(text: string, elem: RegExp, delimiter: string): E
 	    {
 	        let i = shortHash(reg.Result[0]);
 	        result = result.replaceRange(reg.Index, reg.Result[0], delimiter + i + delimiter);
-	        collection.Add(i, reg.Result[0]);
+	        collection.AddPair(i, reg.Result[0]);
 	        reg = result.find(elem);
 	    }
 
