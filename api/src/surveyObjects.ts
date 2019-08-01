@@ -103,7 +103,7 @@ export class SurveyElement
 	/** задаёт значение атрибута (или создаёт новый) */
 	public SetAttr(name: string, value: string): void
 	{
-	    this.Attributes.AddPair(name, new InlineAttribute(name, value));
+	    this.Attributes.AddPair(name, new InlineAttribute(name, value), false);
 	}
 
 	/** обновляет значение атрибута */
@@ -171,7 +171,7 @@ export class SurveyElement
 	    let value = typeof child == "string" ? new SurveyElement(child) : child;
 
 	    if (!this.Children.ContainsKey(name))
-	        this.Children.AddPair(name, [value], false);
+	        this.Children.AddPair(name, [value]);
 	    else this.Children.UpdateValue(name, (val) => { return val.concat([value]) });
 	}
 

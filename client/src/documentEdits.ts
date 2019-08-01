@@ -282,14 +282,14 @@ export function createElements(text: string, type: SurveyElementType): XMLElemen
 	{
 		elements.forEach(element =>
 		{
-			itemItems.AddPair(element.Id, new SurveyListItem(element.Id, element.Text));
+			itemItems.AddPair(element.Id, new SurveyListItem(element.Id, element.Text), false);
 		});
 	}
 	else
 	{
 		elements.forEach(element =>
 		{
-			answerItems.AddPair(element.Id, new SurveyAnswer(element.Id, element.Text));
+			answerItems.AddPair(element.Id, new SurveyAnswer(element.Id, element.Text), false);
 		});
 	}
 
@@ -299,9 +299,8 @@ export function createElements(text: string, type: SurveyElementType): XMLElemen
 			{
 				let parsedId = !!questionResult && !!questionResult.Id ? translate(questionResult.Id) : 'Q1';
 				let id = "${1:" + parsedId + "}";
-				let q = new SurveyQuestion(parsedId, "${2|" + QuestionTypes.join(',') + "|}");
+				let q = new SurveyQuestion(id, "${2|" + QuestionTypes.join(',') + "|}");
 				q.Answers = answerItems;
-				q.SetAttr("Id", id);
 				q.Header = !!questionResult ? questionResult.Text.trim() : '';
 				let p = new SurveyPage(id);
 				p.AddChild(q);
@@ -317,7 +316,6 @@ export function createElements(text: string, type: SurveyElementType): XMLElemen
 
 		case SurveyElementType.ListItem:
 			{
-
 				let q = new SurveyList("$1");
 				q.Items = itemItems;
 				res.Fill(q.ToXML());
