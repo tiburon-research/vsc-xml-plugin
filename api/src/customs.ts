@@ -180,13 +180,12 @@ export class KeyedCollection<T>
 	}
 
 
-
 	/** 
 	 * Добавляет или заменяет
 	 * 
 	 * `ignoreDuplicates` - заменять дублирующиеся элементы (если false, то будет ошибка)
 	*/
-	public AddPair(key: string, value: T, ignoreDuplicates = true)
+	public Add(key: string, value: T, ignoreDuplicates = true)
 	{
 		let index = this._getindex(key);
 		if (index > -1)
@@ -206,7 +205,7 @@ export class KeyedCollection<T>
 	*/
 	public AddElement(element: KeyValuePair<T>, ignoreDuplicates = false)
 	{
-		this.AddPair(element.Key, element.Value, ignoreDuplicates);
+		this.Add(element.Key, element.Value, ignoreDuplicates);
 	}
 
 
@@ -256,7 +255,7 @@ export class KeyedCollection<T>
 		let res = new KeyedCollection<T>();
 		for (let key in obj)
 		{
-			if (obj.hasOwnProperty(key)) res.AddPair(key, obj[key]);
+			if (obj.hasOwnProperty(key)) res.Add(key, obj[key]);
 		}
 		return res;
 	}
@@ -279,7 +278,7 @@ export class KeyedCollection<T>
 		let res = new KeyedCollection<T>();
 		pairs.forEach(pair =>
 		{
-			res.AddPair(pair.Key, pair.Value);
+			res.Add(pair.Key, pair.Value);
 		});
 		return res;
 	}
@@ -310,7 +309,7 @@ export class KeyedCollection<T>
 		let res = new KeyedCollection<T>();
 		this.ForEach((key, value) =>
 		{
-			if (filter(key, value)) res.AddPair(key, value);
+			if (filter(key, value)) res.Add(key, value);
 		});
 		return res;
 	}
@@ -319,7 +318,7 @@ export class KeyedCollection<T>
 	/** Обновляет значение элемента по ключу */
 	public UpdateValue(key: string, transform: (value: T) => T): void
 	{
-		this.AddPair(key, transform(this.Item(key)), true);
+		this.Add(key, transform(this.Item(key)), true);
 	}
 
 	
@@ -328,7 +327,7 @@ export class KeyedCollection<T>
 	{
 		range.ForEach((key, value) =>
 		{
-			this.AddPair(key, value);
+			this.Add(key, value);
 		})
 	}
 
