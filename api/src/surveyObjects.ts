@@ -80,9 +80,9 @@ export class SurveyElement
 	public GetAttributes(): string
 	{
 	    let res = "";
-	    this.Attributes.OrderBy(x => x.Key == "Id" ? 0 : 1).forEach(pair =>
+	    this.Attributes.OrderBy((key, value) => key == "Id" ? 0 : 1).ForEach((key, value) =>
 	    {
-	        res += " " + pair.Value.Text;
+	        res += " " + value.Text;
 	    })
 	    return res;
 	}

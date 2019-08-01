@@ -40,8 +40,8 @@ export const RegExpPatterns = {
 	RestAttributes: /^(\s*(\w+)=(("[^"]*")|('[^']*'))\s*)+/,
 	XMLIterators:
 	{
-	    Singele: /(@)((ID)|(Text)|(Pure)|(Itera))((\()(-\d+)(\)))?/,
-	    Var: /(@)(Var)((\()(-\d+)(\)))?((\()(([@0-9a-zA-Z]+(\(-\d+\))?)|((@)(Var)((\()(-\d+)(\)))?(\()([@0-9a-zA-Z]+(\(-\d+\))?)(\))))(\)))/
+		Singele: /(@)((ID)|(Text)|(Pure)|(Itera))((\()(-\d+)(\)))?/,
+		Var: /(@)(Var)((\()(-\d+)(\)))?((\()(([@0-9a-zA-Z]+(\(-\d+\))?)|((@)(Var)((\()(-\d+)(\)))?(\()([@0-9a-zA-Z]+(\(-\d+\))?)(\))))(\)))/
 	}
 }
 
@@ -70,11 +70,10 @@ export const XMLEmbeddings = [
 ];
 
 
-export const PreDifinedConstants =
-	[
-	    { Scripts: "\\\\tib-srv-debug.corp.tiburon-research.ru\\scripts" },
-	    { StoreUrl: "S:" }
-	];
+export const PreDifinedConstants = {
+	Scripts: "\\\\tib-srv-debug.corp.tiburon-research.ru\\scripts",
+	StoreUrl: "S:"
+};
 
 
 export const LogPath = "G:\\Разное\\TiburonXMLHelper\\Logs";

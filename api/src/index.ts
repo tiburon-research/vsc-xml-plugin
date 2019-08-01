@@ -99,7 +99,7 @@ const _translation = KeyedCollection.FromArrays(translationArray.rus, translatio
 /** Заменяет в строке все константы на значения */
 export function applyConstants(input: string): string
 {
-	let cons = PreDifinedConstants.toKeyedCollection(x => x).Select((key, value) => new KeyValuePair<string>('@' + key, value));
+	let cons = KeyedCollection.FromObject(PreDifinedConstants).Select((key, value) => new KeyValuePair<string>('@' + key, value));
 	return input.replaceValues(cons);
 }
 
@@ -277,10 +277,9 @@ String.prototype.replaceRange = function (from: number, substr: string | number,
 String.prototype.replaceValues = function (elements: KeyedCollection<string>): string
 {
 	let res = this as string;
-	let sorted: KeyValuePair<string>[] = elements.OrderBy(x => x.Key.length);
-	sorted.forEach(x =>
+	elements.OrderBy((key, value) => key.length).ForEach((key, value) =>
 	{
-		res = res.replace(new RegExp(safeString(x.Key), "g"), x.Value);
+		res = res.replace(new RegExp(safeString(key), "g"), value);
 	});
 	return res;
 }

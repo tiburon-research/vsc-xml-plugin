@@ -148,7 +148,6 @@ export class KeyValuePair<T> implements IPair<T>
 
 
 // TODO: 
-// - добавить индексацию
 // - переделать все callback на key + value
 // - выкинуть OrderedCollection
 export class KeyedCollection<T>
