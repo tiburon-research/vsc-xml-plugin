@@ -5,7 +5,7 @@ import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as JQuery from './tibJQuery'
 import { CacheSet } from './cache'
-import { KeyValuePair, KeyedCollection, safeString, IPair, OrderedCollection, getFromClioboard, positiveMin, copyToClipboard, createDir, pathExists, uriFromName, unlockFile, showFile, fileIsLocked, lockFile, hideFile } from './customs'
+import { KeyValuePair, KeyedCollection, safeString, IPair, getFromClioboard, positiveMin, copyToClipboard, createDir, pathExists, uriFromName, unlockFile, showFile, fileIsLocked, lockFile, hideFile } from './customs'
 import { ISurveyData } from './surveyData'
 import { comparePositions, getCurrentLineText, getPreviousText, getWordAtPosition, getWordRangeAtPosition, isScriptLanguage, translatePosition, isValidDocumentPosition } from './vscodeDocument'
 import { CurrentTag, IProtocolTagFields, CurrentTagFields, TagInfo, TextRange, SimpleTag, ProtocolTagFields, InlineAttribute, ITextRange, CurrentTagGetFields } from './currentTag'
@@ -15,7 +15,7 @@ import { translationArray, PreDifinedConstants } from './constants';
 
 
 // проходной export, чтобы основное вызывать через import from 'tib-api'
-export { JQuery, Parse, Encoding, KeyValuePair, KeyedCollection, safeString, IPair, OrderedCollection, getFromClioboard, positiveMin, copyToClipboard, createDir, pathExists, uriFromName, ISurveyData, comparePositions, getCurrentLineText, getPreviousText, getWordAtPosition, getWordRangeAtPosition, isScriptLanguage, translatePosition, isValidDocumentPosition, CurrentTag, IProtocolTagFields, CurrentTagFields, TagInfo, TextRange, SimpleTag, ProtocolTagFields, InlineAttribute, ITextRange, CurrentTagGetFields, unlockFile, showFile, fileIsLocked, lockFile, hideFile };
+export { JQuery, Parse, Encoding, KeyValuePair, KeyedCollection, safeString, IPair, getFromClioboard, positiveMin, copyToClipboard, createDir, pathExists, uriFromName, ISurveyData, comparePositions, getCurrentLineText, getPreviousText, getWordAtPosition, getWordRangeAtPosition, isScriptLanguage, translatePosition, isValidDocumentPosition, CurrentTag, IProtocolTagFields, CurrentTagFields, TagInfo, TextRange, SimpleTag, ProtocolTagFields, InlineAttribute, ITextRange, CurrentTagGetFields, unlockFile, showFile, fileIsLocked, lockFile, hideFile };
 
 
 

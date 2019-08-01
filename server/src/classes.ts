@@ -443,7 +443,7 @@ export class TibAutoCompletes
 	            let attrs = textAfter.match(RegExpPatterns.RestAttributes);
 	            let nameOnly = !!textAfter.match(/^=["']/);
 	            let nexAttrs: string[] = [];
-	            if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys();
+	            if (!!attrs) nexAttrs = CurrentTag.GetAttributesArray(attrs[0]).Keys;
 	            let parent = this;
 	            AutoCompleteArray.Attributes[this.tag.Id].filter((x: { Name: string; }) => nexAttrs.indexOf(x.Name) + existAttrs.indexOf(x.Name) < -1).forEach((element: Object) =>
 	            {
