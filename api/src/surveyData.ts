@@ -110,7 +110,7 @@ export class TibMethods extends KeyedCollection<TibMethod>
 
 	public Add(item: TibMethod)
 	{
-	    if (!this.ContainsKey(item.Name)) this.Add(item.Name, item);
+	    if (!this.ContainsKey(item.Name)) this.AddPair(item.Name, item);
 	}
 
 	CompletionArray(): server.CompletionItem[]
@@ -205,7 +205,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 	Add(item: SurveyNode)
 	{
 	    if (!this.ContainsKey(item.Type))
-	        this.Add(item.Type, [item]);
+	        this.AddPair(item.Type, [item]);
 	    else if (this.Item(item.Type).findIndex(x => x.Id == item.Id)) this.Item(item.Type).push(item);
 	}
 
@@ -216,7 +216,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 	    range.ForEach((key, value) =>
 	    {
 	        if (!this.ContainsKey(key))
-	            this.Add(key, value);
+	            this.AddPair(key, value);
 	        else this.UpdateValue(key, x => x.concat(value));
 	    })
 	}
@@ -282,7 +282,7 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 	    this.ForEach((key, value) =>
 	    {
 	        let nodes = value.filter(x => filter(x));
-	        if (nodes.length) res.Add(key, nodes);
+	        if (nodes.length) res.AddPair(key, nodes);
 	    })
 	    return res;
 	}

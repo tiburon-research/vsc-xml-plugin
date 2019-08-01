@@ -355,7 +355,7 @@ Array.prototype.toKeyedCollection = function <Q, T>(this: T[], func: (x: T) => Q
 	{
 		let obj = func(element);
 		let key = Object.keys(obj)[0];
-		res.Add(key, obj[key] as Q);
+		res.AddPair(key, obj[key] as Q);
 	});
 	return res;
 }

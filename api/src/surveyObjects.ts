@@ -103,7 +103,7 @@ export class SurveyElement
 	/** задаёт значение атрибута (или создаёт новый) */
 	public SetAttr(name: string, value: string): void
 	{
-	    this.Attributes.Add(name, new InlineAttribute(name, value));
+	    this.Attributes.AddPair(name, new InlineAttribute(name, value));
 	}
 
 	/** обновляет значение атрибута */
@@ -171,7 +171,7 @@ export class SurveyElement
 	    let value = typeof child == "string" ? new SurveyElement(child) : child;
 
 	    if (!this.Children.ContainsKey(name))
-	        this.Children.Add(name, [value], false);
+	        this.Children.AddPair(name, [value], false);
 	    else this.Children.UpdateValue(name, (val) => { return val.concat([value]) });
 	}
 
@@ -330,7 +330,7 @@ export class SurveyList extends SurveyElement
 	    if (!!item.Text) res.Text = item.Text;
 	    // предупреждаем о перезаписи
 	    if (this.Items.ContainsKey(id)) console.warn("Элемент '" + id + "' уже существует в листе '" + this.AttrValue("Id") + "', он будет заменён.");
-	    this.Items.Add(id, res);
+	    this.Items.AddPair(id, res);
 	    return id;
 	}
 
@@ -410,7 +410,7 @@ export class SurveyQuestion extends SurveyElement
 	    if (!!answer.Text) res.Text = answer.Text;
 	    // предупреждаем о перезаписи
 	    if (this.Answers.ContainsKey(id)) console.warn("Ответ '" + id + "' уже существует в вопросе '" + this.AttrValue("Id") + "', он будет заменён.");
-	    this.Answers.Add(id, res);
+	    this.Answers.AddPair(id, res);
 	    return id;
 	}
 

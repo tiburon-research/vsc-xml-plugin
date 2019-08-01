@@ -560,7 +560,7 @@ export function getDuplicatedElementsIds(document: server.TextDocument, prepeare
 	                let attr = $(e).attr('Id');
 	                if (!!attr) ar.push(attr.toLowerCase());
 	            });
-	            ids.Add(element, ar);
+	            ids.AddPair(element, ar);
 	        });
 
 	        ids.ForEach((key, value) =>
