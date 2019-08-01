@@ -325,7 +325,7 @@ export class CurrentTag
 	        mt.forEach(element =>
 	        {
 	            let parse = element.match(reg);
-	            if (parse) res.AddPair(parse[1], parse[2].replace(/^('|")(.*)('|")$/, "$2"));
+	            if (parse) res.Add(parse[1], parse[2].replace(/^('|")(.*)('|")$/, "$2"));
 	        });
 	    }
 	    return res;

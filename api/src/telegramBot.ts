@@ -98,8 +98,8 @@ export class TelegramBot
 	    if (this.active)
 	    {
 	        let params = new KeyedCollection<string>();
-	        params.AddPair('to', user);
-	        params.AddPair('error', text);
+	        params.Add('to', user);
+	        params.Add('error', text);
 	        this.request('log', params).catch(res =>
 	        {
 	            throw "Ошибка при отправке сообщения";
@@ -163,7 +163,7 @@ export class TelegramBot
 	{
 	    let res = this.Data.redirect + method;
 	    if (!args) args = new KeyedCollection<string>();
-	    args.AddPair("secret", this.Data.secret);
+	    args.Add("secret", this.Data.secret);
 	    let params = args.ToArray((key, value) => encodeURIComponent(key) + '=' + encodeURIComponent(value));
 	    res += "?" + params.join('&');
 	    return res;

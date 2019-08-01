@@ -177,7 +177,7 @@ export class ServerDocumentStore
 	public add(data: IServerDocument): server.TextDocument
 	{
 	    let buffer = new DocumentBuffer(data);
-	    this._docs.AddPair(data.uri, buffer);
+	    this._docs.Add(data.uri, buffer);
 	    return buffer.document;
 	}
 
@@ -229,7 +229,7 @@ class ElementExtractor
 	        {
 	            if (!!parent[element[1]] && !res.ContainsKey(element[1]))
 	            {
-	                res.AddPair(element[1], parent[element[1]].call(this)); // почему-то при вызове GeAll* this'ом считается _ElementFunctions
+	                res.Add(element[1], parent[element[1]].call(this)); // почему-то при вызове GeAll* this'ом считается _ElementFunctions
 	            }
 	        });
 	        let i = 1;
