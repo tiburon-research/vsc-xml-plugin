@@ -193,8 +193,11 @@ export class KeyedCollection<T>
 			if (!ignoreDuplicates) throw "Элемент с таким ключом уже содержится в коллекции!";
 			this._values[index] = value;
 		}
-		this._keys.push(key);
-		this._values.push(value);
+		else
+		{
+			this._keys.push(key);
+			this._values.push(value);	
+		}
 	}
 
 
