@@ -462,9 +462,8 @@
 
 
 		{
-			"begin":"(?i)((\\[\\/?)((?:a|abbr|acronym|address|applet|area|article|aside|audio|b|base|basefont|bdi|bdo|bgsound|big|blink|blockquote|body|br|button|canvas|caption|center|cite|code|col|colgroup|command|content|data|datalist|dd|del|details|dfn|dialog|dir|div|dl|dt|element|em|embed|fieldset|figcaption|figure|font|footer|form|frame|frameset|h[1-6]|head|header|hgroup|hr|html|i|iframe|image|img|input|ins|isindex|kbd|keygen|label|legend|li|link|listing|main|map|mark|marquee|math|menu|menuitem|meta|meter|multicol|nav|nextid|nobr|noembed|noframes|noscript|object|ol|optgroup|option|output|p|param|picture|plaintext|pre|progress|q|rb|rp|rt|rtc|ruby|s|samp|script|section|select|shadow|slot|small|source|spacer|span|strike|strong|style|sub|summary|sup|table|tbody|td|template|textarea|tfoot|th|thead|time|title|tr|track|tt|u|ul|var|video|wbr|xmp#SVG|altGlyph|altGlyphDef|altGlyphItem|animate|animateColor|animateMotion|animateTransform|circle|clipPath|color-profile|cursor|defs|desc|discard|ellipse|feBlend|feColorMatrix|feComponentTransfer|feComposite|feConvolveMatrix|feDiffuseLighting|feDisplacementMap|feDistantLight|feDropShadow|feFlood|feFuncA|feFuncB|feFuncG|feFuncR|feGaussianBlur|feImage|feMerge|feMergeNode|feMorphology|feOffset|fePointLight|feSpecularLighting|feSpotLight|feTile|feTurbulence|filter|font-face|font-face-format|font-face-name|font-face-src|font-face-uri|foreignObject|g|glyph|glyphRef|hatch|hatchpath|hkern|line|linearGradient|marker|mask|mesh|meshgradient|meshpatch|meshrow|metadata|missing-glyph|mpath|path|pattern|polygon|polyline|radialGradient|rect|set|solidcolor|stop|svg|switch|symbol|text|textPath|tref|tspan|use|view|vkern#MathML|annotation|annotation-xml|maction|maligngroup|malignmark|math|menclose|merror|mfenced|mfrac|mglyph|mi|mlabeledtr|mlongdiv|mmultiscripts|mn|mo|mover|mpadded|mphantom|mroot|mrow|ms|mscarries|mscarry|msgroup|msline|mspace|msqrt|msrow|mstack|mstyle|msub|msubsup|msup|mtable|mtd|mtext|mtr|munder|munderover|semantics)|(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr)))(\\s[\\S\\s]*?[^#])?(\/?\\])",
-			"end":"",
-			"beginCaptures": {
+			"match":"(?i)((\\[\\/?)((?:a|abbr|acronym|address|applet|area|article|aside|audio|b|base|basefont|bdi|bdo|bgsound|big|blink|blockquote|body|br|button|canvas|caption|center|cite|code|col|colgroup|command|content|data|datalist|dd|del|details|dfn|dialog|dir|div|dl|dt|element|em|embed|fieldset|figcaption|figure|font|footer|form|frame|frameset|h[1-6]|head|header|hgroup|hr|html|i|iframe|image|img|input|ins|isindex|kbd|keygen|label|legend|li|link|listing|main|map|mark|marquee|math|menu|menuitem|meta|meter|multicol|nav|nextid|nobr|noembed|noframes|noscript|object|ol|optgroup|option|output|p|param|picture|plaintext|pre|progress|q|rb|rp|rt|rtc|ruby|s|samp|script|section|select|shadow|slot|small|source|spacer|span|strike|strong|style|sub|summary|sup|table|tbody|td|template|textarea|tfoot|th|thead|time|title|tr|track|tt|u|ul|var|video|wbr|xmp#SVG|altGlyph|altGlyphDef|altGlyphItem|animate|animateColor|animateMotion|animateTransform|circle|clipPath|color-profile|cursor|defs|desc|discard|ellipse|feBlend|feColorMatrix|feComponentTransfer|feComposite|feConvolveMatrix|feDiffuseLighting|feDisplacementMap|feDistantLight|feDropShadow|feFlood|feFuncA|feFuncB|feFuncG|feFuncR|feGaussianBlur|feImage|feMerge|feMergeNode|feMorphology|feOffset|fePointLight|feSpecularLighting|feSpotLight|feTile|feTurbulence|filter|font-face|font-face-format|font-face-name|font-face-src|font-face-uri|foreignObject|g|glyph|glyphRef|hatch|hatchpath|hkern|line|linearGradient|marker|mask|mesh|meshgradient|meshpatch|meshrow|metadata|missing-glyph|mpath|path|pattern|polygon|polyline|radialGradient|rect|set|solidcolor|stop|svg|switch|symbol|text|textPath|tref|tspan|use|view|vkern#MathML|annotation|annotation-xml|maction|maligngroup|malignmark|math|menclose|merror|mfenced|mfrac|mglyph|mi|mlabeledtr|mlongdiv|mmultiscripts|mn|mo|mover|mpadded|mphantom|mroot|mrow|ms|mscarries|mscarry|msgroup|msline|mspace|msqrt|msrow|mstack|mstyle|msub|msubsup|msup|mtable|mtd|mtext|mtr|munder|munderover|semantics)|(?:area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr)))(\\s[\\S\\s]*?[^#])?(\/?\\])",
+			"captures": {
 				"2": {
 					"name": "punctuation.definition.tag.html"
 				},
@@ -787,9 +786,8 @@
 					]
 				},
 				{
-					"begin": "(\\$)((?!(repeat|place)\\()([A-Za-z0-9_]+\\())(([^\\(\\)]+)|(([^\\(\\)]*\\([^\\(\\)]*\\)[^\\(\\)]*)*))?(\\))",
-					"end": "",
-					"beginCaptures":
+					"match": "(\\$)((?!(repeat|place)\\()([A-Za-z0-9_]+\\())(([^\\(\\)]+)|(([^\\(\\)]*\\([^\\(\\)]*\\)[^\\(\\)]*)*))?(\\))",
+					"captures":
 					{
 						"1":
 						{
@@ -858,10 +856,9 @@
 		{
 			"patterns": [
 				{
-					"begin": "(\\$)(repeat)\\(([@\\)\\(\\w\\[\\]]+)\\)((\\{)(.+?)((\\[)([^\\]]+)(\\]))?(\\}))",
-					"end": "",
+					"match": "(\\$)(repeat)\\(([@\\)\\(\\w\\[\\]]+)\\)((\\{)(.+?)((\\[)([^\\]]+)(\\]))?(\\}))",
 					"name": "tib.inline.special",
-					"beginCaptures": {
+					"captures": {
 						"1": {
 							"name": "tib.inline.special.prefix"
 						},
@@ -905,10 +902,9 @@
 					}
 				},
 				{
-					"begin": "(\\$)(place)\\(([@\\)\\(\\w\\[\\]]+?)\\)",
-					"end": "",
+					"match": "(\\$)(place)\\(([@\\)\\(\\w\\[\\]]+?)\\)",
 					"name": "tib.inline.special",
-					"beginCaptures": {
+					"captures": {
 						"1": {
 							"name": "tib.inline.special.prefix"
 						},
@@ -926,10 +922,9 @@
 					}
 				},
 				{
-					"begin": "(\\$)(today|all|age|sex)",
-					"end": "",
+					"match": "(\\$)(today|all|age|sex)",
 					"name": "tib.inline.special",
-					"beginCaptures": {
+					"captures": {
 						"1": {
 							"name": "tib.inline.special.prefix"
 						},
@@ -945,10 +940,9 @@
 		{
 			"patterns": [
 				{
-					"begin": "(@)((?!(ID|Text|Pure|Itera|Var|AnswerExists|AnswerExistsAny)\\b)[a-zA-Z]+)",
-					"end": "",
+					"match": "(@)((?!(ID|Text|Pure|Itera|Var|AnswerExists|AnswerExistsAny)\\b)[a-zA-Z]+)",
 					"name": "tib.constant",
-					"beginCaptures": {
+					"captures": {
 						"1":
 						{
 							"name": "tib.constant.prefix"
@@ -966,9 +960,8 @@
 		{
 			"patterns": [
 				{
-					"begin": "(@)((ID)|(Text)|(Pure)|(Itera))((\\()(-\\d+)(\\)))?",
-					"end": "",
-					"beginCaptures": {
+					"match": "(@)((ID)|(Text)|(Pure)|(Itera))((\\()(-\\d+)(\\)))?",
+					"captures": {
 						"1":
 						{
 							"name": "tib.iterator.prefix"
@@ -998,9 +991,8 @@
 		{
 			"patterns": [
 				{
-					"begin": "(@)(Var)((\\()(-\\d+)(\\)))?((\\()(([@0-9a-zA-Z]+(\\(-\\d+\\))?)|((@)(Var)((\\()(-\\d+)(\\)))?(\\()([@0-9a-zA-Z]+(\\(-\\d+\\))?)(\\))))(\\)))",
-					"end": "",
-					"beginCaptures": {
+					"match": "(@)(Var)((\\()(-\\d+)(\\)))?((\\()(([@0-9a-zA-Z]+(\\(-\\d+\\))?)|((@)(Var)((\\()(-\\d+)(\\)))?(\\()([@0-9a-zA-Z]+(\\(-\\d+\\))?)(\\))))(\\)))",
+					"captures": {
 						"1":
 						{
 							"name": "tib.iterator.prefix"
@@ -1111,9 +1103,8 @@
 					"name": "tib.cdata"
 				},
 				{
-					"begin": "(]])(>)",
-					"end": "",
-					"beginCaptures":
+					"match": "(]])(>)",
+					"captures":
 					{
 						"1":
 						{
@@ -1653,9 +1644,8 @@
 		"comments": {
 			"patterns": [
 				{
-					"begin": "(<!--)(#(end)?block)([\\s\\S]*)(-->)",
-					"end": "",
-					"beginCaptures": {
+					"match": "(<!--)(#(end)?block)([\\s\\S]*)(-->)",
+					"captures": {
 						"1":
 						{
 							"name": "punctuation.definition.comment.block.bracket.tib"
