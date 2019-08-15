@@ -519,3 +519,38 @@ export class CustomQuickPick
 		});
 	}
 }
+
+
+export interface CustomInputBoxOptions
+{
+	ignoreFocusOut?: boolean;
+	placeholder?: string;
+	step?: number;
+	title?: string;
+	totalSteps?: number;
+	value?: string;
+}
+
+export class CustomInputBox
+{
+	private inputBox: vscode.InputBox;
+
+	constructor(options: CustomInputBoxOptions)
+	{
+		this.inputBox = vscode.window.createInputBox();
+		Object.assign(this.inputBox, options);
+	}
+
+	public execute(): Promise<string>
+	{
+		return new Promise<string>((resolve, reject) =>
+		{
+			this.inputBox.show();
+			this.inputBox.onDidAccept(() =>
+			{
+				resolve(this.inputBox.value);
+				this.inputBox.hide();
+			})
+		});
+	}
+}

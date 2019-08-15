@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 
 import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
-import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick } from "./classes";
+import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
@@ -15,7 +15,7 @@ import * as client from 'vscode-languageclient';
 import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors } from './errors';
-import { readGeoFile, GeoFileLineData, GeoConstants, createGeolists, createGeoPage } from './geo';
+import { readGeoFile, GeoFileLineData, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
 
 
 export { CSFormatter, _settings as Settings };
@@ -1783,7 +1783,7 @@ async function chooseGeo()
 	let geoData = await readGeoFile();
 	let step = 0;
 	let ignoreFocusOut = true;
-	let totalSteps = 4;
+	let totalSteps = 5;
 
 	let nextStep = function (propertyName: string, placeHolder: string, selectedItems?: string[]): Promise<string[]>
 	{
@@ -1808,12 +1808,14 @@ async function chooseGeo()
 		});
 	}
 
+	// спрашиваем географию
 	await nextStep("CountryName", "Страна:", ["Россия"]);
 	await nextStep("DistrictName", "Федеральный округ:", ["Центральный", "Северо-Западный", "Сибирский", "Уральский", "Приволжский", "Южный", "Дальневосточный"]);
 	await nextStep("StrataName", "Население:", ["1млн +", "500тыс.-1 млн.", "250тыс.-500тыс."]);
 
+	// спрашиваем разбивку
 	let grouping = [{ label: GeoConstants.GroupBy.District }, { label: GeoConstants.GroupBy.Subject }];
-	let options: CustomQuickPickOptions = {
+	let qpOptions: CustomQuickPickOptions = {
 		canSelectMany: true,
 		ignoreFocusOut,
 		totalSteps,
@@ -1822,10 +1824,34 @@ async function chooseGeo()
 		items: grouping,
 		selectedItems: [grouping[0]]
 	}
-	let q = new CustomQuickPick(options);
+	let q = new CustomQuickPick(qpOptions);
 	let groupBy = await q.execute();
+
+	// спрашиваем QuestionIds
+	let qIds: GeoClusters = GeoConstants.QuestionNames;
+	totalSteps += groupBy.length;
+
+	async function getNextQuestionId(questionName: string, placeholder: string, title: string): Promise<void>
+	{
+		let ib = new CustomInputBox({
+			ignoreFocusOut,
+			placeholder,
+			step: ++step,
+			title,
+			totalSteps,
+			value: placeholder
+		});
+		qIds[questionName] = await ib.execute();
+	}
+	
+	if (groupBy.contains(GeoConstants.GroupBy.District)) await getNextQuestionId("District", GeoConstants.QuestionNames.District, GeoConstants.GroupBy.District);
+	if (groupBy.contains(GeoConstants.GroupBy.Subject)) await getNextQuestionId("Subject", GeoConstants.QuestionNames.Subject, GeoConstants.GroupBy.Subject);
+	await getNextQuestionId("City", GeoConstants.QuestionNames.City, "Город");
+
+
+	// генерация XML
 	let lists = await createGeolists(geoData, groupBy);
-	let page = await createGeoPage(groupBy);
+	let page = await createGeoPage(groupBy, qIds);
 	return lists + page;
 }
 
