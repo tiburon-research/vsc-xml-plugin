@@ -2060,6 +2060,11 @@ export const Attributes = {
 	        "Name": "Counter",
 	        "Default": "false",
 	        "Type": "Boolean"
+		},
+		{
+	        "Name": "Optimistic",
+	        "Default": "false",
+	        "Type": "Boolean"
 	    }
 	],
 	"Block": [
