@@ -236,7 +236,7 @@ export function clearCSContents(text: string): string
 	resCS.forEach(element =>
 	{
 	    let open = element[1];
-	    let inner = element[7 + tCount].replace(/./g, ' ');
+	    let inner = typeof element[7 + tCount] == 'undefined' ? '' : element[7 + tCount].replace(/./g, ' ');
 	    let close = element[8 + tCount];
 	    let repl = new RegExp(safeString(element[0]));
 	    res = res.replace(repl, open + inner + close);
