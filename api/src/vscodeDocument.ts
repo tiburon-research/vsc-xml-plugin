@@ -76,7 +76,10 @@ export function getWordRangeAtPosition(document: server.TextDocument, position: 
 {
 	let line = getCurrentLineText(document, position);
 	let range = getWordRange(position.character, line, regex);
-	return server.Range.create(server.Position.create(position.line, range.from), server.Position.create(position.line, range.to));
+	let positionFrom = server.Position.create(position.line, range.from);
+	let positionTo = server.Position.create(position.line, range.to);
+	if (!positionFrom || !positionTo) throw { message: "Null position created from " + JSON.stringify(position) };
+	return server.Range.create(positionFrom, positionTo);
 }
 
 
