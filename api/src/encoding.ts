@@ -243,7 +243,7 @@ export function clearCSContents(text: string): string
 	});
 
 	// Очищаем незакрытый CS-тег в конце
-	let regEnd = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?!([\\t ]+\\r?\\n)|(\\s+<\/\\2))[\\s\\S]*)$");
+	let regEnd = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?!([\\t ]+\\r?\\n)|(\\s*<\/\\2))[\\s\\S]*)$");
 	let resCSend = res.match(regEnd);
 	if (!!resCSend)
 	{
