@@ -1388,7 +1388,7 @@ function lockDocument(document: vscode.TextDocument, log = false, force = false)
 		}
 	} catch (error)
 	{
-		logError("Не удалось заблокировать документ", true, error);
+		showWarning("Не удалось заблокировать документ");
 	}
 
 }
