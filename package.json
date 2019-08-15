@@ -166,7 +166,7 @@
         ],
         "keybindings": [
             {
-                "key": "ctrl+alt+e",
+                "key": "ctrl+alt+g",
                 "command": "tib.ChooseGeo"
             },
             {
@@ -198,7 +198,7 @@
                 "command": "tib.selectTag.closest"
             },
             {
-                "key": "ctrl+alt+g",
+                "key": "ctrl+alt+shift+p",
                 "command": "tib.selectTag.global"
             },
             {
