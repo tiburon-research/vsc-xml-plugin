@@ -1,3 +1,21 @@
+# 2.2.0 (16.08.2019)
+
+### Улучшения
+
+* Добавлена команда выбора географии (`ctrl` + `alt` + `G`, команда выделения родительского тега перенесена на сочетание `ctrl` + `alt` + `shift` + `P`). Детали см. в readme.
+
+![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/geo.gif?raw=true)
+
+* В XMLPath добавлены Id и индексы:
+
+![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/XMLPath.jpg?raw=true)
+
+### Исправления
+
+* Исправлена ошибка разбора пустых тегов.
+* Оптимизация и рефакторинг кода расширения.
+
+
 # 2.1.0 (08.07.2019)
 
 ### Улучшения
