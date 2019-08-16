@@ -15,7 +15,7 @@ import * as client from 'vscode-languageclient';
 import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors } from './errors';
-import { readGeoFile, GeoFileLineData, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
+import { readGeoFile, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
 
 
 export { CSFormatter, _settings as Settings };

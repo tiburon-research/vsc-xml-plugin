@@ -334,6 +334,12 @@ export class SurveyList extends SurveyElement
 	    return id;
 	}
 
+	/** Добавляет список Item в лист */
+	public AddItemRange(items: SurveyListItemObject[]): void
+	{
+		items.forEach(item => this.AddItem(item));
+	}
+
 
 	public ToXML(): string
 	{

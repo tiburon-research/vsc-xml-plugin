@@ -22,7 +22,8 @@ export const GeoConstants = {
 	ListNames: {
 		City: "cityList",
 		District: "districtList",
-		Subject: "subjectList"
+		Subject: "subjectList",
+		Strata: "strataList"
 	},
 	QuestionNames: {
 		District: "District",
@@ -139,6 +140,12 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 		});
 		res += subjectList.ToXML() + '\n\n';
 	}
+
+	// страты
+	let stratalist = new SurveyList(GeoConstants.ListNames.Strata);
+	let stratas = KeyedCollection.FromPairs(cities.map(x => { return { Key: x.StrataId, Value: x.StrataName } }))
+	stratalist.AddItemRange(stratas.ToArray((key, value) => { return { Id: key, Text: value }; }));
+	res += stratalist.ToXML() + '\n\n';
 
 	// города
 	let cityList = new SurveyList(GeoConstants.ListNames.City);
