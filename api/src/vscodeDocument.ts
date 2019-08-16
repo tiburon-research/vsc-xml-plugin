@@ -30,28 +30,28 @@ function getWordRange(index: number, line: string, regex?: RegExp): { from: numb
 	
 	try
 	{
-	    if (!regex) regex = /\w/;
-	    let from = index;
-	    let to = from + 1;
-	    for (let i = index; i < line.length; i++)
-	    {
-	        if (!line[i].match(regex))
-	        {
-	            to = i;
-	            break;
-	        }
-	    }
-	    for (let i = index; i > 0; i--)
-	    {
-	        if (!line[i - 1].match(regex))
-	        {
-	            from = i;
-	            break;
-	        }
-	    }   
-	    return { from, to };
+		if (!regex) regex = /\w/;
+		let from = index;
+		let to = from + 1;
+		for (let i = index; i < line.length; i++)
+		{
+			if (!line[i].match(regex))
+			{
+				to = i;
+				break;
+			}
+		}
+		for (let i = index; i > 0; i--)
+		{
+			if (!line[i - 1].match(regex))
+			{
+				from = i;
+				break;
+			}
+		}   
+		return { from, to };
 	} catch (error) {
-	    return emptyRange;
+		return emptyRange;
 	}
 }
 
@@ -88,13 +88,13 @@ export function getPreviousText(document: server.TextDocument, position: server.
 {
 	try
 	{
-	    let start = lineOnly ? server.Position.create(position.line, 0) : server.Position.create(0, 0);
-	    let end = server.Position.create(position.line, position.character);
-	    let res = document.getText(server.Range.create(start, end));
-	    return res;
+		let start = lineOnly ? server.Position.create(position.line, 0) : server.Position.create(0, 0);
+		let end = server.Position.create(position.line, position.character);
+		let res = document.getText(server.Range.create(start, end));
+		return res;
 	} catch (error)
 	{
-	    throw "Ошибка получения текста документа";
+		throw "Ошибка получения текста документа";
 	}
 }
 

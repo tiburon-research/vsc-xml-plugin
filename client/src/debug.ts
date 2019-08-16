@@ -5,7 +5,7 @@ export function test()
 {
 	/* vscode.window.activeTextEditor.edit(builder =>
 	{
-	    builder.setEndOfLine(vscode.EndOfLine.LF);
+		builder.setEndOfLine(vscode.EndOfLine.LF);
 	}) */
 
 	geo.readGeoFile();

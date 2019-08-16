@@ -13,26 +13,26 @@ import { logError } from './server';
 /** Массив из всех типов диагностик */
 const _AllDiagnostics: IDiagnosticType[] =
 	[
-	    {
-	        Type: server.DiagnosticSeverity.Error,
-	        Functions: KeyedCollection.FromPairs(
-	            [
-	                { Key: "wrongIds", Value: getWrongIds },
-	                { Key: "longIds", Value: getLongIds },
-	                { Key: "wrongXML", Value: getWrongXML },
-	                { Key: "duplicatedId", Value: getDuplicatedIds },
-	                { Key: "wrongMixes", Value: getWrongMixes }
-	            ]
-	        )
-	    },
-	    {
-	        Type: server.DiagnosticSeverity.Warning,
-	        Functions: KeyedCollection.FromPairs(
-	            [
-	                { Key: "constantIds", Value: dangerousConstandIds } // иногда оно может стать "delimitedConstant"
-	            ]
-	        )
-	    }
+		{
+			Type: server.DiagnosticSeverity.Error,
+			Functions: KeyedCollection.FromPairs(
+				[
+					{ Key: "wrongIds", Value: getWrongIds },
+					{ Key: "longIds", Value: getLongIds },
+					{ Key: "wrongXML", Value: getWrongXML },
+					{ Key: "duplicatedId", Value: getDuplicatedIds },
+					{ Key: "wrongMixes", Value: getWrongMixes }
+				]
+			)
+		},
+		{
+			Type: server.DiagnosticSeverity.Warning,
+			Functions: KeyedCollection.FromPairs(
+				[
+					{ Key: "constantIds", Value: dangerousConstandIds } // иногда оно может стать "delimitedConstant"
+				]
+			)
+		}
 	];
 
 
@@ -62,22 +62,22 @@ export async function getDiagnosticElements(document: server.TextDocument): Prom
 	let res: server.Diagnostic[] = [];
 	try
 	{
-	    let stack = [];
-	    let text = document.getText();
-	    text = Encoding.clearXMLComments(text);
-	    text = Encoding.clearCDATA(text);
+		let stack = [];
+		let text = document.getText();
+		text = Encoding.clearXMLComments(text);
+		text = Encoding.clearCDATA(text);
 
-	    for (const diagnosticType of _AllDiagnostics) 
-	    {
-	        diagnosticType.Functions.ForEach((name, func) =>
-	        {
-	            stack.push(_diagnosticElements(document, diagnosticType.Type, text, func, name).then(x => res = res.concat(x)));
-	        });
-	    };
-	    await Promise.all(stack);
+		for (const diagnosticType of _AllDiagnostics) 
+		{
+			diagnosticType.Functions.ForEach((name, func) =>
+			{
+				stack.push(_diagnosticElements(document, diagnosticType.Type, text, func, name).then(x => res = res.concat(x)));
+			});
+		};
+		await Promise.all(stack);
 	} catch (error)
 	{
-	    logError('Ошибка получения Diagnostic', true, error);
+		logError('Ошибка получения Diagnostic', true, error);
 	}
 	return res;
 }
@@ -98,7 +98,7 @@ async function getWrongIds(document: server.TextDocument, prepearedText: string)
 	let res = await Parse.getDocumentElements(document, /(\sId=("|'))(\w*[^\w'"\n@\-\(\)]\w*)+(\2)/, "Вот таким Id быть не может", prepearedText);
 	for (let i = 0; i < res.length; i++)
 	{
-	    res[i].Range = server.Range.create(translatePosition(document, res[i].Range.start, res[i].Value[1].length), translatePosition(document, res[i].Range.end, -1));
+		res[i].Range = server.Range.create(translatePosition(document, res[i].Range.start, res[i].Value[1].length), translatePosition(document, res[i].Range.end, -1));
 	}
 	return res;
 }
@@ -157,46 +157,46 @@ async function dangerousConstandIds(document: server.TextDocument, prepearedText
 
 	if (!!constants && constants.length > 0)
 	{
-	    for (const constantTag of constants)
-	    {
-	        let items = constantTag.Value[itemsGroup].matchAll(regItem);
-	        if (!!items && items.length > 0)
-	        {
-	            for (const item of items)
-	            {
-	                if (!item) continue;
-	                let match = regStart.exec(item[itemIdGroup]);
-	                if (!!match)
-	                {
-	                    let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length;
-	                    let wrongItem = new Parse.DocumentElement(document, {
-	                        Value: match,
-	                        Message: `Не стоит начинать Id константы с "${match[0]}"`,
-	                        From: from,
-	                        To: from + match[0].length
-	                    });
-	                    res.push(wrongItem);
-	                }
-	                let _ = item[itemIdGroup].indexOf("_");
-	                if (_ > -1)
-	                {
-	                    let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length;
-	                    let wrongItem = new Parse.DocumentElement(document, {
-	                        Value: ["_"],
-	                        Message: "Константы с '_' не распознаются в расширении как константы",
-	                        From: from,
-	                        To: from + item[itemIdGroup].length,
-	                        DiagnosticProperties:
-	                        {
-	                            Type: server.DiagnosticSeverity.Information,
-	                            Code: "delimitedConstant"
-	                        }
-	                    });
-	                    res.push(wrongItem);
-	                }
-	            }
-	        }
-	    }
+		for (const constantTag of constants)
+		{
+			let items = constantTag.Value[itemsGroup].matchAll(regItem);
+			if (!!items && items.length > 0)
+			{
+				for (const item of items)
+				{
+					if (!item) continue;
+					let match = regStart.exec(item[itemIdGroup]);
+					if (!!match)
+					{
+						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length;
+						let wrongItem = new Parse.DocumentElement(document, {
+							Value: match,
+							Message: `Не стоит начинать Id константы с "${match[0]}"`,
+							From: from,
+							To: from + match[0].length
+						});
+						res.push(wrongItem);
+					}
+					let _ = item[itemIdGroup].indexOf("_");
+					if (_ > -1)
+					{
+						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length;
+						let wrongItem = new Parse.DocumentElement(document, {
+							Value: ["_"],
+							Message: "Константы с '_' не распознаются в расширении как константы",
+							From: from,
+							To: from + item[itemIdGroup].length,
+							DiagnosticProperties:
+							{
+								Type: server.DiagnosticSeverity.Information,
+								Code: "delimitedConstant"
+							}
+						});
+						res.push(wrongItem);
+					}
+				}
+			}
+		}
 	}
 
 	return res;
@@ -218,14 +218,14 @@ async function _diagnosticElements(document: server.TextDocument, type: server.D
 	let elements = await func(document, preparedText);
 	if (!!elements)
 	{
-	    elements.forEach(element =>
-	    {
-	        let t = !!element.DiagnosticProperties.Type ? element.DiagnosticProperties.Type : type;
-	        let code = !!element.DiagnosticProperties.Code ? element.DiagnosticProperties.Code : diagnosticId;
-	        let diagItem = server.Diagnostic.create(element.Range, element.Message, t);
-	        //diagItem.code = code;
-	        res.push(diagItem);
-	    });
+		elements.forEach(element =>
+		{
+			let t = !!element.DiagnosticProperties.Type ? element.DiagnosticProperties.Type : type;
+			let code = !!element.DiagnosticProperties.Code ? element.DiagnosticProperties.Code : diagnosticId;
+			let diagItem = server.Diagnostic.create(element.Range, element.Message, t);
+			//diagItem.code = code;
+			res.push(diagItem);
+		});
 	}
 	return res;
 }

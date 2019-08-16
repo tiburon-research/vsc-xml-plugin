@@ -1,1032 +1,1032 @@
 var ManualCode = [
 	{
-	    Name: "CurrentSurvey",
-	    Kind: "Variable",
-	    Detail: "Object"
+		Name: "CurrentSurvey",
+		Kind: "Variable",
+		Detail: "Object"
 	},
 	{
-	    Name: "SurveyListItem",
-	    Kind: "Class",
-	    Detail: "Class"
+		Name: "SurveyListItem",
+		Kind: "Class",
+		Detail: "Class"
 	},
 	{
-	    Name: "CurrentInterview",
-	    Kind: "Variable",
-	    Detail: "int"
+		Name: "CurrentInterview",
+		Kind: "Variable",
+		Detail: "int"
 	},
 	{
-	    Name: "InterviewPars",
-	    Kind: "Variable",
-	    Detail: "Object"
+		Name: "InterviewPars",
+		Kind: "Variable",
+		Detail: "Object"
 	},
 	{
-	    Name: "RespID",
-	    Kind: "Property",
-	    Detail: "string",
-	    Parent: "InterviewPars"
+		Name: "RespID",
+		Kind: "Property",
+		Detail: "string",
+		Parent: "InterviewPars"
 	},
 	{
-	    Name: "GetInstance",
-	    Kind: "Method",
-	    Parent: "InterviewPars"
+		Name: "GetInstance",
+		Kind: "Method",
+		Parent: "InterviewPars"
 	},
 	{
-	    Name: "SurveyID",
-	    Kind: "Property",
-	    Detail: "int",
-	    Parent: "InterviewPars"
+		Name: "SurveyID",
+		Kind: "Property",
+		Detail: "int",
+		Parent: "InterviewPars"
 	},
 	{
-	    Name: "Host",
-	    Kind: "Property",
-	    Detail: "string",
-	    Parent: "InterviewPars"
+		Name: "Host",
+		Kind: "Property",
+		Detail: "string",
+		Parent: "InterviewPars"
 	},
 	{
-	    Name: "ProjectId",
-	    Kind: "Property",
-	    Parent: "InterviewPars"
+		Name: "ProjectId",
+		Kind: "Property",
+		Parent: "InterviewPars"
 	},
 	{
-	    Name: "PageId",
-	    Kind: "Property",
-	    Parent: "InterviewPars\\.GetInstance\\(\\)"
+		Name: "PageId",
+		Kind: "Property",
+		Parent: "InterviewPars\\.GetInstance\\(\\)"
 	},
 	{
-	    Name: "InterviewID",
-	    Kind: "Property",
-	    Detail: "int",
-	    Parent: "InterviewPars\\.GetInstance\\(\\)"
+		Name: "InterviewID",
+		Kind: "Property",
+		Detail: "int",
+		Parent: "InterviewPars\\.GetInstance\\(\\)"
 	},
 	{
-	    Name: "ProjectId",
-	    Kind: "Property",
-	    Parent: "InterviewPars\\.GetInstance\\(\\)"
+		Name: "ProjectId",
+		Kind: "Property",
+		Parent: "InterviewPars\\.GetInstance\\(\\)"
 	},
 	{
-	    Name: "IsMobile",
-	    Kind: "Property",
-	    Detail: "bool",
-	    Parent: "InterviewPars\\.GetInstance\\(\\)"
+		Name: "IsMobile",
+		Kind: "Property",
+		Detail: "bool",
+		Parent: "InterviewPars\\.GetInstance\\(\\)"
 	},
 	{
-	    Name: "IsTest",
-	    Kind: "Property",
-	    Detail: "bool",
-	    Parent: "InterviewPars\\.GetInstance\\(\\)"
+		Name: "IsTest",
+		Kind: "Property",
+		Detail: "bool",
+		Parent: "InterviewPars\\.GetInstance\\(\\)"
 	},
 	{
-	    Name: "Pages",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey"
+		Name: "Pages",
+		Kind: "Property",
+		Parent: "CurrentSurvey"
 	},
 	{
-	    Name: "QuestionPage",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey"
+		Name: "QuestionPage",
+		Kind: "Property",
+		Parent: "CurrentSurvey"
 	},
 	{
-	    Name: "ID",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey"
+		Name: "ID",
+		Kind: "Property",
+		Parent: "CurrentSurvey"
 	},
 	{
-	    Name: "Lists",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey"
+		Name: "Lists",
+		Kind: "Property",
+		Parent: "CurrentSurvey"
 	},
 	{
-	    Name: "Contains",
-	    Kind: "Method",
-	    Parent: "CurrentSurvey\\.Lists"
+		Name: "Contains",
+		Kind: "Method",
+		Parent: "CurrentSurvey\\.Lists"
 	},
 	{
-	    Name: "Items",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey\\.Lists\\[.*\\]"
+		Name: "Items",
+		Kind: "Property",
+		Parent: "CurrentSurvey\\.Lists\\[.*\\]"
 	},
 	{
-	    Name: "Contains",
-	    Kind: "Method",
-	    Detail: "bool",
-	    Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
+		Name: "Contains",
+		Kind: "Method",
+		Detail: "bool",
+		Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
 	},
 	{
-	    Name: "Count",
-	    Kind: "Property",
-	    Detail: "Integer",
-	    Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
+		Name: "Count",
+		Kind: "Property",
+		Detail: "Integer",
+		Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
 	},
 	{
-	    Name: "ItemsIdArray",
-	    Kind: "Property",
-	    Detail: "string[]",
-	    Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
+		Name: "ItemsIdArray",
+		Kind: "Property",
+		Detail: "string[]",
+		Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
 	},
 	{
-	    Name: "Text",
-	    Kind: "Property",
-	    Detail: "string",
-	    Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items\\[.*\\]"
+		Name: "Text",
+		Kind: "Property",
+		Detail: "string",
+		Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items\\[.*\\]"
 	},
 	{
-	    Name: "Vars",
-	    Kind: "Property",
-	    Detail: "string[]",
-	    Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items\\[.*\\]"
+		Name: "Vars",
+		Kind: "Property",
+		Detail: "string[]",
+		Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items\\[.*\\]"
 	},
 	{
-	    Name: "ID",
-	    Kind: "Property",
-	    Detail: "string",
-	    Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items\\[.*\\]"
+		Name: "ID",
+		Kind: "Property",
+		Detail: "string",
+		Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items\\[.*\\]"
 	},
 	{
-	    Name: "Items",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
+		Name: "Items",
+		Kind: "Property",
+		Parent: "CurrentSurvey\\.Lists\\[.*\\]\\.Items"
 	},
 	{
-	    Name: "Values",
-	    Kind: "Property",
-	    Detail: "IEnumerable",
-	    Parent: "CurrentSurvey\\.Lists\\[.*?\\]\\.Items\\.Items"
+		Name: "Values",
+		Kind: "Property",
+		Detail: "IEnumerable",
+		Parent: "CurrentSurvey\\.Lists\\[.*?\\]\\.Items\\.Items"
 	},
 	{
-	    Name: "Questions",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey\\.Pages\\[.*\\]"
+		Name: "Questions",
+		Kind: "Property",
+		Parent: "CurrentSurvey\\.Pages\\[.*\\]"
 	},
 	{
-	    Name: "Header",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey\\.Pages\\[.*\\]"
+		Name: "Header",
+		Kind: "Property",
+		Parent: "CurrentSurvey\\.Pages\\[.*\\]"
 	},
 	{
-	    Name: "HasStore",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey\\.Pages\\[.*\\]"
+		Name: "HasStore",
+		Kind: "Property",
+		Parent: "CurrentSurvey\\.Pages\\[.*\\]"
 	},
 	{
-	    Name: "BlockID",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey\\.Pages\\[.*\\]"
+		Name: "BlockID",
+		Kind: "Property",
+		Parent: "CurrentSurvey\\.Pages\\[.*\\]"
 	},
 	{
-	    Name: "Text",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey\\.Pages\\[.*\\]\\.Questions\\[.*\\]"
+		Name: "Text",
+		Kind: "Property",
+		Parent: "CurrentSurvey\\.Pages\\[.*\\]\\.Questions\\[.*\\]"
 	},
 	{
-	    Name: "Answers",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey\\.Pages\\[.*\\]\\.Questions\\[.*\\]"
+		Name: "Answers",
+		Kind: "Property",
+		Parent: "CurrentSurvey\\.Pages\\[.*\\]\\.Questions\\[.*\\]"
 	},
 	{
-	    Name: "Text",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey\\.Pages\\[.*\\]\\.Questions\\[.*\\]\\.Answers\\[.*\\]"
+		Name: "Text",
+		Kind: "Property",
+		Parent: "CurrentSurvey\\.Pages\\[.*\\]\\.Questions\\[.*\\]\\.Answers\\[.*\\]"
 	},
 	{
-	    Name: "Header",
-	    Kind: "Property",
-	    Parent: "CurrentSurvey\\.Pages\\[.*\\]\\.Questions\\[.*\\]\\.Answers\\[.*\\]"
+		Name: "Header",
+		Kind: "Property",
+		Parent: "CurrentSurvey\\.Pages\\[.*\\]\\.Questions\\[.*\\]\\.Answers\\[.*\\]"
 	},
 	{
-	    Name: "Common",
-	    Kind: "Variable"
+		Name: "Common",
+		Kind: "Variable"
 	},
 	{
-	    Name: "MixArray",
-	    Kind: "Method",
-	    Parent: "Common"
+		Name: "MixArray",
+		Kind: "Method",
+		Parent: "Common"
 	},
 	{
-	    Name: "LogicalOperator",
-	    Kind: "Enum"
+		Name: "LogicalOperator",
+		Kind: "Enum"
 	},
 	{
-	    Name: "Or",
-	    Kind: "EnumMember",
-	    Parent: "LogicalOperator"
+		Name: "Or",
+		Kind: "EnumMember",
+		Parent: "LogicalOperator"
 	},
 	{
-	    Name: "Xor",
-	    Kind: "EnumMember",
-	    Parent: "LogicalOperator"
+		Name: "Xor",
+		Kind: "EnumMember",
+		Parent: "LogicalOperator"
 	},
 	{
-	    Name: "And",
-	    Kind: "EnumMember",
-	    Parent: "LogicalOperator"
+		Name: "And",
+		Kind: "EnumMember",
+		Parent: "LogicalOperator"
 	}
 ];
 
 
 var KnownCode = [
 	{
-	    "Name": "PinQuestion",
-	    "Detail": "string",
-	    "Kind": "Property",
-	    Parent: "this",
-	    "Documentation": "string PinQuestion",
-	    ParentTag: "Validate"
+		"Name": "PinQuestion",
+		"Detail": "string",
+		"Kind": "Property",
+		Parent: "this",
+		"Documentation": "string PinQuestion",
+		ParentTag: "Validate"
 	},
 	{
-	    "Name": "PinAnswer",
-	    "Detail": "string",
-	    "Kind": "Property",
-	    Parent: "this",
-	    "Documentation": "string PinAnswer",
-	    ParentTag: "Validate"
+		"Name": "PinAnswer",
+		"Detail": "string",
+		"Kind": "Property",
+		Parent: "this",
+		"Documentation": "string PinAnswer",
+		ParentTag: "Validate"
 	},
 	{
-	    "Name": "Message",
-	    "Detail": "string",
-	    "Kind": "Property",
-	    Parent: "this",
-	    "Documentation": "string Message",
-	    ParentTag: "Validate"
+		"Name": "Message",
+		"Detail": "string",
+		"Kind": "Property",
+		Parent: "this",
+		"Documentation": "string Message",
+		ParentTag: "Validate"
 	},
 	{
-	    "Name": "MessageGeneral",
-	    "Detail": "string",
-	    "Kind": "Property",
-	    Parent: "this",
-	    "Documentation": "string MessageGeneral",
-	    ParentTag: "Validate"
+		"Name": "MessageGeneral",
+		"Detail": "string",
+		"Kind": "Property",
+		Parent: "this",
+		"Documentation": "string MessageGeneral",
+		ParentTag: "Validate"
 	},
 	{
-	    "Name": "Status",
-	    "Detail": "int",
-	    "Kind": "Property",
-	    Parent: "this",
-	    "Documentation": "int Status",
-	    ParentTag: "Redirect"
+		"Name": "Status",
+		"Detail": "int",
+		"Kind": "Property",
+		Parent: "this",
+		"Documentation": "int Status",
+		ParentTag: "Redirect"
 	},
 	{
-	    "Name": "Page",
-	    "Detail": "string",
-	    "Kind": "Property",
-	    Parent: "this",
-	    "Documentation": "string Page",
-	    ParentTag: "Redirect"
+		"Name": "Page",
+		"Detail": "string",
+		"Kind": "Property",
+		Parent: "this",
+		"Documentation": "string Page",
+		ParentTag: "Redirect"
 	},
 	{
-	    "Name": "Url",
-	    "Detail": "string",
-	    "Kind": "Property",
-	    Parent: "this",
-	    "Documentation": "string Url",
-	    ParentTag: "Redirect"
+		"Name": "Url",
+		"Detail": "string",
+		"Kind": "Property",
+		Parent: "this",
+		"Documentation": "string Url",
+		ParentTag: "Redirect"
 	},
 	{
-	    "Name": "CurrentInterview",
-	    "Detail": "int",
-	    "Kind": "Property",
-	    Parent: "this",
-	    "Documentation": "int CurrentInterview",
-	    ParentTag: "Redirect"
+		"Name": "CurrentInterview",
+		"Detail": "int",
+		"Kind": "Property",
+		Parent: "this",
+		"Documentation": "int CurrentInterview",
+		ParentTag: "Redirect"
 	},
 	{
-	    "Name": "CurrentInterviewOrder",
-	    "Detail": "int",
-	    "Kind": "Property",
-	    Parent: "this",
-	    "Documentation": "int CurrentInterviewOrder",
-	    ParentTag: "Redirect"
+		"Name": "CurrentInterviewOrder",
+		"Detail": "int",
+		"Kind": "Property",
+		Parent: "this",
+		"Documentation": "int CurrentInterviewOrder",
+		ParentTag: "Redirect"
 	},
 	{
-	    "Name": "InterviewExists",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool InterviewExists(string questionId, string answerId, string val)"
+		"Name": "InterviewExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool InterviewExists(string questionId, string answerId, string val)"
 	},
 	{
-	    "Name": "AnswerInsert",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void AnswerInsert(string pageId, string questionId, string answerId, string val)"
+		"Name": "AnswerInsert",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerInsert(string pageId, string questionId, string answerId, string val)"
 	},
 	{
-	    "Name": "AnswerInsert",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void AnswerInsert(string pageId, string questionId, string answerId)"
+		"Name": "AnswerInsert",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerInsert(string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerInsert",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void ExtInterviewAnswerInsert(int interviewId, string pageId, string questionId, string answerId, string val)"
+		"Name": "ExtInterviewAnswerInsert",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtInterviewAnswerInsert(int interviewId, string pageId, string questionId, string answerId, string val)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerInsert",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void ExtInterviewAnswerInsert(int interviewId, string pageId, string questionId, string answerId)"
+		"Name": "ExtInterviewAnswerInsert",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtInterviewAnswerInsert(int interviewId, string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerUpdate",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void ExtInterviewAnswerUpdate(int interviewId, string pageId, string questionId, string answerId, string val)"
+		"Name": "ExtInterviewAnswerUpdate",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtInterviewAnswerUpdate(int interviewId, string pageId, string questionId, string answerId, string val)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerDelete",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void ExtInterviewAnswerDelete(int interviewId, string pageId, string questionId, string answerId)"
+		"Name": "ExtInterviewAnswerDelete",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtInterviewAnswerDelete(int interviewId, string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerDelete",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void ExtInterviewAnswerDelete(int interviewId, string questionId, string answerId)"
+		"Name": "ExtInterviewAnswerDelete",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtInterviewAnswerDelete(int interviewId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "AnswerInsertOnce",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void AnswerInsertOnce(string pageId, string questionId, string answerId, string val)"
+		"Name": "AnswerInsertOnce",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerInsertOnce(string pageId, string questionId, string answerId, string val)"
 	},
 	{
-	    "Name": "AnswerInsertOnce",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void AnswerInsertOnce(string pageId, string questionId, string answerId)"
+		"Name": "AnswerInsertOnce",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerInsertOnce(string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "AnswerUpdateP",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void AnswerUpdateP(string pageId, string questionId, string answerId, string val)"
+		"Name": "AnswerUpdateP",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerUpdateP(string pageId, string questionId, string answerId, string val)"
 	},
 	{
-	    "Name": "AnswerUpdateP",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void AnswerUpdateP(string pageId, string questionId, string answerId)"
+		"Name": "AnswerUpdateP",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerUpdateP(string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "AnswerUpdate",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void AnswerUpdate(string questionId, string answerId, string val)"
+		"Name": "AnswerUpdate",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerUpdate(string questionId, string answerId, string val)"
 	},
 	{
-	    "Name": "AnswerUpdate",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void AnswerUpdate(string questionId, string answerId)"
+		"Name": "AnswerUpdate",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerUpdate(string questionId, string answerId)"
 	},
 	{
-	    "Name": "PageClear",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void PageClear(string pageId)"
+		"Name": "PageClear",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void PageClear(string pageId)"
 	},
 	{
-	    "Name": "QuestionClear",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void QuestionClear(string questionId)"
+		"Name": "QuestionClear",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void QuestionClear(string questionId)"
 	},
 	{
-	    "Name": "QuestionClear",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void QuestionClear(int interviewId, string questionId)"
+		"Name": "QuestionClear",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void QuestionClear(int interviewId, string questionId)"
 	},
 	{
-	    "Name": "AnswerClear",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void AnswerClear(string questionId, string answerId)"
+		"Name": "AnswerClear",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerClear(string questionId, string answerId)"
 	},
 	{
-	    "Name": "AnswerExistsForRange",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool AnswerExistsForRange(string questionId, string srcRange, LogicalOperator oper)"
+		"Name": "AnswerExistsForRange",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExistsForRange(string questionId, string srcRange, LogicalOperator oper)"
 	},
 	{
-	    "Name": "AnswerExistsAny",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool AnswerExistsAny(string questionId, string srcRange)"
+		"Name": "AnswerExistsAny",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExistsAny(string questionId, string srcRange)"
 	},
 	{
-	    "Name": "AnswerExistsAll",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool AnswerExistsAll(string questionId, string srcRange)"
+		"Name": "AnswerExistsAll",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExistsAll(string questionId, string srcRange)"
 	},
 	{
-	    "Name": "AnswerExistsOnce",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool AnswerExistsOnce(string pageId, string questionId, int answerStart, int answerEnd)"
+		"Name": "AnswerExistsOnce",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExistsOnce(string pageId, string questionId, int answerStart, int answerEnd)"
 	},
 	{
-	    "Name": "AnswerExistsOnce",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool AnswerExistsOnce(string questionId, int answerStart, int answerEnd)"
+		"Name": "AnswerExistsOnce",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExistsOnce(string questionId, int answerStart, int answerEnd)"
 	},
 	{
-	    "Name": "AnswerID",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string AnswerID(string pageId, string questionId)"
+		"Name": "AnswerID",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string AnswerID(string pageId, string questionId)"
 	},
 	{
-	    "Name": "AnswerID",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string AnswerID(string questionId)"
+		"Name": "AnswerID",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string AnswerID(string questionId)"
 	},
 	{
-	    "Name": "AnswerExists",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool AnswerExists(string pageId, string questionId, string answerId)"
+		"Name": "AnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExists(string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "AnswerExists",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool AnswerExists(string questionId, string srcRangeOrNot)"
+		"Name": "AnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExists(string questionId, string srcRangeOrNot)"
 	},
 	{
-	    "Name": "ExtAnswerExists",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtAnswerExists(int surveyId, string pageId, string questionId, string answerId)"
+		"Name": "ExtAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtAnswerExists(int surveyId, string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtAnswerExists",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtAnswerExists(int surveyId, string questionId, string answerId)"
+		"Name": "ExtAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtAnswerExists(int surveyId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerExists",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtInterviewAnswerExists(int extInterviewId, string pageId, string questionId, string answerId)"
+		"Name": "ExtInterviewAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtInterviewAnswerExists(int extInterviewId, string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerExists",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtInterviewAnswerExists(int extInterviewId, string questionId, string srcRangeOrNot)"
+		"Name": "ExtInterviewAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtInterviewAnswerExists(int extInterviewId, string questionId, string srcRangeOrNot)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerExistsForRange",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtInterviewAnswerExistsForRange(int externalInterview, string questionId, string srcRange, LogicalOperator logicalOperator)"
+		"Name": "ExtInterviewAnswerExistsForRange",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtInterviewAnswerExistsForRange(int externalInterview, string questionId, string srcRange, LogicalOperator logicalOperator)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerExistsAny",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtInterviewAnswerExistsAny(int externalInterview, string questionId, string srcRange)"
+		"Name": "ExtInterviewAnswerExistsAny",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtInterviewAnswerExistsAny(int externalInterview, string questionId, string srcRange)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerExistsAny",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtInterviewAnswerExistsAny(int externalInterview, string pageId, string questionId, string srcRange)"
+		"Name": "ExtInterviewAnswerExistsAny",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtInterviewAnswerExistsAny(int externalInterview, string pageId, string questionId, string srcRange)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerExistsAll",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtInterviewAnswerExistsAll(int externalInterview, string questionId, string srcRange)"
+		"Name": "ExtInterviewAnswerExistsAll",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtInterviewAnswerExistsAll(int externalInterview, string questionId, string srcRange)"
 	},
 	{
-	    "Name": "AnswerValue",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string AnswerValue(string pageId, string questionId, string answerId)"
+		"Name": "AnswerValue",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string AnswerValue(string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "AnswerValue",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string AnswerValue(string questionId, string answerId)"
+		"Name": "AnswerValue",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string AnswerValue(string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerValue",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string ExtInterviewAnswerValue(int extInterviewId, string pageId, string questionId, string answerId)"
+		"Name": "ExtInterviewAnswerValue",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtInterviewAnswerValue(int extInterviewId, string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviewAnswerValue",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string ExtInterviewAnswerValue(int extInterviewId, string questionId, string answerId)"
+		"Name": "ExtInterviewAnswerValue",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtInterviewAnswerValue(int extInterviewId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterview",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int ExtInterview(int extSurveyId, string questionId, string answerId, string val)"
+		"Name": "ExtInterview",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int ExtInterview(int extSurveyId, string questionId, string answerId, string val)"
 	},
 	{
-	    "Name": "ExtInterview",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int ExtInterview(int extSurveyId, string interviewRespondent)"
+		"Name": "ExtInterview",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int ExtInterview(int extSurveyId, string interviewRespondent)"
 	},
 	{
-	    "Name": "ExtInterviews",
-	    "Detail": "int[]",
-	    "Kind": "Function",
-	    "Documentation": "int[] ExtInterviews(int extSurveyId, int statusId, string questionId, string answerId, string val)"
+		"Name": "ExtInterviews",
+		"Detail": "int[]",
+		"Kind": "Function",
+		"Documentation": "int[] ExtInterviews(int extSurveyId, int statusId, string questionId, string answerId, string val)"
 	},
 	{
-	    "Name": "ExtInterviews",
-	    "Detail": "int[]",
-	    "Kind": "Function",
-	    "Documentation": "int[] ExtInterviews(int extSurveyId, int statusId, string questionId, string answerId)"
+		"Name": "ExtInterviews",
+		"Detail": "int[]",
+		"Kind": "Function",
+		"Documentation": "int[] ExtInterviews(int extSurveyId, int statusId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviews",
-	    "Detail": "int[]",
-	    "Kind": "Function",
-	    "Documentation": "int[] ExtInterviews(int extSurveyId, string questionId, string answerId, string val)"
+		"Name": "ExtInterviews",
+		"Detail": "int[]",
+		"Kind": "Function",
+		"Documentation": "int[] ExtInterviews(int extSurveyId, string questionId, string answerId, string val)"
 	},
 	{
-	    "Name": "ExtInterviews",
-	    "Detail": "int[]",
-	    "Kind": "Function",
-	    "Documentation": "int[] ExtInterviews(int extSurveyId, string questionId, string answerId)"
+		"Name": "ExtInterviews",
+		"Detail": "int[]",
+		"Kind": "Function",
+		"Documentation": "int[] ExtInterviews(int extSurveyId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviewsAnswerExists",
-	    "Detail": "bool[]",
-	    "Kind": "Function",
-	    "Documentation": "bool[] ExtInterviewsAnswerExists(int[] interviewList, int statusId, string pageId, string questionId, string answerId)"
+		"Name": "ExtInterviewsAnswerExists",
+		"Detail": "bool[]",
+		"Kind": "Function",
+		"Documentation": "bool[] ExtInterviewsAnswerExists(int[] interviewList, int statusId, string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviewsAnswerExists",
-	    "Detail": "bool[]",
-	    "Kind": "Function",
-	    "Documentation": "bool[] ExtInterviewsAnswerExists(int[] interviewList, string pageId, string questionId, string answerId)"
+		"Name": "ExtInterviewsAnswerExists",
+		"Detail": "bool[]",
+		"Kind": "Function",
+		"Documentation": "bool[] ExtInterviewsAnswerExists(int[] interviewList, string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviewsAnswerValue",
-	    "Detail": "string[]",
-	    "Kind": "Function",
-	    "Documentation": "string[] ExtInterviewsAnswerValue(int[] interviewList, int statusId, string pageId, string questionId, string answerId)"
+		"Name": "ExtInterviewsAnswerValue",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] ExtInterviewsAnswerValue(int[] interviewList, int statusId, string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviewsAnswerValue",
-	    "Detail": "string[]",
-	    "Kind": "Function",
-	    "Documentation": "string[] ExtInterviewsAnswerValue(int[] interviewList, string pageId, string questionId, string answerId)"
+		"Name": "ExtInterviewsAnswerValue",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] ExtInterviewsAnswerValue(int[] interviewList, string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtInterviewsAnswerId",
-	    "Detail": "string[]",
-	    "Kind": "Function",
-	    "Documentation": "string[] ExtInterviewsAnswerId(int[] interviewList, int statusId, string pageId, string questionId)"
+		"Name": "ExtInterviewsAnswerId",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] ExtInterviewsAnswerId(int[] interviewList, int statusId, string pageId, string questionId)"
 	},
 	{
-	    "Name": "ExtInterviewsAnswerId",
-	    "Detail": "string[]",
-	    "Kind": "Function",
-	    "Documentation": "string[] ExtInterviewsAnswerId(int[] interviewList, string pageId, string questionId)"
+		"Name": "ExtInterviewsAnswerId",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] ExtInterviewsAnswerId(int[] interviewList, string pageId, string questionId)"
 	},
 	{
-	    "Name": "AnswerCount",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int AnswerCount(string pageId)"
+		"Name": "AnswerCount",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int AnswerCount(string pageId)"
 	},
 	{
-	    "Name": "AnswerCount",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int AnswerCount(string pageId, string questionId)"
+		"Name": "AnswerCount",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int AnswerCount(string pageId, string questionId)"
 	},
 	{
-	    "Name": "AnswerCountRange",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int AnswerCountRange(string questionId, string srcRange)"
+		"Name": "AnswerCountRange",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int AnswerCountRange(string questionId, string srcRange)"
 	},
 	{
-	    "Name": "DataExists",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool DataExists(int index, string val)"
+		"Name": "DataExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool DataExists(int index, string val)"
 	},
 	{
-	    "Name": "DataGetCustom",
-	    "Detail": "string[]",
-	    "Kind": "Function",
-	    "Documentation": "string[] DataGetCustom(int index, string value)"
+		"Name": "DataGetCustom",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] DataGetCustom(int index, string value)"
 	},
 	{
-	    "Name": "DataGetCustoms",
-	    "Detail": "string[][]",
-	    "Kind": "Function",
-	    "Documentation": "string[][] DataGetCustoms(int index, string value)"
+		"Name": "DataGetCustoms",
+		"Detail": "string[][]",
+		"Kind": "Function",
+		"Documentation": "string[][] DataGetCustoms(int index, string value)"
 	},
 	{
-	    "Name": "DataGetCustomSingleRandom",
-	    "Detail": "string[]",
-	    "Kind": "Function",
-	    "Documentation": "string[] DataGetCustomSingleRandom(int index, int key, int updateKey)"
+		"Name": "DataGetCustomSingleRandom",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] DataGetCustomSingleRandom(int index, int key, int updateKey)"
 	},
 	{
-	    "Name": "DataGetCustomSingleRandomWithConditions",
-	    "Detail": "string[]",
-	    "Kind": "Function",
-	    "Documentation": "string[] DataGetCustomSingleRandomWithConditions(int index, int key, int updateKey, string[] conditions)"
+		"Name": "DataGetCustomSingleRandomWithConditions",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] DataGetCustomSingleRandomWithConditions(int index, int key, int updateKey, string[] conditions)"
 	},
 	{
-	    "Name": "QuotaCount",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int QuotaCount(string quotaId)"
+		"Name": "QuotaCount",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int QuotaCount(string quotaId)"
 	},
 	{
-	    "Name": "QuotaCount",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int QuotaCount(int surveyId, string quotaId)"
+		"Name": "QuotaCount",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int QuotaCount(int surveyId, string quotaId)"
 	},
 	{
-	    "Name": "QuotaCountStatus",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int QuotaCountStatus(string quotaId, int statusId)"
+		"Name": "QuotaCountStatus",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int QuotaCountStatus(string quotaId, int statusId)"
 	},
 	{
-	    "Name": "QuotaCountStatus",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int QuotaCountStatus(int surveyId, string quotaId, int statusId)"
+		"Name": "QuotaCountStatus",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int QuotaCountStatus(int surveyId, string quotaId, int statusId)"
 	},
 	{
-	    "Name": "QuotaLimit",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int QuotaLimit(string quotaId)"
+		"Name": "QuotaLimit",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int QuotaLimit(string quotaId)"
 	},
 	{
-	    "Name": "QuotaLimit",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int QuotaLimit(int surveyId, string quotaId)"
+		"Name": "QuotaLimit",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int QuotaLimit(int surveyId, string quotaId)"
 	},
 	{
-	    "Name": "QuotaIsOpen",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool QuotaIsOpen(string quotaId)"
+		"Name": "QuotaIsOpen",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool QuotaIsOpen(string quotaId)"
 	},
 	{
-	    "Name": "QuotaIsOpen",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool QuotaIsOpen(int surveyId, string quotaId)"
+		"Name": "QuotaIsOpen",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool QuotaIsOpen(int surveyId, string quotaId)"
 	},
 	{
-	    "Name": "IsEmailCorrect",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool IsEmailCorrect(string email)"
+		"Name": "IsEmailCorrect",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool IsEmailCorrect(string email)"
 	},
 	{
-	    "Name": "GetAnswerID",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string GetAnswerID(string pageId, string questionId, string val)"
+		"Name": "GetAnswerID",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string GetAnswerID(string pageId, string questionId, string val)"
 	},
 	{
-	    "Name": "GetAnswerID",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string GetAnswerID(string questionId, string val)"
+		"Name": "GetAnswerID",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string GetAnswerID(string questionId, string val)"
 	},
 	{
-	    "Name": "GetSurveyUserMails",
-	    "Detail": "List<string[]>",
-	    "Kind": "Function",
-	    "Documentation": "List<string[]> GetSurveyUserMails(int surveyId)"
+		"Name": "GetSurveyUserMails",
+		"Detail": "List<string[]>",
+		"Kind": "Function",
+		"Documentation": "List<string[]> GetSurveyUserMails(int surveyId)"
 	},
 	{
-	    "Name": "AnswerDelete",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void AnswerDelete(string pageId, string questionId, string answerId)"
+		"Name": "AnswerDelete",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerDelete(string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "AnswerDelete",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void AnswerDelete(string questionId, string answerId)"
+		"Name": "AnswerDelete",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerDelete(string questionId, string answerId)"
 	},
 	{
-	    "Name": "QuestionResults",
-	    "Detail": "string[][]",
-	    "Kind": "Function",
-	    "Documentation": "string[][] QuestionResults(string pageId, string questionId)"
+		"Name": "QuestionResults",
+		"Detail": "string[][]",
+		"Kind": "Function",
+		"Documentation": "string[][] QuestionResults(string pageId, string questionId)"
 	},
 	{
-	    "Name": "QuestionResults",
-	    "Detail": "string[][]",
-	    "Kind": "Function",
-	    "Documentation": "string[][] QuestionResults(int interviewId, string pageId, string questionId)"
+		"Name": "QuestionResults",
+		"Detail": "string[][]",
+		"Kind": "Function",
+		"Documentation": "string[][] QuestionResults(int interviewId, string pageId, string questionId)"
 	},
 	{
-	    "Name": "AnswerIDs",
-	    "Detail": "string[]",
-	    "Kind": "Function",
-	    "Documentation": "string[] AnswerIDs(string pageId, string questionId)"
+		"Name": "AnswerIDs",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] AnswerIDs(string pageId, string questionId)"
 	},
 	{
-	    "Name": "AnswerIDs",
-	    "Detail": "string[]",
-	    "Kind": "Function",
-	    "Documentation": "string[] AnswerIDs(int interviewId, string pageId, string questionId)"
+		"Name": "AnswerIDs",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] AnswerIDs(int interviewId, string pageId, string questionId)"
 	},
 	{
-	    "Name": "AnswerText",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string AnswerText(string pageId, string questionId, string answerId)"
+		"Name": "AnswerText",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string AnswerText(string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "InterviewResultClear",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void InterviewResultClear()"
+		"Name": "InterviewResultClear",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void InterviewResultClear()"
 	},
 	{
-	    "Name": "InterviewStatusChange",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void InterviewStatusChange(int statusId)"
+		"Name": "InterviewStatusChange",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void InterviewStatusChange(int statusId)"
 	},
 	{
-	    "Name": "QuestionText",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string QuestionText(string pageId, string questionId)"
+		"Name": "QuestionText",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string QuestionText(string pageId, string questionId)"
 	},
 	{
-	    "Name": "QuestionHeader",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string QuestionHeader(string pageId, string questionId)"
+		"Name": "QuestionHeader",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string QuestionHeader(string pageId, string questionId)"
 	},
 	{
-	    "Name": "PageHeader",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string PageHeader(string pageId)"
+		"Name": "PageHeader",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string PageHeader(string pageId)"
 	},
 	{
-	    "Name": "GetMixOrder",
-	    "Detail": "string[]",
-	    "Kind": "Function",
-	    "Documentation": "string[] GetMixOrder(string mixId)"
+		"Name": "GetMixOrder",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] GetMixOrder(string mixId)"
 	},
 	{
-	    "Name": "MixItera",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string MixItera(int defaultItera)"
+		"Name": "MixItera",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string MixItera(int defaultItera)"
 	},
 	{
-	    "Name": "GetDateDiff",
-	    "Detail": "DateResult",
-	    "Kind": "Function",
-	    "Documentation": "DateResult GetDateDiff(DateTime currentDate, DateTime subtractDate)"
+		"Name": "GetDateDiff",
+		"Detail": "DateResult",
+		"Kind": "Function",
+		"Documentation": "DateResult GetDateDiff(DateTime currentDate, DateTime subtractDate)"
 	},
 	{
-	    "Name": "GetAge",
-	    "Detail": "DateResult",
-	    "Kind": "Function",
-	    "Documentation": "DateResult GetAge(DateTime subtractDate)"
+		"Name": "GetAge",
+		"Detail": "DateResult",
+		"Kind": "Function",
+		"Documentation": "DateResult GetAge(DateTime subtractDate)"
 	},
 	{
-	    "Name": "GetInt",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int GetInt(string rawValue, int def = -1000)"
+		"Name": "GetInt",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int GetInt(string rawValue, int def = -1000)"
 	},
 	{
-	    "Name": "TryGetInt",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int TryGetInt(string rawValue)"
+		"Name": "TryGetInt",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int TryGetInt(string rawValue)"
 	},
 	{
-	    "Name": "GetDouble",
-	    "Detail": "double",
-	    "Kind": "Function",
-	    "Documentation": "double GetDouble(string rawValue)"
+		"Name": "GetDouble",
+		"Detail": "double",
+		"Kind": "Function",
+		"Documentation": "double GetDouble(string rawValue)"
 	},
 	{
-	    "Name": "GetFloat",
-	    "Detail": "float",
-	    "Kind": "Function",
-	    "Documentation": "float GetFloat(string rawValue)"
+		"Name": "GetFloat",
+		"Detail": "float",
+		"Kind": "Function",
+		"Documentation": "float GetFloat(string rawValue)"
 	},
 	{
-	    "Name": "GetDateTime",
-	    "Detail": "DateTime",
-	    "Kind": "Function",
-	    "Documentation": "DateTime GetDateTime(string rawValue)"
+		"Name": "GetDateTime",
+		"Detail": "DateTime",
+		"Kind": "Function",
+		"Documentation": "DateTime GetDateTime(string rawValue)"
 	},
 	{
-	    "Name": "InterviewStartDate",
-	    "Detail": "DateTime",
-	    "Kind": "Function",
-	    "Documentation": "DateTime InterviewStartDate()"
+		"Name": "InterviewStartDate",
+		"Detail": "DateTime",
+		"Kind": "Function",
+		"Documentation": "DateTime InterviewStartDate()"
 	},
 	{
-	    "Name": "MailSend",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void MailSend(string recipient, string body, string subject)"
+		"Name": "MailSend",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void MailSend(string recipient, string body, string subject)"
 	},
 	{
-	    "Name": "MailSend",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void MailSend(string recipient, string recipientBlind, string body, string subject)"
+		"Name": "MailSend",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void MailSend(string recipient, string recipientBlind, string body, string subject)"
 	},
 	{
-	    "Name": "MailSend",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void MailSend(string mailFrom, string recipient, string recipientBlind, string body, string subject, string attachments)"
+		"Name": "MailSend",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void MailSend(string mailFrom, string recipient, string recipientBlind, string body, string subject, string attachments)"
 	},
 	{
-	    "Name": "GetListItemVar",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string GetListItemVar(string listId, string itemId, int varIndex)"
+		"Name": "GetListItemVar",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string GetListItemVar(string listId, string itemId, int varIndex)"
 	},
 	{
-	    "Name": "GetListItemVar",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string GetListItemVar(string listId, int itemIndex, int varIndex)"
+		"Name": "GetListItemVar",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string GetListItemVar(string listId, int itemIndex, int varIndex)"
 	},
 	{
-	    "Name": "GetListItemText",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string GetListItemText(string listId, string itemId)"
+		"Name": "GetListItemText",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string GetListItemText(string listId, string itemId)"
 	},
 	{
-	    "Name": "GetListItemText",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string GetListItemText(string listId, int itemIndex)"
+		"Name": "GetListItemText",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string GetListItemText(string listId, int itemIndex)"
 	},
 	{
-	    "Name": "getRedirectUrl",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string getRedirectUrl()"
+		"Name": "getRedirectUrl",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string getRedirectUrl()"
 	},
 	{
-	    "Name": "GetPageTime",
-	    "Detail": "DateTime",
-	    "Kind": "Function",
-	    "Documentation": "DateTime GetPageTime(string pageId, string side = \"Client\")"
+		"Name": "GetPageTime",
+		"Detail": "DateTime",
+		"Kind": "Function",
+		"Documentation": "DateTime GetPageTime(string pageId, string side = \"Client\")"
 	},
 	{
-	    "Name": "DataHashExist",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool DataHashExist(string hash)"
+		"Name": "DataHashExist",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool DataHashExist(string hash)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerInsert",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void ExtSurveyAnswerInsert(int extSurveyId, string pageId, string questionId, string answerId, string val = null)"
+		"Name": "ExtSurveyAnswerInsert",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerInsert(int extSurveyId, string pageId, string questionId, string answerId, string val = null)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerUpdateP",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, string answerId, string val = null)"
+		"Name": "ExtSurveyAnswerUpdateP",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, string answerId, string val = null)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerUpdate",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void ExtSurveyAnswerUpdate(int extSurveyId, string questionId, string answerId, string val = null)"
+		"Name": "ExtSurveyAnswerUpdate",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerUpdate(int extSurveyId, string questionId, string answerId, string val = null)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerDelete",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void ExtSurveyAnswerDelete(int extSurveyId, string pageId, string questionId, string answerId)"
+		"Name": "ExtSurveyAnswerDelete",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerDelete(int extSurveyId, string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerDelete",
-	    "Detail": "void",
-	    "Kind": "Function",
-	    "Documentation": "void ExtSurveyAnswerDelete(int extSurveyId, string questionId, string answerId)"
+		"Name": "ExtSurveyAnswerDelete",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerDelete(int extSurveyId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerExists",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtSurveyAnswerExists(int extSurveyId, string pageId, string questionId, string answerId)"
+		"Name": "ExtSurveyAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExists(int extSurveyId, string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerExists",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtSurveyAnswerExists(int extSurveyId, string questionId, string answerId)"
+		"Name": "ExtSurveyAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExists(int extSurveyId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerExistsAny",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtSurveyAnswerExistsAny(int extSurveyId, string questionId, string srcRange)"
+		"Name": "ExtSurveyAnswerExistsAny",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExistsAny(int extSurveyId, string questionId, string srcRange)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerExistsAny",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtSurveyAnswerExistsAny(int extSurveyId, string pageId, string questionId, string srcRange)"
+		"Name": "ExtSurveyAnswerExistsAny",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExistsAny(int extSurveyId, string pageId, string questionId, string srcRange)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerExistsForRange",
-	    "Detail": "bool",
-	    "Kind": "Function",
-	    "Documentation": "bool ExtSurveyAnswerExistsForRange(int extSurveyId, string questionId, string srcRange, LogicalOperator oper)"
+		"Name": "ExtSurveyAnswerExistsForRange",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExistsForRange(int extSurveyId, string questionId, string srcRange, LogicalOperator oper)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerValue",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string ExtSurveyAnswerValue(int extSurveyId, string pageId, string questionId, string answerId)"
+		"Name": "ExtSurveyAnswerValue",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtSurveyAnswerValue(int extSurveyId, string pageId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerValue",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string ExtSurveyAnswerValue(int extSurveyId, string questionId, string answerId)"
+		"Name": "ExtSurveyAnswerValue",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtSurveyAnswerValue(int extSurveyId, string questionId, string answerId)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerID",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string ExtSurveyAnswerID(int extSurveyId, string pageId, string questionId)"
+		"Name": "ExtSurveyAnswerID",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtSurveyAnswerID(int extSurveyId, string pageId, string questionId)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerMarked",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string ExtSurveyAnswerMarked(int extSurveyId, string pageId, string questionId)"
+		"Name": "ExtSurveyAnswerMarked",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtSurveyAnswerMarked(int extSurveyId, string pageId, string questionId)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerIDs",
-	    "Detail": "string[]",
-	    "Kind": "Function",
-	    "Documentation": "string[] ExtSurveyAnswerIDs(int extSurveyId, string pageId, string questionId)"
+		"Name": "ExtSurveyAnswerIDs",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] ExtSurveyAnswerIDs(int extSurveyId, string pageId, string questionId)"
 	},
 	{
-	    "Name": "ExtSurveyAnswerCount",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int ExtSurveyAnswerCount(int extSurveyId, string pageId, string questionId)"
+		"Name": "ExtSurveyAnswerCount",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int ExtSurveyAnswerCount(int extSurveyId, string pageId, string questionId)"
 	},
 	{
-	    "Name": "ExtSurveyInterviewID",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int ExtSurveyInterviewID(int extSurveyId)"
+		"Name": "ExtSurveyInterviewID",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int ExtSurveyInterviewID(int extSurveyId)"
 	},
 	{
-	    "Name": "ExtSurveyRespondent",
-	    "Detail": "string",
-	    "Kind": "Function",
-	    "Documentation": "string ExtSurveyRespondent(int extSurveyId)"
+		"Name": "ExtSurveyRespondent",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtSurveyRespondent(int extSurveyId)"
 	},
 	{
-	    "Name": "ExtSurveyInterviewStatus",
-	    "Detail": "int",
-	    "Kind": "Function",
-	    "Documentation": "int ExtSurveyInterviewStatus(int extSurveyId)"
+		"Name": "ExtSurveyInterviewStatus",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int ExtSurveyInterviewStatus(int extSurveyId)"
 	}
 ];
 
@@ -1036,1531 +1036,1531 @@ export const Code = ManualCode.concat(KnownCode);
 
 export const Attributes = {
 	"ExportDataSettings": [
-	    {
-	        "Name": "VarDelimiter",
-	        "Default": ".",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Statuses",
-	        "Default": "all",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Utf8",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "CheckBoxMultiple",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "CheckBoxBinary",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "CutLabels",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "WriteCsvLabels",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ExportPageTime",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    }
-	],
-	"Settings": [
-	    {
-	        "Name": "LogoText",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "CompletePage",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ClosePage",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "CompleteUrl",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "UrlSuccess",
-	        "Default": "//launch.survstat.ru/finish?id=@RespID&type=@StatusID&sel=@AnswerValue('pre_data', 'sel')",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "UrlScreenoutEarly",
-	        "Default": "//launch.survstat.ru/finish?id=@RespID&type=@StatusID&sel=@AnswerValue('pre_data', 'sel')",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "UrlScreenoutLate",
-	        "Default": "//launch.survstat.ru/finish?id=@RespID&type=@StatusID&sel=@AnswerValue('pre_data', 'sel')",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "UrlQuota",
-	        "Default": "//launch.survstat.ru/finish?id=@RespID&type=@StatusID&sel=@AnswerValue('pre_data', 'sel')",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ExtPars",
-	        "Default": "resp/Внешний ID,s/Пол,a/Возраст",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Culture",
-	        "Default": "ru-RU",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "StatusAltSuccess",
-	        "Type": "String",
-	        Auto: "51"
-	    },
-	    {
-	        "Name": "StatusAltScreenoutEarly",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "StatusAltScreenoutLate",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "StatusAltQuota",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "TimeoutMessage",
-	        "Default": "Данные на странице устарели. Обновляем..",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "UrlAgreement",
-	        "Default": "https://survey.survstat.ru/agreement",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "UrlPrivacy",
-	        "Default": "https://docs.survstat.ru/privacy",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ExtLibs",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Utf8",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ColorConstructor",
-	        "Default": "false",
-	        "DbValue": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "UseQuotasv3",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    }
-	],
-	"CustomText1": [
-	    {
-	        "Name": "Action",
-	        "Default": "Replace",
-	        "Type": "String",
-	        Auto: "Append"
-	    }
-	],
-	"CustomText2": [
-	    {
-	        "Name": "Action",
-	        "Default": "Replace",
-	        "Type": "String",
-	        Auto: "Append"
-	    }
-	],
-	"Defaults": [
-	    {
-	        "Name": "LogoText",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "LogoUrl",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "CompletePage",
-	        "Default": "_Complete",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ClosePage",
-	        "Default": "_Close",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "NextButton",
-	        "Default": "Далее",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "PrevButton",
-	        "Default": "Назад",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Progress",
-	        "Default": "Пройдено",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "PopupCancelText",
-	        "Default": "Отмена",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "PopupOkText",
-	        "Default": "Ок",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "LandscapeOrientationText",
-	        "Default": "ПОВЕРНИТЕ ВАШЕ УСТРОЙСТВО",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "LandscapeOrientationHintText",
-	        "Default": "в горизонтальное положение для более комфортного просмотра",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "PortraitOrientationText",
-	        "Default": "ПОВЕРНИТЕ ВАШЕ УСТРОЙСТВО",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "PortraitOrientationHintText",
-	        "Default": "в вертикальное положение для более комфортного просмотра",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "EmptyError",
-	        "Default": "Пожалуйста, не оставляйте вопросы без ответа",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "TextError",
-	        "Default": "Пожалуйста, введите текст",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "IntError",
-	        "Default": "Пожалуйста, введите целое число",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "NumberError",
-	        "Default": "Пожалуйста, введите число",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "DateError",
-	        "Default": "Пожалуйста, укажите дату",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "SelectError",
-	        "Default": "Эти варианты ответа не могут быть отмечены одновременно",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "RangeError",
-	        "Default": "Выбранный вариант ответа должен иметь другое значение",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "LengthError",
-	        "Default": "Введённый Вами текст слишком длинный",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "MaxAnswersError",
-	        "Default": "Укажите, пожалуйста, меньшее количество ответов",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "MinAnswersError",
-	        "Default": "Укажите, пожалуйста, большее количество ответов",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ExchangeError",
-	        "Default": "Неверный запрос к странице",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "CommentText",
-	        "Default": "Здесь Вы можете оставить любой комментарий по ходу опроса",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ErrorTitle",
-	        "Default": "Ошибка",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "GeneralErrorText",
-	        "Default": "Проверьте, пожалуйста, правильность заполнения страницы",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "GeneralErrorButton",
-	        "Default": "Ок",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "WaitingText",
-	        "Default": "Пожалуйста, подождите, пока загрузится страница",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "AgreementText",
-	        "Default": "Пользовательское соглашение",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "PrivacyText",
-	        "Default": "Политика конфиденциальности",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "SupportText",
-	        "Default": "Нашли ошибку или что-то не работает?",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "SupportEditText",
-	        "Default": "Опишите проблему здесь",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "SupportSendText",
-	        "Default": "Отправить",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "SupportCloseText",
-	        "Default": "Отмена",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "SupportSuccessText",
-	        "Default": "Спасибо! Информация о Вашей проблеме будет передана администрации проекта.",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "SupportFailText",
-	        "Default": "Сообщение не было отправлено",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "CommentHeader",
-	        "Default": "Здесь Вы можете оставить любой комментарий по ходу опроса",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Copyright",
-	        "Default": "Powered by SurveyStat",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "NoflashText",
-	        "Default": "<p>На Вашем компьютере установлена старая версия flash-плеера, либо плеер не установлен. Вы можете скачать последнюю версию пройдя по ссылке ниже</p><a href='http://get.adobe.com/flashplayer/'><img border='0' src='http://www.adobe.com/images/shared/download_buttons/get_adobe_flash_player.png' alt='Скачать flash-плеер' /></a>",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Title",
-	        "Default": "Исследование",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintRadioButton",
-	        "Default": "Один ответ",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintCheckBox",
-	        "Default": "Отметьте все подходящие ответы",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintText",
-	        "Default": "Запишите ответ в поле ниже",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintInteger",
-	        "Default": "Введите число в поле ниже",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintMemo",
-	        "Default": "Мы будем благодарны Вам за подробный ответ",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintUnionVertical",
-	        "Default": "колонке",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintUnionHorizontal",
-	        "Default": "строке",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintUnion",
-	        "Default": "@HintType по каждой @HintOrientation",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ButtonTimeoutWaitText",
-	        "Default": "Ждите @Countdown сек",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "WarnClosingText",
-	        "Default": "Опрос ещё не завершён, Вы уверены, что хотите закрыть его?",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "CompleteUrl",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ClickPointRemoveText",
-	        "Default": "Удалить",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintMinAnswers",
-	        "Default": "Не менее @count ответов",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintMaxAnswers",
-	        "Default": "Не более @count ответов",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintEqualsAnswers",
-	        "Default": "Укажите точное количество ответов: @count",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintMaxDiffDesktop",
-	        "Default": "Выберите вариант ответа, который Вам @labelleast, и вариант ответа, который Вам @labelmost",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "HintMaxDiffMobile",
-	        "Default": "Сделайте жест влево для варианта ответа, который Вам @labelleast, и жест вправо для варианта ответа, который Вам @labelmost",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ShowProgress",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ShowNextButton",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ShowPrevButton",
-	        "Default": "false",
-	        "AllowCode": "true",
-	        "DbValue": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ProhibitSelection",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ShowSupport",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ShowAgreement",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ShowPrivacy",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ShowComment",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "NumberAnswers",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "LogoShow",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "LogoOnce",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "WarnClosing",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ShowQuestionIds",
-	        "Default": "false",
-	        "DbValue": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "WaitingDelay",
-	        "Default": "2000",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "EmphaseTimeout",
-	        "Default": "3000",
-	        "Type": "Integer"
-	    },
-	],
-	"Page": [
-	    {
-	        Name: "Id",
-	        Type: "String"
-	    },
-	    {
-	        "Name": "SyncId",
-	        "AllowCode": "true",
-	        "Type": "String",
-	        Auto: "@ID"
-	    },
-	    {
-	        "Name": "Header",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ScreenOrientation",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Footer",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ExportLabel",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "MixId",
-	        Result: "getAllMixIds",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "InvId",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ButtonTimeout",
-	        "AllowCode": "true",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "PostbackTimeout",
-	        "AllowCode": "true",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "CustomProgress",
-	        "AllowCode": "true",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "CountProgress",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Mix",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Inv",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Fix",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "End",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "StructIgnore",
-	        "Type": "Boolean"
-	    },
-	],
-	"ListItem": [
-	    {
-	        Name: "Id",
-	        Type: "String"
-	    },
-	    {
-	        "Name": "Text",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        Name: "Var",
-	        Type: "String"
-	    }
-	],
-	"List": [
-	    {
-	        Name: "Id",
-	        Type: "String"
-	    },
-	    {
-	        "Name": "SaveToDb",
-	        "Type": "Boolean"
-	    }
-	],
-	"Question": [
-	    {
-	        Name: "Id",
-	        Type: "String"
-	    },
-	    {
-	        "Name": "Reverse",
-	        "Type": "Boolean"
-	    },
-	    {
-	        Name: "Orientation",
-	        Default: "Vertical",
-	        Auto: "Horizontal"
-	    },
-	    {
-	        "Name": "Type",
-	        "Default": "RadioButton",
-	        "Type": "QuestionType",
-	        Result: "getQuestionTypes"
-	    },
-	    {
-	        "Name": "SyncId",
-	        "AllowCode": "true",
-	        "Type": "String",
-	        Auto: "@ID"
-	    },
-	    {
-	        "Name": "Text",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "EndText",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Header",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Hint",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "SubText",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Title",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Store",
-	        "Type": "String",
-	        Result: "getAllQuestions"
-	    },
-	    {
-	        "Name": "CornerText",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Union",
-	        "Type": "String",
-	        "Auto": "\\$all"
-	    },
-	    {
-	        "Name": "Range",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ExportLabel",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "UnionMixId",
-	        Result: "getAllMixIds",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "MixId",
-	        Result: "getAllMixIds",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "InvId",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "AutoSetSingle",
-	        "AllowCode": "true",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Mix",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Inv",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Imperative",
-	        "Default": "true",
-	        "Type": "Boolean",
-	        Auto: "false"
-	    },
-	    {
-	        "Name": "ImperativeAll",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "UnionMix",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Fix",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "StructIgnore",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "TextWidth",
-	        "Default": "100",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "EndTextWidth",
-	        "Default": "20",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "MinAnswers",
-	        "AllowCode": "true",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "MaxAnswers",
-	        "AllowCode": "true",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "EqualsAnswers",
-	        "AllowCode": "true",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "Length",
-	        "Type": "Integer"
-	    }
-	],
-	"Answer": [
-	    {
-	        Name: "Id",
-	        Type: "String"
-	    },
-	    {
-	        "Name": "SyncId",
-	        "AllowCode": "true",
-	        "Type": "String",
-	        Auto: "@ID"
-	    },
-	    {
-	        "Name": "Text",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "EndText",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Title",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Placeholder",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Value",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Range",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "ExportLabel",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Fix",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "NoUseInQstFilter",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ShowDay",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ShowMonth",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "ShowYear",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Solo",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Imperative",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Reset",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "StructIgnore",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Type",
-	        "Type": "QuestionType",
-	        Auto: "Text"
-	    },
-	    {
-	        "Name": "Length",
-	        "Type": "Integer"
-	    }
-	],
-	"Filter": [
-	    {
-	        "Name": "Spread",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Operator",
-	        "Default": "And",
-	        "Type": "LogicalOperator"
-	    },
-	    {
-	        "Name": "Side",
-	        "Default": "Server",
-	        "Type": "ProcessSide",
-	        Auto: "Client"
-	    }
-	],
-	"Condition": [
-	    {
-	        "Name": "Operator",
-	        "Default": "Or",
-	        "Type": "LogicalOperator"
-	    }
-	],
-	"ConditionItem": [
-	    {
-	        "Name": "Page",
-	        Result: "getAllPages",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Question",
-	        "Type": "String",
-	        Result: "getAllQuestions"
-	    },
-	    {
-	        "Name": "Answer",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Value",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Operator",
-	        "Default": "Nothing",
-	        "Type": "LogicalOperator"
-	    },
-	    {
-	        "Name": "RangeOperator",
-	        "Default": "Or",
-	        "Type": "LogicalOperator"
-	    },
-	    {
-	        "Name": "Apply",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Generable",
-	        "Type": "Boolean"
-	    }
-	],
-	"Redirect": [
-	    {
-	        "Name": "Page",
-	        Result: "getAllPages",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Url",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Status",
-	        "Type": "Integer",
-	        Auto: "19"
-	    },
-	    {
-	        "Name": "Operator",
-	        "Default": "And",
-	        "Type": "LogicalOperator"
-	    },
-	    {
-	        "Name": "Runtime",
-	        "Default": "Declaring",
-	        "Type": "RuntimeType"
-	    },
-	    {
-	        "Name": "Side",
-	        "Default": "Server",
-	        "Type": "ProcessSide"
-	    }
-	],
-	"Quota": [
-	    {
-	        Name: "Id",
-	        Type: "String"
-	    },
-	    {
-	        "Name": "Limit",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "Status",
-	        "Default": "21",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "Enabled",
-	        "Default": "true",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Page",
-	        Result: "getAllPages",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Description",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Url",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Apply",
-	        "Type": "String",
-	        Result: "getAllPages"
-	    },
-	    {
-	        "Name": "Monadic",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Operator",
-	        "Default": "And",
-	        "Type": "LogicalOperator"
-	    },
-	    {
-	        "Name": "Counter",
-	        "Default": "false",
-	        "Type": "Boolean"
+		{
+			"Name": "VarDelimiter",
+			"Default": ".",
+			"Type": "String"
 		},
 		{
-	        "Name": "Optimistic",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    }
+			"Name": "Statuses",
+			"Default": "all",
+			"Type": "String"
+		},
+		{
+			"Name": "Utf8",
+			"Default": "false",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "CheckBoxMultiple",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "CheckBoxBinary",
+			"Default": "false",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "CutLabels",
+			"Default": "false",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "WriteCsvLabels",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ExportPageTime",
+			"Default": "true",
+			"Type": "Boolean"
+		}
+	],
+	"Settings": [
+		{
+			"Name": "LogoText",
+			"Type": "String"
+		},
+		{
+			"Name": "CompletePage",
+			"Type": "String"
+		},
+		{
+			"Name": "ClosePage",
+			"Type": "String"
+		},
+		{
+			"Name": "CompleteUrl",
+			"Type": "String"
+		},
+		{
+			"Name": "UrlSuccess",
+			"Default": "//launch.survstat.ru/finish?id=@RespID&type=@StatusID&sel=@AnswerValue('pre_data', 'sel')",
+			"Type": "String"
+		},
+		{
+			"Name": "UrlScreenoutEarly",
+			"Default": "//launch.survstat.ru/finish?id=@RespID&type=@StatusID&sel=@AnswerValue('pre_data', 'sel')",
+			"Type": "String"
+		},
+		{
+			"Name": "UrlScreenoutLate",
+			"Default": "//launch.survstat.ru/finish?id=@RespID&type=@StatusID&sel=@AnswerValue('pre_data', 'sel')",
+			"Type": "String"
+		},
+		{
+			"Name": "UrlQuota",
+			"Default": "//launch.survstat.ru/finish?id=@RespID&type=@StatusID&sel=@AnswerValue('pre_data', 'sel')",
+			"Type": "String"
+		},
+		{
+			"Name": "ExtPars",
+			"Default": "resp/Внешний ID,s/Пол,a/Возраст",
+			"Type": "String"
+		},
+		{
+			"Name": "Culture",
+			"Default": "ru-RU",
+			"Type": "String"
+		},
+		{
+			"Name": "StatusAltSuccess",
+			"Type": "String",
+			Auto: "51"
+		},
+		{
+			"Name": "StatusAltScreenoutEarly",
+			"Type": "String"
+		},
+		{
+			"Name": "StatusAltScreenoutLate",
+			"Type": "String"
+		},
+		{
+			"Name": "StatusAltQuota",
+			"Type": "String"
+		},
+		{
+			"Name": "TimeoutMessage",
+			"Default": "Данные на странице устарели. Обновляем..",
+			"Type": "String"
+		},
+		{
+			"Name": "UrlAgreement",
+			"Default": "https://survey.survstat.ru/agreement",
+			"Type": "String"
+		},
+		{
+			"Name": "UrlPrivacy",
+			"Default": "https://docs.survstat.ru/privacy",
+			"Type": "String"
+		},
+		{
+			"Name": "ExtLibs",
+			"Type": "String"
+		},
+		{
+			"Name": "Utf8",
+			"Default": "false",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ColorConstructor",
+			"Default": "false",
+			"DbValue": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "UseQuotasv3",
+			"Default": "false",
+			"Type": "Boolean"
+		}
+	],
+	"CustomText1": [
+		{
+			"Name": "Action",
+			"Default": "Replace",
+			"Type": "String",
+			Auto: "Append"
+		}
+	],
+	"CustomText2": [
+		{
+			"Name": "Action",
+			"Default": "Replace",
+			"Type": "String",
+			Auto: "Append"
+		}
+	],
+	"Defaults": [
+		{
+			"Name": "LogoText",
+			"Type": "String"
+		},
+		{
+			"Name": "LogoUrl",
+			"Type": "String"
+		},
+		{
+			"Name": "CompletePage",
+			"Default": "_Complete",
+			"Type": "String"
+		},
+		{
+			"Name": "ClosePage",
+			"Default": "_Close",
+			"Type": "String"
+		},
+		{
+			"Name": "NextButton",
+			"Default": "Далее",
+			"Type": "String"
+		},
+		{
+			"Name": "PrevButton",
+			"Default": "Назад",
+			"Type": "String"
+		},
+		{
+			"Name": "Progress",
+			"Default": "Пройдено",
+			"Type": "String"
+		},
+		{
+			"Name": "PopupCancelText",
+			"Default": "Отмена",
+			"Type": "String"
+		},
+		{
+			"Name": "PopupOkText",
+			"Default": "Ок",
+			"Type": "String"
+		},
+		{
+			"Name": "LandscapeOrientationText",
+			"Default": "ПОВЕРНИТЕ ВАШЕ УСТРОЙСТВО",
+			"Type": "String"
+		},
+		{
+			"Name": "LandscapeOrientationHintText",
+			"Default": "в горизонтальное положение для более комфортного просмотра",
+			"Type": "String"
+		},
+		{
+			"Name": "PortraitOrientationText",
+			"Default": "ПОВЕРНИТЕ ВАШЕ УСТРОЙСТВО",
+			"Type": "String"
+		},
+		{
+			"Name": "PortraitOrientationHintText",
+			"Default": "в вертикальное положение для более комфортного просмотра",
+			"Type": "String"
+		},
+		{
+			"Name": "EmptyError",
+			"Default": "Пожалуйста, не оставляйте вопросы без ответа",
+			"Type": "String"
+		},
+		{
+			"Name": "TextError",
+			"Default": "Пожалуйста, введите текст",
+			"Type": "String"
+		},
+		{
+			"Name": "IntError",
+			"Default": "Пожалуйста, введите целое число",
+			"Type": "String"
+		},
+		{
+			"Name": "NumberError",
+			"Default": "Пожалуйста, введите число",
+			"Type": "String"
+		},
+		{
+			"Name": "DateError",
+			"Default": "Пожалуйста, укажите дату",
+			"Type": "String"
+		},
+		{
+			"Name": "SelectError",
+			"Default": "Эти варианты ответа не могут быть отмечены одновременно",
+			"Type": "String"
+		},
+		{
+			"Name": "RangeError",
+			"Default": "Выбранный вариант ответа должен иметь другое значение",
+			"Type": "String"
+		},
+		{
+			"Name": "LengthError",
+			"Default": "Введённый Вами текст слишком длинный",
+			"Type": "String"
+		},
+		{
+			"Name": "MaxAnswersError",
+			"Default": "Укажите, пожалуйста, меньшее количество ответов",
+			"Type": "String"
+		},
+		{
+			"Name": "MinAnswersError",
+			"Default": "Укажите, пожалуйста, большее количество ответов",
+			"Type": "String"
+		},
+		{
+			"Name": "ExchangeError",
+			"Default": "Неверный запрос к странице",
+			"Type": "String"
+		},
+		{
+			"Name": "CommentText",
+			"Default": "Здесь Вы можете оставить любой комментарий по ходу опроса",
+			"Type": "String"
+		},
+		{
+			"Name": "ErrorTitle",
+			"Default": "Ошибка",
+			"Type": "String"
+		},
+		{
+			"Name": "GeneralErrorText",
+			"Default": "Проверьте, пожалуйста, правильность заполнения страницы",
+			"Type": "String"
+		},
+		{
+			"Name": "GeneralErrorButton",
+			"Default": "Ок",
+			"Type": "String"
+		},
+		{
+			"Name": "WaitingText",
+			"Default": "Пожалуйста, подождите, пока загрузится страница",
+			"Type": "String"
+		},
+		{
+			"Name": "AgreementText",
+			"Default": "Пользовательское соглашение",
+			"Type": "String"
+		},
+		{
+			"Name": "PrivacyText",
+			"Default": "Политика конфиденциальности",
+			"Type": "String"
+		},
+		{
+			"Name": "SupportText",
+			"Default": "Нашли ошибку или что-то не работает?",
+			"Type": "String"
+		},
+		{
+			"Name": "SupportEditText",
+			"Default": "Опишите проблему здесь",
+			"Type": "String"
+		},
+		{
+			"Name": "SupportSendText",
+			"Default": "Отправить",
+			"Type": "String"
+		},
+		{
+			"Name": "SupportCloseText",
+			"Default": "Отмена",
+			"Type": "String"
+		},
+		{
+			"Name": "SupportSuccessText",
+			"Default": "Спасибо! Информация о Вашей проблеме будет передана администрации проекта.",
+			"Type": "String"
+		},
+		{
+			"Name": "SupportFailText",
+			"Default": "Сообщение не было отправлено",
+			"Type": "String"
+		},
+		{
+			"Name": "CommentHeader",
+			"Default": "Здесь Вы можете оставить любой комментарий по ходу опроса",
+			"Type": "String"
+		},
+		{
+			"Name": "Copyright",
+			"Default": "Powered by SurveyStat",
+			"Type": "String"
+		},
+		{
+			"Name": "NoflashText",
+			"Default": "<p>На Вашем компьютере установлена старая версия flash-плеера, либо плеер не установлен. Вы можете скачать последнюю версию пройдя по ссылке ниже</p><a href='http://get.adobe.com/flashplayer/'><img border='0' src='http://www.adobe.com/images/shared/download_buttons/get_adobe_flash_player.png' alt='Скачать flash-плеер' /></a>",
+			"Type": "String"
+		},
+		{
+			"Name": "Title",
+			"Default": "Исследование",
+			"Type": "String"
+		},
+		{
+			"Name": "HintRadioButton",
+			"Default": "Один ответ",
+			"Type": "String"
+		},
+		{
+			"Name": "HintCheckBox",
+			"Default": "Отметьте все подходящие ответы",
+			"Type": "String"
+		},
+		{
+			"Name": "HintText",
+			"Default": "Запишите ответ в поле ниже",
+			"Type": "String"
+		},
+		{
+			"Name": "HintInteger",
+			"Default": "Введите число в поле ниже",
+			"Type": "String"
+		},
+		{
+			"Name": "HintMemo",
+			"Default": "Мы будем благодарны Вам за подробный ответ",
+			"Type": "String"
+		},
+		{
+			"Name": "HintUnionVertical",
+			"Default": "колонке",
+			"Type": "String"
+		},
+		{
+			"Name": "HintUnionHorizontal",
+			"Default": "строке",
+			"Type": "String"
+		},
+		{
+			"Name": "HintUnion",
+			"Default": "@HintType по каждой @HintOrientation",
+			"Type": "String"
+		},
+		{
+			"Name": "ButtonTimeoutWaitText",
+			"Default": "Ждите @Countdown сек",
+			"Type": "String"
+		},
+		{
+			"Name": "WarnClosingText",
+			"Default": "Опрос ещё не завершён, Вы уверены, что хотите закрыть его?",
+			"Type": "String"
+		},
+		{
+			"Name": "CompleteUrl",
+			"Type": "String"
+		},
+		{
+			"Name": "ClickPointRemoveText",
+			"Default": "Удалить",
+			"Type": "String"
+		},
+		{
+			"Name": "HintMinAnswers",
+			"Default": "Не менее @count ответов",
+			"Type": "String"
+		},
+		{
+			"Name": "HintMaxAnswers",
+			"Default": "Не более @count ответов",
+			"Type": "String"
+		},
+		{
+			"Name": "HintEqualsAnswers",
+			"Default": "Укажите точное количество ответов: @count",
+			"Type": "String"
+		},
+		{
+			"Name": "HintMaxDiffDesktop",
+			"Default": "Выберите вариант ответа, который Вам @labelleast, и вариант ответа, который Вам @labelmost",
+			"Type": "String"
+		},
+		{
+			"Name": "HintMaxDiffMobile",
+			"Default": "Сделайте жест влево для варианта ответа, который Вам @labelleast, и жест вправо для варианта ответа, который Вам @labelmost",
+			"Type": "String"
+		},
+		{
+			"Name": "ShowProgress",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ShowNextButton",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ShowPrevButton",
+			"Default": "false",
+			"AllowCode": "true",
+			"DbValue": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ProhibitSelection",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ShowSupport",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ShowAgreement",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ShowPrivacy",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ShowComment",
+			"Default": "false",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "NumberAnswers",
+			"Default": "false",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "LogoShow",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "LogoOnce",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "WarnClosing",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ShowQuestionIds",
+			"Default": "false",
+			"DbValue": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "WaitingDelay",
+			"Default": "2000",
+			"Type": "Integer"
+		},
+		{
+			"Name": "EmphaseTimeout",
+			"Default": "3000",
+			"Type": "Integer"
+		},
+	],
+	"Page": [
+		{
+			Name: "Id",
+			Type: "String"
+		},
+		{
+			"Name": "SyncId",
+			"AllowCode": "true",
+			"Type": "String",
+			Auto: "@ID"
+		},
+		{
+			"Name": "Header",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "ScreenOrientation",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Footer",
+			"Type": "String"
+		},
+		{
+			"Name": "ExportLabel",
+			"Type": "String"
+		},
+		{
+			"Name": "MixId",
+			Result: "getAllMixIds",
+			"Type": "String"
+		},
+		{
+			"Name": "InvId",
+			"Type": "String"
+		},
+		{
+			"Name": "ButtonTimeout",
+			"AllowCode": "true",
+			"Type": "Integer"
+		},
+		{
+			"Name": "PostbackTimeout",
+			"AllowCode": "true",
+			"Type": "Integer"
+		},
+		{
+			"Name": "CustomProgress",
+			"AllowCode": "true",
+			"Type": "Integer"
+		},
+		{
+			"Name": "CountProgress",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Mix",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Inv",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Fix",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "End",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "StructIgnore",
+			"Type": "Boolean"
+		},
+	],
+	"ListItem": [
+		{
+			Name: "Id",
+			Type: "String"
+		},
+		{
+			"Name": "Text",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			Name: "Var",
+			Type: "String"
+		}
+	],
+	"List": [
+		{
+			Name: "Id",
+			Type: "String"
+		},
+		{
+			"Name": "SaveToDb",
+			"Type": "Boolean"
+		}
+	],
+	"Question": [
+		{
+			Name: "Id",
+			Type: "String"
+		},
+		{
+			"Name": "Reverse",
+			"Type": "Boolean"
+		},
+		{
+			Name: "Orientation",
+			Default: "Vertical",
+			Auto: "Horizontal"
+		},
+		{
+			"Name": "Type",
+			"Default": "RadioButton",
+			"Type": "QuestionType",
+			Result: "getQuestionTypes"
+		},
+		{
+			"Name": "SyncId",
+			"AllowCode": "true",
+			"Type": "String",
+			Auto: "@ID"
+		},
+		{
+			"Name": "Text",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "EndText",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Header",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Hint",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "SubText",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Title",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Store",
+			"Type": "String",
+			Result: "getAllQuestions"
+		},
+		{
+			"Name": "CornerText",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Union",
+			"Type": "String",
+			"Auto": "\\$all"
+		},
+		{
+			"Name": "Range",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "ExportLabel",
+			"Type": "String"
+		},
+		{
+			"Name": "UnionMixId",
+			Result: "getAllMixIds",
+			"Type": "String"
+		},
+		{
+			"Name": "MixId",
+			Result: "getAllMixIds",
+			"Type": "String"
+		},
+		{
+			"Name": "InvId",
+			"Type": "String"
+		},
+		{
+			"Name": "AutoSetSingle",
+			"AllowCode": "true",
+			"Default": "false",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Mix",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Inv",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Imperative",
+			"Default": "true",
+			"Type": "Boolean",
+			Auto: "false"
+		},
+		{
+			"Name": "ImperativeAll",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "UnionMix",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Fix",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "StructIgnore",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "TextWidth",
+			"Default": "100",
+			"Type": "Integer"
+		},
+		{
+			"Name": "EndTextWidth",
+			"Default": "20",
+			"Type": "Integer"
+		},
+		{
+			"Name": "MinAnswers",
+			"AllowCode": "true",
+			"Type": "Integer"
+		},
+		{
+			"Name": "MaxAnswers",
+			"AllowCode": "true",
+			"Type": "Integer"
+		},
+		{
+			"Name": "EqualsAnswers",
+			"AllowCode": "true",
+			"Type": "Integer"
+		},
+		{
+			"Name": "Length",
+			"Type": "Integer"
+		}
+	],
+	"Answer": [
+		{
+			Name: "Id",
+			Type: "String"
+		},
+		{
+			"Name": "SyncId",
+			"AllowCode": "true",
+			"Type": "String",
+			Auto: "@ID"
+		},
+		{
+			"Name": "Text",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "EndText",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Title",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Placeholder",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Value",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Range",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "ExportLabel",
+			"Type": "String"
+		},
+		{
+			"Name": "Fix",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "NoUseInQstFilter",
+			"Default": "false",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ShowDay",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ShowMonth",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "ShowYear",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Solo",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Imperative",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Reset",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "StructIgnore",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Type",
+			"Type": "QuestionType",
+			Auto: "Text"
+		},
+		{
+			"Name": "Length",
+			"Type": "Integer"
+		}
+	],
+	"Filter": [
+		{
+			"Name": "Spread",
+			"Type": "String"
+		},
+		{
+			"Name": "Operator",
+			"Default": "And",
+			"Type": "LogicalOperator"
+		},
+		{
+			"Name": "Side",
+			"Default": "Server",
+			"Type": "ProcessSide",
+			Auto: "Client"
+		}
+	],
+	"Condition": [
+		{
+			"Name": "Operator",
+			"Default": "Or",
+			"Type": "LogicalOperator"
+		}
+	],
+	"ConditionItem": [
+		{
+			"Name": "Page",
+			Result: "getAllPages",
+			"Type": "String"
+		},
+		{
+			"Name": "Question",
+			"Type": "String",
+			Result: "getAllQuestions"
+		},
+		{
+			"Name": "Answer",
+			"Type": "String"
+		},
+		{
+			"Name": "Value",
+			"Type": "String"
+		},
+		{
+			"Name": "Operator",
+			"Default": "Nothing",
+			"Type": "LogicalOperator"
+		},
+		{
+			"Name": "RangeOperator",
+			"Default": "Or",
+			"Type": "LogicalOperator"
+		},
+		{
+			"Name": "Apply",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Generable",
+			"Type": "Boolean"
+		}
+	],
+	"Redirect": [
+		{
+			"Name": "Page",
+			Result: "getAllPages",
+			"Type": "String"
+		},
+		{
+			"Name": "Url",
+			"Type": "String"
+		},
+		{
+			"Name": "Status",
+			"Type": "Integer",
+			Auto: "19"
+		},
+		{
+			"Name": "Operator",
+			"Default": "And",
+			"Type": "LogicalOperator"
+		},
+		{
+			"Name": "Runtime",
+			"Default": "Declaring",
+			"Type": "RuntimeType"
+		},
+		{
+			"Name": "Side",
+			"Default": "Server",
+			"Type": "ProcessSide"
+		}
+	],
+	"Quota": [
+		{
+			Name: "Id",
+			Type: "String"
+		},
+		{
+			"Name": "Limit",
+			"Type": "Integer"
+		},
+		{
+			"Name": "Status",
+			"Default": "21",
+			"Type": "Integer"
+		},
+		{
+			"Name": "Enabled",
+			"Default": "true",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Page",
+			Result: "getAllPages",
+			"Type": "String"
+		},
+		{
+			"Name": "Description",
+			"Type": "String"
+		},
+		{
+			"Name": "Url",
+			"Type": "String"
+		},
+		{
+			"Name": "Apply",
+			"Type": "String",
+			Result: "getAllPages"
+		},
+		{
+			"Name": "Monadic",
+			"Type": "String"
+		},
+		{
+			"Name": "Operator",
+			"Default": "And",
+			"Type": "LogicalOperator"
+		},
+		{
+			"Name": "Counter",
+			"Default": "false",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Optimistic",
+			"Default": "false",
+			"Type": "Boolean"
+		}
 	],
 	"Block": [
-	    {
-	        Name: "Id",
-	        Type: "String"
-	    },
-	    {
-	        "Name": "Items",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Title",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Text",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "SyncId",
-	        "AllowCode": "true",
-	        "Type": "String",
-	        Auto: "@ID"
-	    },
-	    {
-	        "Name": "MixId",
-	        Result: "getAllMixIds",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "InvId",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Fix",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Mix",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Inv",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "LocalProgress",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "LocalProgressStart",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "LocalProgressEnd",
-	        "Type": "Integer"
-	    }
+		{
+			Name: "Id",
+			Type: "String"
+		},
+		{
+			"Name": "Items",
+			"Type": "String"
+		},
+		{
+			"Name": "Title",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Text",
+			"Type": "String"
+		},
+		{
+			"Name": "SyncId",
+			"AllowCode": "true",
+			"Type": "String",
+			Auto: "@ID"
+		},
+		{
+			"Name": "MixId",
+			Result: "getAllMixIds",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "InvId",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Fix",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Mix",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Inv",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "LocalProgress",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "LocalProgressStart",
+			"Type": "Integer"
+		},
+		{
+			"Name": "LocalProgressEnd",
+			"Type": "Integer"
+		}
 	],
 	"Repeat": [
-	    {
-	        "Name": "Mix",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "List",
-	        Result: "getAllLists",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "MixId",
-	        Result: "getAllMixIds",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Range",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Length",
-	        "Type": "Integer"
-	    }
+		{
+			"Name": "Mix",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "List",
+			Result: "getAllLists",
+			"Type": "String"
+		},
+		{
+			"Name": "MixId",
+			Result: "getAllMixIds",
+			"Type": "String"
+		},
+		{
+			"Name": "Range",
+			"Type": "String"
+		},
+		{
+			"Name": "Length",
+			"Type": "Integer"
+		}
 	],
 	"Validate": [
-	    {
-	        "Name": "PinQuestion",
-	        "Type": "String",
-	        Result: "getAllQuestions"
-	    },
-	    {
-	        "Name": "PinAnswer",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Message",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Operator",
-	        "Default": "And",
-	        "Type": "LogicalOperator"
-	    }
+		{
+			"Name": "PinQuestion",
+			"Type": "String",
+			Result: "getAllQuestions"
+		},
+		{
+			"Name": "PinAnswer",
+			"Type": "String"
+		},
+		{
+			"Name": "Message",
+			"Type": "String"
+		},
+		{
+			"Name": "Operator",
+			"Default": "And",
+			"Type": "LogicalOperator"
+		}
 	],
 	"Methods": [
-	    {
-	        Name: "Action",
-	        Default: "Append"
-	    }
+		{
+			Name: "Action",
+			Default: "Append"
+		}
 	],
 	"Split": [
-	    {
-	        "Name": "Name",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Source",
-	        "Type": "String"
-	    }
+		{
+			"Name": "Name",
+			"Type": "String"
+		},
+		{
+			"Name": "Source",
+			"Type": "String"
+		}
 	],
 	"SplitItem": [
-	    {
-	        Name: "Id",
-	        Type: "String"
-	    },
-	    {
-	        "Name": "Text",
-	        "Type": "String"
-	    }
+		{
+			Name: "Id",
+			Type: "String"
+		},
+		{
+			"Name": "Text",
+			"Type": "String"
+		}
 	],
 	"Statistic": [
-	    {
-	        Name: "Id",
-	        Type: "String"
-	    },
-	    {
-	        "Name": "BindInterval",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "Group",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "Union",
-	        "Type": "Integer"
-	    },
-	    {
-	        "Name": "Name",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Source",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Split",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Base",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Status",
-	        "Type": "String",
-	        Auto: "18"
-	    },
-	    {
-	        "Name": "Quota",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "GroupName",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "AllowQuota",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "AllowStatus",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "HideSplit",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "QuotaOnTop",
-	        "Type": "Boolean"
-	    }
+		{
+			Name: "Id",
+			Type: "String"
+		},
+		{
+			"Name": "BindInterval",
+			"Type": "Integer"
+		},
+		{
+			"Name": "Group",
+			"Type": "Integer"
+		},
+		{
+			"Name": "Union",
+			"Type": "Integer"
+		},
+		{
+			"Name": "Name",
+			"Type": "String"
+		},
+		{
+			"Name": "Source",
+			"Type": "String"
+		},
+		{
+			"Name": "Split",
+			"Type": "String"
+		},
+		{
+			"Name": "Base",
+			"Type": "String"
+		},
+		{
+			"Name": "Status",
+			"Type": "String",
+			Auto: "18"
+		},
+		{
+			"Name": "Quota",
+			"Type": "String"
+		},
+		{
+			"Name": "GroupName",
+			"Type": "String"
+		},
+		{
+			"Name": "AllowQuota",
+			"Default": "false",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "AllowStatus",
+			"Default": "false",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "HideSplit",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "QuotaOnTop",
+			"Type": "Boolean"
+		}
 	],
 	"StatisticItem": [
-	    {
-	        Name: "Id",
-	        Type: "String"
-	    },
-	    {
-	        "Name": "Name",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Source",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Func",
-	        "Default": "Pct",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Ignores",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Color",
-	        "Type": "String"
-	    }
+		{
+			Name: "Id",
+			Type: "String"
+		},
+		{
+			"Name": "Name",
+			"Type": "String"
+		},
+		{
+			"Name": "Source",
+			"Type": "String"
+		},
+		{
+			"Name": "Func",
+			"Default": "Pct",
+			"Type": "String"
+		},
+		{
+			"Name": "Ignores",
+			"Type": "String"
+		},
+		{
+			"Name": "Color",
+			"Type": "String"
+		}
 	],
 	"Comment": [
-	    {
-	        "Name": "Text",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    }
+		{
+			"Name": "Text",
+			"AllowCode": "true",
+			"Type": "String"
+		}
 	],
 	"Holder": [
-	    {
-	        "Name": "Fix",
-	        "Default": "false",
-	        "Type": "Boolean"
-	    },
-	    {
-	        "Name": "Questions",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Align",
-	        "Default": "right",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Valign",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Text",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    },
-	    {
-	        "Name": "Width",
-	        "Default": "30%",
-	        "Type": "String"
-	    }
+		{
+			"Name": "Fix",
+			"Default": "false",
+			"Type": "Boolean"
+		},
+		{
+			"Name": "Questions",
+			"Type": "String"
+		},
+		{
+			"Name": "Align",
+			"Default": "right",
+			"Type": "String"
+		},
+		{
+			"Name": "Valign",
+			"Type": "String"
+		},
+		{
+			"Name": "Text",
+			"AllowCode": "true",
+			"Type": "String"
+		},
+		{
+			"Name": "Width",
+			"Default": "30%",
+			"Type": "String"
+		}
 	],
 	"Footer": [
-	    {
-	        "Name": "Text",
-	        "AllowCode": "true",
-	        "Type": "String"
-	    }
+		{
+			"Name": "Text",
+			"AllowCode": "true",
+			"Type": "String"
+		}
 	],
 	"QuotaItem": [
-	    {
-	        "Name": "Page",
-	        "Type": "string",
-	        Result: "getAllPages"
-	    },
-	    {
-	        "Name": "Question",
-	        "Type": "string",
-	        Result: "getAllQuestions"
-	    },
-	    {
-	        "Name": "Answer",
-	        "Type": "string"
-	    },
-	    {
-	        "Name": "Operator",
-	        "Default": "Exists",
-	        "Values": ["Exists", "NotExists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
-	    },
-	    {
-	        Name: "Value"
-	    },
-	    {
-	        Name: "Generable",
-	        Type: "Boolean",
-	        Default: "false"
-	    }
+		{
+			"Name": "Page",
+			"Type": "string",
+			Result: "getAllPages"
+		},
+		{
+			"Name": "Question",
+			"Type": "string",
+			Result: "getAllQuestions"
+		},
+		{
+			"Name": "Answer",
+			"Type": "string"
+		},
+		{
+			"Name": "Operator",
+			"Default": "Exists",
+			"Values": ["Exists", "NotExists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
+		},
+		{
+			Name: "Value"
+		},
+		{
+			Name: "Generable",
+			Type: "Boolean",
+			Default: "false"
+		}
 	],
 	"RedirectItem": [
-	    {
-	        "Name": "Operator",
-	        "Default": "Exists",
-	        "Values": ["Exists", "NotExists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
-	    },
-	    {
-	        Name: "Value"
-	    }
+		{
+			"Name": "Operator",
+			"Default": "Exists",
+			"Values": ["Exists", "NotExists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
+		},
+		{
+			Name: "Value"
+		}
 	],
 	"ValidateItem": [
-	    {
-	        "Name": "Operator",
-	        "Default": "Exists",
-	        "Values": ["Exists", "NotExists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
-	    },
-	    {
-	        Name: "Value"
-	    }
+		{
+			"Name": "Operator",
+			"Default": "Exists",
+			"Values": ["Exists", "NotExists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
+		},
+		{
+			Name: "Value"
+		}
 	]
 };
 
 
 export const CSSnippets = [
 	{
-	    "prefix": "class",
-	    "body": [
-	        "public class ${1:MyClass}",
-	        "{",
-	        "\t$0",
-	        "}"
-	    ],
-	    "description": "Объявление класса"
+		"prefix": "class",
+		"body": [
+			"public class ${1:MyClass}",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Объявление класса"
 	},
 	{
-	    "prefix": "const",
-	    "body": [
-	        "${1:public} const ${2:string} ${3:CONSTANT_NAME} = \"${4:value}\";",
-	        "$0"
-	    ],
-	    "description": "Объявление константы"
+		"prefix": "const",
+		"body": [
+			"${1:public} const ${2:string} ${3:CONSTANT_NAME} = \"${4:value}\";",
+			"$0"
+		],
+		"description": "Объявление константы"
 	},
 	{
-	    "prefix": "do",
-	    "body": [
-	        "do",
-	        "{",
-	        "\t$0",
-	        "} while (${1:true});"
-	    ],
-	    "description": "Блок do-while"
+		"prefix": "do",
+		"body": [
+			"do",
+			"{",
+			"\t$0",
+			"} while (${1:true});"
+		],
+		"description": "Блок do-while"
 	},
 	{
-	    "prefix": "else",
-	    "body": [
-	        "else",
-	        "{",
-	        "\t$0",
-	        "}"
-	    ],
-	    "description": "Блок else"
+		"prefix": "else",
+		"body": [
+			"else",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Блок else"
 	},
 	{
-	    "prefix": "enum",
-	    "body": [
-	        "public enum ${1:MyEnum}Type()",
-	        "{",
-	        "\t$0",
-	        "}"
-	    ],
-	    "description": "Объявление перечисления"
+		"prefix": "enum",
+		"body": [
+			"public enum ${1:MyEnum}Type()",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Объявление перечисления"
 	},
 	{
-	    "prefix": "for",
-	    "body": [
-	        "for (${1:int} ${2:i} = 0; $2 < ${3:length}; $2++)",
-	        "{",
-	        "\t$0",
-	        "}"
-	    ],
-	    "description": "Блок for"
+		"prefix": "for",
+		"body": [
+			"for (${1:int} ${2:i} = 0; $2 < ${3:length}; $2++)",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Блок for"
 	},
 	{
-	    "prefix": "foreach",
-	    "body": [
-	        "foreach (${1:SurveyListItem} ${2:item} in ${3:CurrentSurvey.Lists[\"$4\"].Items})",
-	        "{",
-	        "\t$0",
-	        "}"
-	    ],
-	    "description": "Блок foreach"
+		"prefix": "foreach",
+		"body": [
+			"foreach (${1:SurveyListItem} ${2:item} in ${3:CurrentSurvey.Lists[\"$4\"].Items})",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Блок foreach"
 	},
 	{
-	    "prefix": "if",
-	    "body": [
-	        "if (${1:true})",
-	        "{",
-	        "\t$0",
-	        "}"
-	    ],
-	    "description": "Блок if"
+		"prefix": "if",
+		"body": [
+			"if (${1:true})",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Блок if"
 	},
 	{
-	    "prefix": "ifelse",
-	    "body": [
-	        "if (${1:true})",
-	        "{",
-	        "\t$2",
-	        "}",
-	        "else",
-	        "{",
-	        "\t$0",
-	        "}"
-	    ],
-	    "description": "Блок if-else"
+		"prefix": "ifelse",
+		"body": [
+			"if (${1:true})",
+			"{",
+			"\t$2",
+			"}",
+			"else",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Блок if-else"
 	},
 	{
-	    prefix: "public",
-	    body: [
-	        "public ${1:string} ${2:method}($3)",
-	        "{",
-	        "\t$0",
-	        "}"
-	    ],
-	    description: "Метод public"
+		prefix: "public",
+		body: [
+			"public ${1:string} ${2:method}($3)",
+			"{",
+			"\t$0",
+			"}"
+		],
+		description: "Метод public"
 	},
 	{
-	    "prefix": "struct",
-	    "body": [
-	        "public struct ${1:MyStruct}",
-	        "{",
-	        "\t$0",
-	        "}"
-	    ],
-	    "description": "Объявление структуры"
+		"prefix": "struct",
+		"body": [
+			"public struct ${1:MyStruct}",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Объявление структуры"
 	},
 	{
-	    "prefix": "switch",
-	    "body": [
-	        "switch (${1:switch_on})",
-	        "{",
-	        "\t$0",
-	        "\tdefault:",
-	        "\t\tbreak;",
-	        "}"
-	    ],
-	    "description": "Блок switch"
+		"prefix": "switch",
+		"body": [
+			"switch (${1:switch_on})",
+			"{",
+			"\t$0",
+			"\tdefault:",
+			"\t\tbreak;",
+			"}"
+		],
+		"description": "Блок switch"
 	},
 	{
-	    "prefix": "try",
-	    "body": [
-	        "try",
-	        "{",
-	        "\t$0",
-	        "}",
-	        "catch (${1:}Exception ${2:ex})",
-	        "{\r\n",
-	        "\tthrow;",
-	        "}"
-	    ],
-	    "description": "Блок try-catch"
+		"prefix": "try",
+		"body": [
+			"try",
+			"{",
+			"\t$0",
+			"}",
+			"catch (${1:}Exception ${2:ex})",
+			"{\r\n",
+			"\tthrow;",
+			"}"
+		],
+		"description": "Блок try-catch"
 	},
 	{
-	    "prefix": "tryf",
-	    "body": [
-	        "try",
-	        "{",
-	        "\t$0",
-	        "}",
-	        "catch (${1:}Exception ${2:ex})",
-	        "{\r\n",
-	        "\tthrow;",
-	        "}",
-	        "finally",
-	        "{\r\n",
-	        "}"
-	    ],
-	    "description": "Блок try-finally"
+		"prefix": "tryf",
+		"body": [
+			"try",
+			"{",
+			"\t$0",
+			"}",
+			"catch (${1:}Exception ${2:ex})",
+			"{\r\n",
+			"\tthrow;",
+			"}",
+			"finally",
+			"{\r\n",
+			"}"
+		],
+		"description": "Блок try-finally"
 	},
 	{
-	    "prefix": "while",
-	    "body": [
-	        "while (${1:true})",
-	        "{",
-	        "\t$0",
-	        "}"
-	    ],
-	    "description": "Блок while"
+		"prefix": "while",
+		"body": [
+			"while (${1:true})",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Блок while"
 	},
 	{
-	    "prefix": "DataGetCustoms",
-	    "body": [
-	        "string[][] data = DataGetCustoms(${1:dataId}, ${2:AnswerValue(\"pre_data\", \"respuid\")});",
-	        "for (int i = 0; data.Length > i; i++)",
-	        "{",
-	        "\t$0",
-	        "}"
-	    ],
-	    "description": "Стандартный вызов DataGetCustoms"
+		"prefix": "DataGetCustoms",
+		"body": [
+			"string[][] data = DataGetCustoms(${1:dataId}, ${2:AnswerValue(\"pre_data\", \"respuid\")});",
+			"for (int i = 0; data.Length > i; i++)",
+			"{",
+			"\t$0",
+			"}"
+		],
+		"description": "Стандартный вызов DataGetCustoms"
 	}
 ];
 
@@ -2582,358 +2582,358 @@ export const StaticMethods = {
 
 export const XMLFeatures = [
 	{
-	    "prefix": "_sexList",
-	    "body": [
-	        "<List Id=\"sexList\">",
-	        "\t<Item Id=\"1\" Var=\"Мужчины\"><Text>Man</Text></Item>",
-	        "\t<Item Id=\"2\" Var=\"Женщины\"><Text>Woman</Text></Item>",
-	        "</List>"
-	    ],
-	    "description": "Список всех возможных полов"
+		"prefix": "_sexList",
+		"body": [
+			"<List Id=\"sexList\">",
+			"\t<Item Id=\"1\" Var=\"Мужчины\"><Text>Man</Text></Item>",
+			"\t<Item Id=\"2\" Var=\"Женщины\"><Text>Woman</Text></Item>",
+			"</List>"
+		],
+		"description": "Список всех возможных полов"
 	},
 	{
-	    "prefix": "_monthList",
-	    "body": [
-	        "<List Id=\"monthList\">",
-	        "\t<Item Id=\"1\"><Text>Январь</Text></Item>",
-	        "\t<Item Id=\"2\"><Text>Февраль</Text></Item>",
-	        "\t<Item Id=\"3\"><Text>Март</Text></Item>",
-	        "\t<Item Id=\"4\"><Text>Апрель</Text></Item>",
-	        "\t<Item Id=\"5\"><Text>Май</Text></Item>",
-	        "\t<Item Id=\"6\"><Text>Июнь</Text></Item>",
-	        "\t<Item Id=\"7\"><Text>Июль</Text></Item>",
-	        "\t<Item Id=\"8\"><Text>Август</Text></Item>",
-	        "\t<Item Id=\"9\"><Text>Сентябрь</Text></Item>",
-	        "\t<Item Id=\"10\"><Text>Октябрь</Text></Item>",
-	        "\t<Item Id=\"11\"><Text>Ноябрь</Text></Item>",
-	        "\t<Item Id=\"12\"><Text>Декабрь</Text></Item>",
-	        "</List>"
-	    ],
-	    "description": "Список месяцев"
+		"prefix": "_monthList",
+		"body": [
+			"<List Id=\"monthList\">",
+			"\t<Item Id=\"1\"><Text>Январь</Text></Item>",
+			"\t<Item Id=\"2\"><Text>Февраль</Text></Item>",
+			"\t<Item Id=\"3\"><Text>Март</Text></Item>",
+			"\t<Item Id=\"4\"><Text>Апрель</Text></Item>",
+			"\t<Item Id=\"5\"><Text>Май</Text></Item>",
+			"\t<Item Id=\"6\"><Text>Июнь</Text></Item>",
+			"\t<Item Id=\"7\"><Text>Июль</Text></Item>",
+			"\t<Item Id=\"8\"><Text>Август</Text></Item>",
+			"\t<Item Id=\"9\"><Text>Сентябрь</Text></Item>",
+			"\t<Item Id=\"10\"><Text>Октябрь</Text></Item>",
+			"\t<Item Id=\"11\"><Text>Ноябрь</Text></Item>",
+			"\t<Item Id=\"12\"><Text>Декабрь</Text></Item>",
+			"</List>"
+		],
+		"description": "Список месяцев"
 	},
 	{
-	    "prefix": "_isolate",
-	    "body": "<Ui Isolate=\"1\"/>",
-	    "description": "AnswerUi: Кнопка Isolate"
+		"prefix": "_isolate",
+		"body": "<Ui Isolate=\"1\"/>",
+		"description": "AnswerUi: Кнопка Isolate"
 	},
 	{
-	    "prefix": "_reset",
-	    "body": [
-	        "<Answer Id=\"${1:99}\" Reset=\"true\" Fix=\"true\" NoUseInQstFilter=\"true\"><Ui Isolate=\"1\"/><Text>${2:Затрудняюсь ответить}</Text></Answer>"
-	    ],
-	    "description": "Исключающий ответ"
+		"prefix": "_reset",
+		"body": [
+			"<Answer Id=\"${1:99}\" Reset=\"true\" Fix=\"true\" NoUseInQstFilter=\"true\"><Ui Isolate=\"1\"/><Text>${2:Затрудняюсь ответить}</Text></Answer>"
+		],
+		"description": "Исключающий ответ"
 	},
 	{
-	    "prefix": "_resetShort",
-	    "body": [
-	        "<Answer Id=\"${1:99}\" Reset=\"true\" Fix=\"true\"><Text>${2:Затрудняюсь ответить}</Text></Answer>"
-	    ],
-	    "description": "Исключающий ответ (кратко)"
+		"prefix": "_resetShort",
+		"body": [
+			"<Answer Id=\"${1:99}\" Reset=\"true\" Fix=\"true\"><Text>${2:Затрудняюсь ответить}</Text></Answer>"
+		],
+		"description": "Исключающий ответ (кратко)"
 	},
 	{
-	    "prefix": "_open",
-	    "body": [
-	        "<Answer Id=\"${1:98}\" Type=\"Text\" Fix=\"true\"><Text>${2:Другое;Что именно?}</Text></Answer>"
-	    ],
-	    "description": "Открытый ответ"
+		"prefix": "_open",
+		"body": [
+			"<Answer Id=\"${1:98}\" Type=\"Text\" Fix=\"true\"><Text>${2:Другое;Что именно?}</Text></Answer>"
+		],
+		"description": "Открытый ответ"
 	},
 	{
-	    "prefix": "_stepQuestions",
-	    "body": [
-	        "<Ui Step=\"1\" HeaderFix=\"1\"/>"
-	    ],
-	    "description": "PageUi для постепенного выпадения вопросов"
+		"prefix": "_stepQuestions",
+		"body": [
+			"<Ui Step=\"1\" HeaderFix=\"1\"/>"
+		],
+		"description": "PageUi для постепенного выпадения вопросов"
 	},
 	{
-	    "prefix": "_scaleInt",
-	    "body": [
-	        "<Ui Extend=\"Scale\" Gradient=\"1\" GradientReverse=\"0\" LabelStart=\"$1\" LabelEnd=\"$2\"/>"
-	    ],
-	    "description": "QuestionUi: Градиентная шкала с цифрами"
+		"prefix": "_scaleInt",
+		"body": [
+			"<Ui Extend=\"Scale\" Gradient=\"1\" GradientReverse=\"0\" LabelStart=\"$1\" LabelEnd=\"$2\"/>"
+		],
+		"description": "QuestionUi: Градиентная шкала с цифрами"
 	},
 	{
-	    "prefix": "_scaleText",
-	    "body": [
-	        "<Ui Extend=\"Scale\" Gradient=\"1\" GradientReverse=\"0\"/>"
-	    ],
-	    "description": "QuestionUi: Градиентная шкала с метками"
+		"prefix": "_scaleText",
+		"body": [
+			"<Ui Extend=\"Scale\" Gradient=\"1\" GradientReverse=\"0\"/>"
+		],
+		"description": "QuestionUi: Градиентная шкала с метками"
 	},
 	{
-	    "prefix": "_scaleTextVertical",
-	    "body": [
-	        "<Ui Extend=\"Scale\" Gradient=\"1\" Orientation=\"Vertical\"/>"
-	    ],
-	    "description": "QuestionUi: Вертикальная градиентная шкала с метками"
+		"prefix": "_scaleTextVertical",
+		"body": [
+			"<Ui Extend=\"Scale\" Gradient=\"1\" Orientation=\"Vertical\"/>"
+		],
+		"description": "QuestionUi: Вертикальная градиентная шкала с метками"
 	},
 	{
-	    "prefix": "_shape",
-	    "body": [
-	        "<Ui Extend=\"Shape\" Color=\"#F0FF00\" Opacity=\"0.3\" OpacitySelected=\"0.6\" WidthBorder=\"2\" ColorBorder=\"#f00\" Src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1\"/>"
-	    ],
-	    "description": "QuestionUi: Областной клик-тест/полка"
+		"prefix": "_shape",
+		"body": [
+			"<Ui Extend=\"Shape\" Color=\"#F0FF00\" Opacity=\"0.3\" OpacitySelected=\"0.6\" WidthBorder=\"2\" ColorBorder=\"#f00\" Src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1\"/>"
+		],
+		"description": "QuestionUi: Областной клик-тест/полка"
 	},
 	{
-	    "prefix": "_sliderDiscrete",
-	    "body": [
-	        "<Ui Extend=\"Slider\" Type=\"Discrete\"/>"
-	    ],
-	    "description": "QuestionUi: Дискретный Slider"
+		"prefix": "_sliderDiscrete",
+		"body": [
+			"<Ui Extend=\"Slider\" Type=\"Discrete\"/>"
+		],
+		"description": "QuestionUi: Дискретный Slider"
 	},
 	{
-	    "prefix": "_sliderContinous",
-	    "body": [
-	        "<Ui Extend=\"Slider\" Type=\"Continuous\" MinVal=\"0\" MaxVal=\"250\" SliderStep=\"1\" LabelEnd=\" руб.\" LabelTop=\"1\" ValueShow=\"1\"/>"
-	    ],
-	    "description": "QuestionUi: Непрерывный Slider"
+		"prefix": "_sliderContinous",
+		"body": [
+			"<Ui Extend=\"Slider\" Type=\"Continuous\" MinVal=\"0\" MaxVal=\"250\" SliderStep=\"1\" LabelEnd=\" руб.\" LabelTop=\"1\" ValueShow=\"1\"/>"
+		],
+		"description": "QuestionUi: Непрерывный Slider"
 	},
 	{
-	    "prefix": "_stars",
-	    "body": [
-	        "<Ui Extend=\"Stars\" ClearCaption=\"Оценки нет\" HoverColor=\"#fde16d\" SelectedColor=\"#fde16d\" BackColor=\"#aaa\"/>"
-	    ],
-	    "description": "QuestionUi: Звёзды"
+		"prefix": "_stars",
+		"body": [
+			"<Ui Extend=\"Stars\" ClearCaption=\"Оценки нет\" HoverColor=\"#fde16d\" SelectedColor=\"#fde16d\" BackColor=\"#aaa\"/>"
+		],
+		"description": "QuestionUi: Звёзды"
 	},
 	{
-	    "prefix": "_clickText",
-	    "body": [
-	        "<Ui Extend=\"ClickText\" SelectedFontColor=\"black\" SelectedBackgroundColor=\"orange\" SplittingType=\"1\"/>"
-	    ],
-	    "description": "QuestionUi: Текстовый ClickTest"
+		"prefix": "_clickText",
+		"body": [
+			"<Ui Extend=\"ClickText\" SelectedFontColor=\"black\" SelectedBackgroundColor=\"orange\" SplittingType=\"1\"/>"
+		],
+		"description": "QuestionUi: Текстовый ClickTest"
 	},
 	{
-	    "prefix": "_dragItemRange",
-	    "body": [
-	        "<Ui Extend=\"DragItem\" Type=\"Range\" SourceContainer=\"0,0\" TargetContainer=\"0,0\" DragItemAllowClick=\"1\"/>"
-	    ],
-	    "description": "QuestionUi: DragItem Range"
+		"prefix": "_dragItemRange",
+		"body": [
+			"<Ui Extend=\"DragItem\" Type=\"Range\" SourceContainer=\"0,0\" TargetContainer=\"0,0\" DragItemAllowClick=\"1\"/>"
+		],
+		"description": "QuestionUi: DragItem Range"
 	},
 	{
-	    "prefix": "_dragItemCard",
-	    "body": [
-	        "<Ui Extend=\"DragItem\" Type=\"Card\" SourceContainer=\"550,0\" TargetContainer=\"0,0\" DragItemAllowClick=\"1\" FontSizeSource=\"1rem\" FontSizeTarget=\".8rem\"/>"
-	    ],
-	    "description": "QuestionUi: DragItem Card"
+		"prefix": "_dragItemCard",
+		"body": [
+			"<Ui Extend=\"DragItem\" Type=\"Card\" SourceContainer=\"550,0\" TargetContainer=\"0,0\" DragItemAllowClick=\"1\" FontSizeSource=\"1rem\" FontSizeTarget=\".8rem\"/>"
+		],
+		"description": "QuestionUi: DragItem Card"
 	},
 	{
-	    "prefix": "_maxDiff",
-	    "body": [
-	        "<Ui Extend=\"MaxDiff\" LabelMost=\"$1\" LabelLeast=\"$2\"/>"
-	    ],
-	    "description": "QuestionUi: MaxDiff"
+		"prefix": "_maxDiff",
+		"body": [
+			"<Ui Extend=\"MaxDiff\" LabelMost=\"$1\" LabelLeast=\"$2\"/>"
+		],
+		"description": "QuestionUi: MaxDiff"
 	},
 	{
-	    "prefix": "_video",
-	    "body": [
-	        "<Ui Extend=\"MediaPlayer\" Type=\"Video\" Src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.mp4,@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.webm,@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.ogv\" PlayAuto=\"1\" SeekEnable=\"1\"/>"
-	    ],
-	    "description": "QuestionUi: MediaPlayer Video"
+		"prefix": "_video",
+		"body": [
+			"<Ui Extend=\"MediaPlayer\" Type=\"Video\" Src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.mp4,@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.webm,@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.ogv\" PlayAuto=\"1\" SeekEnable=\"1\"/>"
+		],
+		"description": "QuestionUi: MediaPlayer Video"
 	},
 	{
-	    "prefix": "_audio",
-	    "body": [
-	        "<Ui Extend=\"MediaPlayer\" Type=\"Audio\" Src='@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.mp3;@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.ogg' PlayAuto=\"1\" PlayRedirect=\"1\" PauseEnable=\"0\" SeekEnable=\"1\"/>"
-	    ],
-	    "description": "QuestionUi: MediaPlayer Audio"
+		"prefix": "_audio",
+		"body": [
+			"<Ui Extend=\"MediaPlayer\" Type=\"Audio\" Src='@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.mp3;@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.ogg' PlayAuto=\"1\" PlayRedirect=\"1\" PauseEnable=\"0\" SeekEnable=\"1\"/>"
+		],
+		"description": "QuestionUi: MediaPlayer Audio"
 	},
 	{
-	    "prefix": "_contentOnly",
-	    "body": [
-	        "<Ui Extend=\"ContentOnly\"/>"
-	    ],
-	    "description": "QuestionUi: ContentOnly"
+		"prefix": "_contentOnly",
+		"body": [
+			"<Ui Extend=\"ContentOnly\"/>"
+		],
+		"description": "QuestionUi: ContentOnly"
 	},
 	{
-	    "prefix": "_comboBox",
-	    "body": [
-	        "<Ui Extend=\"ComboBox\" Search=\"0\" Label=\"Выберите\"/>"
-	    ],
-	    "description": "QuestionUi: ComboBox"
+		"prefix": "_comboBox",
+		"body": [
+			"<Ui Extend=\"ComboBox\" Search=\"0\" Label=\"Выберите\"/>"
+		],
+		"description": "QuestionUi: ComboBox"
 	},
 	{
-	    "prefix": "_completePage",
-	    "body": [
-	        "<Page Id=\"${1:complete}\" End=\"true\">",
-	        "\t<Header>$0</Header>",
-	        "</Page>"
-	    ],
-	    "description": "Вы прошли отбор!"
+		"prefix": "_completePage",
+		"body": [
+			"<Page Id=\"${1:complete}\" End=\"true\">",
+			"\t<Header>$0</Header>",
+			"</Page>"
+		],
+		"description": "Вы прошли отбор!"
 	},
 	{
-	    "prefix": "_completeRedirectPage",
-	    "body": [
-	        "<Page Id=\"${1:last}\" CountProgress=\"false\" StructIgnore=\"true\">",
-	        "\t<Filter>false;</Filter>",
-	        "\t<Redirect Status=\"18\"/>",
-	        "</Page>"
-	    ],
-	    "description": "Последняя страница (заглушка)"
+		"prefix": "_completeRedirectPage",
+		"body": [
+			"<Page Id=\"${1:last}\" CountProgress=\"false\" StructIgnore=\"true\">",
+			"\t<Filter>false;</Filter>",
+			"\t<Redirect Status=\"18\"/>",
+			"</Page>"
+		],
+		"description": "Последняя страница (заглушка)"
 	},
 	{
-	    "prefix": "_respInfo",
-	    "body": [
-	        "<Page Id=\"RespInfo\">",
-	        "\t<Filter>false;</Filter>",
-	        "\t<Header>Опросные данные</Header>",
-	        "\t$0",
-	        "</Page>\n"
-	    ],
-	    "description": "Страница RespInfo"
+		"prefix": "_respInfo",
+		"body": [
+			"<Page Id=\"RespInfo\">",
+			"\t<Filter>false;</Filter>",
+			"\t<Header>Опросные данные</Header>",
+			"\t$0",
+			"</Page>\n"
+		],
+		"description": "Страница RespInfo"
 	},
 	{
-	    "prefix": "_yandexMetrika",
-	    "body": [
-	        "<CustomText2 Action=\"Append\"><![CDATA[",
-	        "\t<!-- Yandex.Metrika counter -->",
-	        "\t<script type=\"text/javascript\">",
-	        "\tvar yaParams = {'project': '[c#]InterviewPars.ProjectID;[/c#]', 'interview': '[c#]InterviewPars.RespID;[/c#]'};",
-	        "\t(function (d, w, c) {",
-	        "\t\t(w[c] = w[c] || []).push(function() {",
-	        "\t\t\ttry {",
-	        "\t\t\t\tw.yaCounter26653611 = new Ya.Metrika({id:26653611,",
-	        "\t\t\t\t\twebvisor:true,",
-	        "\t\t\t\t\tclickmap:true,",
-	        "\t\t\t\t\ttrackLinks:true,",
-	        "\t\t\t\t\taccurateTrackBounce:true,",
-	        "\t\t\t\t\tparams:window.yaParams||{} });",
-	        "\t\t\t} catch(e) { }",
-	        "\t\t});",
-	        "\t\tvar n = d.getElementsByTagName(\"script\")[0],",
-	        "\t\t\ts = d.createElement(\"script\"),",
-	        "\t\t\tf = function () { n.parentNode.insertBefore(s, n); };",
-	        "\t\ts.type = \"text/javascript\";",
-	        "\t\ts.async = true;",
-	        "\t\ts.src = (d.location.protocol == \"https:\" ? \"https:\" : \"http:\") + \"//mc.yandex.ru/metrika/watch.js\";",
-	        "\t\tif (w.opera == \"[object Opera]\") {",
-	        "\t\t\td.addEventListener(\"DOMContentLoaded\", f, false);",
-	        "\t\t} else { f(); }",
-	        "\t})(document, window, \"yandex_metrika_callbacks\");",
-	        "\t</script>",
-	        "\t<noscript><div><img src=\"//mc.yandex.ru/watch/26653611\" style=\"position:absolute; left:-9999px;\" alt=\"\" /></div></noscript>",
-	        "\t<!-- /Yandex.Metrika counter -->",
-	        "]]></CustomText2>"
-	    ],
-	    "description": "Яндекс.Метрика"
+		"prefix": "_yandexMetrika",
+		"body": [
+			"<CustomText2 Action=\"Append\"><![CDATA[",
+			"\t<!-- Yandex.Metrika counter -->",
+			"\t<script type=\"text/javascript\">",
+			"\tvar yaParams = {'project': '[c#]InterviewPars.ProjectID;[/c#]', 'interview': '[c#]InterviewPars.RespID;[/c#]'};",
+			"\t(function (d, w, c) {",
+			"\t\t(w[c] = w[c] || []).push(function() {",
+			"\t\t\ttry {",
+			"\t\t\t\tw.yaCounter26653611 = new Ya.Metrika({id:26653611,",
+			"\t\t\t\t\twebvisor:true,",
+			"\t\t\t\t\tclickmap:true,",
+			"\t\t\t\t\ttrackLinks:true,",
+			"\t\t\t\t\taccurateTrackBounce:true,",
+			"\t\t\t\t\tparams:window.yaParams||{} });",
+			"\t\t\t} catch(e) { }",
+			"\t\t});",
+			"\t\tvar n = d.getElementsByTagName(\"script\")[0],",
+			"\t\t\ts = d.createElement(\"script\"),",
+			"\t\t\tf = function () { n.parentNode.insertBefore(s, n); };",
+			"\t\ts.type = \"text/javascript\";",
+			"\t\ts.async = true;",
+			"\t\ts.src = (d.location.protocol == \"https:\" ? \"https:\" : \"http:\") + \"//mc.yandex.ru/metrika/watch.js\";",
+			"\t\tif (w.opera == \"[object Opera]\") {",
+			"\t\t\td.addEventListener(\"DOMContentLoaded\", f, false);",
+			"\t\t} else { f(); }",
+			"\t})(document, window, \"yandex_metrika_callbacks\");",
+			"\t</script>",
+			"\t<noscript><div><img src=\"//mc.yandex.ru/watch/26653611\" style=\"position:absolute; left:-9999px;\" alt=\"\" /></div></noscript>",
+			"\t<!-- /Yandex.Metrika counter -->",
+			"]]></CustomText2>"
+		],
+		"description": "Яндекс.Метрика"
 	},
 	{
-	    "prefix": "_expand",
-	    "body": [
-	        "[div data-expand='${1|1,2,3|}']",
-	        "\t[div class='smallTextBlock']",
-	        "\t\t${2:основной текст}",
-	        "\t[/div]",
-	        "\t[div class='popUpText']",
-	        "\t\t${3:увеличенный текст}",
-	        "\t[/div]",
-	        "[/div]"
-	    ],
-	    "description": "Увеличение по клику (2) или по наведению (3)"
+		"prefix": "_expand",
+		"body": [
+			"[div data-expand='${1|1,2,3|}']",
+			"\t[div class='smallTextBlock']",
+			"\t\t${2:основной текст}",
+			"\t[/div]",
+			"\t[div class='popUpText']",
+			"\t\t${3:увеличенный текст}",
+			"\t[/div]",
+			"[/div]"
+		],
+		"description": "Увеличение по клику (2) или по наведению (3)"
 	},
 	{
-	    "prefix": "_counter",
-	    "body": [
-	        "<Footer>",
-	        "\tСумма:",
-	        "\t[c# Side=\"Client\"]AnswerIDs(\"${1:PageId}\", \"${2:QuestionId}\").Select(x => int.Parse(AnswerValue(\"${2:QuestionId}\", x))).Sum().ToString();[/c#]%",
-	        "</Footer>",
-	        "<Validate Message=\"Cумма должна быть 100%!\" PinQuestion=\"${2:QuestionId}\">",
-	        "\treturn AnswerIDs(\"${1:PageId}\", \"${2:QuestionId}\").Select(x => int.Parse(AnswerValue(\"${2:QuestionId}\", x))).Sum() == 100;",
-	        "</Validate>"
-	    ],
-	    "description": "Счётчик (Footer + Validate)"
+		"prefix": "_counter",
+		"body": [
+			"<Footer>",
+			"\tСумма:",
+			"\t[c# Side=\"Client\"]AnswerIDs(\"${1:PageId}\", \"${2:QuestionId}\").Select(x => int.Parse(AnswerValue(\"${2:QuestionId}\", x))).Sum().ToString();[/c#]%",
+			"</Footer>",
+			"<Validate Message=\"Cумма должна быть 100%!\" PinQuestion=\"${2:QuestionId}\">",
+			"\treturn AnswerIDs(\"${1:PageId}\", \"${2:QuestionId}\").Select(x => int.Parse(AnswerValue(\"${2:QuestionId}\", x))).Sum() == 100;",
+			"</Validate>"
+		],
+		"description": "Счётчик (Footer + Validate)"
 	},
 	{
-	    "prefix": "_yesNoAnswers",
-	    "body": [
-	        "<Answer Id=\"1\"><Text>Да</Text></Answer>",
-	        "<Answer Id=\"2\"><Text>Нет</Text></Answer>"
-	    ],
-	    "description": "Два ответа (Да + Нет)"
+		"prefix": "_yesNoAnswers",
+		"body": [
+			"<Answer Id=\"1\"><Text>Да</Text></Answer>",
+			"<Answer Id=\"2\"><Text>Нет</Text></Answer>"
+		],
+		"description": "Два ответа (Да + Нет)"
 	}
 ];
 
 
 export const CSFeatures = [
 	{
-	    "prefix": "#getConceptCell",
-	    "body": [
-	        "public string cell()",
-	        "{",
-	        "\treturn AnswerValue(\"RespInfo\", \"Cell\", \"1\");",
-	        "}"
-	    ],
-	    "description": "Метод для получения ячейки"
+		"prefix": "#getConceptCell",
+		"body": [
+			"public string cell()",
+			"{",
+			"\treturn AnswerValue(\"RespInfo\", \"Cell\", \"1\");",
+			"}"
+		],
+		"description": "Метод для получения ячейки"
 	},
 	{
-	    "prefix": "#getShape",
-	    "body": [
-	        "public string getShape(int shNum) ",
-	        "{",
-	        "\t/* число квадратиков */",
-	        "\tint X = 14;",
-	        "\tint Y = 25;",
-	        "",
-	        "\t/* размер картинки в пикселях */",
-	        "\tint W = 466;",
-	        "\tint H = 600;",
-	        "",
-	        "\t/* размер квадратика */",
-	        "\tdouble sizeX = (double)W/X;",
-	        "\tdouble sizeY = (double)H/Y;",
-	        "",
-	        "\t/* номер строки и столбца */",
-	        "\tint C = (shNum-1) % X + 1;",
-	        "\tint R = (shNum-1) / X + 1;",
-	        "",
-	        "\t/* левый верхний угол квадратика */",
-	        "\tdouble top = (double)(R-1)*sizeY;",
-	        "\tdouble left = (double)(C-1)*sizeX;",
-	        "",
-	        "\tstring ret = left.ToString() + \",\" + top.ToString() + \",\" + (left+sizeX).ToString() + \",\" + top.ToString() + \",\" + (left+sizeX).ToString() + \",\" + (top+sizeY).ToString() + \",\" + left.ToString() + \",\" + (top+sizeY).ToString();",
-	        "",
-	        "\treturn ret;",
-	        "}"
-	    ],
-	    "description": "Метод для сеточного клик-теста"
+		"prefix": "#getShape",
+		"body": [
+			"public string getShape(int shNum) ",
+			"{",
+			"\t/* число квадратиков */",
+			"\tint X = 14;",
+			"\tint Y = 25;",
+			"",
+			"\t/* размер картинки в пикселях */",
+			"\tint W = 466;",
+			"\tint H = 600;",
+			"",
+			"\t/* размер квадратика */",
+			"\tdouble sizeX = (double)W/X;",
+			"\tdouble sizeY = (double)H/Y;",
+			"",
+			"\t/* номер строки и столбца */",
+			"\tint C = (shNum-1) % X + 1;",
+			"\tint R = (shNum-1) / X + 1;",
+			"",
+			"\t/* левый верхний угол квадратика */",
+			"\tdouble top = (double)(R-1)*sizeY;",
+			"\tdouble left = (double)(C-1)*sizeX;",
+			"",
+			"\tstring ret = left.ToString() + \",\" + top.ToString() + \",\" + (left+sizeX).ToString() + \",\" + top.ToString() + \",\" + (left+sizeX).ToString() + \",\" + (top+sizeY).ToString() + \",\" + left.ToString() + \",\" + (top+sizeY).ToString();",
+			"",
+			"\treturn ret;",
+			"}"
+		],
+		"description": "Метод для сеточного клик-теста"
 	},
 	{
-	    "prefix": "#isMoble",
-	    "body": [
-	        "InterviewPars.GetInstance().IsMobile"
-	    ],
-	    "description": "Мобильное устройство"
+		"prefix": "#isMoble",
+		"body": [
+			"InterviewPars.GetInstance().IsMobile"
+		],
+		"description": "Мобильное устройство"
 	},
 	{
-	    "prefix": "#debugPrint",
-	    "body": [
-	        "public string DebugPrint(string text)",
-	        "{",
-	        "\treturn \"[div class=\"d color-red\"]\" + text + \"[/div]\";",
-	        "}"
-	    ],
-	    "description": "Метод для вывод отладочной информации (только для debug)"
+		"prefix": "#debugPrint",
+		"body": [
+			"public string DebugPrint(string text)",
+			"{",
+			"\treturn \"[div class=\"d color-red\"]\" + text + \"[/div]\";",
+			"}"
+		],
+		"description": "Метод для вывод отладочной информации (только для debug)"
 	},
 	{
-	    "prefix": "#debugData",
-	    "body": [
-	        "AnswerUpdateP(\"debug\", \"debug\", \"${1:1}\", $2);"
-	    ],
-	    "description": "Сохранение данных для отладки"
+		"prefix": "#debugData",
+		"body": [
+			"AnswerUpdateP(\"debug\", \"debug\", \"${1:1}\", $2);"
+		],
+		"description": "Сохранение данных для отладки"
 	},
 	{
-	    "prefix": "#sexText",
-	    "body": [
-	        "public string SexText(string man, string woman)",
-	        "{",
-	        "\t return AnswerExists(\"pre_sex\", \"1\") ? man : woman;",
-	        "}"
-	    ],
-	    "description": "Метод: текст в зависимости от пола"
+		"prefix": "#sexText",
+		"body": [
+			"public string SexText(string man, string woman)",
+			"{",
+			"\t return AnswerExists(\"pre_sex\", \"1\") ? man : woman;",
+			"}"
+		],
+		"description": "Метод: текст в зависимости от пола"
 	},
 	{
-	    "prefix": "#parseDateTime",
-	    "body": [
-	        "DateTime.ParseExact(${1:stringDate}, \"${2:dd.MM.yyyy hh:mm:ss}\", null)"
-	    ],
-	    "description": "Приведение string к DateTime"
+		"prefix": "#parseDateTime",
+		"body": [
+			"DateTime.ParseExact(${1:stringDate}, \"${2:dd.MM.yyyy hh:mm:ss}\", null)"
+		],
+		"description": "Приведение string к DateTime"
 	}
 ];

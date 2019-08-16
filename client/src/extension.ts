@@ -1347,11 +1347,11 @@ function checkDocument(editor: vscode.TextEditor)
 {
 	/* if (!_refused.enableCache && !_settings.Item("enableCache") && editor.document.lineCount > 5000)
 	{
-	    yesNoHelper("Включить кэширование? Кеширование позволяет ускорить работу с большими документами таких функций расширения, как автозавершение, подсказки при вводе и т.д.").then((res) => 
-	    {
-	        if (res) _settings.Set("enableCache", true).then(null, (er) => { logError("Ошибка при изменении конфигурации", true) });
-	        else _refused.enableCache = true;
-	    })
+		yesNoHelper("Включить кэширование? Кеширование позволяет ускорить работу с большими документами таких функций расширения, как автозавершение, подсказки при вводе и т.д.").then((res) => 
+		{
+			if (res) _settings.Set("enableCache", true).then(null, (er) => { logError("Ошибка при изменении конфигурации", true) });
+			else _refused.enableCache = true;
+		})
 	} */
 }
 

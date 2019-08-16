@@ -20,11 +20,11 @@ export function getAllSnippets(directory: string): string
 	let files = fs.readdirSync(directory).map(x => directory + "\\" + x);
 	files.forEach(file => 
 	{
-	    let obj = getSnippet(file);
-	    for (let name in obj)
-	    {
-	        res += snippetString(name, obj[name]) + "\n";
-	    }
+		let obj = getSnippet(file);
+		for (let name in obj)
+		{
+			res += snippetString(name, obj[name]) + "\n";
+		}
 	});
 	return res;
 }

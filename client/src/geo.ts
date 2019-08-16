@@ -59,14 +59,14 @@ function getGeoPath(): string
 	let res: string = null;
 	if (pathExists(GeoConstants.FilePath))
 	{
-	    let files = fs.readdirSync(GeoConstants.FilePath).map(f =>
-	    {
-	        let res: number;
-	        let match = f.match(/^(\d+)-geo\.xlsx$/);
-	        if (!!match) res = Number(match[1]);
-	        return res;
-	    }).filter(f => !!f).sort((a, b) => { return b - a; });
-	    if (files.length > 0) res = Path.Concat(GeoConstants.FilePath, files[0] + "-geo.xlsx");
+		let files = fs.readdirSync(GeoConstants.FilePath).map(f =>
+		{
+			let res: number;
+			let match = f.match(/^(\d+)-geo\.xlsx$/);
+			if (!!match) res = Number(match[1]);
+			return res;
+		}).filter(f => !!f).sort((a, b) => { return b - a; });
+		if (files.length > 0) res = Path.Concat(GeoConstants.FilePath, files[0] + "-geo.xlsx");
 	}
 	return res;
 }
@@ -85,14 +85,14 @@ async function parseGeoList(data: [][]): Promise<GeoFileLineData[]>
 	let res: GeoFileLineData[] = [];
 	lines.forEach(line =>
 	{
-	    // либо все, либо без мегафона
-	    if (line.length != cellNames.length && line.length != cellNames.length - 2) return;
-	    let lineData = new GeoFileLineData();
-	    for (let i = 0; i < cellNames.length; i++)
-	    {
-	        lineData[cellNames[i]] = line[i];
-	    }
-	    res.push(lineData);
+		// либо все, либо без мегафона
+		if (line.length != cellNames.length && line.length != cellNames.length - 2) return;
+		let lineData = new GeoFileLineData();
+		for (let i = 0; i < cellNames.length; i++)
+		{
+			lineData[cellNames[i]] = line[i];
+		}
+		res.push(lineData);
 	});
 	return res;
 }

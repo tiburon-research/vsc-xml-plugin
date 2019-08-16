@@ -17,37 +17,37 @@ export class ExtensionSettings extends KeyedCollection<any>
 {
 	constructor()
 	{
-	    super();
-	    this.Update();
+		super();
+		this.Update();
 	}
 
 	/** Обновляет объект настроек из файла конфигурации */
 	public Update(): void
 	{
-	    this.Config = vscode.workspace.getConfiguration('tib');
-	    for (let key in this.Config) this.AddPair(key.toString(), this.Config.get(key));
+		this.Config = vscode.workspace.getConfiguration('tib');
+		for (let key in this.Config) this.AddPair(key.toString(), this.Config.get(key));
 	}
 
 	/** Изменяет настройки */
 	public Set(key: string, value: any): Promise<void>
 	{
-	    return new Promise<void>((resolve, reject) =>
-	    {
-	        try
-	        {
-	            this.Config.update(key, value, true).then(
-	                () =>
-	                {
-	                    resolve();
-	                },
-	                () => reject("Ошибка при изменении параметра конфигурации")
-	            );
-	        }
-	        catch (error)
-	        {
-	            reject(error);
-	        }
-	    });
+		return new Promise<void>((resolve, reject) =>
+		{
+			try
+			{
+				this.Config.update(key, value, true).then(
+					() =>
+					{
+						resolve();
+					},
+					() => reject("Ошибка при изменении параметра конфигурации")
+				);
+			}
+			catch (error)
+			{
+				reject(error);
+			}
+		});
 	}
 
 	private Config: vscode.WorkspaceConfiguration;
@@ -61,11 +61,11 @@ export class ContextChange
 {
 	constructor(contextChange: vscode.TextDocumentContentChangeEvent, selection: vscode.Selection)
 	{
-	    this.Change = contextChange;
-	    this.Selection = selection;
-	    this.Start = selection.start;
-	    this.End = selection.end;
-	    this.Active = selection.active;
+		this.Change = contextChange;
+		this.Selection = selection;
+		this.Start = selection.start;
+		this.End = selection.end;
+		this.Active = selection.active;
 	}
 
 	Start: vscode.Position;
@@ -82,17 +82,17 @@ export function getContextChanges(document: vscode.TextDocument, selections: vsc
 	let res: ContextChange[] = [];
 	selections.forEach(selection =>
 	{
-	    for (let i = 0; i < changes.length; i++)
-	    {
-	        //let afterChange = isBefore ?  changes[i].range.start : translatePosition(document, changes[i].range.start, changes[i].text.length);
-	        let afterChange = isBefore ? changes[i].range.start : document.positionAt(document.offsetAt(changes[i].range.start) + changes[i].text.length);
-	        if (selection.active.character == afterChange.character &&
-	            selection.active.line == afterChange.line)
-	        {
-	            res.push(new ContextChange(changes[i], selection));
-	            continue;
-	        }
-	    }
+		for (let i = 0; i < changes.length; i++)
+		{
+			//let afterChange = isBefore ?  changes[i].range.start : translatePosition(document, changes[i].range.start, changes[i].text.length);
+			let afterChange = isBefore ? changes[i].range.start : document.positionAt(document.offsetAt(changes[i].range.start) + changes[i].text.length);
+			if (selection.active.character == afterChange.character &&
+				selection.active.line == afterChange.line)
+			{
+				res.push(new ContextChange(changes[i], selection));
+				continue;
+			}
+		}
 	});
 	return res;
 }
@@ -119,22 +119,22 @@ export function openFileText(path: string): Promise<void>
 			})
 		}); */
 
-	    let fileBuffer = fs.readFileSync(path);
-	    // по возможности читаем в 1251
-	    let text = Parse.win1251Avaliabe(fileBuffer) ? iconv.decode(fileBuffer, 'win1251') : fileBuffer.toString('utf8');
-	    vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
-	    { // создаём пустой tib-файл
-	        if (!newDoc) return reject();
-	        vscode.window.showTextDocument(newDoc).then(editor => 
-	        { // отображаем пустой
-	            if (!editor) return reject();
-	            editor.edit(builder => 
-	            { // заливаем в него текст
-	                builder.insert(new vscode.Position(0, 0), text);
-	                resolve();
-	            });
-	        });
-	    })
+		let fileBuffer = fs.readFileSync(path);
+		// по возможности читаем в 1251
+		let text = Parse.win1251Avaliabe(fileBuffer) ? iconv.decode(fileBuffer, 'win1251') : fileBuffer.toString('utf8');
+		vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+		{ // создаём пустой tib-файл
+			if (!newDoc) return reject();
+			vscode.window.showTextDocument(newDoc).then(editor => 
+			{ // отображаем пустой
+				if (!editor) return reject();
+				editor.edit(builder => 
+				{ // заливаем в него текст
+					builder.insert(new vscode.Position(0, 0), text);
+					resolve();
+				});
+			});
+		})
 	});
 }
 
@@ -176,18 +176,18 @@ export class StatusBar
 	/** Устанавливает сообщение на время */
 	public setInfoMessage(text: string, after: number): Promise<vscode.Disposable>
 	{
-	    return this.statusMessage(text, after);
+		return this.statusMessage(text, after);
 	}
 
 	/** выводит в строку состояния информацию о текущем теге */
 	public setTagInfo(tag: CurrentTag): Promise<vscode.Disposable>
 	{
-	    let info = "";
-	    if (!tag) info = "";
-	    else
-	    {
-	        let lang = Language[tag.GetLaguage()];
-	        if (lang == "CSharp") lang = "C#";
+		let info = "";
+		if (!tag) info = "";
+		else
+		{
+			let lang = Language[tag.GetLaguage()];
+			if (lang == "CSharp") lang = "C#";
 			info = lang + ":\t" + tag.Parents.map(x =>
 			{
 				let res = x.Name;
@@ -195,39 +195,39 @@ export class StatusBar
 				if (!!id) res += `['${id}']`;
 				return res;
 			}).concat([tag.Name]).join(" -> ");
-	        if (tag.Name == "Var")
-	        {
-	            let ind = tag.GetVarIndex();
-	            if (ind > -1) info += `[${ind}]`;
-	        }
-	    }
-	    return this.statusMessage(info);
+			if (tag.Name == "Var")
+			{
+				let ind = tag.GetVarIndex();
+				if (ind > -1) info += `[${ind}]`;
+			}
+		}
+		return this.statusMessage(info);
 	}
 
 	/** выводит в строку состояния информацию о текущем процессе */
 	public async setProcessMessage(text: string): Promise<vscode.Disposable>
 	{
-	    this.currentStatus = await this.statusMessage(text);
-	    return this.currentStatus;
+		this.currentStatus = await this.statusMessage(text);
+		return this.currentStatus;
 	}
 
 	/** очищает строку состояния */
 	public removeCurrentMessage()
 	{
-	    if (!!this.currentStatus) this.currentStatus.dispose();
-	    else this.statusMessage('');
+		if (!!this.currentStatus) this.currentStatus.dispose();
+		else this.statusMessage('');
 	}
 
 	// TODO: вот это говно надо переделать
 	private statusMessage(text: string, after?: number): Promise<vscode.Disposable>
 	{
-	    return new Promise<vscode.Disposable>((resolve, reject) =>
-	    {
-	        let res: vscode.Disposable;
-	        if (!!after) res = vscode.window.setStatusBarMessage(text, after);
-	        else res = vscode.window.setStatusBarMessage(text);
-	        setTimeout(x => { resolve(res) }, 100);
-	    });
+		return new Promise<vscode.Disposable>((resolve, reject) =>
+		{
+			let res: vscode.Disposable;
+			if (!!after) res = vscode.window.setStatusBarMessage(text, after);
+			else res = vscode.window.setStatusBarMessage(text);
+			setTimeout(x => { resolve(res) }, 100);
+		});
 	}
 }
 
@@ -238,55 +238,55 @@ export class Path
 
 	constructor(path: string)
 	{
-	    this.originalPath = path;
+		this.originalPath = path;
 	}
 
 	/** Приведение к стандартному типу */
 	public static Normalize(value: string): string
 	{
-	    // замена слешей
-	    let res = value.replace(/\//, "\\");
-	    // убираем слеш в начале и в конце
-	    res = res.replace(/(^\\)|(\\$)/, '');
-	    // заглавная буква диска
-	    if (res.match(/^[a-z]:/)) res = res[0].toLocaleUpperCase() + res.slice(1);
-	    return res;
+		// замена слешей
+		let res = value.replace(/\//, "\\");
+		// убираем слеш в начале и в конце
+		res = res.replace(/(^\\)|(\\$)/, '');
+		// заглавная буква диска
+		if (res.match(/^[a-z]:/)) res = res[0].toLocaleUpperCase() + res.slice(1);
+		return res;
 	}
 
 	/** Полный путь элемента */
 	public get FullPath(): string
 	{
-	    return Path.Normalize(this.originalPath);
+		return Path.Normalize(this.originalPath);
 	}
 
 	/** Имя файла с расширением */
 	public get FileName(): string
 	{
-	    return this.originalPath.replace(/^.+[\\\/]/, '');
+		return this.originalPath.replace(/^.+[\\\/]/, '');
 	}
 
 	/** Расширение файла */
 	public get FileExt(): string
 	{
-	    return this.originalPath.replace(/^.*\./, '').toLocaleLowerCase();
+		return this.originalPath.replace(/^.*\./, '').toLocaleLowerCase();
 	}
 
 	/** Объединяет в один нормальный путь */
 	public static Concat(...values: string[]): string
 	{
-	    let res = "";
-	    values.forEach(element => 
-	    {
-	        let val = Path.Normalize(element);
-	        res += val + "\\";
-	    });
-	    return res.replace(/\\$/, '');
+		let res = "";
+		values.forEach(element => 
+		{
+			let val = Path.Normalize(element);
+			res += val + "\\";
+		});
+		return res.replace(/\\$/, '');
 	}
 
 	/** Возвращает папку в которой находится текущий элемент */
 	public get Directory(): string
 	{
-	    return this.originalPath.replace(/\\[^\\]+$/, '');
+		return this.originalPath.replace(/\\[^\\]+$/, '');
 	}
 
 
@@ -314,16 +314,16 @@ export function getUserData(): UserData
 	let ifs = os.networkInterfaces();
 	for (const key in ifs)
 	{
-	    if (!IP && ifs.hasOwnProperty(key))
-	    {
-	        ifs[key].forEach(n =>
-	        {
-	            if (!IP && 'IPv4' == n.family && !n.internal)
-	            {
-	                IP = n.address;
-	            }
-	        });
-	    }
+		if (!IP && ifs.hasOwnProperty(key))
+		{
+			ifs[key].forEach(n =>
+			{
+				if (!IP && 'IPv4' == n.family && !n.internal)
+				{
+					IP = n.address;
+				}
+			});
+		}
 	}
 
 	return { IP, Id, Name };
@@ -343,8 +343,8 @@ export function createLockInfoFile(path: Path, userData: UserData)
 	if (!pathExists(path.FullPath)) return;
 	let fileName = getLockFilePath(path);
 	let data: LockData = {
-	    User: userData.Name,
-	    Id: userData.Id
+		User: userData.Name,
+		Id: userData.Id
 	};
 	if (fs.existsSync(fileName)) fs.unlinkSync(fileName);
 	fs.writeFileSync(fileName, JSON.stringify(data));
@@ -392,23 +392,23 @@ export function getLockData(fileName: string): LockData
 {
 	return new Promise<string>((resolve, reject) =>
 	{
-	    let http = require('https');
-	    http.get(url, (res) =>
-	    {
-	        res.setEncoding("utf8");
-	        let body = "";
-	        res.on("data", data =>
-	        {
-	            body += data;
-	        });
-	        res.on("end", () =>
-	        {
-	            resolve(body);
-	        });
-	    }).on('error', (e) =>
-	    {
-	        reject("Не удалось открыть ссылку");
-	    });
+		let http = require('https');
+		http.get(url, (res) =>
+		{
+			res.setEncoding("utf8");
+			let body = "";
+			res.on("data", data =>
+			{
+				body += data;
+			});
+			res.on("end", () =>
+			{
+				resolve(body);
+			});
+		}).on('error', (e) =>
+		{
+			reject("Не удалось открыть ссылку");
+		});
 	});
 }*/
 
@@ -419,28 +419,28 @@ export namespace ClientServerTransforms
 	/** Преобразования Server->Client */
 	export namespace FromServer
 	{
-	    export function Document(document: vscode.TextDocument): server.TextDocument
-	    {
-	        if (!document) return null;
-	        return server.TextDocument.create(document.uri.toString(), document.languageId, document.version, document.getText());
-	    }
+		export function Document(document: vscode.TextDocument): server.TextDocument
+		{
+			if (!document) return null;
+			return server.TextDocument.create(document.uri.toString(), document.languageId, document.version, document.getText());
+		}
 
-	    export function Selection(from: server.Position, to: server.Position): vscode.Selection
-	    {
-	        if (!from || !to) return null;
-	        return new vscode.Selection(new vscode.Position(from.line, from.character), new vscode.Position(to.line, to.character))
-	    }
+		export function Selection(from: server.Position, to: server.Position): vscode.Selection
+		{
+			if (!from || !to) return null;
+			return new vscode.Selection(new vscode.Position(from.line, from.character), new vscode.Position(to.line, to.character))
+		}
 
-	    export function Position(position: server.Position): vscode.Position
-	    {
-	        if (!position) return null;
-	        return new vscode.Position(position.line, position.character);
-	    }
+		export function Position(position: server.Position): vscode.Position
+		{
+			if (!position) return null;
+			return new vscode.Position(position.line, position.character);
+		}
 
-	    export function Range(range: server.Range): vscode.Range
-	    {
-	        if (!range) return null;
-	        return new vscode.Range(this.Position(range.start), this.Position(range.end));
+		export function Range(range: server.Range): vscode.Range
+		{
+			if (!range) return null;
+			return new vscode.Range(this.Position(range.start), this.Position(range.end));
 		}
 		
 		function SimpleTagObject(tag: SimpleTag)
@@ -450,35 +450,35 @@ export namespace ClientServerTransforms
 			return res;
 		}
 
-	    export function Tag(tag: CurrentTag): CurrentTag
-	    {
+		export function Tag(tag: CurrentTag): CurrentTag
+		{
 			if (!tag) return null;
 			let parents = tag.Parents.map(t => SimpleTagObject(t));
 			let newTag = new CurrentTag(tag.Name, parents); // потому что методы с сервера не приходят
 			delete tag.Parents; // оставьте родителей в покое
 			Object.assign(newTag, tag);
-	        return newTag;
-	    }
+			return newTag;
+		}
 	}
 
 	/** Преобразования Client->Server */
 	export namespace ToServer
 	{
-	    export function Document(document: vscode.TextDocument): IServerDocument
-	    {
-	        if (!document) return null;
-	        return {
-	            uri: document.uri.toString(),
-	            version: document.version,
-	            content: document.getText()
-	        }
-	    }
+		export function Document(document: vscode.TextDocument): IServerDocument
+		{
+			if (!document) return null;
+			return {
+				uri: document.uri.toString(),
+				version: document.version,
+				content: document.getText()
+			}
+		}
 
-	    export function Position(position: vscode.Position): server.Position
-	    {
-	        if (!position) return null;
-	        return server.Position.create(position.line, position.character);
-	    }
+		export function Position(position: vscode.Position): server.Position
+		{
+			if (!position) return null;
+			return server.Position.create(position.line, position.character);
+		}
 	}
 
 }

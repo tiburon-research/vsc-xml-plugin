@@ -26,7 +26,7 @@ export class EncodeResult
 
 	toXMLencodeResult(): XMLencodeResult
 	{
-	    return { Delimiter: this.Delimiter, EncodedCollection: this.EncodedCollection };
+		return { Delimiter: this.Delimiter, EncodedCollection: this.EncodedCollection };
 	}
 }
 
@@ -40,33 +40,33 @@ export class Encoder
 	*/
 	constructor(text: string, delimiter?: string | number)
 	{
-	    this.OriginalText = text;
-	    this.Result = text;
-	    let del: string;
-	    if (!delimiter) del = getReplaceDelimiter(text);
-	    else
-	    {
-	        if (typeof delimiter == "string") del = delimiter;
-	        else del = getReplaceDelimiter(text, delimiter);
-	    }
-	    this.Delimiter = del;
+		this.OriginalText = text;
+		this.Result = text;
+		let del: string;
+		if (!delimiter) del = getReplaceDelimiter(text);
+		else
+		{
+			if (typeof delimiter == "string") del = delimiter;
+			else del = getReplaceDelimiter(text, delimiter);
+		}
+		this.Delimiter = del;
 	}
 
 	/** Кодирование текущего результата указанной функцией `encodeFuntion` */
 	public Encode(encodeFuntion: (text: string, delimiter: string) => EncodeResult): void
 	{
-	    let tmpRes = encodeFuntion(this.Result, this.Delimiter);
-	    this.Result = tmpRes.Result;
-	    this.EncodedCollection.AddRange(tmpRes.EncodedCollection);
+		let tmpRes = encodeFuntion(this.Result, this.Delimiter);
+		this.Result = tmpRes.Result;
+		this.EncodedCollection.AddRange(tmpRes.EncodedCollection);
 	}
 
 	public ToEncodeResult(): EncodeResult
 	{
-	    let res = new EncodeResult();
-	    res.EncodedCollection = this.EncodedCollection;
-	    res.Delimiter = this.Delimiter;
-	    res.Result = this.Result;
-	    return res;
+		let res = new EncodeResult();
+		res.EncodedCollection = this.EncodedCollection;
+		res.Delimiter = this.Delimiter;
+		res.Result = this.Result;
+		return res;
 	}
 
 	/** Исходный текст */
@@ -88,7 +88,7 @@ export function getElementsBack(text: string, encodeResult: XMLencodeResult): st
 	let newText = text;
 	encodeResult.EncodedCollection.ForEach(function (i, e)
 	{
-	    newText = newText.replace(new RegExp(safeString(encodeResult.Delimiter + i + encodeResult.Delimiter), "g"), e);
+		newText = newText.replace(new RegExp(safeString(encodeResult.Delimiter + i + encodeResult.Delimiter), "g"), e);
 	})
 	return newText;
 }
@@ -101,22 +101,22 @@ export function encodeElements(text: string, elem: RegExp, delimiter: string): E
 	let result = text;
 	try
 	{
-	    let reg = result.find(elem);
-	    let collection = new KeyedCollection<string>();
-	    while (reg.Index > -1)
-	    {
-	        let i = shortHash(reg.Result[0]);
-	        result = result.replaceRange(reg.Index, reg.Result[0], delimiter + i + delimiter);
-	        collection.AddPair(i, reg.Result[0]);
-	        reg = result.find(elem);
-	    }
+		let reg = result.find(elem);
+		let collection = new KeyedCollection<string>();
+		while (reg.Index > -1)
+		{
+			let i = shortHash(reg.Result[0]);
+			result = result.replaceRange(reg.Index, reg.Result[0], delimiter + i + delimiter);
+			collection.AddPair(i, reg.Result[0]);
+			reg = result.find(elem);
+		}
 
-	    res.EncodedCollection = collection;
-	    res.Delimiter = delimiter;
-	    res.Result = result;
+		res.EncodedCollection = collection;
+		res.Delimiter = delimiter;
+		res.Result = result;
 	} catch (error)
 	{
-	    throw "Ошибка кодирования элементов";
+		throw "Ошибка кодирования элементов";
 	}
 	return res;
 }
@@ -148,9 +148,9 @@ export function getReplaceDelimiter(text: string, length?: number): string
 
 	for (let i = 0; i < dels.length; i++) 
 	{
-	    let curDel = dels[i].repeat(length);
-	    let mt = text.match(new RegExp(safeString(curDel) + RegExpPatterns.DelimiterContent + safeString(curDel), "g"));
-	    if (!mt || mt.length == 0) return curDel;
+		let curDel = dels[i].repeat(length);
+		let mt = text.match(new RegExp(safeString(curDel) + RegExpPatterns.DelimiterContent + safeString(curDel), "g"));
+		if (!mt || mt.length == 0) return curDel;
 	}
 	if (!del) throw 'Подходящий разделитель не найден';
 	return del;
@@ -197,8 +197,8 @@ function replaceWithSpaces(text: string, sub: RegExp): string
 	if (!mt) return text;
 	mt.forEach(element =>
 	{
-	    rep = element.replace(/./g, ' ');
-	    res = res.replace(element, rep);
+		rep = element.replace(/./g, ' ');
+		res = res.replace(element, rep);
 	});
 	return res;
 }
@@ -235,11 +235,11 @@ export function clearCSContents(text: string): string
 	let resCS = res.matchAll(reg);
 	resCS.forEach(element =>
 	{
-	    let open = element[1];
-	    let inner = typeof element[7 + tCount] == 'undefined' ? '' : element[7 + tCount].replace(/./g, ' ');
-	    let close = element[8 + tCount];
-	    let repl = new RegExp(safeString(element[0]));
-	    res = res.replace(repl, open + inner + close);
+		let open = element[1];
+		let inner = typeof element[7 + tCount] == 'undefined' ? '' : element[7 + tCount].replace(/./g, ' ');
+		let close = element[8 + tCount];
+		let repl = new RegExp(safeString(element[0]));
+		res = res.replace(repl, open + inner + close);
 	});
 
 	// Очищаем незакрытый CS-тег в конце
@@ -247,9 +247,9 @@ export function clearCSContents(text: string): string
 	let resCSend = res.match(regEnd);
 	if (!!resCSend)
 	{
-	    let open = resCSend[1];
-	    let inner = resCSend[7 + tCount].replace(/./g, ' ');
-	    res = res.replace(resCSend[0], open + inner);
+		let open = resCSend[1];
+		let inner = resCSend[7 + tCount].replace(/./g, ' ');
+		res = res.replace(resCSend[0], open + inner);
 	}
 
 	return res;
