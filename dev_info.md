@@ -35,8 +35,6 @@
 - Проверить, что в `CHANGELOG.md` внесены все **изменения** и правильно указана **версия** и **дата**.
 - Проверить, что всё необходимое добавлено в `README.md`.
 
-Данные для аутентификации лежат в `G:\Разное\TiburonXMLHelper\data.txt`
-
 ## Обновление token
 
 - Заходим в https://dev.azure.com/TiburonResearch/_usersSettings/tokens
@@ -59,4 +57,4 @@
 
 - принудительная пересборка всего: `npm run rebuild`
 - сборка версии в пакет VSIX: `vsce package`
-- публикация новой версии: `vsce publish`
+- публикация новой версии: `vsce publish` (данные для аутентификации лежат в `G:\Разное\TiburonXMLHelper\data.txt`)
