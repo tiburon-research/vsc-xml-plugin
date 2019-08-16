@@ -1820,7 +1820,7 @@ async function chooseGeo()
 		ignoreFocusOut,
 		totalSteps,
 		step: ++step,
-		placeHolder: 'Группировать по:',
+		title: 'Группировать по:',
 		items: grouping,
 		selectedItems: [grouping[0]]
 	}

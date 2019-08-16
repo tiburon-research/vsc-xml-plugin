@@ -493,6 +493,7 @@ export interface CustomQuickPickOptions
 	placeHolder?: string;
 	items?: vscode.QuickPickItem[];
 	selectedItems?: vscode.QuickPickItem[];
+	title?: string;
 }
 
 
