@@ -518,6 +518,26 @@ export class CurrentTag
 	}
 
 
+	/** XML-путь к текущему тегу */
+	public get XmlPath(): string
+	{
+		let path = '';
+		this.Parents.map(x =>
+		{
+			let res = x.Name;
+			let id = x.getAttributes().Item("Id");
+			if (!!id) res += `['${id}']`;
+			return res;
+		}).concat([this.Name]).join(" -> ");
+		if (this.Name == "Var")
+		{
+			let ind = this.GetVarIndex();
+			if (ind > -1) path += `[${ind}]`;
+		}
+		return path;
+	}
+
+
 	public GetIndent(): number
 	{
 		if (!this.Parents) return 0;

@@ -188,18 +188,7 @@ export class StatusBar
 		{
 			let lang = Language[tag.GetLaguage()];
 			if (lang == "CSharp") lang = "C#";
-			info = lang + ":\t" + tag.Parents.map(x =>
-			{
-				let res = x.Name;
-				let id = x.getAttributes().Item("Id");
-				if (!!id) res += `['${id}']`;
-				return res;
-			}).concat([tag.Name]).join(" -> ");
-			if (tag.Name == "Var")
-			{
-				let ind = tag.GetVarIndex();
-				if (ind > -1) info += `[${ind}]`;
-			}
+			info = lang + ":\t" + tag.XmlPath;
 		}
 		return this.statusMessage(info);
 	}

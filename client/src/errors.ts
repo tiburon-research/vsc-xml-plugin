@@ -6,7 +6,7 @@
 import { TelegramBot } from "tib-api/lib/telegramBot";
 import * as vscode from 'vscode';
 import * as dateFormat from 'dateFormat';
-import { pathExists, createDir } from "tib-api";
+import { pathExists, createDir, IErrorTagData } from "tib-api";
 import { Path, UserData, getTibVersion } from "./classes";
 import * as fs from 'fs'
 import * as shortHash from 'short-hash'
@@ -28,6 +28,7 @@ interface UserLogDataFields
 	Data?: Object;
 	VSCVerion?: string;
 	ActiveExtensions?: string[];
+	tag?: IErrorTagData;
 }
 
 
@@ -145,6 +146,15 @@ export class TibOutput
 }
 
 
+interface LogErrorData
+{
+	text: string;
+	data: LogData;
+	stackTrace: any;
+	showerror: boolean;
+	errorMessage: string;
+	tag?: IErrorTagData;
+}
 
 
 /** Класс для логирования ошибок */
@@ -181,9 +191,8 @@ export class TibErrors
 		});
 	}
 
-
 	/** Показ и сохранение ошибки */
-	logError(text: string, data: LogData, stackTrace: any, showerror: boolean, errorMessage: string)
+	logError({ text, data, stackTrace, showerror, errorMessage, tag }: LogErrorData)
 	{
 		if (_pack == "debug")
 		{
@@ -192,7 +201,7 @@ export class TibErrors
 		}
 		if (!!stackTrace) console.log(errorMessage, stackTrace);
 		if (showerror) showError(text);
-		data.add({ StackTrace: stackTrace, ErrorMessage: errorMessage });
+		data.add({ StackTrace: stackTrace, ErrorMessage: errorMessage, tag });
 		this.saveError(text, data);
 	}
 

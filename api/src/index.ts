@@ -24,6 +24,12 @@ export { JQuery, Parse, Encoding, KeyValuePair, KeyedCollection, safeString, IPa
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
 //#region
 
+	
+export interface IErrorTagData
+{
+	Language: Language;
+	XmlPath: string;
+}
 
 /** Для передачи ошибки на клиента */
 export interface IErrorLogData
@@ -35,6 +41,8 @@ export interface IErrorLogData
 	/** Ошибка не будет показана */
 	Silent: boolean;
 	StackTrace?: any;
+	/** Информация о закешированном теге */
+	TagData?: IErrorTagData;
 }
 
 

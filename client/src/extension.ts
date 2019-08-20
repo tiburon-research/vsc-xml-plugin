@@ -1261,7 +1261,7 @@ function logError(text: string, showErrror: boolean, errorMessage: string)
 	let stackTrace = new Error().stack;
 	let editor = vscode.window.activeTextEditor;
 	let data = getLogData(editor);
-	_errors.logError(text, data, stackTrace, showErrror, errorMessage);
+	_errors.logError({ text, data, stackTrace, showerror: showErrror, errorMessage });
 }
 
 
@@ -1558,7 +1558,7 @@ async function createClientConnection(context: vscode.ExtensionContext)
 			_client.onNotification("logError", (data: IErrorLogData) =>
 			{
 				let logData = getLogData(vscode.window.activeTextEditor);
-				_errors.logError(data.MessageFriendly, logData, data.StackTrace, !data.Silent, data.Message);
+				_errors.logError({ text: data.MessageFriendly, data: logData, stackTrace: data.StackTrace, showerror: !data.Silent, errorMessage: data.Message, tag: data.TagData });
 			});
 
 			// запрос документа с ссервера

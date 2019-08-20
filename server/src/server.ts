@@ -1,7 +1,7 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData, isValidDocumentPosition } from 'tib-api';
+import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData, isValidDocumentPosition, IErrorTagData } from 'tib-api';
 import { TibAutoCompleteItem, getCompletions, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition, LanguageString } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { _NodeStoreNames, _pack } from 'tib-api/lib/constants';
@@ -467,11 +467,14 @@ export function logError(text: string, showError: boolean, errorMessage?)
 		if (typeof errorMessage == 'string') msg = errorMessage;
 		else if (!!errorMessage.message) msg = errorMessage.message;
 	}
+	let tag = _Cache.Tag.IsSet() ? _Cache.Tag.Get() : null;
+	let tagData: IErrorTagData = !!tag ? { Language: tag.GetLaguage(), XmlPath: tag.XmlPath } : undefined;
 	let log: IErrorLogData = {
 		MessageFriendly: text,
 		Message: msg,
 		Silent: !showError && _pack != "debug",
-		StackTrace: !!data ? ('SERVER: ' + data) : undefined
+		StackTrace: !!data ? ('SERVER: ' + data) : undefined,
+		TagData: tagData
 	};
 	connection.sendNotification('logError', log);
 }
