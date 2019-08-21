@@ -290,6 +290,11 @@ export function parseElements(strings: string[]): ParsedElementObject[]
 			Regex: /^(.+?)([\.\-—:\s]*)(\d+)$/,
 			IdGroup: 3,
 			TextGroup: 1
+		},
+		{
+			Regex: /^(\w)(\s?[\.\-—:\)]\s*)(.+?)$/,
+			IdGroup: 1,
+			TextGroup: 3
 		}
 	];
 
@@ -307,7 +312,8 @@ export function parseElements(strings: string[]): ParsedElementObject[]
 			let match = str.match(reg.Regex);
 			if (!match) break;
 			else found = true;
-			res.push({ Id: match[reg.IdGroup], Text: match[reg.TextGroup] });
+			let id = match[reg.IdGroup].match(/\d+/) ? match[reg.IdGroup] : '' + (j + 1);
+			res.push({ Id: id, Text: match[reg.TextGroup] });
 		}
 		found = found && res.length == strings.length;
 		if (found)
