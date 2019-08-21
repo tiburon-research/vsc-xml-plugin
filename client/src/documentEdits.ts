@@ -1,7 +1,7 @@
 'use strict'
 
 import { Parse, safeString, JQuery, translate, KeyedCollection } from 'tib-api'
-import { SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElementType } from 'tib-api/lib/surveyObjects'
+import { SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElementType, SurveyElement } from 'tib-api/lib/surveyObjects'
 import * as vscode from 'vscode'
 import { QuestionTypes } from 'tib-api/lib/constants';
 
@@ -289,7 +289,18 @@ export function createElements(text: string, type: SurveyElementType): XMLElemen
 	{
 		elements.forEach(element =>
 		{
-			answerItems.AddPair(element.Id, new SurveyAnswer(element.Id, element.Text), false);
+			let answer = new SurveyAnswer(element.Id, element.Text);
+			if (element.IsResetAnswer)
+			{
+				answer.SetAttr('Reset', 'true');
+				answer.SetAttr('Fix', 'true');
+				answer.SetAttr('NoUseInQstFilter', 'true');
+				let uiElement = new SurveyElement('Ui');
+				uiElement.SetAttr('Isolate', '1');
+				answer.AddChild(uiElement);
+			}
+			else if (element.IsTextAnswer) answer.SetAttr('Type', 'Text');
+			answerItems.AddPair(element.Id, answer, false);
 		});
 	}
 

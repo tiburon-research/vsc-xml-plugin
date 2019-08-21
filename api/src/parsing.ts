@@ -20,11 +20,28 @@ export interface FindTagResult
 }
 
 
-export interface ParsedElementObject
+/** Результат поиска элементов */
+export class ParsedElementObject
 {
-	Id: string;
-	Text: string;
-	Delimiter?: string;
+	/** Инициализация */
+	constructor(Id?: string, Text?: string )
+	{
+		if (!!Id) this.Id = Id;
+		if (!!Text) this.Text = Text;
+	}
+
+	public Id: string;
+	public Text: string;
+
+	public get IsResetAnswer(): boolean
+	{
+		return checkResetAnswer(this.Text);
+	}
+	
+	public get IsTextAnswer(): boolean
+	{
+		return checkOpenAnswer(this.Text);
+	}
 }
 
 
@@ -272,7 +289,29 @@ export function win1251Avaliabe(buf: Buffer)
 }
 
 
-/** Разбирает текст на `Id` + `Text` */
+/** Проверяет ответ на з.о. по тексту */
+function checkResetAnswer(answerText: string): boolean
+{
+	let text = answerText.toLocaleLowerCase();
+	for (const pattern of RegExpPatterns.ResetAnswerText) {
+		if (text.match(pattern)) return true;
+	}
+	return false;
+}
+
+
+/** Проверяет ответ на открытый по тексту */
+function checkOpenAnswer(answerText: string): boolean
+{
+	let text = answerText.toLocaleLowerCase();
+	for (const pattern of RegExpPatterns.OpenAnswerText) {
+		if (text.match(pattern)) return true;
+	}
+	return false;
+}
+
+
+/** Разбирает текст на Answer/Item */
 export function parseElements(strings: string[]): ParsedElementObject[]
 {
 	let res: ParsedElementObject[] = [];
@@ -312,8 +351,10 @@ export function parseElements(strings: string[]): ParsedElementObject[]
 			let match = str.match(reg.Regex);
 			if (!match) break;
 			else found = true;
-			let id = match[reg.IdGroup].match(/\d+/) ? match[reg.IdGroup] : '' + (j + 1);
-			res.push({ Id: id, Text: match[reg.TextGroup] });
+			let data = new ParsedElementObject();
+			data.Id = match[reg.IdGroup].match(/\d+/) ? match[reg.IdGroup] : '' + (j + 1);
+			data.Text = match[reg.TextGroup];
+			res.push(data);
 		}
 		found = found && res.length == strings.length;
 		if (found)
@@ -323,7 +364,7 @@ export function parseElements(strings: string[]): ParsedElementObject[]
 		}
 	}
 
-	if (!withIds) res = strings.map((s, i) => { return { Id: '' + (i + 1), Text: s } });
+	if (!withIds) res = strings.map((s, i) => { return new ParsedElementObject('' + (i + 1), s); } );
 
 	return res;
 }
@@ -335,11 +376,10 @@ export function parseElements(strings: string[]): ParsedElementObject[]
  *  */
 export function parseQuestion(text: string, force = false): ParsedElementObject
 {
-	let res = { Id: "", Text: text, Prefix: "" };
+	let res = new ParsedElementObject("", text);
 	let regex = /^([a-zA-Z]\w+)(\.?\s*)(.*)/;
 	let indexes = {
 		id: 1,
-		prefix: 2,
 		text: 3
 	}
 	if (force)
@@ -347,14 +387,12 @@ export function parseQuestion(text: string, force = false): ParsedElementObject
 		regex = /^((\d+)|([A-Za-zА-Яа-я][А-Яа-я\w]+))(\.?\s*)(.*)/;
 		indexes = {
 			id: 1,
-			prefix: 4,
 			text: 5
 		}
 	}
 	let match = text.match(regex);
 	if (!match) return res;
 	res.Id = match[indexes.id];
-	res.Prefix = match[indexes.prefix];
 	res.Text = match[indexes.text];
 	return res;
 }
