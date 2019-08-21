@@ -613,8 +613,6 @@ async function registerCommands()
 			{
 				let text = editor.document.getText(editor.selection);
 				let res = TibDocumentEdits.ToAgeList(text);
-				// TODO: убрать, когда появится принудительное форматирование многострочности
-				res = res.replace(/(<((Item)|(\/List)))/g, "\n$1");
 				applyChanges(editor.selection, res, editor, true).then(() => { resolve(); });
 			} catch (error)
 			{

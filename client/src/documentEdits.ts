@@ -46,41 +46,57 @@ function TransformElement(text: string, from: string, to: string): string
 	return $dom.xml();
 }
 
+
+/** Получает возрастные диапазоны из строки */
+function getAgeRanges(text: string): {from: string, to: string}[]
+{
+	let res = [];
+	let ageLimits = text.split('\n').map(x => x.trim().matchAll(/\d+/)).filter(x => x.length > 0);
+	for (let i = 0; i < ageLimits.length; i++)
+	{
+		let from: string;
+		let to: string;
+		if (ageLimits[i].length == 1)
+		{
+			if (i == 0)
+			{
+				from = '0';
+				to = ageLimits[i][0][0];
+			}
+			else if (i == ageLimits.length - 1)
+			{
+				from = ageLimits[i][0][0];
+				to = '99';
+			}
+			else throw "Не удалось получить возрастной диапазон в строке " + (i + 1);
+		}
+		else
+		{
+			from = ageLimits[i][0][0];
+			to = ageLimits[i][1][0];
+		}
+		res.push({from, to});
+	}
+	return res;
+}
+
+
 export function ToAgeList(text: string): string
 {
-	let $ = JQuery.init();
-	let ageLimits = text.match(/\d+/g);
-	let $dom = $.XMLDOM("<List></List>");
-	let $list = $dom.find("List");
-	$list.attr('Id', "ageList");
+	let ageLimits = getAgeRanges(text);
+	let list = new SurveyList("ageList");
+	list.VarsAsTags = false;
 
-	for (let i = 0, length = ageLimits.length, addedElementCount = 1; i < length; i += addedElementCount)
+	for (let i = 0; i < ageLimits.length; i++)
 	{
-		let $item = $.XML("<Item></Item>");
-		$item.attr("Id", ~~(i / 2) + i % 2 + 1);
-
-		if (i + 1 == length)
-		{
-			$item.attr("Var", ageLimits[i] + ",99");
-			$.XML('<Text></Text>').text(ageLimits[i] + "_99").appendTo($item);
-		} else
-		{
-			if (parseInt(ageLimits[i + 1]) - parseInt(ageLimits[i]) == 1)
-			{
-				$item.attr("Var", "0," + ageLimits[i]);
-				$.XML('<Text></Text>').text("0_" + ageLimits[i]).appendTo($item);
-			} else
-			{
-				$item.attr("Var", ageLimits[i] + "," + ageLimits[i + 1]);
-				$.XML('<Text></Text>').text(ageLimits[i] + "_" + ageLimits[i + 1]).appendTo($item);
-				addedElementCount = 2;
-			}
-		}
-
-		$item.appendTo($list);
+		list.AddItem({
+			Id: '' + (i + 1),
+			Text: ageLimits[i].from + '_' + ageLimits[i].to,
+			Vars: [ageLimits[i].from, ageLimits[i].to]
+		});
 	}
 
-	return $dom.xml();
+	return list.ToXML();
 }
 
 export function RemoveQuestionIds(text: string): string
