@@ -92,6 +92,11 @@
                 "command": "tib.transform.ToAgeList",
                 "title": "-> AgeList",
                 "category": "tib"
+			},
+			{
+                "command": "tib.transform.ToSexAgeList",
+                "title": "-> SexAgeList",
+                "category": "tib"
             },
             {
                 "command": "tib.remove.QuestionIds",

@@ -48,7 +48,7 @@ function TransformElement(text: string, from: string, to: string): string
 
 
 /** Получает возрастные диапазоны из строки */
-function getAgeRanges(text: string): {from: string, to: string}[]
+function getAgeRanges(text: string): { from: string, to: string }[]
 {
 	let res = [];
 	let ageLimits = text.split('\n').map(x => x.trim().matchAll(/\d+/)).filter(x => x.length > 0);
@@ -75,7 +75,7 @@ function getAgeRanges(text: string): {from: string, to: string}[]
 			from = ageLimits[i][0][0];
 			to = ageLimits[i][1][0];
 		}
-		res.push({from, to});
+		res.push({ from, to });
 	}
 	return res;
 }
@@ -98,6 +98,31 @@ export function ToAgeList(text: string): string
 
 	return list.ToXML();
 }
+
+
+export function ToSexAgeList(text: string): string
+{
+	let ageLimits = getAgeRanges(text);
+	let list = new SurveyList("sexAgeList");
+	list.VarsAsTags = false;
+	let sexList = ["man", "woman"];
+	let i = 1;
+
+	for (let sIndex = 0; sIndex < sexList.length; sIndex++)
+	{
+		ageLimits.forEach(age =>
+		{
+			list.AddItem({
+				Id: '' + (i++),
+				Text: sexList[sIndex] + '_' + age.from + '_' + age.to,
+				Vars: ['' + (sIndex + 1), age.from, age.to]
+			});
+		});
+	};
+
+	return list.ToXML();
+}
+
 
 export function RemoveQuestionIds(text: string): string
 {

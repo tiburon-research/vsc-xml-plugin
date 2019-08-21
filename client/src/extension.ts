@@ -622,6 +622,26 @@ async function registerCommands()
 		});
 	});
 
+
+	//преобразовать в список c возрастом
+	registerCommand('tib.transform.ToSexAgeList', () =>
+	{
+		return new Promise<void>((resolve, reject) =>
+		{
+			let editor = vscode.window.activeTextEditor;
+			try
+			{
+				let text = editor.document.getText(editor.selection);
+				let res = TibDocumentEdits.ToSexAgeList(text);
+				applyChanges(editor.selection, res, editor, true).then(() => { resolve(); });
+			} catch (error)
+			{
+				logError("Ошибка в преобразовании половозрастного списка", true, error);
+				resolve();
+			}
+		});
+	});
+
 	// комментирование блока
 	registerCommand('editor.action.blockComment', () => 
 	{
