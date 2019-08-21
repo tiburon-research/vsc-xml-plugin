@@ -404,8 +404,8 @@ async function registerCommands()
 			{
 				_inProcess = true;
 				let multi = vscode.window.activeTextEditor.document.getText(vscode.window.activeTextEditor.selection).indexOf("\n") > -1;
-				let pre = multi ? "\n" : " ";
-				let post = multi ? "\n" : " ";
+				let pre = multi ? "" : " ";
+				let post = multi ? "" : " ";
 				vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<![CDATA[" + pre + "$TM_SELECTED_TEXT" + post + "]]>")).then(() => 
 				{
 					_inProcess = false;
