@@ -282,7 +282,7 @@ export function parseElements(strings: string[]): ParsedElementObject[]
 	// пробуем разбить на Id + text
 	let regTests = [
 		{
-			Regex: /^(\d+)([\.\-—:\s]*)(.+?)$/,
+			Regex: /^(\d+)([\.\-—:\)\s]*)(.+?)$/,
 			IdGroup: 1,
 			TextGroup: 3
 		},
