@@ -107,7 +107,12 @@
                 "command": "tib.cdata",
                 "title": "Обернуть в CDATA",
                 "category": "tib"
-            },
+			},
+			{
+                "command": "tib.cdataInner",
+                "title": "Обернуть текущий тег в CDATA",
+                "category": "tib"
+			},
             {
                 "command": "tib.surveyBlock",
                 "title": "Обернуть в сворачиваемый блок",
@@ -176,7 +181,11 @@
             {
                 "key": "ctrl+alt+c",
                 "command": "tib.cdata"
-            },
+			},
+			{
+                "key": "ctrl+shift+alt+c",
+                "command": "tib.cdataInner"
+			},
             {
                 "key": "ctrl+alt+b",
                 "command": "tib.surveyBlock"

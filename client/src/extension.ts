@@ -277,6 +277,8 @@ async function registerCommands()
 		});
 	}, false);
 
+
+	// география
 	registerCommand('tib.ChooseGeo', () =>
 	{
 		return new Promise<void>((resolve, reject) =>
@@ -296,6 +298,7 @@ async function registerCommands()
 			}).catch(er => { logError("Ошибка получения географии", true, er) });
 		});
 	});
+
 
 	// выделение полного Question+Page из текста
 	registerCommand('tib.getFullPage', () => 
@@ -411,6 +414,41 @@ async function registerCommands()
 			} catch (error)
 			{
 				logError("Ошибка при оборачивании в CDATA", true, error);
+				resolve();
+			}
+		});
+	});
+
+
+	registerCommand('tib.cdataInner', () => 
+	{
+		return new Promise<void>((resolve, reject) =>
+		{
+			try
+			{
+				let doc = vscode.window.activeTextEditor.document;
+				vscode.window.activeTextEditor.selections.forEachAsync(selection =>
+				{
+					return new Promise<vscode.Selection>((resl, rej) =>
+					{
+						getCurrentTag(doc, selection.active).then(tag =>
+						{
+							let startPostion = new vscode.Position(tag.OpenTagRange.end.line, tag.OpenTagRange.end.character);
+							let lastPosition = doc.positionAt(tag.PreviousText.length);
+							let closeTagPosition = findCloseTag('<', tag.Name, '>', createServerDocument(doc), ClientServerTransforms.ToServer.Position(lastPosition));
+							if (!closeTagPosition) rej("Не удалось найти закрывающийся тег");
+							resl(new vscode.Selection(startPostion.line, startPostion.character, closeTagPosition.start.line, closeTagPosition.start.character));
+						}).catch(rej);
+					});
+				}).then(selections =>
+				{
+					vscode.window.activeTextEditor.selections = selections;
+					vscode.commands.executeCommand('tib.cdata');
+					resolve();
+				}).catch(reject);
+			} catch (error)
+			{
+				logError("Ошибка при оборачивании в CDATA (Inner)", true, error);
 				resolve();
 			}
 		});

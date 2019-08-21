@@ -209,9 +209,10 @@ export class CurrentTag
 	public LastParent: SimpleTag;
 	/** Откуда начинается */
 	public StartIndex: number;
+	/** Открывающийся тег */
 	public OpenTagRange: server.Range;
 	/** Текст от начала документа до Position */
-	public PreviousText = null;
+	public PreviousText: string = null;
 
 
 	// -------------------- ТЕХНИЧЕСКОЕ
