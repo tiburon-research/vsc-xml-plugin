@@ -9,7 +9,7 @@ import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSetti
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
-import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, LogPath } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, LogPath, GenerableRepeats } from 'tib-api/lib/constants'
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
@@ -639,6 +639,35 @@ async function registerCommands()
 				logError("Ошибка в преобразовании половозрастного списка", true, error);
 				resolve();
 			}
+		});
+	});
+
+
+	//шаблон ротации
+	registerCommand('tib.rotationTemplate', () =>
+	{
+		return new Promise<void>((resolve, reject) =>
+		{
+			let rotationTypes = [
+				{
+					Label: "Ротированная",
+					Snippet: GenerableRepeats.Rotated,
+					Description: "блоки переменных по порядку показа",
+					Detail: "BBDO, О+К"
+				},
+				{
+					Label: "Разротированная",
+					Snippet: GenerableRepeats.Unrotated,
+					Description: "блоки переменных по концепциям",
+					Detail: "Яндекс"
+				}
+			];
+
+			vscode.window.showQuickPick(rotationTypes.map(x => { return { label: x.Label, description: x.Description, detail: x.Detail } as vscode.QuickPickItem })).then(value =>
+			{
+				let res = new vscode.SnippetString(GenerableRepeats.RespInfo + rotationTypes.find(x => x.Label == value.label).Snippet);
+				vscode.window.activeTextEditor.insertSnippet(res).then(() => { resolve(); });
+			});
 		});
 	});
 
@@ -1899,7 +1928,7 @@ async function chooseGeo()
 		});
 		qIds[questionName] = await ib.execute();
 	}
-	
+
 	if (groupBy.contains(GeoConstants.GroupBy.District)) await getNextQuestionId("District", GeoConstants.QuestionNames.District, GeoConstants.GroupBy.District);
 	if (groupBy.contains(GeoConstants.GroupBy.Subject)) await getNextQuestionId("Subject", GeoConstants.QuestionNames.Subject, GeoConstants.GroupBy.Subject);
 	await getNextQuestionId("City", GeoConstants.QuestionNames.City, "Город");

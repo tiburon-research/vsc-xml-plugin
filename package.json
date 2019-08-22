@@ -172,7 +172,12 @@
                 "command": "tib.getItems",
                 "title": "Преобразовать в Items",
                 "category": "tib"
-            }
+			},
+			{
+                "command": "tib.rotationTemplate",
+                "title": "Вставить шаблон ",
+                "category": "tib"
+			}
         ],
         "keybindings": [
             {
@@ -234,7 +239,11 @@
             {
                 "key": "ctrl+alt+i",
                 "command": "tib.getItems"
-            }
+			},
+			{
+                "key": "ctrl+alt+r",
+                "command": "tib.rotationTemplate"
+			}
         ],
         "configurationDefaults": {
             "[tib]": {

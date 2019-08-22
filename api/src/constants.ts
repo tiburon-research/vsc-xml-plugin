@@ -95,3 +95,67 @@ export const PreDifinedConstants = {
 
 
 export const LogPath = "G:\\Разное\\TiburonXMLHelper\\Logs";
+
+
+export const GenerableRepeats = {
+	RespInfo: `
+<Constants>
+	<Item Id="$2Count"><Value>$3</Value></Item>
+</Constants>
+
+<Repeat List="$1">
+	<Quota Id="zzz_\${2:concept}_@ID" Apply="$4" Limit="1000">
+		<Item Page="RespInfo" Question="$2" Answer="@ID" Generable="true"/>
+	</Quota>
+</Repeat>
+
+<Page Id="RespInfo">
+	<Filter>false;</Filter>
+	<Header>Опросные данные</Header>
+	<Question Id="$2" Type="CheckBox" Store="$2Store" Imperative="false" StructIgnore="true">
+		<Repeat List="$1">
+			<Answer Id="@ID"><Text>@Text</Text></Answer>
+		</Repeat>
+	</Question>
+	<Question Id="$2Store" Type="Integer" Imperative="false">
+		<Header>$5</Header>
+		<Repeat Length="@$2Count">
+			<Answer Id="@Itera" ExportLabel="Позиция @Itera"/>
+		</Repeat>
+	</Question>
+</Page>
+	`,
+	
+	Unrotated: `
+<Block Items="\\$repeat($1){rotBlock@ID[,]}" MixId=":$2"/>
+
+<Repeat List="$1">
+
+	<Block Id="rotBlock@ID" Items="preview_@ID" SyncId="@ID"/>
+
+	<Page Id="preview_@ID">
+		<Header>@Text</Header>
+	</Page>	
+
+</Repeat>
+	`,
+
+	Rotated: `
+<Repeat Length="@$2Count">
+
+	<Page Id="preview_@Itera">
+		<Header>\\$get$2("@Itera")</Header>
+	</Page>
+
+</Repeat>
+
+<Methods><![CDATA[
+
+	public string get$2(string itera)
+	{
+		return GetListItemText("$1", AnswerValue("$2Store", itera));
+	}
+
+]]></Methods>
+	`
+}
