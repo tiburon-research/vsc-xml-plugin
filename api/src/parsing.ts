@@ -682,3 +682,18 @@ export function getWrongMixedElements(document: server.TextDocument, prepearedTe
 		resolve(res);
 	});
 }
+
+
+/** Ищет весь пользовательский JS и возвращает одной строкой */
+export async function getCustomJS(text: string): Promise<string>
+{
+	let res: string = null;
+	let jsElements = text.matchAll(/<!--#JS([\s\S]*?)-->/);
+	jsElements.forEach(body =>
+	{
+		if (!body[1]) return;
+		if (!!res) res += "\n" + body[1];
+		else res += body[1];
+	});
+	return res;
+}

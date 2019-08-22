@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
@@ -16,6 +16,8 @@ import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors } from './errors';
 import { readGeoFile, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
+import { getCustomJS } from 'tib-api/lib/parsing';
+import { DocumentObjectModel } from './customSurveyCode';
 
 
 export { CSFormatter, _settings as Settings };
@@ -669,6 +671,13 @@ async function registerCommands()
 				vscode.window.activeTextEditor.insertSnippet(res).then(() => { resolve(); });
 			});
 		});
+	});
+
+
+	//custom js
+	registerCommand('tib.runCustomScript', () =>
+	{
+		return runCustomJS();
 	});
 
 	// комментирование блока
@@ -1938,6 +1947,20 @@ async function chooseGeo()
 	let lists = await createGeolists(geoData, groupBy);
 	let page = await createGeoPage(groupBy, qIds);
 	return lists + page;
+}
+
+
+
+async function runCustomJS()
+{
+	let js = await getCustomJS(vscode.window.activeTextEditor.document.getText());
+	let code = await vscode.window.showInputBox({ placeHolder: "Код для выполнения" });
+	let resultScript = js + "\n" + code;
+	
+	// переменные, которые пригодятся
+	let $ = JQuery.init();
+	let document = new DocumentObjectModel(vscode.window.activeTextEditor.document, $);
+	eval(resultScript);
 }
 
 
