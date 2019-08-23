@@ -203,7 +203,7 @@ export class SurveyItem extends SurveyElement
 
 
 /** список Var для SurveyListItem */
-class SurveyListItemVars
+export class SurveyListItemVars
 {
 	constructor(varArray: string[])
 	{

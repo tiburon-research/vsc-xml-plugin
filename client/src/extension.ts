@@ -1404,7 +1404,7 @@ async function getCSFormatter(ext: vscode.Extension<any>): Promise<ICSFormatter>
 
 
 /** Заменяет `range` на `text` */
-export async function applyChanges(range: vscode.Range, text: string, editor: vscode.TextEditor, format = false): Promise<string>
+export async function applyChanges(range: vscode.Range, text: string, editor: vscode.TextEditor, format = false): Promise<void>
 {
 	_inProcess = true;
 	let res = text;
@@ -1418,7 +1418,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 	{
 		try
 		{
-			let sel = selectLines(editor.document, editor.selection);
+			let sel = selectLines(editor.document, new vscode.Selection(range.start.line, range.start.character, range.end.line, range.end.character));
 			editor.selection = sel;
 			let tag = await getCurrentTag(editor.document, sel.start);
 			let ind = !!tag ? tag.GetIndent() : 0;
@@ -1431,7 +1431,6 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 		}
 	}
 	_inProcess = false;
-	return res;
 }
 
 
@@ -1953,13 +1952,21 @@ async function chooseGeo()
 
 async function runCustomJS()
 {
-	let js = await getCustomJS(vscode.window.activeTextEditor.document.getText());
+	let editor = vscode.window.activeTextEditor;
+	let js = await getCustomJS(editor.document.getText());
 	let code = await vscode.window.showInputBox({ placeHolder: "Код для выполнения" });
 	let resultScript = js + "\n" + code;
 	
 	// переменные, которые пригодятся
-	let $ = JQuery.init();
-	let document = new DocumentObjectModel(vscode.window.activeTextEditor.document, $);
+	let replaceDocumentText = function (text: string) 
+	{
+		let selections = editor.selections;
+		let change = applyChanges(getFullRange(vscode.window.activeTextEditor.document), text, editor, true);
+		change.then(() => { editor.selections = selections });
+		return change;
+	};
+
+	let document = new DocumentObjectModel(editor.document, replaceDocumentText);
 	eval(resultScript);
 }
 
