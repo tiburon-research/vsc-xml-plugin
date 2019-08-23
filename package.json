@@ -175,7 +175,12 @@
 			},
 			{
                 "command": "tib.rotationTemplate",
-                "title": "Вставить шаблон ",
+                "title": "Вставить шаблон ротации",
+                "category": "tib"
+			},
+			{
+                "command": "tib.runCustomScript",
+                "title": "Выполнить скрипт",
                 "category": "tib"
 			}
         ],
