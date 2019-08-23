@@ -2935,5 +2935,23 @@ export const CSFeatures = [
 			"DateTime.ParseExact(${1:stringDate}, \"${2:dd.MM.yyyy hh:mm:ss}\", null)"
 		],
 		"description": "Приведение string к DateTime"
+	},
+	{
+		"prefix": "#ageIntervals",
+		"body": [
+			'public void setAgeIntervals()',
+			'{',
+			'	int age = int.Parse(AnswerValue("pre_age","1"));',
+			'	foreach (SurveyListItem item in CurrentSurvey.Lists["ageList"].Items)',
+			'	{',
+			'		if (age >= int.Parse(item.Vars[0]) && age <= int.Parse(item.Vars[1]))',
+			'		{',
+			'			AnswerUpdateP("RespInfo", "Age", item.ID);',
+			'			break;',
+			'		}',
+			'	}',
+			'}'
+		],
+		"description": "Метод перекодировки возраста в интервалы"
 	}
 ];
