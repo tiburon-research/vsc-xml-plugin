@@ -164,8 +164,11 @@ namespace XML
 /** Реализует удобную работу с документом tib-xml */
 export class DocumentObjectModel
 {
+	/** Полный текст документа */
 	public text: string;
+	/** Объект для работы с листами */
 	public lists: XML.Lists;
+	/** Применяет к документу внесённые изменения */
 	public applyChanges: () => Promise<void>;
 
 	constructor(private document: vscode.TextDocument, f: (s: string) => Promise<void>)
