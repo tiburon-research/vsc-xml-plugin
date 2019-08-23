@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
@@ -16,6 +16,8 @@ import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors } from './errors';
 import { readGeoFile, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
+import { getCustomJS } from 'tib-api/lib/parsing';
+import { DocumentObjectModel } from './customSurveyCode';
 
 
 export { CSFormatter, _settings as Settings };
@@ -669,6 +671,13 @@ async function registerCommands()
 				vscode.window.activeTextEditor.insertSnippet(res).then(() => { resolve(); });
 			});
 		});
+	});
+
+
+	//custom js
+	registerCommand('tib.runCustomScript', () =>
+	{
+		return runCustomJS();
 	});
 
 	// комментирование блока
@@ -1395,7 +1404,7 @@ async function getCSFormatter(ext: vscode.Extension<any>): Promise<ICSFormatter>
 
 
 /** Заменяет `range` на `text` */
-export async function applyChanges(range: vscode.Range, text: string, editor: vscode.TextEditor, format = false): Promise<string>
+export async function applyChanges(range: vscode.Range, text: string, editor: vscode.TextEditor, format = false): Promise<void>
 {
 	_inProcess = true;
 	let res = text;
@@ -1409,7 +1418,7 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 	{
 		try
 		{
-			let sel = selectLines(editor.document, editor.selection);
+			let sel = selectLines(editor.document, new vscode.Selection(range.start.line, range.start.character, range.end.line, range.end.character));
 			editor.selection = sel;
 			let tag = await getCurrentTag(editor.document, sel.start);
 			let ind = !!tag ? tag.GetIndent() : 0;
@@ -1422,7 +1431,6 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 		}
 	}
 	_inProcess = false;
-	return res;
 }
 
 
@@ -1938,6 +1946,28 @@ async function chooseGeo()
 	let lists = await createGeolists(geoData, groupBy);
 	let page = await createGeoPage(groupBy, qIds);
 	return lists + page;
+}
+
+
+
+async function runCustomJS()
+{
+	let editor = vscode.window.activeTextEditor;
+	let js = await getCustomJS(editor.document.getText());
+	let code = await vscode.window.showInputBox({ placeHolder: "Код для выполнения" });
+	let resultScript = js + "\n" + code;
+	
+	// переменные, которые пригодятся
+	let replaceDocumentText = function (text: string) 
+	{
+		let selections = editor.selections;
+		let change = applyChanges(getFullRange(vscode.window.activeTextEditor.document), text, editor, true);
+		change.then(() => { editor.selections = selections });
+		return change;
+	};
+
+	let document = new DocumentObjectModel(editor.document, replaceDocumentText);
+	eval(resultScript);
 }
 
 

@@ -243,6 +243,10 @@
 			{
                 "key": "ctrl+alt+r",
                 "command": "tib.rotationTemplate"
+			},
+			{
+                "key": "ctrl+alt+j",
+                "command": "tib.runCustomScript"
 			}
         ],
         "configurationDefaults": {
