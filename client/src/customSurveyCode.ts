@@ -24,7 +24,7 @@ function __getListItemVars($item, safe = false): string[]
 	let varsAttr = $item.attr('Var');
 	let $varsTags = $item.find('Var');
 	if (!!varsAttr) vars = vars.concat(varsAttr.split(','));
-	else if ($varsTags.length > 0) vars = vars.concat($.map($varsTags, v => $(v).text()));
+	else if ($varsTags.length > 0) vars = vars.concat($.map($varsTags, v => $dom.find(v).text()));
 	else if (safe) throw '';
 	return vars;
 }
@@ -53,15 +53,19 @@ namespace XML
 {
 	export class ListItem
 	{
-		readonly id: string;
-		readonly text: string;
-		readonly vars?: string[];
+		public readonly id: string;
+		public readonly text: string;
+		public readonly vars?: string[];
+		/** Представление JQuery */
+		public $element;
 	}
 
 	export class List
 	{
-		readonly id: string;
-		readonly items: ListItem[];
+		public readonly id: string;
+		public readonly items: ListItem[];
+		/** Представление JQuery */
+		public $element;
 	}
 
 	/** Работа с листами */
@@ -76,16 +80,18 @@ namespace XML
 			let $list = __getList(id);
 			let items = $.map($list.find('Item'), i =>
 			{
-				let $item = $(i);
+				let $item = $dom.find(i);
 				return {
 					id: $item.attr('Id'),
 					text: __getItemText($item),
-					vars: __getListItemVars($item)
+					vars: __getListItemVars($item),
+					$element: $item
 				} as XML.ListItem;
 			})
 			return {
 				id: $list.attr('Id'),
-				items
+				items,
+				$element: $list
 			} as XML.List;
 		}
 
