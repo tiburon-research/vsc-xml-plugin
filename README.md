@@ -351,7 +351,7 @@ ___
 $dom.find('Quota[Id="test1"]').attr('Id', 'test2');
 document.applyChanges();
 ```
-
+Данный пример заменяет Id в квоте `test1` на `test2`.
 
 
 ### Комментирование
