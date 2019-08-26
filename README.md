@@ -293,6 +293,7 @@ ___
 ![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/geo.gif?raw=true)
 
 * Вставить шаблон ротации 
+
 Добавляет шаблон из `RespInfo` + `Generable` + `Repeat` в зависимости от того, как должна выглядеть база (ротированная/разротированная).  
 `Ctrl` + `Alt` + `R`.
 
