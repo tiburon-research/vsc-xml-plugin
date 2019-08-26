@@ -1966,7 +1966,8 @@ async function runCustomJS()
 		return change;
 	};
 
-	let document = new DocumentObjectModel(editor.document, replaceDocumentText);
+	let $dom = require('tib-api').JQuery.init().XMLDOM(editor.document.getText());
+	let document = new DocumentObjectModel(editor.document, $dom, replaceDocumentText);
 	eval(resultScript);
 }
 

@@ -335,6 +335,24 @@ ___
 	- `function yesNoHelper(text: string): Promise<boolean>` - показвает вопрос `text` и 2 ответа (да и нет). Возвращает true в случае "да".
 	- `_outChannel.logToOutput(message: string, prefix = " > "): void` - выводит сообщение в консоль VSCode.
 
+#### Использование JQuery
+
+С помощью переменной `$dom` можно работать с JQuery-моделью документа. Большинство методов JQuery адаптированы под tibXml.  
+Доаолнительные методы:
+- `xml()` - возвращает внутренний XML объекта;
+- `outerXml()` - возвращает XML объекта вместе с родителем;
+- `XML(element: string)` - создаёт новый объект из XML-строки;
+
+После изменений в `$dom` также необходимо вызывать `document.applyChanges()`.  
+Нужно учитывать, библиотека JQuery регистрозависимая и селекторы по id (`#id`) в tibXml работать не будут.
+
+Пример:
+```JS
+$dom.find('Quota[Id="test1"]').attr('Id', 'test2');
+document.applyChanges();
+```
+
+
 
 ### Комментирование
 

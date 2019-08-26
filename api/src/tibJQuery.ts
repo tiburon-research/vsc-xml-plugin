@@ -135,7 +135,6 @@ export function init(): any
 	{
 		let $el = JQuery(this[0]);
 		let res = $el.outerHtml();
-		let data = (JQuery.SurveyData as DOMSurveyData);
 		res = JQuery.decode(res);
 		return res;
 	}

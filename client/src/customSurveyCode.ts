@@ -156,10 +156,10 @@ namespace XML
 /** Реализует удобную работу с документом tib-xml */
 export class DocumentObjectModel
 {
-	constructor(private document: vscode.TextDocument, f: (s: string) => Promise<void>)
+	constructor(private document: vscode.TextDocument, dom: any, f: (s: string) => Promise<void>)
 	{
 		this.text = document.getText();
-		$dom = $.XMLDOM(this.text);
+		$dom = dom;
 		this.applyChanges = () => { return f($dom.xml()); };
 		this.lists = new XML.Lists($dom);
 	}
