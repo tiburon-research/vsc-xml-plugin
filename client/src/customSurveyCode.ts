@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { JQuery } from 'tib-api';
 import { SurveyListItem, SurveyListItemVars } from 'tib-api/lib/surveyObjects';
+import xlsx from 'node-xlsx';
 
 
 var $ = JQuery.init();
@@ -44,15 +45,6 @@ function __getList(listId: string)
 	let $list = $dom.find(`List[Id="${listId}"]`);
 	if ($list.length == 0) throw `Список с Id="${listId}" не найден`;
 	return $list;
-}
-
-
-function __replaceAllText(text: string)
-{
-	vscode.window.activeTextEditor.edit(builder =>
-	{
-		builder.replace
-	})
 }
 
 
@@ -164,13 +156,6 @@ namespace XML
 /** Реализует удобную работу с документом tib-xml */
 export class DocumentObjectModel
 {
-	/** Полный текст документа */
-	public text: string;
-	/** Объект для работы с листами */
-	public lists: XML.Lists;
-	/** Применяет к документу внесённые изменения */
-	public applyChanges: () => Promise<void>;
-
 	constructor(private document: vscode.TextDocument, f: (s: string) => Promise<void>)
 	{
 		this.text = document.getText();
@@ -178,5 +163,12 @@ export class DocumentObjectModel
 		this.applyChanges = () => { return f($dom.xml()); };
 		this.lists = new XML.Lists($dom);
 	}
+
+	/** Полный текст документа */
+	public text: string;
+	/** Объект для работы с листами */
+	public lists: XML.Lists;
+	/** Применяет к документу внесённые изменения */
+	public applyChanges: () => Promise<void>;
 
 }
