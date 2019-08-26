@@ -1598,7 +1598,7 @@ export const Attributes = {
 		{
 			"Name": "ButtonTimeout",
 			"AllowCode": "true",
-			"Type": "Double"
+			"Type": "Integer"
 		},
 		{
 			"Name": "PostbackTimeout",
