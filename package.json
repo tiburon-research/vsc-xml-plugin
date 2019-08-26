@@ -351,7 +351,7 @@
         "vscode": "^1.1.33"
     },
     "scripts": {
-        "vscode:prepublish": "npm run compile && copy-signature",
+        "vscode:prepublish": "npm run compile && npm run copy-signature",
         "compile": "tsc -b",
         "watch": "tsc -b -w",
         "compile-api": "cd api && npm run compile && cd ../",
