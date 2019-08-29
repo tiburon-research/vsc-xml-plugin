@@ -4,6 +4,7 @@ import { Parse, safeString, JQuery, translate, KeyedCollection } from 'tib-api'
 import { SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElementType, SurveyElement } from 'tib-api/lib/surveyObjects'
 import * as vscode from 'vscode'
 import { QuestionTypes } from 'tib-api/lib/constants';
+import { ExtensionSettings } from './classes';
 
 
 export function AnswersToItems(text: string): string
@@ -297,7 +298,7 @@ export class XMLElementCreationResult
 	}
 }
 
-export function createElements(text: string, type: SurveyElementType): XMLElementCreationResult
+export function createElements(text: string, type: SurveyElementType, settings: ExtensionSettings): XMLElementCreationResult
 {
 	let strings = text.split("\n");
 	let questionResult: Parse.ParsedElementObject;
@@ -328,21 +329,31 @@ export function createElements(text: string, type: SurveyElementType): XMLElemen
 	}
 	else
 	{
-		elements.forEach(element =>
-		{
+		for (let i = 0; i < elements.length; i++) {
+			const element = elements[i];
 			let answer = new SurveyAnswer(element.Id, element.Text);
-			if (element.IsResetAnswer)
+			if (elements.length - i < 3) // проставляем доп атрибуты только 2 последним Answer'ам
 			{
-				answer.SetAttr('Reset', 'true');
-				answer.SetAttr('Fix', 'true');
-				answer.SetAttr('NoUseInQstFilter', 'true');
-				let uiElement = new SurveyElement('Ui');
-				uiElement.SetAttr('Isolate', '1');
-				answer.AddChild(uiElement);
+				if (element.IsResetAnswer)
+				{
+					answer.SetAttr('Reset', 'true');
+					answer.SetAttr('Fix', 'true');
+					answer.SetAttr('NoUseInQstFilter', 'true');
+					if (settings.Item('enableUiIsolateGen'))
+					{
+						let uiElement = new SurveyElement('Ui');
+						uiElement.SetAttr('Isolate', '1');
+						answer.AddChild(uiElement);
+					}
+				}
+				else if (element.IsTextAnswer)
+				{
+					answer.SetAttr('Fix', 'true');
+					answer.SetAttr('Type', 'Text');
+				}
 			}
-			else if (element.IsTextAnswer) answer.SetAttr('Type', 'Text');
 			answerItems.AddPair(element.Id, answer, false);
-		});
+		};
 	}
 
 	switch (type)

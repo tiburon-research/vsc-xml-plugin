@@ -1582,7 +1582,7 @@ async function createElements(elementType: SurveyElementType)
 			return;
 		}
 		let text = editor.document.getText(editor.selection);
-		let res = TibDocumentEdits.createElements(text, elementType);
+		let res = TibDocumentEdits.createElements(text, elementType, _settings);
 		if (!res.Ok)
 		{
 			showWarning(res.Message);

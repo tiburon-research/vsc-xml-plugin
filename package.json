@@ -2,7 +2,7 @@
     "name": "tiburonscripter",
     "displayName": "Tiburon XML Helper",
     "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-    "version": "2.3.0",
+    "version": "2.3.1",
     "publisher": "TiburonResearch",
     "author": {
         "name": "GuRu",
@@ -320,7 +320,12 @@
                     "description": "Включить блокировку файлов при редактировании",
                     "type": "boolean",
                     "default": true
-                }
+				},
+				"tib.enableUiIsolateGen": {
+                    "description": "Добавлять Isolate при генерации ответов",
+                    "type": "boolean",
+                    "default": true
+				}
             }
         }
     },
