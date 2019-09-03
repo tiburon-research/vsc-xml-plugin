@@ -92,8 +92,8 @@ export class CacheSet
 						Parents: validParents,
 						Body: body,
 						OpenTagIsClosed: openTagIsclosed,
-						OpenTagRange: lastParentRange,
-						StartIndex: document.offsetAt(lastParentRange.start)
+						OpenTagRange: current.OpenTagRange,
+						StartIndex: document.offsetAt(current.OpenTagRange.start)
 					});
 					return true;
 				}
