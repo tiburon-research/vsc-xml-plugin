@@ -105,7 +105,7 @@ export async function readGeoFile(): Promise<GeoFileLineData[]>
 	if (!path) throw "Путь к файлу с георафией не найден";
 	let geoList = await readGeoFileList(path);
 	let res = await parseGeoList(geoList);
-	return res;
+	return res.filter(x => !!x.CityId && !!x.CityName); // фильтруем косяки
 }
 
 

@@ -271,7 +271,6 @@ async function registerCommands()
 	{
 		return new Promise<void>((resolve, reject) =>
 		{
-			console.log(111);
 			if (_pack != "debug") return;
 			// выполняем дебажный тест
 			debug.test();
