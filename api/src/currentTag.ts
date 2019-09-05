@@ -520,10 +520,9 @@ export class CurrentTag
 
 
 	/** XML-путь к текущему тегу */
-	public get XmlPath(): string
+	public XmlPath(): string
 	{
-		let path = '';
-		this.Parents.map(x =>
+		let path = this.Parents.map(x =>
 		{
 			let res = x.Name;
 			let id = x.getAttributes().Item("Id");

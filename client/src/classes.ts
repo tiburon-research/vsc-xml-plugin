@@ -188,7 +188,7 @@ export class StatusBar
 		{
 			let lang = Language[tag.GetLaguage()];
 			if (lang == "CSharp") lang = "C#";
-			info = lang + ":\t" + tag.XmlPath;
+			info = lang + ":\t" + tag.XmlPath();
 		}
 		return this.statusMessage(info);
 	}
