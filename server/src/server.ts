@@ -468,7 +468,7 @@ export function logError(text: string, showError: boolean, errorMessage?)
 		else if (!!errorMessage.message) msg = errorMessage.message;
 	}
 	let tag = _Cache.Tag.IsSet() ? _Cache.Tag.Get() : null;
-	let tagData: IErrorTagData = !!tag ? { Language: tag.GetLaguage(), XmlPath: tag.XmlPath } : undefined;
+	let tagData: IErrorTagData = !!tag ? { Language: tag.GetLaguage(), XmlPath: tag.XmlPath() } : undefined;
 	let log: IErrorLogData = {
 		MessageFriendly: text,
 		Message: msg,
