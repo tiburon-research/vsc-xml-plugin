@@ -236,6 +236,7 @@ async function getStaticData()
 				_bot = new TelegramBot(data, function (res)
 				{
 					if (!res) _outChannel.logToOutput("Отправка логов недоступна", _WarningLogPrefix);
+					else _outChannel.logToOutput("telegram-бот активирован");
 				});
 			}
 		}
