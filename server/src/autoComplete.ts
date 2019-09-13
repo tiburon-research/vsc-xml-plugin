@@ -2955,3 +2955,117 @@ export const CSFeatures = [
 		"description": "Метод перекодировки возраста в интервалы"
 	}
 ];
+
+
+
+
+export const RangeQuestion = {
+	QuestionSnippet: {
+		"prefix": "_rangeQuestions",
+		"body": [
+			'<Page Id="${1:Q1}">',
+			'\t<Question Id="$1" Type="CheckBox" MaxAnswers="@RangeCount" MixId="${8:rangeMix}">',
+			'\t\t<Header>$2</Header>',
+			'\t\t<Ui Extend="ContentOnly"/>',
+			'\t\t<Repeat List="${3:list}">',
+			'\t\t\t<Answer Id="@ID"><Text>[img src="@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/@ID.jpg"/]@Text</Text></Answer>',
+			'\t\t</Repeat>',
+			'\t\t<Answer Id="999" Reset="true" Fix="true" NoUseInQstFilter="true"><Ui Isolate="1"/><Text>${6:Ни один}</Text></Answer>',
+			'\t</Question>',
+			'\t<Question Id="$1_range" Type="Integer">',
+			'\t\t<Filter>return false;</Filter>',
+			'\t\t<Header>Ранги элементов</Header>',
+			'\t\t<Repeat List="qType5_2List">',
+			'\t\t\t<Answer Id="@ID"><Text>@Text</Text></Answer>',
+			'\t\t</Repeat>',
+			'\t</Question>',
+			'</Page>',
+			'',
+			'<Repeat Length="@RangeCount">',
+			'\t<Page Id="$4_@Itera">',
+			'\t\t<Defaults ShowPrevButton="[c#]@Itera != 1;[/c#]"/>',
+			'\t\t<Filter><![CDATA[ return AnswerExistsAny("$1", "\\$repeat($3){@ID[,]}") && AnswerEnabled("$4_", "999", @Itera, @RangeCount); ]]></Filter>',
+			'\t\t<Question Id="$4_@Itera" Type="RadioButton" MixId="$8" AutoSetSingle="true">',
+			'\t\t\t<Header>$5</Header>',
+			'\t\t\t<Ui Extend="ContentOnly"/>',
+			'\t\t\t<Repeat List="$3">',
+			'\t\t\t\t<Answer Id="@ID">',
+			'\t\t\t\t\t<Filter><![CDATA[ return AnswerExists("$1", "@ID") && AnswerEnabled("$4_", "@ID", @Itera(-1), @RangeCount); ]]></Filter>',
+			'\t\t\t\t\t<Text>[img src="@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/@ID.jpg"/]@Text</Text>',
+			'\t\t\t\t</Answer>',
+			'\t\t\t</Repeat>',
+			'\t\t\t<Answer Id="999" Reset="true" Fix="true" NoUseInQstFilter="true"><Ui Isolate="1"/><Text>$6</Text></Answer>',
+			'\t\t</Question>',
+			'\t</Page>',
+			'</Repeat>',
+			'',
+			'<Page Id="SetRanges" StructIgnore="true" CountProgress="false">',
+			'\t<Filter>return false;</Filter>',
+			'\t<Redirect><![CDATA[',
+			'\t\t/** считается что "$1" и "$1_range" находятся на странице "$1", а "$2_*" на "$2_*" */',
+			'\t\tSetRanges("$1", "$2_", "$1_range", "$3", @RangeCount);',
+			'\t\treturn false;',
+			'\t]]></Redirect>',
+			'</Page>',
+			''
+		],
+		"description": "Ранжирование"
+	},
+
+	Constant: '\t\t<Item Id="RangeCount"><Value>7</Value></Item>',
+
+	Methods: `
+		public bool AnswerEnabled(string prefix, string answer, int current, int len)
+		{
+		\tfor (int i = 1; i <= len; i++)
+		\t{
+		\t\tif (i == current) continue;
+		\t\tif (AnswerExists(prefix + i.ToString(), answer)) return false;
+		\t}
+		\treturn true;
+		}
+		
+		public void SetRanges(string selectionQuestion, string rangeQuestionPrefix, string targetQuestion, string listId, int rangeLength)
+		{
+		\tvar listItems = CurrentSurvey.Lists[listId].Items.ItemsIdArray;
+		\tvar answers = AnswerIDs(selectionQuestion, selectionQuestion);
+		\tvar selected = listItems.Intersect(answers); /** тут не учитывается другое */
+		\tvar notSelected = listItems.Except(answers);
+
+		\t/** проставляем ранг не выбранным в selectionQuestion */
+		\tvar listLength = listItems.Length;
+		\tvar rangeValue = 8;
+		\tif (listLength > 10) rangeValue = 10;
+		\telse if (listLength < 8) rangeValue = listLength;
+		\tstring value = rangeValue.ToString();
+		\tforeach (var item in notSelected)
+		\t{
+		\t\tAnswerUpdateP(selectionQuestion, targetQuestion, item, value);
+		\t}
+
+		\t/** проставляем ранги оценённым */
+		\tint selectedCount = selected.Count();
+		\tvar ranged = new List<string>();
+		\tfor(int i = 1; i <= selectedCount; i++)
+		\t{
+		\t\tvar currentRange = i.ToString();
+		\t\tvar ans = AnswerID(rangeQuestionPrefix + currentRange);
+		\t\tif (ans == "999")
+		\t\t{ /** Если з.о., то всем остальным проставляется вот такой ранг */
+		\t\t\tstring resetRange = Math.Ceiling((double) (i + selectedCount) / 2).ToString();
+		\t\t\tvar selectedNotRanged = selected.Except(ranged);
+		\t\t\tforeach (var item in selectedNotRanged)
+		\t\t\t{
+		\t\t\t\tAnswerUpdateP(selectionQuestion, targetQuestion, item, resetRange);
+		\t\t\t}
+		\t\t\tbreak;
+		\t\t}
+		\t\telse
+		\t\t{
+		\t\t\tAnswerUpdateP(selectionQuestion, targetQuestion, ans, currentRange);
+		\t\t\tranged.Add(ans);
+		\t\t}
+		\t}
+		}
+	`
+}

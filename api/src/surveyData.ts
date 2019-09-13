@@ -468,3 +468,42 @@ export class TibAttribute
 		return null;
 	}
 }
+
+
+/** Генерация TextEdit */
+export namespace TextEdits
+{
+	/** Возвращает TextEdit для добавления в Methods */
+	export function insertInMethods(document: server.TextDocument, str: string): server.TextEdit
+	{
+		return insertIntoTagOrCreateNew(document, 'Methods', str, true);
+	}
+
+	/** Возвращает TextEdit для добавления в Constants */
+	export function insertInConstants(document: server.TextDocument, str: string): server.TextEdit
+	{
+		return insertIntoTagOrCreateNew(document, 'Constants', str, false);
+	}
+
+	/** Добавляет `str` к <`tagName`>. Если не найден, то создаётся новый в конец скрипта. */
+	function insertIntoTagOrCreateNew(document: server.TextDocument, tagName: string, str: string, insertCDATA = false): server.TextEdit
+	{
+		let text = Encoding.clearXMLComments(document.getText());
+		let tagStart = text.lastIndexOf('<' + tagName);
+		str = '\n' + str;
+		if (tagStart < 0)
+		{// добавляем сначала тег
+			let innerText = str + '\n';
+			if (insertCDATA) innerText = '<![CDATA[' + str + ']]>';
+			str = `\t<${tagName}>${innerText}\t</${tagName}>\n`;
+			tagStart = text.lastIndexOf('</Survey');
+			if (tagStart < 0) tagStart = text.length;
+		}
+		else
+		{
+			tagStart = text.indexOf('\n', tagStart);
+		}
+		let position = document.positionAt(tagStart);
+		return server.TextEdit.insert(position, str);
+	}
+}

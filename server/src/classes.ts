@@ -2,10 +2,12 @@
 
 import * as server from 'vscode-languageserver';
 import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition, applyConstants, Encoding, pathExists, uriFromName } from 'tib-api';
-import { ISurveyData, TibAttribute } from 'tib-api/lib/surveyData';
+import { ISurveyData, TibAttribute, TextEdits } from 'tib-api/lib/surveyData';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
 import { logError, consoleLog } from './server';
+import { clearXMLComments } from 'tib-api/lib/encoding';
+import { timingSafeEqual } from 'crypto';
 
 
 /** Возвращает все автозавершения для текущего места */
@@ -354,7 +356,15 @@ export class TibAutoCompletes
 				// XML Features
 				if (this.tag.OpenTagIsClosed && text.match(/\b_\w*$/))
 				{
-					return AutoCompleteArray.XMLFeatures.map(x => snippetToCompletitionItem(x));
+					let snippets = AutoCompleteArray.XMLFeatures.map(x => snippetToCompletitionItem(x));
+					// добавляем snippet для ранжирования
+					let rangeSnippet = snippetToCompletitionItem(AutoCompleteArray.RangeQuestion.QuestionSnippet);
+					rangeSnippet.additionalTextEdits = [
+						TextEdits.insertInMethods(this.document, AutoCompleteArray.RangeQuestion.Methods),
+						TextEdits.insertInConstants(this.document, AutoCompleteArray.RangeQuestion.Constant)
+					];
+					snippets.push(rangeSnippet);
+					return snippets;
 				}
 
 				let curOpenMatch = text.match(/<(\w+)$/);

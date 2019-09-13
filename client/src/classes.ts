@@ -448,6 +448,11 @@ export namespace ClientServerTransforms
 			Object.assign(newTag, tag);
 			return newTag;
 		}
+
+		export function TextEdit(edit: server.TextEdit): vscode.TextEdit
+		{
+			return new vscode.TextEdit(Range(edit.range), edit.newText);
+		}
 	}
 
 	/** Преобразования Client->Server */
