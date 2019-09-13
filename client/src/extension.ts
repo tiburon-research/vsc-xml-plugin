@@ -654,13 +654,13 @@ async function registerCommands()
 					Label: "Ротированная",
 					Snippet: GenerableRepeats.Rotated,
 					Description: "блоки переменных по порядку показа",
-					Detail: "BBDO, О+К"
+					Detail: "BBDO"
 				},
 				{
 					Label: "Разротированная",
 					Snippet: GenerableRepeats.Unrotated,
 					Description: "блоки переменных по концепциям",
-					Detail: "Яндекс"
+					Detail: "Яндекс, О+К"
 				}
 			];
 
