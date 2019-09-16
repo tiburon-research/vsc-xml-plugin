@@ -7,7 +7,7 @@ import * as AutoCompleteArray from './autoComplete';
 import { _NodeStoreNames, _pack } from 'tib-api/lib/constants';
 import { getDiagnosticElements } from './diagnostic';
 import { CacheSet } from 'tib-api/lib/cache';
-import { SurveyData, TibMethods, SurveyNodes, getDocumentMethods, getDocumentNodeIds, getMixIds, getIncludePaths } from 'tib-api/lib/surveyData';
+import { SurveyData, TibMethods, SurveyNodes, getDocumentMethods, getDocumentNodeIds, getMixIds, getIncludePaths, getConstants, SurveyNode } from 'tib-api/lib/surveyData';
 
 
 
@@ -406,6 +406,7 @@ async function updateSurveyData(document: server.TextDocument)
 	let includes = getIncludePaths(document.getText());
 	let methods = new TibMethods();
 	let nodes = new SurveyNodes();
+	let constants = new KeyedCollection<SurveyNode>();
 	let mixIds: string[] = [];
 
 	// если Include поменялись, то обновляем все
@@ -426,16 +427,15 @@ async function updateSurveyData(document: server.TextDocument)
 		{
 			// либо этот, либо надо открыть
 			let doc = docs[i] == document.uri ? document : await getDocument(docs[i]);
-			let mets = await getDocumentMethods(doc);
-			let nods = await getDocumentNodeIds(doc, _NodeStoreNames);
-			let mixs = await getMixIds(doc);
-			methods.AddRange(mets);
-			nodes.AddRange(nods);
-			mixIds = mixIds.concat(mixs);
+			methods.AddRange(await getDocumentMethods(doc));
+			nodes.AddRange(await getDocumentNodeIds(doc, _NodeStoreNames));
+			mixIds = mixIds.concat(await getMixIds(doc));
+			constants.AddRange(await getConstants(doc));
 		}
 		_SurveyData.Methods = methods;
 		_SurveyData.CurrentNodes = nodes;
 		_SurveyData.MixIds = mixIds;
+		_SurveyData.ConstantItems = constants;
 	} catch (error)
 	{
 		logError("Ошибка при сборе сведений о документе", false, error);

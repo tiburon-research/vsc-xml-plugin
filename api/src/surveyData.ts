@@ -18,7 +18,9 @@ export interface ISurveyData
 	/** Список MixId (подставляется в значениях атрибутов) */
 	MixIds: string[];
 	/** Список путей Include */
-	Includes: string[]
+	Includes: string[];
+	/** Константы */
+	ConstantItems: KeyedCollection<SurveyNode>;
 }
 
 
@@ -31,7 +33,9 @@ export class SurveyData implements ISurveyData
 	/** Список MixId (подставляется в значениях атрибутов) */
 	MixIds: string[];
 	/** Список путей Include */
-	Includes: string[]
+	Includes: string[];
+	/** Константы */
+	ConstantItems: KeyedCollection<SurveyNode>;
 
 	/** Очистка */
 	public Clear()
@@ -40,6 +44,7 @@ export class SurveyData implements ISurveyData
 		this.CurrentNodes = new SurveyNodes();
 		this.MixIds = [];
 		this.Includes = [];
+		this.ConstantItems = new KeyedCollection<SurveyNode>();
 	}
 }
 
@@ -379,6 +384,35 @@ export async function getMixIds(document: server.TextDocument): Promise<string[]
 	return res.distinct();
 }
 
+/** Возвращает список констант */
+export async function getConstants(document: server.TextDocument): Promise<KeyedCollection<SurveyNode>>
+{
+	let res = new KeyedCollection<SurveyNode>();
+	let txt = document.getText();
+	txt = Encoding.clearXMLComments(txt);
+	// ищем только первый тэг
+	let constTagStart = txt.indexOf('<Constants');
+	if (constTagStart > -1)
+	{
+		let constEnd = txt.indexOf('</Constants', constTagStart);
+		if (constEnd > 0)
+		{
+			let constTag = txt.slice(constTagStart, constEnd);
+			let items = constTag.findAll(/<Item\s+.*(Id=.([^'"]+).)[\s\S]+?<\/Item[^>]*>/);
+			//console.log(items.map(x => x.Index));
+			if (items.length > 0)
+			{
+				items.forEach(item =>
+				{
+					let position = document.positionAt(constTagStart + item.Index);
+					//console.log('index: ', item.Index);
+					res.AddPair(item.Result[2], new SurveyNode("ConstantItem", item.Result[2], position, document.uri));
+				});
+			}
+		}
+	}
+	return res;
+}
 
 /** Получает URI ко всем <Include> */
 export function getIncludePaths(text: string): string[]

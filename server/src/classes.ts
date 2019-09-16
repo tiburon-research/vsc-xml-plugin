@@ -6,8 +6,6 @@ import { ISurveyData, TibAttribute, TextEdits } from 'tib-api/lib/surveyData';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
 import { logError, consoleLog } from './server';
-import { clearXMLComments } from 'tib-api/lib/encoding';
-import { timingSafeEqual } from 'crypto';
 
 
 /** Возвращает все автозавершения для текущего места */
@@ -978,7 +976,15 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 	{
 		let range = getWordRangeAtPosition(document, position);
 		let word = document.getText(range);
+		let prevSymbol = document.getText(server.Range.create(translatePosition(document, range.start, -1), range.start));
+
 		if (!tag) return res;
+		console.log(surveyData.ConstantItems);
+		if (prevSymbol == "@")
+		{// для начала считаем это константой
+			let constant = surveyData.ConstantItems.Find((key, value) => key == word);
+			if (!!constant) return constant.Value.GetLocation();
+		}
 
 		if (tag.GetLaguage() == Language.CSharp && !tag.InCSString()) // C#
 		{
