@@ -33,6 +33,7 @@ export class TibAutoCompleteItem
 	Overloads: TibAutoCompleteItem[] = []; // массив перегрузок
 	/** Тег, в котором должно работать */
 	ParentTag: string = "";
+	Deprecated = false;
 
 	constructor(obj: Object)
 	{
@@ -56,6 +57,7 @@ export class TibAutoCompleteItem
 		item.documentation = mds.value;
 		if (sortString) item.sortText = sortString;
 		if (this.Detail) item.detail = this.Detail;
+		item.deprecated = this.Deprecated;
 		return item;
 
 	}

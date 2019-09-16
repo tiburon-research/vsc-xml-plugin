@@ -445,6 +445,7 @@ export class TibAttribute
 	Values: Array<string> = [];
 	/** код функции, вызываемый потом в callback, чтобы вернуть string[] для Snippet */
 	Result: string;
+	Deprecated = false;
 
 	constructor(obj: Object)
 	{
@@ -481,6 +482,7 @@ export class TibAttribute
 			kind: server.MarkupKind.Markdown,
 			value: doc
 		};
+		item.deprecated = this.Deprecated;
 		return item;
 	}
 

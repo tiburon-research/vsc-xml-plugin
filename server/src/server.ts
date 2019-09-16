@@ -353,12 +353,11 @@ async function getAutoComleteList()
 		// объединённый массив Tiburon + MSDN
 		let all = tibCode.concat(statCS);
 
-		all.forEach(element =>
+		all.forEach(item =>
 		{
-			let item = new TibAutoCompleteItem(element);
 			if (!item.Kind || !item.Name) return;
 
-			CodeAutoCompleteArray.push(new TibAutoCompleteItem(element)); // сюда добавляем всё
+			CodeAutoCompleteArray.push(item); // сюда добавляем всё
 			// если такого типа ещё нет, то добавляем
 			if (!TibAutoCompleteList.ContainsKey(item.Kind)) TibAutoCompleteList.AddPair(item.Kind, [item])
 			else // если есть то добавляем в массив с учётом перегрузок

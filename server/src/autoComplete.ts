@@ -306,25 +306,29 @@ var KnownCode = [
 		"Name": "AnswerInsert",
 		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "void AnswerInsert(string pageId, string questionId, string answerId, string val)"
+		"Documentation": "void AnswerInsert(string pageId, string questionId, string answerId, string val)",
+		"Deprecated": true
 	},
 	{
 		"Name": "AnswerInsert",
 		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "void AnswerInsert(string pageId, string questionId, string answerId)"
+		"Documentation": "void AnswerInsert(string pageId, string questionId, string answerId)",
+		"Deprecated": true
 	},
 	{
 		"Name": "ExtInterviewAnswerInsert",
 		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "void ExtInterviewAnswerInsert(int interviewId, string pageId, string questionId, string answerId, string val)"
+		"Documentation": "void ExtInterviewAnswerInsert(int interviewId, string pageId, string questionId, string answerId, string val)",
+		"Deprecated": true
 	},
 	{
 		"Name": "ExtInterviewAnswerInsert",
 		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "void ExtInterviewAnswerInsert(int interviewId, string pageId, string questionId, string answerId)"
+		"Documentation": "void ExtInterviewAnswerInsert(int interviewId, string pageId, string questionId, string answerId)",
+		"Deprecated": true
 	},
 	{
 		"Name": "ExtInterviewAnswerUpdate",
@@ -348,13 +352,15 @@ var KnownCode = [
 		"Name": "AnswerInsertOnce",
 		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "void AnswerInsertOnce(string pageId, string questionId, string answerId, string val)"
+		"Documentation": "void AnswerInsertOnce(string pageId, string questionId, string answerId, string val)",
+		"Deprecated": true
 	},
 	{
 		"Name": "AnswerInsertOnce",
 		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "void AnswerInsertOnce(string pageId, string questionId, string answerId)"
+		"Documentation": "void AnswerInsertOnce(string pageId, string questionId, string answerId)",
+		"Deprecated": true
 	},
 	{
 		"Name": "AnswerUpdateP",
@@ -804,7 +810,8 @@ var KnownCode = [
 		"Name": "MixItera",
 		"Detail": "string",
 		"Kind": "Function",
-		"Documentation": "string MixItera(int defaultItera)"
+		"Documentation": "string MixItera(int defaultItera)",
+		"Deprecated": true
 	},
 	{
 		"Name": "GetDateDiff",
@@ -1998,16 +2005,6 @@ export const Attributes = {
 			"Name": "Operator",
 			"Default": "And",
 			"Type": "LogicalOperator"
-		},
-		{
-			"Name": "Runtime",
-			"Default": "Declaring",
-			"Type": "RuntimeType"
-		},
-		{
-			"Name": "Side",
-			"Default": "Server",
-			"Type": "ProcessSide"
 		}
 	],
 	"Quota": [
@@ -2027,7 +2024,8 @@ export const Attributes = {
 		{
 			"Name": "Enabled",
 			"Default": "true",
-			"Type": "Boolean"
+			"Type": "Boolean",
+			"Deprecated": true
 		},
 		{
 			"Name": "Page",
@@ -2049,7 +2047,8 @@ export const Attributes = {
 		},
 		{
 			"Name": "Monadic",
-			"Type": "String"
+			"Type": "String",
+			"Deprecated": true
 		},
 		{
 			"Name": "Operator",
@@ -2116,15 +2115,18 @@ export const Attributes = {
 		},
 		{
 			"Name": "LocalProgress",
-			"Type": "Boolean"
+			"Type": "Boolean",
+			"Deprecated": true
 		},
 		{
 			"Name": "LocalProgressStart",
-			"Type": "Integer"
+			"Type": "Integer",
+			"Deprecated": true
 		},
 		{
 			"Name": "LocalProgressEnd",
-			"Type": "Integer"
+			"Type": "Integer",
+			"Deprecated": true
 		}
 	],
 	"Repeat": [
