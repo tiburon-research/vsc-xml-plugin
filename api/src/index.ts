@@ -200,6 +200,11 @@ declare global
 	{
 		/** Продвинутый indexOf */
 		find(search: string | RegExp): SearchResult;
+		/** Находит все вхождения
+		 * 
+		 * Нельзя использовать флаг `g`!
+		*/
+		findAll(search: string | RegExp): SearchResult[];
 		/** Продвинутый lastIndexOf string=Regexp */
 		//findLast(search: string): SearchResult;
 		/** Поиск с группами по всей строке 
@@ -243,12 +248,33 @@ declare global
 
 }
 
-String.prototype.find = function (search: string | RegExp): SearchResult
+String.prototype.find = function (this: string, search: string | RegExp): SearchResult
 {
 	let res = new RegExp(search).exec(this);
 	let ind = !!res ? res.index : -1;
 	return { Index: ind, Result: res };
 }
+
+String.prototype.findAll = function (this: string, search: string | RegExp): SearchResult[]
+{
+	let res: SearchResult[] = [];
+	let value = typeof search == "string" ? search : search.source;
+	let reg = new RegExp(value);
+	let match: RegExpExecArray;
+	let restText = this;
+	let len = this.length;
+	let i = 0;
+	while ((match = reg.exec(restText)) !== null && i < 10000)
+	{
+		let index = len - restText.length + match.index;
+		res.push({ Result: match, Index: index });
+		restText = restText.slice(match.index + match[0].length);
+		i++;
+	}
+	if (i >= 10000) throw "Слишком много итераций при поиске элементов";
+	return res;
+}
+
 /* 
 String.prototype.findLast = function (search: string): SearchResult
 {
