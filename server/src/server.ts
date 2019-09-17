@@ -4,7 +4,7 @@ import * as server from 'vscode-languageserver';
 import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData, isValidDocumentPosition, IErrorTagData } from 'tib-api';
 import { TibAutoCompleteItem, getCompletions, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition, LanguageString } from './classes';
 import * as AutoCompleteArray from './autoComplete';
-import { _NodeStoreNames, _pack } from 'tib-api/lib/constants';
+import { _NodeStoreNames, _pack, RequestNames } from 'tib-api/lib/constants';
 import { getDiagnosticElements } from './diagnostic';
 import { CacheSet } from 'tib-api/lib/cache';
 import { SurveyData, TibMethods, SurveyNodes, getDocumentMethods, getDocumentNodeIds, getMixIds, getIncludePaths, getConstants, SurveyNode } from 'tib-api/lib/surveyData';
@@ -54,7 +54,7 @@ connection.onInitialize(() =>
 
 connection.onInitialized(() =>
 {
-	connection.sendNotification("client.out", "Сервер запущен");
+	connection.sendNotification(RequestNames.LogToOutput, "Сервер запущен");
 });
 
 connection.listen();
@@ -209,7 +209,7 @@ connection.onDefinition(data =>
 })
 
 // это событие дёргаем руками, чтобы передавать все нужные данные
-connection.onRequest('onDidChangeTextDocument', (data: OnDidChangeDocumentData) =>
+connection.onRequest(RequestNames.OnDidChangeTextDocument, (data: OnDidChangeDocumentData) =>
 {
 	return new Promise<CurrentTag>((resolve) =>
 	{
@@ -226,7 +226,7 @@ connection.onRequest('onDidChangeTextDocument', (data: OnDidChangeDocumentData) 
 })
 
 
-connection.onRequest('currentTag', (fields: IProtocolTagFields) =>
+connection.onRequest(RequestNames.GetCurrentTag, (fields: IProtocolTagFields) =>
 {
 	return new Promise<CurrentTag>((resolve) =>
 	{
@@ -235,7 +235,7 @@ connection.onRequest('currentTag', (fields: IProtocolTagFields) =>
 })
 
 
-connection.onRequest('anotherDocument', (data: IServerDocument) =>
+connection.onRequest(RequestNames.OnAnotherDocumentActivated, (data: IServerDocument) =>
 {
 	anotherDocument(data);
 })
@@ -247,7 +247,7 @@ connection.onRequest('anotherDocument', (data: IServerDocument) =>
 }); */
 
 
-connection.onNotification('updateSettings', (data: Object) =>
+connection.onNotification(RequestNames.UpdateExtensionSettings, (data: Object) =>
 {
 	_Settings = KeyedCollection.FromObject(data);
 });
@@ -300,7 +300,7 @@ function getServerTag(data: CurrentTagGetFields): CurrentTag
 
 export function consoleLog(...data)
 {
-	connection.sendNotification('console.log', data);
+	connection.sendNotification(RequestNames.LogToConsole, data);
 }
 
 /** Смена документа */
@@ -449,7 +449,7 @@ function getDocument(uri: string): Promise<server.TextDocument>
 	{
 		let document = documents.get(uri);
 		if (!!document) return resolve(document);
-		connection.sendRequest<IServerDocument>('getDocument', uri).then(doc =>
+		connection.sendRequest<IServerDocument>(RequestNames.GetDocumentByUri, uri).then(doc =>
 		{
 			resolve(documents.add(doc));
 		}, err => { reject(err); });
@@ -475,14 +475,14 @@ export function logError(text: string, showError: boolean, errorMessage?)
 		StackTrace: !!data ? ('SERVER: ' + data) : undefined,
 		TagData: tagData
 	};
-	connection.sendNotification('logError', log);
+	connection.sendNotification(RequestNames.LogError, log);
 }
 
 
 /** Отправляет `tag` клиенту */
 function sendTagToClient(tag: CurrentTag): void
 {
-	connection.sendNotification('currentTag', tag);
+	connection.sendNotification(RequestNames.CurrentTagFromServer, tag);
 }
 
 //#endregion

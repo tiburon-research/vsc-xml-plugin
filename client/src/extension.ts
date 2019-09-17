@@ -9,7 +9,7 @@ import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSetti
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
-import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, LogPath, GenerableRepeats } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, LogPath, GenerableRepeats, RequestNames } from 'tib-api/lib/constants'
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
@@ -89,7 +89,7 @@ export function activate(context: vscode.ExtensionContext)
 	vscode.workspace.onDidChangeConfiguration(() =>
 	{
 		_settings.Update();
-		sendNotification<Object>("updateSettings", _settings.ToSimpleObject());
+		sendNotification<Object>(RequestNames.UpdateExtensionSettings, _settings.ToSimpleObject());
 	})
 
 	/** Документ сменился */
@@ -97,7 +97,7 @@ export function activate(context: vscode.ExtensionContext)
 	{
 		if (!editor || editor.document.languageId != 'tib') return;
 		let documentData = ClientServerTransforms.ToServer.Document(editor.document);
-		createRequest<IServerDocument, void>("anotherDocument", documentData, true);
+		createRequest<IServerDocument, void>(RequestNames.OnAnotherDocumentActivated, documentData, true);
 		if (!editor.document.isUntitled)
 		{
 			if (isLocked(editor.document)) showLockInfo(editor.document);
@@ -1138,7 +1138,7 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 			force
 		};
 
-		createRequest<IProtocolTagFields, CurrentTag>('currentTag', fields).then(data =>
+		createRequest<IProtocolTagFields, CurrentTag>(RequestNames.GetCurrentTag, fields).then(data =>
 		{
 			if (!data) return resolve(data);
 			let tag = tagFromServerTag(data);
@@ -1635,26 +1635,26 @@ async function createClientConnection(context: vscode.ExtensionContext)
 		_client.onReady().then(() =>
 		{
 
-			_client.onNotification("client.out", data =>
+			_client.onNotification(RequestNames.LogToOutput, data =>
 			{
 				if (typeof data != 'string') _outChannel.logToOutput('Неправильный тип данных для логов с сервера', _WarningLogPrefix);
 				_outChannel.logToOutput(data);
 			});
 
-			_client.onNotification("console.log", data =>
+			_client.onNotification(RequestNames.LogToConsole, data =>
 			{
 				console.log(data);
 			});
 
 			// отчёт об ошибках
-			_client.onNotification("logError", (data: IErrorLogData) =>
+			_client.onNotification(RequestNames.LogError, (data: IErrorLogData) =>
 			{
 				let logData = getLogData(vscode.window.activeTextEditor);
 				_errors.logError({ text: data.MessageFriendly, data: logData, stackTrace: data.StackTrace, showerror: !data.Silent, errorMessage: data.Message, tag: data.TagData });
 			});
 
 			// запрос документа с ссервера
-			_client.onRequest('getDocument', (uri: string) =>
+			_client.onRequest(RequestNames.GetDocumentByUri, (uri: string) =>
 			{
 				return new Promise<IServerDocument>((resolve, reject) =>
 				{
@@ -1666,14 +1666,14 @@ async function createClientConnection(context: vscode.ExtensionContext)
 			})
 
 			// получен tag
-			_client.onNotification("currentTag", (data: CurrentTag) =>
+			_client.onNotification(RequestNames.CurrentTagFromServer, (data: CurrentTag) =>
 			{
 				if (!data) return;
 				// собственно, просто показываем инфу
 				tagFromServerTag(data);
 			});
 
-			sendNotification<Object>("updateSettings", _settings.ToSimpleObject(), true);
+			sendNotification<Object>(RequestNames.UpdateExtensionSettings, _settings.ToSimpleObject(), true);
 
 			_clientIsReady = true;
 

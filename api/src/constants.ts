@@ -160,3 +160,19 @@ export const GenerableRepeats = {
 ]]></Methods>
 	`
 }
+
+
+export const RequestNames = {
+	GetCurrentTag: 'currentTag',
+	CurrentTagFromServer: 'currentTagForce',
+
+	OnAnotherDocumentActivated: 'anotherDocument',
+	OnDidChangeTextDocument: 'onDidChangeTextDocument',
+	GetDocumentByUri: 'getDocument',
+	
+	UpdateExtensionSettings: 'updateSettings',
+	
+	LogToConsole: 'console.log',
+	LogToOutput: 'client.out',
+	LogError: 'logError'
+}
