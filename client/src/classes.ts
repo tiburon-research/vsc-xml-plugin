@@ -77,7 +77,7 @@ export class ContextChange
 
 
 /** Возвращает совмещённую структуру из изменений и соответствующих выделений */
-export function getContextChanges(document: vscode.TextDocument, selections: vscode.Selection[], changes: vscode.TextDocumentContentChangeEvent[], isBefore = false): ContextChange[]
+export function getContextChanges(document: vscode.TextDocument, selections: vscode.Selection[], changes: readonly vscode.TextDocumentContentChangeEvent[], isBefore = false): ContextChange[]
 {
 	let res: ContextChange[] = [];
 	selections.forEach(selection =>

@@ -8,3 +8,4 @@ npm-debug.log
 stuff/deleted.json
 **/ignore
 **/debug.ts
+*.tsbuildinfo

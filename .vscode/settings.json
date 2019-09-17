@@ -5,7 +5,8 @@
         "*.vsix": true,
         "stuff/*.*": true,
         "**/package-lock.json": true,
-        "ignore": true
+		"ignore": true,
+		"**/tsconfig.tsbuildinfo": true
     },
     "search.exclude": {
         "out": true // set this to false to include "out" folder in search results
