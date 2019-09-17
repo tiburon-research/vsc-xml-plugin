@@ -334,7 +334,7 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 			let answer = new SurveyAnswer(element.Id, element.Text);
 			if (elements.length - i < 3) // проставляем доп атрибуты только 2 последним Answer'ам
 			{
-				if (element.IsResetAnswer)
+				if (element.IsResetAnswer())
 				{
 					answer.SetAttr('Reset', 'true');
 					answer.SetAttr('Fix', 'true');
@@ -346,7 +346,7 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 						answer.AddChild(uiElement);
 					}
 				}
-				else if (element.IsTextAnswer)
+				else if (element.IsTextAnswer())
 				{
 					answer.SetAttr('Fix', 'true');
 					answer.SetAttr('Type', 'Text');

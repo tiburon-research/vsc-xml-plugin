@@ -33,12 +33,12 @@ export class ParsedElementObject
 	public Id: string;
 	public Text: string;
 
-	public get IsResetAnswer(): boolean
+	public IsResetAnswer(): boolean
 	{
 		return checkResetAnswer(this.Text);
 	}
 	
-	public get IsTextAnswer(): boolean
+	public IsTextAnswer(): boolean
 	{
 		return checkOpenAnswer(this.Text);
 	}
