@@ -157,9 +157,8 @@ export function activate(context: vscode.ExtensionContext)
 			previousText: text
 		};
 
-		createRequest<OnDidChangeDocumentData, CurrentTag>('onDidChangeTextDocument', changeData).then(serverTag =>
+		updateDocumentOnServer(changeData).then(tag => 
 		{
-			let tag = tagFromServerTag(serverTag);
 			let data: ITibEditorData = {
 				changes,
 				tag,
@@ -1832,25 +1831,26 @@ async function registerActionCommands()
 
 
 /** Отправка документа на сервер */
-async function updateDocumentOnServer()
+async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null)
 {
-	let editor = vscode.window.activeTextEditor;
-	let doc = editor.document;
-	let documentData = ClientServerTransforms.ToServer.Document(doc);
-	let position = ClientServerTransforms.ToServer.Position(editor.selection.active);
-	let text = getPreviousText(createServerDocument(doc), position);
-
-	let changeData: OnDidChangeDocumentData = {
-		document: documentData,
-		currentPosition: position,
-		previousText: text
-	};
-
-	createRequest<OnDidChangeDocumentData, CurrentTag>('onDidChangeTextDocument', changeData).then(serverTag =>
+	if (!changeData)
 	{
-		tagFromServerTag(serverTag);
-	});
-	return sendNotification('forceDocumentUpdate', documentData);
+		let editor = vscode.window.activeTextEditor;
+		let doc = editor.document;
+		let documentData = ClientServerTransforms.ToServer.Document(doc);
+		let position = ClientServerTransforms.ToServer.Position(editor.selection.active);
+		let text = getPreviousText(createServerDocument(doc), position);
+
+		changeData = {
+			document: documentData,
+			currentPosition: position,
+			previousText: text
+		};
+	}
+
+	let serverTag = await createRequest<OnDidChangeDocumentData, CurrentTag>('onDidChangeTextDocument', changeData);
+	return tagFromServerTag(serverTag);
+	//await sendNotification('forceDocumentUpdate', documentData);
 }
 
 
