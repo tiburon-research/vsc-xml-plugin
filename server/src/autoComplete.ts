@@ -2955,6 +2955,13 @@ export const CSFeatures = [
 			'}'
 		],
 		"description": "Метод перекодировки возраста в интервалы"
+	},
+	{
+		"prefix": "#ListItems",
+		"body": [
+			"CurrentSurvey.Lists[$1].Items.Items.Values"
+		],
+		"description": "Обращение к коллекции элементов листа"
 	}
 ];
 
