@@ -21,7 +21,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 					{ Key: "longIds", Value: getLongIds },
 					{ Key: "wrongXML", Value: getWrongXML },
 					{ Key: "duplicatedId", Value: getDuplicatedIds },
-					{ Key: "wrongMixes", Value: getWrongMixes }
+					{ Key: "wrongMixes", Value: getWrongMixes },
+					{ Key: "csInAutoSplit", Value: getCsInAutoSplit }
 				]
 			)
 		},
@@ -133,6 +134,12 @@ async function getDuplicatedIds(document: server.TextDocument, prepearedText: st
 async function getWrongMixes(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
 	return await Parse.getWrongMixedElements(document, prepearedText);
+}
+
+
+async function getCsInAutoSplit(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+{
+	return await Parse.getCsInAutoSplit(document, prepearedText);
 }
 
 

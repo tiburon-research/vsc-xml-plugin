@@ -684,6 +684,39 @@ export function getWrongMixedElements(document: server.TextDocument, prepearedTe
 }
 
 
+/** Находит использование c# в AutoSplit */
+export function getCsInAutoSplit(document: server.TextDocument, prepearedText: string): Promise<DocumentElement[]>
+{
+	return new Promise<DocumentElement[]>((resolve, reject) => {
+		let res: DocumentElement[] = [];
+		let autoSplits = prepearedText.findAll(/(Type=("|')AutoSplit(\2))([\s\S]+?)<\/Question/);
+		autoSplits.forEach(element =>
+		{
+			let content = element.Result[4];
+			if (!content) return;
+			let answer = content.find(/(<Answer([\s\S]+?)<Text\s*>)([\s\S]+?)<\/Text/);
+			if (!!answer.Result)
+			{
+				let match = answer.Result[3].find(/(\[c#\][\s\S]+?\[\/c#\])|(\$\w+)/i);
+				if (!!match.Result)
+				{
+					let From = element.Index + element.Result[1].length + answer.Index + answer.Result[1].length + match.Index;
+					let To = From + match.Result[0].length;
+					res.push(new DocumentElement(document, {
+						From,
+						To,
+						Value: match.Result,
+						Message: 'ClickText.AutoSplit не поддерживает кодовые вставки. Надо делать Repeat+Filter.',
+						DiagnosticProperties: { Type: server.DiagnosticSeverity.Error }
+					}));
+				}
+			}
+		});
+		resolve(res);
+	});
+}
+
+
 /** Ищет весь пользовательский JS и возвращает одной строкой */
 export async function getCustomJS(text: string): Promise<string>
 {
