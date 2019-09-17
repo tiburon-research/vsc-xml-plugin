@@ -46,6 +46,7 @@ export const RegExpPatterns = {
 	ResetAnswerText:
 	[
 		/затрудняюсь\s+ответить/,
+		/ничего\s+из/,
 		/нет\s+ответа/,
 		/никогда/,
 		/не\s+знаю/,
