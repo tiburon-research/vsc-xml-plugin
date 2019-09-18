@@ -698,7 +698,7 @@ export function getCsInAutoSplit(document: server.TextDocument, prepearedText: s
 			if (!!answer.Result)
 			{
 				let match = answer.Result[3].find(/(\[c#\][\s\S]+?\[\/c#\])|(\$\w+)/i);
-				if (!!match.Result)
+				if (!!match.Result && match.Result[0] != '$repeat')
 				{
 					let From = element.Index + element.Result[1].length + answer.Index + answer.Result[1].length + match.Index;
 					let To = From + match.Result[0].length;
