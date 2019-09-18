@@ -749,7 +749,18 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
 
 	try
 	{
-		let text = getWordAtPosition(document, position);
+		let range = getWordRangeAtPosition(document, position);
+		let text = document.getText(range);
+		let prevSymbol = document.getText(server.Range.create(translatePosition(document, range.start, -1), range.start));
+		let startsAsConstant = prevSymbol == "@";
+		if (startsAsConstant)
+		{
+			let constant = surveyData.ConstantItems.Find((key, value) => key == text);
+			if (!!constant)
+			{
+				res.push({ language: 'plaintext', value: constant.Value.Content });
+			}
+		}
 		testVar = 10;
 		if (!text || !tag || tag.GetLaguage() != Language.CSharp) return res;
 		let parent = null;

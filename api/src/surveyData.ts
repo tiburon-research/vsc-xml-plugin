@@ -163,10 +163,13 @@ export class SurveyNode
 	}
 
 	public Id: string = "";
+	/** Тэг */
 	public Type: string = "";
 	public Position: server.Position;
 	public FileName: string;
 	public IconKind: server.CompletionItemKind;
+	/** Содержимое */
+	public Content?: string;
 
 	private Uri: string;
 
@@ -399,14 +402,16 @@ export async function getConstants(document: server.TextDocument): Promise<Keyed
 		{
 			let constTag = txt.slice(constTagStart, constEnd);
 			let items = constTag.findAll(/<Item\s+.*(Id=.([^'"]+).)[\s\S]+?<\/Item[^>]*>/);
-			//console.log(items.map(x => x.Index));
 			if (items.length > 0)
 			{
 				items.forEach(item =>
 				{
 					let position = document.positionAt(constTagStart + item.Index);
-					//console.log('index: ', item.Index);
-					res.AddPair(item.Result[2], new SurveyNode("ConstantItem", item.Result[2], position, document.uri));
+					let constant = new SurveyNode("ConstantItem", item.Result[2], position, document.uri);
+					let value = item.Result[0].match(/(<Value>)([\s\S]*)<\/Value>/);
+					if (!value) value = item.Result[0].match(/Value=('|")(.+)(\1)/);
+					if (!!value) constant.Content = value[2];
+					res.AddPair(item.Result[2], constant);
 				});
 			}
 		}
