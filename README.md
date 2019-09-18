@@ -193,6 +193,7 @@ ___
 - из кодовых вставок к определению функций/переменных, описанных в Methods;
 - к Page/Question/List по Id;
 - к файлу, указанному в Include;
+- к константам;
 
 ![Image](https://github.com/tiburon-research/vsc-xml-plugin/blob/master/stuff/definitions.gif?raw=true)
 ___
