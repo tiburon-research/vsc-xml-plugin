@@ -981,8 +981,10 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 		let prevSymbol = document.getText(server.Range.create(translatePosition(document, range.start, -1), range.start));
 
 		if (!tag) return res;
-		console.log(surveyData.ConstantItems);
-		if (prevSymbol == "@")
+
+		let startsAsConstant = prevSymbol == "@";
+
+		if (startsAsConstant)
 		{// для начала считаем это константой
 			let constant = surveyData.ConstantItems.Find((key, value) => key == word);
 			if (!!constant) return constant.Value.GetLocation();
@@ -994,6 +996,7 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 		}
 		else // XML узлы
 		{
+			if (startsAsConstant) return res; // если начинается с @ и не в C#, то считаем это отсутствующей константой
 			if (tag.Name == "Include")
 			{
 				let attrs = tag.GetAllAttributes(document);
