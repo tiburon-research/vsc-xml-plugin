@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
@@ -16,7 +16,7 @@ import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors } from './errors';
 import { readGeoFile, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
-import { getCustomJS } from 'tib-api/lib/parsing';
+import { getCustomJS, findOpenTag } from 'tib-api/lib/parsing';
 import { DocumentObjectModel } from './customSurveyCode';
 
 
@@ -870,6 +870,47 @@ async function registerCommands()
 			return [];
 		}
 	});
+
+	vscode.languages.registerRenameProvider('tib', {
+		provideRenameEdits(document, position, newName: string, token)
+		{
+			let res = new vscode.WorkspaceEdit();
+			let doc = createServerDocument(document);
+			let pos = ClientServerTransforms.ToServer.Position(position);
+			let range = getWordRangeAtPosition(doc, pos);
+			let word = doc.getText(range);
+			let prevSymbols = doc.getText(server.Range.create(translatePosition(doc, range.start, -2), range.start));
+			let secondTag: server.Range = null;
+			let text = getPreviousText(doc, pos);
+			let openBracket: string;
+			let closeBracket: string;
+			if (prevSymbols.match(/(<|\[)\//))
+			{
+				openBracket = prevSymbols[0];
+				closeBracket = openBracket == "[" ? "]" : ">";
+				let openTag = findOpenTag(openBracket, word, closeBracket, text);
+				if (!!openTag)
+				{
+					let from = doc.positionAt(openTag.Range.From);
+					let to = doc.positionAt(openTag.Range.To);
+					secondTag = server.Range.create(from, to);
+				}
+			}
+			else if (prevSymbols.length > 1 && prevSymbols.match(/<|\[/))
+			{
+				openBracket = prevSymbols[1];
+				closeBracket = openBracket == "[" ? "]" : ">";
+				secondTag = findCloseTag(openBracket, word, closeBracket, doc, pos);
+			}
+			
+			if (secondTag === null) return res;
+
+			res.replace(document.uri, ClientServerTransforms.FromServer.Range(range), newName);
+			res.replace(document.uri, ClientServerTransforms.FromServer.Range(secondTag), openBracket + '/' + newName + closeBracket);
+
+			return res;
+		}
+	})
 }
 
 
