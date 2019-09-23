@@ -889,6 +889,7 @@ var KnownCode = [
 		"Name": "GetListItemVar",
 		"Detail": "string",
 		"Kind": "Function",
+		"Deprecated": true,
 		"Documentation": "string GetListItemVar(string listId, int itemIndex, int varIndex)"
 	},
 	{
@@ -901,6 +902,7 @@ var KnownCode = [
 		"Name": "GetListItemText",
 		"Detail": "string",
 		"Kind": "Function",
+		"Deprecated": true,
 		"Documentation": "string GetListItemText(string listId, int itemIndex)"
 	},
 	{
@@ -2992,7 +2994,13 @@ export const RangeQuestion = {
 			'',
 			'<Repeat Length="@RangeCount">',
 			'\t<Page Id="$4_@Itera">',
-			'\t\t<Defaults ShowPrevButton="[c#]@Itera != 1;[/c#]"/>',
+			'\t\t<CustomText2 Action="Append"><![CDATA[',
+			'\t\t\t<style>',
+			'\t\t\t\t#__prev {',
+			'\t\t\t\t\t[c#]@Itera != 1 ? "display: inline-block !important;" : "";[/c#]',
+			'\t\t\t\t}',
+			'\t\t\t</style>',
+			'\t\t]]></CustomText2>',
 			'\t\t<Filter><![CDATA[ return AnswerExistsAny("$1", "\\$repeat($3){@ID[,]}") && AnswerEnabled("$4_", "999", @Itera, @RangeCount); ]]></Filter>',
 			'\t\t<Question Id="$4_@Itera" Type="RadioButton" MixId="$8" AutoSetSingle="true">',
 			'\t\t\t<Header>$5</Header>',
