@@ -889,6 +889,7 @@ var KnownCode = [
 		"Name": "GetListItemVar",
 		"Detail": "string",
 		"Kind": "Function",
+		"Deprecated": true,
 		"Documentation": "string GetListItemVar(string listId, int itemIndex, int varIndex)"
 	},
 	{
@@ -901,6 +902,7 @@ var KnownCode = [
 		"Name": "GetListItemText",
 		"Detail": "string",
 		"Kind": "Function",
+		"Deprecated": true,
 		"Documentation": "string GetListItemText(string listId, int itemIndex)"
 	},
 	{

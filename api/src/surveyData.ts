@@ -401,7 +401,7 @@ export async function getConstants(document: server.TextDocument): Promise<Keyed
 		if (constEnd > 0)
 		{
 			let constTag = txt.slice(constTagStart, constEnd);
-			let items = constTag.findAll(/<Item\s+.*(Id=.([^'"]+).)[\s\S]+?<\/Item[^>]*>/);
+			let items = constTag.findAll(/<Item\s+.*(Id=.([^'"]+).)[\s\S]+?((\/>)|(<\/Item[^>]*>))/);
 			if (items.length > 0)
 			{
 				items.forEach(item =>
