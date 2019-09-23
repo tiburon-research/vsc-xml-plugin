@@ -1056,11 +1056,6 @@ export const Attributes = {
 			"Type": "String"
 		},
 		{
-			"Name": "Utf8",
-			"Default": "false",
-			"Type": "Boolean"
-		},
-		{
 			"Name": "CheckBoxMultiple",
 			"Default": "true",
 			"Type": "Boolean"
@@ -1172,7 +1167,8 @@ export const Attributes = {
 		{
 			"Name": "Utf8",
 			"Default": "false",
-			"Type": "Boolean"
+			"Type": "Boolean",
+			Deprecated: true
 		},
 		{
 			"Name": "ColorConstructor",
