@@ -697,16 +697,19 @@ export function getCsInAutoSplit(document: server.TextDocument, prepearedText: s
 			let answer = content.find(/(<Answer([\s\S]+?)<Text\s*>)([\s\S]+?)<\/Text/);
 			if (!!answer.Result)
 			{
-				let match = answer.Result[3].find(/(\[c#\][\s\S]+?\[\/c#\])|(\$\w+)/i);
+				let match = answer.Result[3].find(/(\[c#\][\s\S]+?\[\/c#\])|(\$\w+)|(@Text)/i);
 				if (!!match.Result && match.Result[0] != '$repeat')
 				{
 					let From = element.Index + element.Result[1].length + answer.Index + answer.Result[1].length + match.Index;
 					let To = From + match.Result[0].length;
+					let msg = 'ClickText.AutoSplit не поддерживает кодовые вставки. ';
+					if (match.Result[0] == "@Text") msg += 'Используйте @Pure вместо @Text.';
+					else msg += 'Надо делать Repeat+Filter.'
 					res.push(new DocumentElement(document, {
 						From,
 						To,
 						Value: match.Result,
-						Message: 'ClickText.AutoSplit не поддерживает кодовые вставки. Надо делать Repeat+Filter.',
+						Message: msg,
 						DiagnosticProperties: { Type: server.DiagnosticSeverity.Error }
 					}));
 				}
