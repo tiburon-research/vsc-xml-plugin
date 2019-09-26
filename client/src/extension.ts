@@ -882,31 +882,31 @@ async function registerCommands()
 			let prevSymbols = doc.getText(server.Range.create(translatePosition(doc, range.start, -2), range.start));
 			let secondTag: server.Range = null;
 			let text = getPreviousText(doc, pos);
-			let openBracket: string;
 			let closeBracket: string;
 			if (prevSymbols.match(/(<|\[)\//))
 			{
-				openBracket = prevSymbols[0];
-				closeBracket = openBracket == "[" ? "]" : ">";
-				let openTag = findOpenTag(openBracket, word, closeBracket, text);
+				closeBracket = prevSymbols[1] == "[" ? "]" : ">";
+				let openTag = findOpenTag(prevSymbols[0], word, closeBracket, text);
 				if (!!openTag)
 				{
 					let from = doc.positionAt(openTag.Range.From);
-					let to = doc.positionAt(openTag.Range.To);
+					from.character++;
+					let to = server.Position.create(from.line, from.character + word.length);
 					secondTag = server.Range.create(from, to);
 				}
 			}
 			else if (prevSymbols.length > 1 && prevSymbols.match(/<|\[/))
 			{
-				openBracket = prevSymbols[1];
-				closeBracket = openBracket == "[" ? "]" : ">";
-				secondTag = findCloseTag(openBracket, word, closeBracket, doc, pos);
+				closeBracket = prevSymbols[1] == "[" ? "]" : ">";
+				secondTag = findCloseTag(prevSymbols[1], word, closeBracket, doc, pos);
+				secondTag.start.character += 2;
+				secondTag.end = server.Position.create(secondTag.start.line, secondTag.start.character + word.length);
 			}
 			
 			if (secondTag === null) return res;
 
 			res.replace(document.uri, ClientServerTransforms.FromServer.Range(range), newName);
-			res.replace(document.uri, ClientServerTransforms.FromServer.Range(secondTag), openBracket + '/' + newName + closeBracket);
+			res.replace(document.uri, ClientServerTransforms.FromServer.Range(secondTag), newName);
 
 			return res;
 		}
