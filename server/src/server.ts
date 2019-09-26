@@ -386,7 +386,7 @@ async function getAutoComleteList()
 					TibAutoCompleteList.Item(item.Kind)[ind].Overloads.push(item);
 					let doc = "Перегрузок: " + (len + 1);
 					TibAutoCompleteList.Item(item.Kind)[ind].Description = doc;
-					TibAutoCompleteList.Item(item.Kind)[ind].Documentation = doc;
+					//TibAutoCompleteList.Item(item.Kind)[ind].Documentation = doc;
 				}
 			}
 		});
