@@ -1,7 +1,7 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition, applyConstants, Encoding, pathExists, uriFromName, KeyValuePair } from 'tib-api';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition, applyConstants, Encoding, pathExists, uriFromName, KeyValuePair, SimpleTag } from 'tib-api';
 import { ISurveyData, TibAttribute, TextEdits } from 'tib-api/lib/surveyData';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames, PreDifinedConstants } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
@@ -373,7 +373,7 @@ export class TibAutoCompletes
 				let opening = curOpenMatch[1].toLocaleLowerCase();
 
 				//Item Snippet
-				if ("item".indexOf(opening) > -1)
+				if ("item".startsWith(opening))
 				{
 					let parent: string;
 					for (let key in ItemSnippets)
@@ -397,7 +397,7 @@ export class TibAutoCompletes
 					}
 				}
 				// Answer Snippet
-				else if ("answer".indexOf(opening) > -1)
+				else if ("answer".startsWith(opening))
 				{
 					let ci = server.CompletionItem.create("Answer");
 					ci.kind = server.CompletionItemKind.Snippet;
@@ -428,6 +428,42 @@ export class TibAutoCompletes
 					// краткий вариант
 					ciS.insertText = "Answer Id=\"${1:" + iterator + "}\"/>";
 					completionItems.push(ciS);
+				}
+				// Repeat Snippet
+				else if ("repeat".startsWith(opening))
+				{
+					let lastParent: SimpleTag = null;
+					let validParents = this.tag.Parents.filter(x => x.Name != "Repeat");
+					if (validParents.length > 0) lastParent = validParents.last();
+					let repeatTypes = ['List', 'Length', 'Range'];
+
+					repeatTypes.forEach(type =>
+					{
+						let ci = server.CompletionItem.create(`Repeat (${type})`);
+						ci.kind = server.CompletionItemKind.Snippet;
+						ci.insertTextFormat = server.InsertTextFormat.Snippet;
+						let body: string = '';
+						let textEdit = null;
+
+						switch (lastParent.Name)
+						{
+							case 'Page':
+								body = '!-- <Block Items="$repeat($1){$2[,]}" MixId="$2Mix"/> -->\n<Repeat {{init}}>\n\t<Question Id="\${2:Q1}_{{iterator}}">\n\t\t<Header>$3</Header>\n\t\t$0\n\t</Question>\n</Repeat>';
+								break;
+
+							case 'Question':
+								body = 'Repeat {{init}}>\n\t<Answer Id="{{iterator}}"><Text>{{textIterator}}</Text></Answer>\n</Repeat>';
+								break;
+
+							default:
+								body = 'Repeat {{init}}>\n\n\n</Repeat>';
+								break;
+						}
+
+						ci.insertText = this._createRepeatSnippetBody(type, body);
+						ci.documentation = 'Повтор по ' + type;
+						completionItems.push(ci);
+					});
 				}
 			}
 		}
@@ -695,7 +731,7 @@ export class TibAutoCompletes
 		let wordRange = getWordRangeAtPosition(this.document, this.position);
 		let word = this.document.getText(wordRange);
 		let prevSymbol = this.document.getText(server.Range.create(translatePosition(this.document, wordRange.start, -1), wordRange.start));
-		
+
 		if (prevSymbol == "@")
 		{
 			let consts = this.surveyData.ConstantItems.Select((key, value) => new KeyValuePair(value.Id, value.Content));
@@ -712,6 +748,21 @@ export class TibAutoCompletes
 		}
 
 		return completionItems;
+	}
+
+	private _createRepeatSnippetBody(type: string, body: string): string
+	{
+		let res = body;
+		let init = "$1";
+		if (type == 'List')
+		{
+			let extractor = new ElementExtractor(this.surveyData);
+			init = `\${1|${extractor.getAllLists().join(',')}|}`;
+		}
+		res = res.replace(/\{\{iterator\}\}/g, type == 'List' ? '@ID' : '@Itera');
+		res = res.replace(/\{\{textIterator\}\}/g, type == 'List' ? '@Text' : '@Itera');
+		res = res.replace(/\{\{init\}\}/g, type + `="${init}"`);
+		return res;
 	}
 
 }
