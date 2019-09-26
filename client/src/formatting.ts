@@ -1,6 +1,7 @@
 'use strict';
 
 import { Language, safeString, Parse, Encoding } from "tib-api";
+import * as Constants from "tib-api/lib/constants";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
 import { CSFormatter } from "./extension";
@@ -326,12 +327,14 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
 			let hasCDATA = !!reg;
 			if (hasCDATA) res = reg[1];
 			let multiline = res.indexOf("\n") > -1;
-			// убираем собак и $repeat
+			let constRegexp = new RegExp(`\\$(${Constants.XMLEmbeddings.map(x => x.Name).join('|')})`);
+			// убираем собак и $-константы и repeat
 			let encoder = new Encoding.Encoder(res);
 			encoder.Encode((txt, delimiter) => Encoding.encodeElements(txt, /\$repeat\([\w@]+\)({.*\[.*\]\s*})?/, delimiter));
 			encoder.Encode((txt, delimiter) => Encoding.encodeElements(txt, RegExpPatterns.XMLIterators.Var, delimiter));
 			encoder.Encode((txt, delimiter) => Encoding.encodeElements(txt, RegExpPatterns.XMLIterators.Singele, delimiter));
 			encoder.Encode((txt, delimiter) => Encoding.encodeElements(txt, /@(?!")(\w+)/, delimiter)); // для констант
+			encoder.Encode((txt, delimiter) => Encoding.encodeElements(txt, constRegexp, delimiter));
 			res = encoder.Result;
 			// форматируем
 			res = clearIndents(res);
@@ -340,7 +343,7 @@ async function formatCSharp(text: string, tab: string = "\t", indent: number = 0
 			if (hasCDATA) res = res.replace(/^([\s\S]*)$/, "<![CDATA[" + space + "$1" + space + "]]>");
 			let ind = tab.repeat(indent);
 			res = res.replace(/\n([\t ]*\S)/g, "\n" + ind + "$1");
-			// возвращаем собак и $repeat
+			// возвращаем собак и $-константы с repeat
 			res = Encoding.getElementsBack(res, encoder.ToEncodeResult());
 		}
 		else
