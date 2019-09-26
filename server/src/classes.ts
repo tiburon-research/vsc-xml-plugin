@@ -1,9 +1,9 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition, applyConstants, Encoding, pathExists, uriFromName } from 'tib-api';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition, applyConstants, Encoding, pathExists, uriFromName, KeyValuePair } from 'tib-api';
 import { ISurveyData, TibAttribute, TextEdits } from 'tib-api/lib/surveyData';
-import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames } from 'tib-api/lib/constants';
+import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames, PreDifinedConstants } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
 import { logError, consoleLog } from './server';
 
@@ -332,7 +332,8 @@ export class TibAutoCompletes
 			this.getXMLAttrs,
 			this.getAttrValues,
 			this.getMainCS,
-			this.getCSMethods
+			this.getCSMethods,
+			this.getConstants
 		];
 		let parent = this;
 		allF.forEach(f =>
@@ -688,6 +689,31 @@ export class TibAutoCompletes
 		return completionItems;
 	}
 
+	private getConstants(): server.CompletionItem[]
+	{
+		let completionItems: server.CompletionItem[] = [];
+		let wordRange = getWordRangeAtPosition(this.document, this.position);
+		let word = this.document.getText(wordRange);
+		let prevSymbol = this.document.getText(server.Range.create(translatePosition(this.document, wordRange.start, -1), wordRange.start));
+		
+		if (prevSymbol == "@")
+		{
+			let consts = this.surveyData.ConstantItems.Select((key, value) => new KeyValuePair(value.Id, value.Content));
+			consts.AddRange(KeyedCollection.FromObject(PreDifinedConstants));
+			let suitable = !!word ? consts.Filter((key, value) => key.contains(word)) : consts;
+			if (suitable.Count > 0) completionItems = completionItems.concat(suitable.ToArray((key, value) =>
+			{
+				let ci = server.CompletionItem.create(key);
+				ci.insertText = key;
+				ci.kind = server.CompletionItemKind.Constant;
+				ci.documentation = value;
+				return ci;
+			}))
+		}
+
+		return completionItems;
+	}
+
 }
 
 
@@ -755,10 +781,13 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
 		let startsAsConstant = prevSymbol == "@";
 		if (startsAsConstant)
 		{
+			let constantValue: string = null;
 			let constant = surveyData.ConstantItems.Find((key, value) => key == text);
-			if (!!constant)
+			if (!constant) constantValue = PreDifinedConstants[text];
+			else constantValue = constant.Value.Content;
+			if (!!constantValue)
 			{
-				res.push({ language: 'plaintext', value: constant.Value.Content });
+				res.push({ language: 'plaintext', value: constantValue });
 			}
 		}
 		testVar = 10;

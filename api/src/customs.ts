@@ -307,7 +307,7 @@ export class KeyedCollection<T>
 	
 
 	/** Фильтрует набор */
-	protected Filter(filter: (key: string, value: T) => boolean): KeyedCollection<T>
+	public Filter(filter: (key: string, value: T) => boolean): KeyedCollection<T>
 	{
 		let res = new KeyedCollection<T>();
 		this.ForEach((key, value) =>
