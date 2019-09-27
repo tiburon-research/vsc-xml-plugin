@@ -658,39 +658,39 @@ var KnownCode = [
 	},
 	{
 		"Name": "QuotaCount",
-		"Detail": "int",
+		"Detail": "double",
 		"Kind": "Function",
-		"Documentation": "int QuotaCount(string quotaId)"
+		"Documentation": "double QuotaCount(string quotaId)"
 	},
 	{
 		"Name": "QuotaCount",
-		"Detail": "int",
+		"Detail": "double",
 		"Kind": "Function",
-		"Documentation": "int QuotaCount(int surveyId, string quotaId)"
+		"Documentation": "double QuotaCount(int surveyId, string quotaId)"
 	},
 	{
 		"Name": "QuotaCountStatus",
-		"Detail": "int",
+		"Detail": "double",
 		"Kind": "Function",
-		"Documentation": "int QuotaCountStatus(string quotaId, int statusId)"
+		"Documentation": "double QuotaCountStatus(string quotaId, int statusId)"
 	},
 	{
 		"Name": "QuotaCountStatus",
-		"Detail": "int",
+		"Detail": "double",
 		"Kind": "Function",
-		"Documentation": "int QuotaCountStatus(int surveyId, string quotaId, int statusId)"
+		"Documentation": "double QuotaCountStatus(int surveyId, string quotaId, int statusId)"
 	},
 	{
 		"Name": "QuotaLimit",
-		"Detail": "int",
+		"Detail": "double",
 		"Kind": "Function",
-		"Documentation": "int QuotaLimit(string quotaId)"
+		"Documentation": "double QuotaLimit(string quotaId)"
 	},
 	{
 		"Name": "QuotaLimit",
-		"Detail": "int",
+		"Detail": "double",
 		"Kind": "Function",
-		"Documentation": "int QuotaLimit(int surveyId, string quotaId)"
+		"Documentation": "double QuotaLimit(int surveyId, string quotaId)"
 	},
 	{
 		"Name": "QuotaIsOpen",
