@@ -885,7 +885,7 @@ async function registerCommands()
 			let closeBracket: string;
 			if (prevSymbols.match(/(<|\[)\//))
 			{
-				closeBracket = prevSymbols[1] == "[" ? "]" : ">";
+				closeBracket = prevSymbols[0] == "[" ? "]" : ">";
 				let openTag = findOpenTag(prevSymbols[0], word, closeBracket, doc, pos);
 				if (!!openTag)
 				{
