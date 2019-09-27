@@ -190,8 +190,8 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 	{
 		throw "Ошибка при поиске открывающегося тега";
 	}
-	return null;
 }
+
 
 
 /** Тег, не требующий закрывающего */

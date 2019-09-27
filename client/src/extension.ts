@@ -16,7 +16,7 @@ import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors } from './errors';
 import { readGeoFile, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
-import { getCustomJS, findOpenTag } from 'tib-api/lib/parsing';
+import { getCustomJS } from 'tib-api/lib/parsing';
 import { DocumentObjectModel } from './customSurveyCode';
 
 
@@ -886,10 +886,10 @@ async function registerCommands()
 			if (prevSymbols.match(/(<|\[)\//))
 			{
 				closeBracket = prevSymbols[1] == "[" ? "]" : ">";
-				let openTag = findOpenTag(prevSymbols[0], word, closeBracket, text);
+				let openTag = findOpenTag(prevSymbols[0], word, closeBracket, doc, pos);
 				if (!!openTag)
 				{
-					let from = doc.positionAt(openTag.Range.From);
+					let from = openTag.start;
 					from.character++;
 					let to = server.Position.create(from.line, from.character + word.length);
 					secondTag = server.Range.create(from, to);
@@ -1165,6 +1165,24 @@ function findCloseTag(opBracket: string, tagName: string, clBracket: string, doc
 	}
 	return null;
 }
+
+function findOpenTag(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
+{
+	try
+	{
+		let prevText = getPreviousText(document, position);
+		let res = Parse.findOpenTag(opBracket, tagName, clBracket, prevText);
+		if (!res) return null;
+		let startPos = document.positionAt(res.Range.From);
+		let endPos = document.positionAt(res.Range.To + 1);
+		return server.Range.create(startPos, endPos);
+	} catch (error)
+	{
+		logError("Ошибка выделения открывающегося тега", false, error);
+	}
+	return null;
+}
+
 
 
 /** getCurrentTag для debug (без try-catch) */
