@@ -53,12 +53,6 @@ var ManualCode = [
 		Parent: "InterviewPars\\.GetInstance\\(\\)"
 	},
 	{
-		Name: "InterviewID",
-		Kind: "Property",
-		Detail: "int",
-		Parent: "InterviewPars\\.GetInstance\\(\\)"
-	},
-	{
 		Name: "ProjectId",
 		Kind: "Property",
 		Parent: "InterviewPars\\.GetInstance\\(\\)"
