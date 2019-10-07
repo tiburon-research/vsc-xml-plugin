@@ -25,6 +25,19 @@ export { JQuery, Parse, Encoding, KeyValuePair, KeyedCollection, safeString, IPa
 //#region
 
 	
+export enum ErrorCodes
+{
+	wrongIds = "wrongIds",
+	longIds = "longIds",
+	wrongXML = "wrongXML",
+	duplicatedId = "duplicatedId",
+	wrongMixes = "wrongMixes",
+	csInAutoSplit = "csInAutoSplit",
+	wrongSpaces = "wrongSpaces",
+	constantIds = "constantIds",
+	delimitedConstant = "delimitedConstant"
+};
+	
 export interface IErrorTagData
 {
 	Language: Language;

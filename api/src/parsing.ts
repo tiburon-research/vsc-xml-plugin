@@ -499,6 +499,11 @@ export function ReplaceXMLDeclaration(text: string): { Result: string, Declarati
 }
 
 
+export interface IDocumentElementDiagnosticProps
+{
+	Type?: server.DiagnosticSeverity;
+	Code?: string | number;
+}
 
 export interface IDocumentElement
 {
@@ -507,11 +512,7 @@ export interface IDocumentElement
 	To: number;
 	Message: string;
 	/** Если задан, используется для преобразования в `DiagnosticElement` */
-	DiagnosticProperties?:
-	{
-		Type?: server.DiagnosticSeverity;
-		Code?: string | number;
-	}
+	DiagnosticProperties?: IDocumentElementDiagnosticProps;
 }
 
 
@@ -553,7 +554,7 @@ export class DocumentElement implements IDocumentElement
  * Если задан `preparedText`, то используется он (но сначала сравнивается длина)
  * 
 */
-export async function getDocumentElements(document: server.TextDocument, search: RegExp, errorMessage: string, preparedText: string): Promise<DocumentElement[]>
+export async function getDocumentElements(document: server.TextDocument, search: RegExp, errorMessage: string, preparedText: string, diagnosticProps?: IDocumentElementDiagnosticProps): Promise<DocumentElement[]>
 {
 	let res: DocumentElement[] = [];
 	let text = preparedText;
@@ -567,7 +568,8 @@ export async function getDocumentElements(document: server.TextDocument, search:
 				Value: element,
 				From: element.index,
 				To: to,
-				Message: errorMessage
+				Message: errorMessage,
+				DiagnosticProperties: diagnosticProps || {} as IDocumentElementDiagnosticProps
 			}));
 		});
 	}

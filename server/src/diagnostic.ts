@@ -1,6 +1,6 @@
 'use strict'
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, translatePosition, Encoding, Parse } from 'tib-api';
+import { KeyedCollection, translatePosition, Encoding, Parse, ErrorCodes } from 'tib-api';
 import { RegExpPatterns } from 'tib-api/lib/constants';
 import { logError } from './server';
 
@@ -17,12 +17,13 @@ const _AllDiagnostics: IDiagnosticType[] =
 			Type: server.DiagnosticSeverity.Error,
 			Functions: KeyedCollection.FromPairs(
 				[
-					{ Key: "wrongIds", Value: getWrongIds },
-					{ Key: "longIds", Value: getLongIds },
-					{ Key: "wrongXML", Value: getWrongXML },
-					{ Key: "duplicatedId", Value: getDuplicatedIds },
-					{ Key: "wrongMixes", Value: getWrongMixes },
-					{ Key: "csInAutoSplit", Value: getCsInAutoSplit }
+					{ Key: ErrorCodes.wrongIds, Value: getWrongIds },
+					{ Key: ErrorCodes.longIds, Value: getLongIds },
+					{ Key: ErrorCodes.wrongXML, Value: getWrongXML },
+					{ Key: ErrorCodes.duplicatedId, Value: getDuplicatedIds },
+					{ Key: ErrorCodes.wrongMixes, Value: getWrongMixes },
+					{ Key: ErrorCodes.csInAutoSplit, Value: getCsInAutoSplit },
+					{ Key: ErrorCodes.wrongSpaces, Value: getWrongSpaces }
 				]
 			)
 		},
@@ -30,7 +31,7 @@ const _AllDiagnostics: IDiagnosticType[] =
 			Type: server.DiagnosticSeverity.Warning,
 			Functions: KeyedCollection.FromPairs(
 				[
-					{ Key: "constantIds", Value: dangerousConstandIds } // иногда оно может стать "delimitedConstant"
+					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds } // иногда оно может стать "delimitedConstant"
 				]
 			)
 		}
@@ -123,6 +124,14 @@ async function getWrongXML(document: server.TextDocument, prepearedText: string)
 	return res;
 }
 
+/** проверка недопустимых пробелов в XML */
+async function getWrongSpaces(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+{
+	let res: Parse.DocumentElement[] = [];
+	res = res.concat(await Parse.getDocumentElements(document, RegExpPatterns.wrongSpaseChars, "Недопустимый символ (на самом деле, это не пробел)", prepearedText, { Code: ErrorCodes.wrongSpaces })); // 0xA0
+	return res;
+}
+
 
 /** проверка уникальности Id */
 async function getDuplicatedIds(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
@@ -196,7 +205,7 @@ async function dangerousConstandIds(document: server.TextDocument, prepearedText
 							DiagnosticProperties:
 							{
 								Type: server.DiagnosticSeverity.Information,
-								Code: "delimitedConstant"
+								Code: ErrorCodes.delimitedConstant
 							}
 						});
 						res.push(wrongItem);
@@ -230,7 +239,7 @@ async function _diagnosticElements(document: server.TextDocument, type: server.D
 			let t = !!element.DiagnosticProperties.Type ? element.DiagnosticProperties.Type : type;
 			let code = !!element.DiagnosticProperties.Code ? element.DiagnosticProperties.Code : diagnosticId;
 			let diagItem = server.Diagnostic.create(element.Range, element.Message, t);
-			//diagItem.code = code;
+			diagItem.code = code;
 			res.push(diagItem);
 		});
 	}

@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
@@ -1842,7 +1842,7 @@ async function registerActionCommands()
 		}),
 		(doc, range, cont) =>
 		{
-			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == "wrongIds";
+			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == ErrorCodes.wrongIds;
 			return {
 				Enabled: en,
 				Arguments: !!en ? [cont.diagnostics[0].range] : []
@@ -1877,7 +1877,7 @@ async function registerActionCommands()
 		}),
 		(doc, range, cont) =>
 		{
-			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == "delimitedConstant";
+			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == ErrorCodes.delimitedConstant;
 			return {
 				Enabled: en,
 				Arguments: !!en ? [cont.diagnostics[0].range] : []
@@ -1885,6 +1885,28 @@ async function registerActionCommands()
 		}
 	);
 
+	// исправление 0xA0 на пробел
+	createCommandActionPair("tib.makeRealSpaces", "Сделать все пробелы нормальными",
+		(range: vscode.Range) => new Promise<void>((resolve, reject) =>
+		{
+			let editor = vscode.window.activeTextEditor;
+			let wholeRange = getFullRange(editor.document);
+			let text = editor.document.getText();
+			let res = text.replace(new RegExp(RegExpPatterns.wrongSpaseChars, 'g'), ' ');
+			editor.edit(builder =>
+			{
+				builder.replace(wholeRange, res);
+			}).then(() => { resolve(); });
+		}),
+		(doc, range, cont) =>
+		{
+			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == ErrorCodes.wrongSpaces;
+			return {
+				Enabled: en,
+				Arguments: !!en ? [cont.diagnostics[0].range] : []
+			}
+		}
+	);
 
 }
 
