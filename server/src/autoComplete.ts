@@ -1171,7 +1171,13 @@ export const Attributes = {
 			"Type": "Boolean"
 		},
 		{
-			"Name": "UseQuotasv3",
+			"Name": "QuotaVersion",
+			"Default": "2",
+			"Type": "int",
+			Auto: "3"
+		},
+		{
+			"Name": "QuotaOptimistic",
 			"Default": "false",
 			"Type": "Boolean"
 		}
