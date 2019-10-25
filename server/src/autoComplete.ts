@@ -1182,6 +1182,12 @@ export const Attributes = {
 			"Type": "Boolean"
 		}
 	],
+	"Include": [
+		{
+			Name: "FileName",
+			Type: "string"
+		}
+	],
 	"CustomText1": [
 		{
 			"Name": "Action",
