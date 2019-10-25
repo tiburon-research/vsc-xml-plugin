@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition, applyConstants, Encoding, pathExists, uriFromName, KeyValuePair, SimpleTag } from 'tib-api';
 import { ISurveyData, TibAttribute, TextEdits } from 'tib-api/lib/surveyData';
-import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames, PreDifinedConstants } from 'tib-api/lib/constants';
+import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames, PreDefinedConstants } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
 import { logError, consoleLog } from './server';
 
@@ -735,7 +735,7 @@ export class TibAutoCompletes
 		if (prevSymbol == "@")
 		{
 			let consts = this.surveyData.ConstantItems.Select((key, value) => new KeyValuePair(value.Id, value.Content));
-			consts.AddRange(KeyedCollection.FromObject(PreDifinedConstants));
+			consts.AddRange(KeyedCollection.FromObject(PreDefinedConstants));
 			let suitable = !!word ? consts.Filter((key, value) => key.contains(word)) : consts;
 			if (suitable.Count > 0) completionItems = completionItems.concat(suitable.ToArray((key, value) =>
 			{
@@ -834,7 +834,7 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
 		{
 			let constantValue: string = null;
 			let constant = surveyData.ConstantItems.Find((key, value) => key == text);
-			if (!constant) constantValue = PreDifinedConstants[text];
+			if (!constant) constantValue = PreDefinedConstants[text];
 			else constantValue = constant.Value.Content;
 			if (!!constantValue)
 			{

@@ -9,7 +9,7 @@ import { KeyValuePair, KeyedCollection, safeString, IPair, getFromClioboard, pos
 import { ISurveyData } from './surveyData'
 import { comparePositions, getCurrentLineText, getPreviousText, getWordAtPosition, getWordRangeAtPosition, isScriptLanguage, translatePosition, isValidDocumentPosition } from './vscodeDocument'
 import { CurrentTag, IProtocolTagFields, CurrentTagFields, TagInfo, TextRange, SimpleTag, ProtocolTagFields, InlineAttribute, ITextRange, CurrentTagGetFields } from './currentTag'
-import { translationArray, PreDifinedConstants } from './constants';
+import { translationArray, PreDefinedConstants } from './constants';
 
 
 
@@ -120,7 +120,7 @@ const _translation = KeyedCollection.FromArrays(translationArray.rus, translatio
 /** Заменяет в строке все константы на значения */
 export function applyConstants(input: string): string
 {
-	let cons = KeyedCollection.FromObject(PreDifinedConstants).Select((key, value) => new KeyValuePair<string>('@' + key, value));
+	let cons = KeyedCollection.FromObject(PreDefinedConstants).Select((key, value) => new KeyValuePair<string>('@' + key, value));
 	return input.replaceValues(cons);
 }
 

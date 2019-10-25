@@ -90,11 +90,12 @@ export const XMLEmbeddings = [
 ];
 
 
-export const PreDifinedConstants = {
+export const PreDefinedConstants = {
 	Scripts: "\\\\tib-srv-debug.corp.tiburon-research.ru\\scripts",
 	StoreUrl: "S:",
+	ContentUrl: "Путь к папке проекта на CDN-сервере",
 	RespID: "Подстановка: InterviewPars.GetInstance().RespId",
-	BinderID: "Подстановка:  survey.BinderId"
+	BinderID: "Подстановка: survey.BinderId"
 };
 
 
