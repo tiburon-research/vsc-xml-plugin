@@ -310,6 +310,11 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 		strings.shift();
 	}
 	let elements = Parse.parseElements(strings);
+	// заменяем 001 на 1
+	for (let i = 0; i < elements.length; i++) {
+		elements[i].Id = elements[i].Id.replace(/^0+([\d])/g, '$1');
+	}
+	// выкидываем дубликаты
 	let duplicatedIs = elements.map(x => x.Id).findDuplicates();
 	if (duplicatedIs.length > 0)
 	{
