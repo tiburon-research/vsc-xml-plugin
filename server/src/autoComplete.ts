@@ -1687,6 +1687,16 @@ export const Attributes = {
 			Result: "getQuestionTypes"
 		},
 		{
+			"Name": "Coding",
+			"Type": "string",
+			Result: "getAllLists"
+		},
+		{
+			"Name": "NumCodes",
+			"Type": "int",
+			Default: "5 для Text и 10 для Memo"
+		},
+		{
 			"Name": "SyncId",
 			"AllowCode": "true",
 			"Type": "String",
