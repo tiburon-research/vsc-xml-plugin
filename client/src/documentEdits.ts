@@ -304,7 +304,7 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 	let questionResult: Parse.ParsedElementObject;
 	let res = new XMLElementCreationResult();
 
-	if (type == SurveyElementType.Page && strings.length > 1)
+	if (type == SurveyElementType.Page)
 	{ // пробуем найти Question
 		questionResult = Parse.parseQuestion(strings[0], true);
 		strings.shift();
@@ -314,14 +314,14 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 	for (let i = 0; i < elements.length; i++) {
 		elements[i].Id = elements[i].Id.replace(/^0+([\d])/g, '$1');
 	}
-	// выкидываем дубликаты
+	// проверяем дубликаты
 	let duplicatedIs = elements.map(x => x.Id).findDuplicates();
 	if (duplicatedIs.length > 0)
 	{
 		return res.Error("Следующие Id повторяются: " + duplicatedIs.join(','));
 	}
 
-	if (!elements || elements.length == 0) return res.Error("Не удалось найти элементы");
+	if (elements.length == 0) elements = [ new Parse.ParsedElementObject("1") ];
 
 	let answerItems = new KeyedCollection<SurveyAnswer>();
 	let itemItems = new KeyedCollection<SurveyListItem>();

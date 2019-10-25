@@ -292,6 +292,7 @@ export function win1251Avaliabe(buf: Buffer)
 /** Проверяет ответ на з.о. по тексту */
 function checkResetAnswer(answerText: string): boolean
 {
+	if (!answerText) return false;
 	let text = answerText.toLocaleLowerCase();
 	for (const pattern of RegExpPatterns.ResetAnswerText) {
 		if (text.match(pattern)) return true;
@@ -303,6 +304,7 @@ function checkResetAnswer(answerText: string): boolean
 /** Проверяет ответ на открытый по тексту */
 function checkOpenAnswer(answerText: string): boolean
 {
+	if (!answerText) return false;
 	let text = answerText.toLocaleLowerCase();
 	for (const pattern of RegExpPatterns.OpenAnswerText) {
 		if (text.match(pattern)) return true;
