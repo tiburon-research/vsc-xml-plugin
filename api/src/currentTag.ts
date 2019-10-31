@@ -115,8 +115,10 @@ export class SimpleTag
 
 	public UpdateFrom(data: SimpleTag): void
 	{
-		for (const key in data) {
-			if (data.hasOwnProperty(key)) {
+		for (const key in data)
+		{
+			if (data.hasOwnProperty(key))
+			{
 				this[key] = data[key];
 			}
 		}
@@ -522,19 +524,25 @@ export class CurrentTag
 	/** XML-путь к текущему тегу */
 	public XmlPath(): string
 	{
-		let path = this.Parents.map(x =>
+		try
 		{
-			let res = x.Name;
-			let id = x.getAttributes().Item("Id");
-			if (!!id) res += `['${id}']`;
-			return res;
-		}).concat([this.Name]).join(" -> ");
-		if (this.Name == "Var")
+			let path = this.Parents.map(x =>
+			{
+				let res = x.Name;
+				let id = x.getAttributes().Item("Id");
+				if (!!id) res += `['${id}']`;
+				return res;
+			}).concat([this.Name]).join(" -> ");
+			if (this.Name == "Var")
+			{
+				let ind = this.GetVarIndex();
+				if (ind > -1) path += `[${ind}]`;
+			}
+			return path;
+		} catch (error)
 		{
-			let ind = this.GetVarIndex();
-			if (ind > -1) path += `[${ind}]`;
+			return null;
 		}
-		return path;
 	}
 
 
