@@ -1313,7 +1313,7 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 
 	let valid = checkInnerComments(newText);
 
-	// если это закомментированный, до снимаем комментирование
+	// если это закомментированный, то снимаем комментирование
 	if (!valid && newText.match(new RegExp("^\\s*" + safeString(cStart) + "[\\S\\s]*" + safeString(cEnd) + "\\s*$")))
 	{
 		newText = newText.replace(new RegExp("^(\\s*)" + safeString(cStart) + "( ?)([\\S\\s]*)( ?)" + safeString(cEnd) + "(\\s*)$"), "$1$3$5");
