@@ -113,6 +113,7 @@
 			"scope":[
 				"entity.name.tag.cdata.tib",
 				"punctuation.definition.cdata.bracket.tib",
+				"punctuation.definition.cdata.prefix.tib",
 				"punctuation.squarebracket.open",
 				"punctuation.squarebracket.close"
 			],
