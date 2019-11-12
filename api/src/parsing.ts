@@ -8,6 +8,7 @@ import { RegExpPatterns } from './constants'
 import * as charDetect from 'charset-detector'
 import * as server from 'vscode-languageserver';
 import { init as initJQuery } from './tibJQuery';
+import { Structures } from "./surveyObjects";
 
 
 
@@ -736,4 +737,42 @@ export async function getCustomJS(text: string): Promise<string>
 		else res += body[1];
 	});
 	return res;
+}
+
+
+function getDefaultElement(jqObject, name: string)
+{
+	if (!jqObject || jqObject.length == 0 || !jqObject[0] || jqObject[0].nodeName != name) return null;
+	let text = jqObject.attr('Text') || jqObject.find('Text').text();
+	text = text || '';
+
+	return {
+		Id: jqObject.attr('Id'),
+		Text: text
+	}
+}
+
+
+/** Получает `Structures.ListItem` из объекта `JQuery` */
+export function getListItem(jqObject): Structures.ListItem
+{
+	let parsed = getDefaultElement(jqObject, 'Item');
+	if (!parsed) return null;
+	let vars = [];
+	let varsAttrs = jqObject.attr('Var');
+	let varsTags = jqObject.find('Var');
+	if (!!varsAttrs) vars = vars.concat(varsAttrs.split(','));
+	if (varsTags.length > 0) vars = vars.concat(varsTags.map(() => { $(this).text() }));
+
+	let res = new Structures.ListItem();
+	res.Id = parsed.Id;
+	res.Text = parsed.Text;
+	res.Vars = vars;
+	return res;
+}
+
+/** Получает `Structures.Answer` из объекта `JQuery` */
+export function getAnswer(jqObject): Structures.Answer
+{
+	return getDefaultElement(jqObject, 'Answer');
 }

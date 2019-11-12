@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, copyToClipboard } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
@@ -14,9 +14,9 @@ import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
-import { TibOutput, showWarning, LogData, TibErrors } from './errors';
+import { TibOutput, showWarning, LogData, TibErrors, showInfo } from './errors';
 import { readGeoFile, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
-import { getCustomJS } from 'tib-api/lib/parsing';
+import { getCustomJS, getListItem, getAnswer } from 'tib-api/lib/parsing';
 import { DocumentObjectModel } from './customSurveyCode';
 
 
@@ -814,6 +814,51 @@ async function registerCommands()
 			resolve();
 		});
 	}, false);
+
+
+	registerCommand('tib.copyAsTable', () =>
+	{
+		let editor = vscode.window.activeTextEditor;
+		let selections = editor.selections;
+
+		return new Promise<void>((resolve, reject) =>
+		{
+			let text = selections.map(sel => editor.document.getText(sel)).join('');
+			let $ = JQuery.init();
+			let $dom = $.XMLDOM(text);
+			
+			let items = $dom.find('Item');
+			let answers = $dom.find('Answer');
+			let isItems = items.length > 0;
+			let elements = isItems ? items : answers;
+			let varCount: number = -1;
+			let res: string[][] = [];
+
+			elements.each((i, el) =>
+			{
+				let $el = $dom.find(el);
+				let element = isItems ? getListItem($el) : getAnswer($el);
+				if (varCount == -1) varCount = isItems ? element['Vars'].length : 0;
+				let line = [];
+				line.push(element.Id);
+				if (isItems) line = line.concat(element['Vars']);
+				line.push(element.Text);
+				res.push(line);
+			});
+
+			let caption = ['Id'];
+			for (let i = 0; i < varCount; i++) {
+				caption.push('Var' + i);
+			}
+			caption.push('Text');
+			res.unshift(caption);
+
+			let resultText = res.map(line => line.join('\t')).join('\n');
+			copyToClipboard(resultText);
+			showInfo('Таблица скопирована в буфер обмена');
+		});
+	});
+
 
 	vscode.languages.registerDocumentFormattingEditProvider('tib', {
 		provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[]

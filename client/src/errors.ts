@@ -228,3 +228,10 @@ export function showWarning(text: string)
 {
 	vscode.window.showWarningMessage(text);
 }
+
+
+/** Показывает информационное сообщение */
+export function showInfo(text: string)
+{
+	vscode.window.showInformationMessage(text);
+}

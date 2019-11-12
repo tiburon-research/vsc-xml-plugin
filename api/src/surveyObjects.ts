@@ -443,3 +443,23 @@ export class SurveyPage extends SurveyElement
 		this.ElementType = SurveyElementType.Page;
 	}
 }
+
+
+export namespace Structures
+{
+	class DefaultElement
+	{
+		public Id: string;
+		public Text: string;
+	}
+
+	export class ListItem extends DefaultElement
+	{
+		public Vars: string[] = [];
+	}
+
+	export class Answer extends DefaultElement
+	{
+		
+	}
+}

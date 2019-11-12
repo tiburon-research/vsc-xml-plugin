@@ -182,8 +182,22 @@
                 "command": "tib.runCustomScript",
                 "title": "Выполнить скрипт",
                 "category": "tib"
+			},
+			{
+                "command": "tib.copyAsTable",
+                "title": "Скопировать как таблицу",
+				"category": "tib",
+				"enablement": "editorHasSelection"
 			}
-        ],
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"when": "editorHasSelection && editorLangId == tib",
+					"command": "tib.copyAsTable"
+				}
+			]
+		},
         "keybindings": [
             {
                 "key": "ctrl+alt+g",
@@ -252,6 +266,10 @@
 			{
                 "key": "ctrl+alt+j",
                 "command": "tib.runCustomScript"
+			},
+			{
+                "key": "ctrl+alt+e",
+                "command": "tib.copyAsTable"
 			}
         ],
         "configurationDefaults": {
