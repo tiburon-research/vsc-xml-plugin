@@ -12,6 +12,13 @@
             "[img src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\"/]"
         ],
         "description": "img с путём к материалам проета"
+	},
+	"contentSrc":{
+        "prefix": "[img src=\"",
+        "body": [
+            "[img src=\"@ContentUrl/$0\"/]"
+        ],
+        "description": "img с путём к материалам проета на CDN"
     },
     "blockFolding":{
         "prefix": "<!--block",
