@@ -443,12 +443,11 @@ export class TibAutoCompletes
 						ci.kind = server.CompletionItemKind.Snippet;
 						ci.insertTextFormat = server.InsertTextFormat.Snippet;
 						let body: string = '';
-						let textEdit = null;
 
 						switch (lastParent.Name)
 						{
 							case 'Page':
-								body = '!-- <Block Items="$repeat($1){$2[,]}" MixId="$2Mix"/> -->\n<Repeat {{init}}>\n\t<Question Id="\${2:Q1}_{{iterator}}">\n\t\t<Header>$3</Header>\n\t\t$0\n\t</Question>\n</Repeat>';
+								body = '!-- <Block Items="\\$repeat($1){$2_{{iterator}}[,]}" MixId="$2Mix"/> -->\n<Repeat {{init}}>\n\t<Question Id="${2:Q1}_{{iterator}}">\n\t\t<Header>$3</Header>\n\t\t$0\n\t</Question>\n</Repeat>';
 								break;
 
 							case 'Question':
