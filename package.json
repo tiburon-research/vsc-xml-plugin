@@ -76,27 +76,32 @@
             {
                 "command": "tib.transform.AnswersToItems",
                 "title": "Answers -> Items",
-                "category": "tib"
+				"category": "tib",
+				"enablement": "editorHasSelection"
             },
             {
                 "command": "tib.transform.ItemsToAnswers",
                 "title": "Items -> Answers",
-                "category": "tib"
+				"category": "tib",
+				"enablement": "editorHasSelection"
             },
             {
                 "command": "tib.transform.SortList",
                 "title": "Сортировка списка",
-                "category": "tib"
+				"category": "tib",
+				"enablement": "editorHasSelection"
             },
             {
                 "command": "tib.transform.ToAgeList",
                 "title": "-> AgeList",
-                "category": "tib"
+				"category": "tib",
+				"enablement": "editorHasSelection"
 			},
 			{
                 "command": "tib.transform.ToSexAgeList",
                 "title": "-> SexAgeList",
-                "category": "tib"
+				"category": "tib",
+				"enablement": "editorHasSelection"
             },
             {
                 "command": "tib.remove.QuestionIds",
@@ -111,7 +116,8 @@
             {
                 "command": "tib.cdata",
                 "title": "Обернуть в CDATA",
-                "category": "tib"
+				"category": "tib",
+				"enablement": "editorHasSelection"
 			},
 			{
                 "command": "tib.cdataInner",
@@ -121,7 +127,8 @@
             {
                 "command": "tib.surveyBlock",
                 "title": "Обернуть в сворачиваемый блок",
-                "category": "tib"
+				"category": "tib",
+				"enablement": "editorHasSelection"
             },
             {
                 "command": "tib.paste",
@@ -161,17 +168,20 @@
             {
                 "command": "tib.getFullPage",
                 "title": "Преобразовать в Page",
-                "category": "tib"
+				"category": "tib",
+				"enablement": "editorHasSelection"
             },
             {
                 "command": "tib.getAnswers",
                 "title": "Преобразовать в Answers",
-                "category": "tib"
+				"category": "tib",
+				"enablement": "editorHasSelection"
             },
             {
                 "command": "tib.getItems",
                 "title": "Преобразовать в Items",
-                "category": "tib"
+				"category": "tib",
+				"enablement": "editorHasSelection"
 			},
 			{
                 "command": "tib.rotationTemplate",
