@@ -188,6 +188,12 @@
                 "title": "Скопировать как таблицу",
 				"category": "tib",
 				"enablement": "editorHasSelection"
+			},
+			{
+                "command": "tib.extractToList",
+                "title": "Вынести ответы в List",
+				"category": "tib",
+				"enablement": "editorHasSelection"
 			}
 		],
 		"menus": {
@@ -195,6 +201,10 @@
 				{
 					"when": "editorHasSelection && editorLangId == tib",
 					"command": "tib.copyAsTable"
+				},
+				{
+					"when": "editorHasSelection && editorLangId == tib",
+					"command": "tib.extractToList"
 				}
 			]
 		},

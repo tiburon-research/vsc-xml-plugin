@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, copyToClipboard } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, copyToClipboard, Encoding } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
@@ -498,6 +498,56 @@ async function registerCommands()
 		});
 	});
 
+	registerCommand('tib.extractToList', () =>
+	{
+		return new Promise<void>((resolve, reject) =>
+		{
+			let editor = vscode.window.activeTextEditor;
+			if (editor.selections.length > 1)
+			{
+				showWarning('Данная команда не поддерживает мультикурсор');
+				return;
+			}
+			try
+			{
+				let nameBox = new CustomInputBox({ placeholder: 'Название листа ответов' });
+				let text = editor.document.getText(editor.selection);
+				let prev = editor.document.getText().slice(0, editor.document.offsetAt(editor.selection.start));
+				let tagP = getCurrentTag(editor.document, editor.selection.start);
+				let nameP = nameBox.execute();
+
+				Promise.all([tagP, nameP]).then(([tag, name]) =>
+				{
+					if (!tag || tag.Parents.length < 2) throw 'Не получилось выделить информацию из CurrentTag';
+					let survIndex = tag.Parents.findIndex(x => x.Name == 'Survey');
+					if (survIndex < 0 || tag.Parents.length - 1 == survIndex) throw 'Не удалось найти нужную структуру тегов';
+					let parent = tag.Parents[survIndex + 1];
+					let from = new vscode.Position(parent.OpenTagRange.start.line, 0);
+					let repeat = "<Repeat List=\"" + translate(name) + "\">\n\t<Answer Id=\"@ID\"><Text>@Text</Text></Answer>\n</Repeat>";
+					let list = TibDocumentEdits.AnswersToItems(text);
+					list = '<List Id="' + name + '">\n' + list + '\n</List>\n\n';
+					Promise.all([
+						Formatting.format(repeat, Language.XML, _settings, '\t', tag.GetIndent()),
+						Formatting.format(list, Language.XML, _settings, '\t', 1),
+					]).then(([resR, resL]) =>
+					{
+						editor.edit(builder =>
+						{
+							builder.replace(new vscode.Range(editor.selection.start.line, 0, editor.selection.end.line, editor.selection.end.character), resR);
+							builder.insert(from, resL);
+							resolve();
+						})
+					})
+				});
+
+			} catch (error)
+			{
+				logError("Ошибка при создании списка ответов", true, error);
+				resolve();
+			}
+		});
+	});
+
 	registerCommand('tib.transform.AnswersToItems', () => 
 	{
 		return new Promise<void>((resolve, reject) =>
@@ -624,7 +674,7 @@ async function registerCommands()
 	});
 
 
-	//преобразовать в список c возрастом
+	//преобразовать в список c половозрастом
 	registerCommand('tib.transform.ToSexAgeList', () =>
 	{
 		return new Promise<void>((resolve, reject) =>
