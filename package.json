@@ -286,10 +286,6 @@
 			{
                 "key": "ctrl+alt+j",
                 "command": "tib.runCustomScript"
-			},
-			{
-                "key": "ctrl+alt+e",
-                "command": "tib.copyAsTable"
 			}
         ],
         "configurationDefaults": {
