@@ -355,6 +355,7 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 				{
 					answer.SetAttr('Fix', 'true');
 					answer.SetAttr('Type', 'Text');
+					answer.SetAttr('ExportLabel', 'Другое');
 				}
 			}
 			answerItems.AddPair(element.Id, answer, false);

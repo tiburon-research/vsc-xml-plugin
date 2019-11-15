@@ -35,7 +35,8 @@ export enum ErrorCodes
 	csInAutoSplit = "csInAutoSplit",
 	wrongSpaces = "wrongSpaces",
 	constantIds = "constantIds",
-	delimitedConstant = "delimitedConstant"
+	delimitedConstant = "delimitedConstant",
+	eqHeaders = "eqHeaders"
 };
 	
 export interface IErrorTagData
@@ -78,7 +79,7 @@ export enum Language { XML, CSharp, CSS, JS, PlainText, Inline };
 
 
 /** Результат поиска в строке */
-interface SearchResult
+export interface SearchResult
 {
 	Result: RegExpMatchArray;
 	Index: number;

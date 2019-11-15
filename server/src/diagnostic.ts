@@ -1,8 +1,8 @@
 'use strict'
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, translatePosition, Encoding, Parse, ErrorCodes } from 'tib-api';
+import { KeyedCollection, translatePosition, Encoding, Parse, ErrorCodes, SearchResult } from 'tib-api';
 import { RegExpPatterns } from 'tib-api/lib/constants';
-import { logError } from './server';
+import { logError, consoleLog } from './server';
 
 
 //#region --------------------------- const type interface
@@ -31,7 +31,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 			Type: server.DiagnosticSeverity.Warning,
 			Functions: KeyedCollection.FromPairs(
 				[
-					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds } // иногда оно может стать "delimitedConstant"
+					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"
+					{ Key: ErrorCodes.eqHeaders, Value: equalHeaders }
 				]
 			)
 		}
@@ -215,6 +216,28 @@ async function dangerousConstandIds(document: server.TextDocument, prepearedText
 		}
 	}
 
+	return res;
+}
+
+/** Одинаковые заголовки */
+async function equalHeaders(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+{
+	let res: Parse.DocumentElement[] = [];
+	let headers = prepearedText.findAll(/<Header\s*>[\s\S]+?<\/Header\s*>/);
+	let eqHeaders = headers.findDuplicates<SearchResult>((x1, x2) => x1.Result[0] == x2.Result[0]);
+	if (eqHeaders.length > 0)
+	{
+		headers.filter(x => eqHeaders.contains(x, el => el.Result[0] == x.Result[0])).forEach(header =>
+		{
+			res.push(new Parse.DocumentElement(document, {
+				DiagnosticProperties: { Type: server.DiagnosticSeverity.Warning, Code: ErrorCodes.eqHeaders },
+				From: header.Index,
+				Message: 'Найдены повторяющиеся заголовки',
+				To: header.Index + header.Result[0].length,
+				Value: header.Result
+			}));
+		});
+	}
 	return res;
 }
 
