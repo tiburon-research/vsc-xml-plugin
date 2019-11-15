@@ -293,7 +293,7 @@ export function win1251Avaliabe(buf: Buffer)
 /** Проверяет ответ на з.о. по тексту */
 function checkResetAnswer(answerText: string): boolean
 {
-	if (!answerText) return false;
+	if (!answerText || answerText.length > 50) return false;
 	let text = answerText.toLocaleLowerCase();
 	for (const pattern of RegExpPatterns.ResetAnswerText) {
 		if (text.match(pattern)) return true;

@@ -337,9 +337,9 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 		for (let i = 0; i < elements.length; i++) {
 			const element = elements[i];
 			let answer = new SurveyAnswer(element.Id, element.Text);
-			if (elements.length - i < 3) // проставляем доп атрибуты только 2 последним Answer'ам
+			if (i > elements.length - 3) // проставляем доп атрибуты только 2 последним Answer'ам
 			{
-				if (element.IsResetAnswer())
+				if (i == elements.length - 1 && element.IsResetAnswer()) // Reset только для последнего
 				{
 					answer.SetAttr('Reset', 'true');
 					answer.SetAttr('Fix', 'true');
