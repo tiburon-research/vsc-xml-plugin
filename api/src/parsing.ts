@@ -33,6 +33,7 @@ export class ParsedElementObject
 
 	public Id: string;
 	public Text: string;
+	public Vars: string[] = [];
 
 	public IsResetAnswer(): boolean
 	{
@@ -321,6 +322,12 @@ export function parseElements(strings: string[]): ParsedElementObject[]
 	if (strings.length == 0) return res;
 	strings = strings.map(x => x.trim()).filter(x => x.length > 0);
 
+	// сначала пробуем особые варианты
+	res = parseHorizontalAnswers(strings);
+	if (res.length > 0) return res;
+	res = parseTableForItems(strings);
+	if (res.length > 0) return res;
+
 	// пробуем разбить на Id + text
 	let regTests = [
 		{
@@ -369,6 +376,69 @@ export function parseElements(strings: string[]): ParsedElementObject[]
 
 	if (!withIds) res = strings.map((s, i) => { return new ParsedElementObject('' + (i + 1), s); } );
 
+	return res;
+}
+
+/** Ищет id+text в горизонтальном виде */
+function parseHorizontalAnswers(strings: string[]): ParsedElementObject[]
+{
+	let res: ParsedElementObject[] = [];
+	// подходит только 1 или 2 строки
+	if (strings.length != 1 && strings.length != 2) return res;
+	// проверяем первую строку
+	let l1 = strings[0].split('\t');
+	// будем искать только от 5 вариантов
+	if (l1.length < 5) return res;
+	let isIds = l1.length == l1.filter(x => !!x.match(/^\d+$/)).length;
+	if (strings.length == 2)
+	{
+		// если строк две и первая не ids, то не подходит
+		if (!isIds) return res;
+		let l2 = strings[1].split('\t');
+		// количество должно быть одинаковым
+		if (l1.length != l2.length) return res;
+		for (let i = 0; i < l1.length; i++) {
+			res.push(new ParsedElementObject(l1[i], l2[i]));
+		}
+	}
+	else
+	{
+		if (isIds)
+		{
+			for (let i = 0; i < l1.length; i++) {
+				res.push(new ParsedElementObject(l1[i], l1[i]));
+			}
+		}
+		else
+		{
+			for (let i = 0; i < l1.length; i++) {
+				res.push(new ParsedElementObject(''+ (i+1), l1[i]));
+			}
+		}
+	}
+
+	return res;
+}
+
+/** Ищет разделённые табуляцией Items с Var */
+function parseTableForItems(strings: string[]): ParsedElementObject[]
+{
+	let res: ParsedElementObject[] = [];
+	let splitted = strings.map(x => x.split('\t'));
+	// все строки должны быть с одинаковым количеством \t
+	if (splitted.map(x => x.length).distinct().length != 1) return res;
+	// считаем только больше одного \t
+	if (splitted[0].length < 3) return res;
+	splitted.forEach(str => {
+		let el = new ParsedElementObject(str[0], str.last());
+		let vars: string[] = [];
+		for (let i = 1; i < str.length - 1; i++)
+		{
+			vars.push(str[i]);
+		}
+		el.Vars = vars;
+		res.push(el);
+	});
 	return res;
 }
 

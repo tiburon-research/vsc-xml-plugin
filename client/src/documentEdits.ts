@@ -1,7 +1,7 @@
 'use strict'
 
 import { Parse, safeString, JQuery, translate, KeyedCollection } from 'tib-api'
-import { SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElementType, SurveyElement } from 'tib-api/lib/surveyObjects'
+import { SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElementType, SurveyElement, SurveyListItemVars } from 'tib-api/lib/surveyObjects'
 import * as vscode from 'vscode'
 import { QuestionTypes } from 'tib-api/lib/constants';
 import { ExtensionSettings } from './classes';
@@ -329,7 +329,9 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 	{
 		elements.forEach(element =>
 		{
-			itemItems.AddPair(element.Id, new SurveyListItem(element.Id, element.Text), false);
+			let item = new SurveyListItem(element.Id, element.Text);
+			if (element.Vars.length > 0) item.Vars = new SurveyListItemVars(element.Vars);
+			itemItems.AddPair(element.Id, item, false);
 		});
 	}
 	else
