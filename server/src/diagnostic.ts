@@ -223,7 +223,7 @@ async function dangerousConstandIds(document: server.TextDocument, prepearedText
 async function equalHeaders(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
 	let res: Parse.DocumentElement[] = [];
-	let headers = prepearedText.findAll(/<Header\s*>[\s\S]+?<\/Header\s*>/);
+	let headers = prepearedText.findAll(/<Header\s*>[\s\S]+?<\/Header\s*>/).filter(x => !x.Result[0].match(/(\[c#\])|@/));
 	let eqHeaders = headers.findDuplicates<SearchResult>((x1, x2) => x1.Result[0] == x2.Result[0]);
 	if (eqHeaders.length > 0)
 	{
