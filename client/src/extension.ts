@@ -14,7 +14,7 @@ import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
-import { TibOutput, showWarning, LogData, TibErrors, showInfo } from './errors';
+import { TibOutput, showWarning, LogData, TibErrors, showInfo, showError } from './errors';
 import { readGeoFile, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
 import { getCustomJS, getListItem, getAnswer } from 'tib-api/lib/parsing';
 import { DocumentObjectModel } from './customSurveyCode';
@@ -875,7 +875,12 @@ async function registerCommands()
 		{
 			let text = selections.map(sel => editor.document.getText(sel)).join('');
 			let $ = JQuery.init();
-			let $dom = $.XMLDOM(text);
+			let $dom;
+			try {
+				$dom = $.XMLDOM(text);	
+			} catch (error) {
+				showError("Не удалось получить XML из выделенной области");
+			}
 			
 			let items = $dom.find('Item');
 			let answers = $dom.find('Answer');
