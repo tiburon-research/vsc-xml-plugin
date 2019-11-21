@@ -587,7 +587,7 @@ export function getDuplicatedElementsIds(document: server.TextDocument, prepeare
 	{
 		let $ = initJQuery();
 		let res: DocumentElement[] = [];
-		let tagNames = ['Page', 'List', 'Question', 'Block'];
+		let tagNames = ['Page', 'List', 'Question'];
 		let $dom;
 		try
 		{
