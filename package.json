@@ -376,7 +376,7 @@
         "@types/jsdom": "^12.2.1",
         "@types/jquery": "^3.3.29",
         "@types/mocha": "^5.2.5",
-        "@types/node": "^10.12.18",
+        "@types/node": "^12.12.11",
         "vscode": "^1.1.33"
     },
     "scripts": {
