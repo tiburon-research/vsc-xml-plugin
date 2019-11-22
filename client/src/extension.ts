@@ -307,12 +307,6 @@ async function registerCommands()
 		return createElements(SurveyElementType.Page);
 	});
 
-	// выделение Answer из текста
-	registerCommand('tib.getAnswers', () => 
-	{
-		return createElements(SurveyElementType.Answer);
-	});
-
 	// выделение Item из текста
 	registerCommand('tib.getItems', () => 
 	{

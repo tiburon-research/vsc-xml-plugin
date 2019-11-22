@@ -172,12 +172,6 @@
 				"enablement": "editorHasSelection"
             },
             {
-                "command": "tib.getAnswers",
-                "title": "Преобразовать в Answers",
-				"category": "tib",
-				"enablement": "editorHasSelection"
-            },
-            {
                 "command": "tib.getItems",
                 "title": "Преобразовать в Items",
 				"category": "tib",
@@ -270,10 +264,6 @@
             {
                 "key": "ctrl+alt+a",
                 "command": "tib.getFullPage"
-            },
-            {
-                "key": "ctrl+alt+shift+a",
-                "command": "tib.getAnswers"
             },
             {
                 "key": "ctrl+alt+i",
