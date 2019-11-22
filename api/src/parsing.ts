@@ -772,7 +772,7 @@ export function getCsInAutoSplit(document: server.TextDocument, prepearedText: s
 			let answer = content.find(/(<Answer([\s\S]+?)<Text\s*>)([\s\S]+?)<\/Text/);
 			if (!!answer.Result)
 			{
-				let matchAll = answer.Result[3].findAll(/(\[c#\][\s\S]+?\[\/c#\])|(\$\w+)|(@Text)/i).filter(x => !!x.Result && x.Result[0] != '$repeat');
+				let matchAll = answer.Result[3].findAll(/(\[c#[^\]]*\][\s\S]+?\[\/c#\])|(\$\w+)|(@Text)/i).filter(x => !!x.Result && x.Result[0] != '$repeat');
 				let match = matchAll.length > 0 ? matchAll[0] : null;
 				if (!!match)
 				{

@@ -32,7 +32,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 			Functions: KeyedCollection.FromPairs(
 				[
 					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"
-					{ Key: ErrorCodes.eqHeaders, Value: equalHeaders }
+					{ Key: ErrorCodes.eqHeaders, Value: equalHeaders },
+					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS}
 				]
 			)
 		}
@@ -241,6 +242,35 @@ async function equalHeaders(document: server.TextDocument, prepearedText: string
 	return res;
 }
 
+/** Повторяющиеся c# вставки */
+async function copyPastedCS(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+{
+	return new Promise<Parse.DocumentElement[]>((resolve, reject) =>
+	{
+		let res: Parse.DocumentElement[] = [];
+		let csIns = prepearedText.findAll(/\[c#[^\]]*\]([\s\S]+?)\[\/c#\s*\]/);
+		let groups = csIns.groupBy<SearchResult>(x => x.Result[1]).Filter((key, value) =>
+		{
+			if (value.length < 4) return false;
+			if (key.matchAll(/\w{5,}\(/).length > 1) return true; // проверяем количество вызываемых методов
+			if (key.matchAll(/\+|(\|\|)|(\&\&)/).length > 2) return true; // проверяем количество операторов (самых частых)
+			return false;
+		});
+		
+		groups.ForEach((key, value) =>
+		{
+			let ar = value.map(x => new Parse.DocumentElement(document, {
+				From: x.Index,
+				To: x.Index + x.Result[0].length,
+				Message: "Многократно повторяющийся код. Лучше использовать методы.",
+				Value: x.Result
+			}));
+			res = res.concat(ar);
+		});
+
+		resolve(res);
+	});
+}
 
 //#endregion
 

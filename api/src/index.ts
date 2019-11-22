@@ -36,7 +36,8 @@ export enum ErrorCodes
 	wrongSpaces = "wrongSpaces",
 	constantIds = "constantIds",
 	delimitedConstant = "delimitedConstant",
-	eqHeaders = "eqHeaders"
+	eqHeaders = "eqHeaders",
+	copyPastedCS = "copyPastedCS"
 };
 	
 export interface IErrorTagData
@@ -258,6 +259,8 @@ declare global
 		orderByValue<T>(this: Array<T>, func: (a: T) => string | number, desc?: boolean): T[]
 		/** Находит повторяющиеся значения */
 		findDuplicates<T>(compareFunc?: (elem1: T, elem2: T) => boolean): T[]
+		/** Группирует элементы по ключу */
+		groupBy<T>(keyFunc: (el: T) => string): KeyedCollection<T[]>
 	}
 
 }
@@ -462,6 +465,20 @@ Array.prototype.findDuplicates = function <T>(this: Array<T>, compareFunc?: (ele
 			res.push(currentElement);
 		}
 	}
+	return res;
+}
+
+
+Array.prototype.groupBy = function <T>(this: Array<T>, keyFunc: (el: T) => string): KeyedCollection<T[]>
+{
+	let res = new KeyedCollection<T[]>();
+	this.forEach(element => {
+		let key = keyFunc(element);
+		let existing = res.Item(key);
+		if (!existing) existing = [];
+		existing.push(element);
+		res.AddPair(key, existing);
+	});
 	return res;
 }
 
