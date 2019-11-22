@@ -316,7 +316,7 @@ async function registerCommands()
 	// выделение Item из текста
 	registerCommand('tib.getItems', () => 
 	{
-		return createElements(SurveyElementType.ListItem);
+		return createElements(SurveyElementType.List);
 	});
 
 
@@ -1740,6 +1740,16 @@ async function createElements(elementType: SurveyElementType)
 			return;
 		}
 		let text = editor.document.getText(editor.selection);
+		let tag = await getCurrentTag(editor.document, editor.selection.active);
+		let parentNames = tag.Parents.map(x => x.Name);
+		parentNames.push(tag.Name);
+		if (elementType == SurveyElementType.Page)
+		{
+			if (parentNames.contains("Question")) elementType = SurveyElementType.Answer;
+			else if (parentNames.contains("Page")) elementType = SurveyElementType.Question;
+		}
+		else if (elementType == SurveyElementType.List && parentNames.contains("List")) elementType = SurveyElementType.ListItem;
+		
 		let res = TibDocumentEdits.createElements(text, elementType, _settings);
 		if (!res.Ok)
 		{
@@ -1748,7 +1758,6 @@ async function createElements(elementType: SurveyElementType)
 		}
 
 		_inProcess = true;
-		let tag = await getCurrentTag(editor.document, editor.selection.active);
 		let indent = !!tag ? tag.GetIndent() : 1;
 		Formatting.format(res.Result.value, Language.XML, _settings, "\t", indent).then(x =>
 		{

@@ -304,14 +304,15 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 	let questionResult: Parse.ParsedElementObject;
 	let res = new XMLElementCreationResult();
 
-	if (type == SurveyElementType.Page)
+	if (type == SurveyElementType.Page || type == SurveyElementType.Question)
 	{ // пробуем найти Question
 		questionResult = Parse.parseQuestion(strings[0], true);
 		strings.shift();
 	}
 	let elements = Parse.parseElements(strings);
 	// заменяем 001 на 1
-	for (let i = 0; i < elements.length; i++) {
+	for (let i = 0; i < elements.length; i++)
+	{
 		elements[i].Id = elements[i].Id.replace(/^0+([\d])/g, '$1');
 	}
 	// проверяем дубликаты
@@ -321,11 +322,11 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 		return res.Error("Следующие Id повторяются: " + duplicatedIs.join(','));
 	}
 
-	if (elements.length == 0) elements = [ new Parse.ParsedElementObject("1") ];
+	if (elements.length == 0) elements = [new Parse.ParsedElementObject("1")];
 
 	let answerItems = new KeyedCollection<SurveyAnswer>();
 	let itemItems = new KeyedCollection<SurveyListItem>();
-	if (type == SurveyElementType.ListItem)
+	if (type == SurveyElementType.ListItem || type == SurveyElementType.List)
 	{
 		elements.forEach(element =>
 		{
@@ -336,7 +337,8 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 	}
 	else
 	{
-		for (let i = 0; i < elements.length; i++) {
+		for (let i = 0; i < elements.length; i++)
+		{
 			const element = elements[i];
 			let answer = new SurveyAnswer(element.Id, element.Text);
 			if (i > elements.length - 3) // проставляем доп атрибуты только 2 последним Answer'ам
@@ -378,18 +380,22 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 				res.Fill(p.ToXML());
 				break;
 			}
-
 		case SurveyElementType.Answer:
 			{
 				res.Fill(answerItems.ToArray((key, value) => value.ToXML()).join("\n"));
 				break;
 			}
-
-		case SurveyElementType.ListItem:
+		case SurveyElementType.List:
 			{
 				let q = new SurveyList("$1");
 				q.Items = itemItems;
 				res.Fill(q.ToXML());
+				break;
+			}
+		case SurveyElementType.ListItem:
+			{
+				let str = itemItems.ToArray((key, value) => value.ToXML()).join('\n');
+				res.Fill(str);
 				break;
 			}
 	}
