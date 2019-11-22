@@ -2718,7 +2718,7 @@ export const XMLFeatures = [
 	{
 		"prefix": "_clickText",
 		"body": [
-			"<Ui Extend=\"ClickText\" SelectedFontColor=\"black\" SelectedBackgroundColor=\"orange\" SplittingType=\"1\"/>"
+			"<Ui Extend=\"ClickText\" Type=\"AutoSplit\" SelectedFontColor=\"black\" SelectedBackgroundColor=\"orange\" SplittingType=\"1\"/>"
 		],
 		"description": "QuestionUi: Текстовый ClickTest"
 	},
