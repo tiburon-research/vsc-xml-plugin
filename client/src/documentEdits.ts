@@ -369,15 +369,20 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 	switch (type)
 	{
 		case SurveyElementType.Page:
+		case SurveyElementType.Question:
 			{
 				let parsedId = !!questionResult && !!questionResult.Id ? translate(questionResult.Id) : 'Q1';
 				let id = "${1:" + parsedId + "}";
 				let q = new SurveyQuestion(id, "${2|" + QuestionTypes.join(',') + "|}");
 				q.Answers = answerItems;
 				q.Header = !!questionResult ? questionResult.Text.trim() : '';
-				let p = new SurveyPage(id);
-				p.AddChild(q);
-				res.Fill(p.ToXML());
+				if (type == SurveyElementType.Page)
+				{
+					let p = new SurveyPage(id);
+					p.AddChild(q);
+					res.Fill(p.ToXML());
+				}
+				else res.Fill(q.ToXML());
 				break;
 			}
 		case SurveyElementType.Answer:
