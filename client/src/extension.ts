@@ -1904,11 +1904,12 @@ async function registerActionCommands()
 
 	// транслитерация
 	createCommandActionPair("tib.translateRange", "Транслитерация",
-		(range: vscode.Range) => new Promise<void>((resolve, reject) =>
+		(data: { range: vscode.Range, lit: boolean }) => new Promise<void>((resolve, reject) =>
 		{
 			let editor = vscode.window.activeTextEditor;
+			let range = !!data.range ? data.range : new vscode.Range(editor.selection.start, editor.selection.end);
 			let text = editor.document.getText(range);
-			let res = translate(text);
+			let res = !data.lit ? translit(text) : translate(text);
 			editor.edit(builder =>
 			{
 				builder.replace(range, res);
@@ -1919,7 +1920,7 @@ async function registerActionCommands()
 			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == ErrorCodes.wrongIds;
 			return {
 				Enabled: en,
-				Arguments: !!en ? [cont.diagnostics[0].range] : []
+				Arguments: !!en ? [{ range: cont.diagnostics[0].range, lit: false }] : []
 			}
 		}
 	);

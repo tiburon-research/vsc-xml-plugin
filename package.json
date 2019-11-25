@@ -68,6 +68,11 @@
             }
         ],
         "commands": [
+			{
+                "command": "tib.translateRange",
+                "title": "Транслитерация текста",
+				"category": "tib"
+            },
             {
                 "command": "tib.ChooseGeo",
                 "title": "Выбрать географию",
@@ -213,6 +218,14 @@
             ]
         },
         "keybindings": [
+			{
+                "key": "ctrl+k ctrl+alt+t",
+				"command": "tib.translateRange",
+				"args": {
+					"range": null,
+					"lit": true
+				}
+            },
             {
                 "key": "ctrl+alt+g",
                 "command": "tib.ChooseGeo"
