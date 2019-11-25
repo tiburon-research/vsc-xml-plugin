@@ -1917,10 +1917,10 @@ async function registerActionCommands()
 		}),
 		(doc, range, cont) =>
 		{
-			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == ErrorCodes.wrongIds;
+			let ind = cont.diagnostics.findIndex((v, i, o) => { return v.code == ErrorCodes.wrongIds });
 			return {
-				Enabled: en,
-				Arguments: !!en ? [{ range: cont.diagnostics[0].range, lit: false }] : []
+				Enabled: ind > -1,
+				Arguments: ind > -1 ? [{ range: cont.diagnostics[ind].range, lit: false }] : []
 			}
 		}
 	);
@@ -1952,17 +1952,17 @@ async function registerActionCommands()
 		}),
 		(doc, range, cont) =>
 		{
-			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == ErrorCodes.delimitedConstant;
+			let ind = cont.diagnostics.findIndex((v, i, o) => { return v.code == ErrorCodes.delimitedConstant });
 			return {
-				Enabled: en,
-				Arguments: !!en ? [cont.diagnostics[0].range] : []
+				Enabled: ind > -1,
+				Arguments: ind > -1 ? [cont.diagnostics[ind].range] : []
 			}
 		}
 	);
 
 	// исправление 0xA0 на пробел
 	createCommandActionPair("tib.makeRealSpaces", "Сделать все пробелы нормальными",
-		(range: vscode.Range) => new Promise<void>((resolve, reject) =>
+		() => new Promise<void>((resolve, reject) =>
 		{
 			let editor = vscode.window.activeTextEditor;
 			let wholeRange = getFullRange(editor.document);
@@ -1975,10 +1975,10 @@ async function registerActionCommands()
 		}),
 		(doc, range, cont) =>
 		{
-			let en = cont.diagnostics.length > 0 && cont.diagnostics[0].code == ErrorCodes.wrongSpaces;
+			let ind = cont.diagnostics.findIndex((v, i, o) => { return v.code == ErrorCodes.wrongSpaces });
 			return {
-				Enabled: en,
-				Arguments: !!en ? [cont.diagnostics[0].range] : []
+				Enabled: ind > -1,
+				Arguments: ind > -1 ? [cont.diagnostics[ind].range] : []
 			}
 		}
 	);
