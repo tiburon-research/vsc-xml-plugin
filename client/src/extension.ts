@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, copyToClipboard, Encoding } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, copyToClipboard } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
@@ -327,7 +327,7 @@ async function registerCommands()
 				{
 					if (!tag) return resolve();
 					let from = tag.OpenTagRange.start;
-					var cl = findCloseTag("<", tag.Name, ">", document, translatePosition(document, from, 1));
+					var cl = Parse.getCloseTagRange("<", tag.Name, ">", document, translatePosition(document, from, 1));
 					if (!cl) return resolve();
 					let to = cl.end;
 					let range = createSelection(from, to);
@@ -365,7 +365,7 @@ async function registerCommands()
 						par = tag.Parents[1].Name;
 						from = tag.Parents[1].OpenTagRange.start;
 					}
-					let cl = findCloseTag("<", par, ">", document, translatePosition(document, from, 1));
+					let cl = Parse.getCloseTagRange("<", par, ">", document, translatePosition(document, from, 1));
 					if (!cl) return resolve();
 					let to = cl.end;
 					let range = createSelection(from, to);;
@@ -430,7 +430,7 @@ async function registerCommands()
 						{
 							let startPostion = new vscode.Position(tag.OpenTagRange.end.line, tag.OpenTagRange.end.character);
 							let lastPosition = doc.positionAt(tag.PreviousText.length);
-							let closeTagPosition = findCloseTag('<', tag.Name, '>', createServerDocument(doc), ClientServerTransforms.ToServer.Position(lastPosition));
+							let closeTagPosition = Parse.getCloseTagRange('<', tag.Name, '>', createServerDocument(doc), ClientServerTransforms.ToServer.Position(lastPosition));
 							if (!closeTagPosition) rej("Не удалось найти закрывающийся тег");
 							resl(new vscode.Selection(startPostion.line, startPostion.character, closeTagPosition.start.line, closeTagPosition.start.character));
 						}).catch(rej);
@@ -980,7 +980,7 @@ async function registerCommands()
 			if (prevSymbols.match(/(<|\[)\//))
 			{
 				closeBracket = prevSymbols[0] == "[" ? "]" : ">";
-				let openTag = findOpenTag(prevSymbols[0], word, closeBracket, doc, pos);
+				let openTag = Parse.getOpenTagRange(prevSymbols[0], word, closeBracket, doc, pos);
 				if (!!openTag)
 				{
 					let from = openTag.start;
@@ -992,7 +992,7 @@ async function registerCommands()
 			else if (prevSymbols.length > 1 && prevSymbols.match(/<|\[/))
 			{
 				closeBracket = prevSymbols[1] == "[" ? "]" : ">";
-				secondTag = findCloseTag(prevSymbols[1], word, closeBracket, doc, pos);
+				secondTag = Parse.getCloseTagRange(prevSymbols[1], word, closeBracket, doc, pos);
 				secondTag.start.character += 2;
 				secondTag.end = server.Position.create(secondTag.start.line, secondTag.start.character + word.length);
 			}
@@ -1239,43 +1239,6 @@ function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 /*---------------------------------------- доп. функции ----------------------------------------*/
 //#region
 
-
-
-/** Возвращает `null`, если тег не закрыт или SelfClosed */
-function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
-{
-	try
-	{
-		let fullText = document.getText();
-		let prevText = getPreviousText(document, position);
-		let res = Parse.findCloseTag(opBracket, tagName, clBracket, prevText, fullText);
-		if (!res || !res.Range) return null;
-		let startPos = document.positionAt(res.Range.From);
-		let endPos = document.positionAt(res.Range.To + 1);
-		return server.Range.create(startPos, endPos);
-	} catch (error)
-	{
-		logError("Ошибка выделения закрывающегося тега", false, error);
-	}
-	return null;
-}
-
-function findOpenTag(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
-{
-	try
-	{
-		let prevText = getPreviousText(document, position);
-		let res = Parse.findOpenTag(opBracket, tagName, clBracket, prevText);
-		if (!res) return null;
-		let startPos = document.positionAt(res.Range.From);
-		let endPos = document.positionAt(res.Range.To + 1);
-		return server.Range.create(startPos, endPos);
-	} catch (error)
-	{
-		logError("Ошибка выделения открывающегося тега", false, error);
-	}
-	return null;
-}
 
 
 

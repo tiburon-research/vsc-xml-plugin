@@ -1,7 +1,7 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordAtPosition, getWordRangeAtPosition, translatePosition, applyConstants, Encoding, pathExists, uriFromName, KeyValuePair, SimpleTag } from 'tib-api';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText,  getWordRangeAtPosition, translatePosition, applyConstants, uriFromName, KeyValuePair, SimpleTag } from 'tib-api';
 import { ISurveyData, TibAttribute, TextEdits } from 'tib-api/lib/surveyData';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames, PreDefinedConstants } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
@@ -933,7 +933,6 @@ export class TibDocumentHighLights
 			let mt = text.match(/(((\[)|(<))\/?)\w*$/);
 
 			if (!mt) return res;
-			let ind = -1;
 			let range: server.Range;
 
 			switch (mt[1])
@@ -948,7 +947,7 @@ export class TibDocumentHighLights
 						// закрывающийся
 						if (!after.match(/^[^>]*\/>/) && !Parse.isSelfClosedTag(word))
 						{
-							range = findCloseTag("<", word, ">", this.document, this.position);
+							range = Parse.getCloseTagRange("<", word, ">", this.document, this.position);
 							if (range) res.push(server.DocumentHighlight.create(range));
 						}
 						break;
@@ -963,7 +962,7 @@ export class TibDocumentHighLights
 						// закрывающийся
 						if (!after.match(/^[^\]]*\/\]/) && !Parse.isSelfClosedTag(word))
 						{
-							range = findCloseTag("[", word, "]", this.document, this.position);
+							range = Parse.getCloseTagRange("[", word, "]", this.document, this.position);
 							if (range) res.push(server.DocumentHighlight.create(range));
 						}
 						break;
@@ -976,7 +975,7 @@ export class TibDocumentHighLights
 						res.push(server.DocumentHighlight.create(curRange));
 
 						// открывающийся
-						range = findOpenTag("<", word, ">", this.document, this.position);
+						range = Parse.getOpenTagRange("<", word, ">", this.document, this.position);
 						if (range) res.push(server.DocumentHighlight.create(range));
 						break;
 					}
@@ -988,7 +987,7 @@ export class TibDocumentHighLights
 						res.push(server.DocumentHighlight.create(curRange));
 
 						// открывающийся
-						range = findOpenTag("[", word, "]", this.document, this.position);
+						range = Parse.getOpenTagRange("[", word, "]", this.document, this.position);
 						if (range) res.push(server.DocumentHighlight.create(range));
 						break;
 					}
@@ -1119,42 +1118,3 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 }
 
 //#endregion
-
-
-
-/** Возвращает `null`, если тег не закрыт или SelfClosed */
-function findCloseTag(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
-{
-	try
-	{
-		let fullText = document.getText();
-		let prevText = getPreviousText(document, position);
-		let res = Parse.findCloseTag(opBracket, tagName, clBracket, prevText, fullText);
-		if (!res || !res.Range) return null;
-		let startPos = document.positionAt(res.Range.From);
-		let endPos = document.positionAt(res.Range.To + 1);
-		return server.Range.create(startPos, endPos);
-	} catch (error)
-	{
-		logError("Ошибка выделения закрывающегося тега", false, error);
-	}
-	return null;
-}
-
-
-function findOpenTag(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
-{
-	try
-	{
-		let prevText = getPreviousText(document, position);
-		let res = Parse.findOpenTag(opBracket, tagName, clBracket, prevText);
-		if (!res) return null;
-		let startPos = document.positionAt(res.Range.From);
-		let endPos = document.positionAt(res.Range.To + 1);
-		return server.Range.create(startPos, endPos);
-	} catch (error)
-	{
-		logError("Ошибка выделения открывающегося тега", false, error);
-	}
-	return null;
-}

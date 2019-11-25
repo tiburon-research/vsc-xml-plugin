@@ -1,6 +1,6 @@
 'use strict'
 
-import { Language } from "./index";
+import { Language, getPreviousText } from "./index";
 import { TextRange, TagInfo, CurrentTag } from './currentTag'
 import { safeString, positiveMin, KeyedCollection } from './customs'
 import { clearXMLComments } from "./encoding"
@@ -127,6 +127,18 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
 	return null;
 }
 
+/** Возвращает диапазон закрывающегося тега или null */
+export function getCloseTagRange(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
+{
+	let fullText = document.getText();
+	let prevText = getPreviousText(document, position);
+	let res = findCloseTag(opBracket, tagName, clBracket, prevText, fullText);
+	if (!res || !res.Range) return null;
+	let startPos = document.positionAt(res.Range.From);
+	let endPos = document.positionAt(res.Range.To + 1);
+	return server.Range.create(startPos, endPos);
+}
+
 
 /** 
  * Поиск открывающего тега.
@@ -192,6 +204,17 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 	{
 		throw "Ошибка при поиске открывающегося тега";
 	}
+}
+
+/** Возвращает диапазон открывающегося тега или null */
+export function getOpenTagRange(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
+{
+	let prevText = getPreviousText(document, position);
+	let res = findOpenTag(opBracket, tagName, clBracket, prevText);
+	if (!res) return null;
+	let startPos = document.positionAt(res.Range.From);
+	let endPos = document.positionAt(res.Range.To + 1);
+	return server.Range.create(startPos, endPos);
 }
 
 
