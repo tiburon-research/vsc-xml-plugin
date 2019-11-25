@@ -76,32 +76,32 @@
             {
                 "command": "tib.transform.AnswersToItems",
                 "title": "Answers -> Items",
-				"category": "tib",
-				"enablement": "editorHasSelection"
+                "category": "tib",
+                "enablement": "editorHasSelection"
             },
             {
                 "command": "tib.transform.ItemsToAnswers",
                 "title": "Items -> Answers",
-				"category": "tib",
-				"enablement": "editorHasSelection"
+                "category": "tib",
+                "enablement": "editorHasSelection"
             },
             {
                 "command": "tib.transform.SortList",
                 "title": "Сортировка списка",
-				"category": "tib",
-				"enablement": "editorHasSelection"
+                "category": "tib",
+                "enablement": "editorHasSelection"
             },
             {
                 "command": "tib.transform.ToAgeList",
                 "title": "-> AgeList",
-				"category": "tib",
-				"enablement": "editorHasSelection"
-			},
-			{
+                "category": "tib",
+                "enablement": "editorHasSelection"
+            },
+            {
                 "command": "tib.transform.ToSexAgeList",
                 "title": "-> SexAgeList",
-				"category": "tib",
-				"enablement": "editorHasSelection"
+                "category": "tib",
+                "enablement": "editorHasSelection"
             },
             {
                 "command": "tib.remove.QuestionIds",
@@ -116,19 +116,19 @@
             {
                 "command": "tib.cdata",
                 "title": "Обернуть в CDATA",
-				"category": "tib",
-				"enablement": "editorHasSelection"
-			},
-			{
+                "category": "tib",
+                "enablement": "editorHasSelection"
+            },
+            {
                 "command": "tib.cdataInner",
                 "title": "Обернуть текущий тег в CDATA",
                 "category": "tib"
-			},
+            },
             {
                 "command": "tib.surveyBlock",
                 "title": "Обернуть в сворачиваемый блок",
-				"category": "tib",
-				"enablement": "editorHasSelection"
+                "category": "tib",
+                "enablement": "editorHasSelection"
             },
             {
                 "command": "tib.paste",
@@ -168,50 +168,50 @@
             {
                 "command": "tib.getFullPage",
                 "title": "Преобразовать в Page",
-				"category": "tib",
-				"enablement": "editorHasSelection"
+                "category": "tib",
+                "enablement": "editorHasSelection"
             },
             {
                 "command": "tib.getItems",
                 "title": "Преобразовать в Items",
-				"category": "tib",
-				"enablement": "editorHasSelection"
-			},
-			{
+                "category": "tib",
+                "enablement": "editorHasSelection"
+            },
+            {
                 "command": "tib.rotationTemplate",
                 "title": "Вставить шаблон ротации",
                 "category": "tib"
-			},
-			{
+            },
+            {
                 "command": "tib.runCustomScript",
                 "title": "Выполнить скрипт",
                 "category": "tib"
-			},
-			{
+            },
+            {
                 "command": "tib.copyAsTable",
                 "title": "Скопировать как таблицу",
-				"category": "tib",
-				"enablement": "editorHasSelection"
-			},
-			{
+                "category": "tib",
+                "enablement": "editorHasSelection"
+            },
+            {
                 "command": "tib.extractToList",
                 "title": "Вынести ответы в List",
-				"category": "tib",
-				"enablement": "editorHasSelection"
-			}
-		],
-		"menus": {
-			"editor/context": [
-				{
-					"when": "editorHasSelection && editorLangId == tib",
-					"command": "tib.copyAsTable"
-				},
-				{
-					"when": "editorHasSelection && editorLangId == tib",
-					"command": "tib.extractToList"
-				}
-			]
-		},
+                "category": "tib",
+                "enablement": "editorHasSelection"
+            }
+        ],
+        "menus": {
+            "editor/context": [
+                {
+                    "when": "editorHasSelection && editorLangId == tib",
+                    "command": "tib.copyAsTable"
+                },
+                {
+                    "when": "editorHasSelection && editorLangId == tib",
+                    "command": "tib.extractToList"
+                }
+            ]
+        },
         "keybindings": [
             {
                 "key": "ctrl+alt+g",
@@ -224,11 +224,11 @@
             {
                 "key": "ctrl+alt+c",
                 "command": "tib.cdata"
-			},
-			{
+            },
+            {
                 "key": "ctrl+shift+alt+c",
                 "command": "tib.cdataInner"
-			},
+            },
             {
                 "key": "ctrl+alt+b",
                 "command": "tib.surveyBlock"
@@ -268,15 +268,15 @@
             {
                 "key": "ctrl+alt+i",
                 "command": "tib.getItems"
-			},
-			{
+            },
+            {
                 "key": "ctrl+alt+r",
                 "command": "tib.rotationTemplate"
-			},
-			{
+            },
+            {
                 "key": "ctrl+alt+j",
                 "command": "tib.runCustomScript"
-			}
+            }
         ],
         "configurationDefaults": {
             "[tib]": {
@@ -344,18 +344,17 @@
                     "description": "Включить блокировку файлов при редактировании",
                     "type": "boolean",
                     "default": true
-				},
-				"tib.enableUiIsolateGen": {
+                },
+                "tib.enableUiIsolateGen": {
                     "description": "Добавлять Isolate при генерации ответов",
                     "type": "boolean",
                     "default": true
-				}
+                }
             }
         }
     },
     "dependencies": {
         "charset-detector": "^0.0.2",
-        "clipboardy": "^1.2.3",
         "cssbeautify": "^0.3.1",
         "dateformat": "^3.0.3",
         "iconv-lite": "^0.4.24",
@@ -385,8 +384,8 @@
         "watch": "tsc -b -w",
         "compile-api": "cd api && npm run compile && cd ../",
         "install-vsc": "node node_modules/vscode/bin/install",
-		"postinstall": "npm run install-vsc && npm run compile-api && npm run compile && npm install -g vsce",
-		"rebuild": "cd api && rmdir /q/s lib && del tsconfig.tsbuildinfo && cd ../client && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../server && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../ && npm run compile && npm run compile",
-		"copy-signature": "copy \"client\\out\\customSurveyCode.d.ts\" \"\\\\192.168.177.11\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts\""
+        "postinstall": "npm run install-vsc && npm run compile-api && npm run compile && npm install -g vsce",
+        "rebuild": "cd api && rmdir /q/s lib && del tsconfig.tsbuildinfo && cd ../client && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../server && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../ && npm run compile && npm run compile",
+        "copy-signature": "copy \"client\\out\\customSurveyCode.d.ts\" \"\\\\192.168.177.11\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts\""
     }
 }

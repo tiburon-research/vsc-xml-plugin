@@ -5,7 +5,6 @@
 
 import * as fs from 'fs'
 import Uri from 'vscode-uri'
-import * as clipboard from "clipboardy"
 //import * as winattr from 'winattr'
 import * as process from 'child_process'
 
@@ -100,20 +99,6 @@ export function positiveMin(a, b, negative: any = null)
 	else
 		if (b < 0) return a;
 		else return Math.min(a, b);
-}
-
-
-/** записывает данные в буфер обмена */
-export function copyToClipboard(text: string)
-{
-	clipboard.writeSync(text);
-}
-
-
-/** получает данные из буфера обмена */
-export function getFromClioboard(): string
-{
-	return clipboard.readSync();
 }
 
 

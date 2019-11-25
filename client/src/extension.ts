@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, getFromClioboard, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, copyToClipboard } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
@@ -769,32 +769,34 @@ async function registerCommands()
 		let prom = new Promise<void>((resolve, reject) =>
 		{
 			_inProcess = true;
-			let txt = getFromClioboard();
-			if (txt.match(/[\s\S]*\n$/)) txt = txt.replace(/\n$/, '');
-			let pre = txt.split("\n");
-			let lines = [];
-			let editor = vscode.window.activeTextEditor;
+			vscode.env.clipboard.readText().then(txt =>
+			{
+				if (txt.match(/[\s\S]*\n$/)) txt = txt.replace(/\n$/, '');
+				let pre = txt.split("\n");
+				let lines = [];
+				let editor = vscode.window.activeTextEditor;
 
-			if (pre.length != editor.selections.length)
-			{
-				for (let i = 0; i < editor.selections.length; i++)
+				if (pre.length != editor.selections.length)
 				{
-					lines.push(txt);
-				}
-				multiLinePaste(editor, lines).then(() => { resolve(); });
-			}
-			else
-			{
-				lines = pre.map(s => { return s.trim() });
-				if (lines.filter(l => { return l.indexOf("\t") > -1; }).length == lines.length)
-				{
-					vscode.window.showQuickPick(["Да", "Нет"], { placeHolder: "Разделить запятыми?" }).then(x =>
+					for (let i = 0; i < editor.selections.length; i++)
 					{
-						multiLinePaste(editor, lines, x == "Да").then(() => { resolve(); });
-					});
+						lines.push(txt);
+					}
+					multiLinePaste(editor, lines).then(() => { resolve(); });
 				}
-				else multiLinePaste(editor, lines).then(() => { resolve(); });
-			}
+				else
+				{
+					lines = pre.map(s => { return s.trim() });
+					if (lines.filter(l => { return l.indexOf("\t") > -1; }).length == lines.length)
+					{
+						vscode.window.showQuickPick(["Да", "Нет"], { placeHolder: "Разделить запятыми?" }).then(x =>
+						{
+							multiLinePaste(editor, lines, x == "Да").then(() => { resolve(); });
+						});
+					}
+					else multiLinePaste(editor, lines).then(() => { resolve(); });
+				}
+			});
 		});
 		prom.then(() => { _inProcess = false; });
 		return prom;
@@ -870,12 +872,14 @@ async function registerCommands()
 			let text = selections.map(sel => editor.document.getText(sel)).join('');
 			let $ = JQuery.init();
 			let $dom;
-			try {
-				$dom = $.XMLDOM(text);	
-			} catch (error) {
+			try
+			{
+				$dom = $.XMLDOM(text);
+			} catch (error)
+			{
 				showError("Не удалось получить XML из выделенной области");
 			}
-			
+
 			let items = $dom.find('Item');
 			let answers = $dom.find('Answer');
 			let isItems = items.length > 0;
@@ -896,15 +900,19 @@ async function registerCommands()
 			});
 
 			let caption = ['Id'];
-			for (let i = 0; i < varCount; i++) {
+			for (let i = 0; i < varCount; i++)
+			{
 				caption.push('Var' + i);
 			}
 			caption.push('Text');
 			res.unshift(caption);
 
 			let resultText = res.map(line => line.join('\t')).join('\n');
-			copyToClipboard(resultText);
-			showInfo('Таблица скопирована в буфер обмена');
+			vscode.env.clipboard.writeText(resultText).then(() =>
+			{
+				showInfo('Таблица скопирована в буфер обмена');
+				resolve();
+			})
 		});
 	});
 
@@ -996,7 +1004,7 @@ async function registerCommands()
 				secondTag.start.character += 2;
 				secondTag.end = server.Position.create(secondTag.start.line, secondTag.start.character + word.length);
 			}
-			
+
 			if (secondTag === null) return res;
 
 			res.replace(document.uri, ClientServerTransforms.FromServer.Range(range), newName);
@@ -1706,7 +1714,7 @@ async function createElements(elementType: SurveyElementType)
 			else if (parentNames.contains("Page")) elementType = SurveyElementType.Question;
 		}
 		else if (elementType == SurveyElementType.List && parentNames.contains("List")) elementType = SurveyElementType.ListItem;
-		
+
 		let res = TibDocumentEdits.createElements(text, elementType, _settings);
 		if (!res.Ok)
 		{
@@ -2103,7 +2111,7 @@ async function runCustomJS()
 	let js = await getCustomJS(editor.document.getText());
 	let code = await vscode.window.showInputBox({ placeHolder: "Код для выполнения" });
 	let resultScript = js + "\n" + code;
-	
+
 	// переменные, которые пригодятся
 	let replaceDocumentText = function (text: string) 
 	{
