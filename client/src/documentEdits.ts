@@ -1,6 +1,6 @@
 'use strict'
 
-import { Parse, safeString, JQuery, translate, KeyedCollection } from 'tib-api'
+import { Parse, safeString, JQuery, translit, KeyedCollection } from 'tib-api'
 import { SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElementType, SurveyElement, SurveyListItemVars } from 'tib-api/lib/surveyObjects'
 import * as vscode from 'vscode'
 import { QuestionTypes } from 'tib-api/lib/constants';
@@ -371,7 +371,7 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 		case SurveyElementType.Page:
 		case SurveyElementType.Question:
 			{
-				let parsedId = !!questionResult && !!questionResult.Id ? translate(questionResult.Id) : 'Q1';
+				let parsedId = !!questionResult && !!questionResult.Id ? translit(questionResult.Id) : 'Q1';
 				let id = "${1:" + parsedId + "}";
 				let q = new SurveyQuestion(id, "${2|" + QuestionTypes.join(',') + "|}");
 				q.Answers = answerItems;

@@ -106,6 +106,7 @@ export interface OnDidChangeDocumentData
 
 /** Коллекция для перевода */
 const _translation = KeyedCollection.FromArrays(translationArray.rus, translationArray.eng);
+const _translitaration = KeyedCollection.FromArrays(translationArray.rus, translationArray.engT);
 
 
 //#endregion
@@ -179,8 +180,19 @@ function _getCurrentTag(document: server.TextDocument, position: server.Position
 }
 
 
-/** Транслитерация с учётом итераторов (`allowIterators`) */
+/** Транслитерация по звукам с учётом итераторов (`allowIterators`) */
 export function translate(input: string, allowIterators = true): string
+{
+	return _changeLanguage(input, _translation, allowIterators);
+}
+
+/** Транслитерация по написанию с учётом итераторов (`allowIterators`) */
+export function translit(input: string, allowIterators = true): string
+{
+	return _changeLanguage(input, _translitaration, allowIterators);
+}
+
+function _changeLanguage(input: string, dict: KeyedCollection<string> , allowIterators = true): string
 {
 	let res = "";
 	let reg = allowIterators ? /[\dA-Za-z_@\-\(\)]/ : /[\dA-Za-z_]/;
@@ -188,8 +200,8 @@ export function translate(input: string, allowIterators = true): string
 	{
 		if (!char.match(reg))
 		{
-			if (_translation.ContainsKey(char))
-				res += _translation.Item(char);
+			if (dict.ContainsKey(char))
+				res += dict.Item(char);
 			else res += "_";
 		}
 		else res += char;

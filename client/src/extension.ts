@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
@@ -517,7 +517,7 @@ async function registerCommands()
 					if (survIndex < 0 || tag.Parents.length - 1 == survIndex) throw 'Не удалось найти нужную структуру тегов';
 					let parent = tag.Parents[survIndex + 1];
 					let from = new vscode.Position(parent.OpenTagRange.start.line, 0);
-					let repeat = "<Repeat List=\"" + translate(name) + "\">\n\t<Answer Id=\"@ID\"><Text>@Text</Text></Answer>\n</Repeat>";
+					let repeat = "<Repeat List=\"" + translit(name) + "\">\n\t<Answer Id=\"@ID\"><Text>@Text</Text></Answer>\n</Repeat>";
 					let list = TibDocumentEdits.AnswersToItems(text);
 					list = '<List Id="' + name + '">\n' + list + '\n</List>\n\n';
 					Promise.all([
