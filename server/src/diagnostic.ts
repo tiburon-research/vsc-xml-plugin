@@ -33,7 +33,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 				[
 					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"
 					{ Key: ErrorCodes.eqHeaders, Value: equalHeaders },
-					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS}
+					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS },
+					{ Key: ErrorCodes.wrongQuotes, Value: wrongQuots }
 				]
 			)
 		}
@@ -270,6 +271,29 @@ async function copyPastedCS(document: server.TextDocument, prepearedText: string
 
 		resolve(res);
 	});
+}
+
+
+async function wrongQuots(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+{
+	let res: Parse.DocumentElement[] = [];
+	let ins = prepearedText.findAll(/(\w+=)("|')([^'"]*\[c#.+?\[\/c#\s*\][^'"]*)\2/);
+	ins.forEach(element => {
+		if (element.Result[3].contains(element.Result[2]))
+		{
+			let from = element.Index + element.Result[1].length;
+			res.push(new Parse.DocumentElement(document, {
+				From: from,
+				To: from + element.Result[2].length + element.Result[3].length + 1,
+				Message: "Конфликт кавычек. Используйте разные кавычки для C#-констант и XML-атрибутов.",
+				Value: element.Result,
+				DiagnosticProperties: {
+					Code: ErrorCodes.wrongQuotes
+				}
+			}));
+		}
+	});
+	return res;
 }
 
 //#endregion

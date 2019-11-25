@@ -1983,6 +1983,29 @@ async function registerActionCommands()
 		}
 	);
 
+	createCommandActionPair("tib.MergeQuotes", "Заменить кавычки",
+		(range: vscode.Range) => new Promise<void>((resolve, reject) =>
+		{
+			let editor = vscode.window.activeTextEditor;
+			let text = editor.document.getText(range);
+			let groups = text.match(/("|')([^'"]*\[c#.+?\[\/c#\s*\][^'"]*)\1/);
+			let q = groups[1] == "'" ? '"' : "'";
+			let res = q + groups[2] + q;
+			editor.edit(builder =>
+			{
+				builder.replace(range, res);
+			}).then(() => { resolve(); });
+		}),
+		(doc, range, cont) =>
+		{
+			let ind = cont.diagnostics.findIndex((v, i, o) => { return v.code == ErrorCodes.wrongQuotes });
+			return {
+				Enabled: ind > -1,
+				Arguments: ind > -1 ? [cont.diagnostics[ind].range] : []
+			}
+		}
+	)
+
 }
 
 
