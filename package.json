@@ -2,7 +2,7 @@
     "name": "tiburonscripter",
     "displayName": "Tiburon XML Helper",
     "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-    "version": "2.7.3",
+    "version": "2.7.4",
     "publisher": "TiburonResearch",
     "author": {
         "name": "GuRu",
@@ -116,8 +116,7 @@
             {
                 "command": "tib.cdata",
                 "title": "Обернуть в CDATA",
-				"category": "tib",
-				"enablement": "editorHasSelection"
+				"category": "tib"
 			},
 			{
                 "command": "tib.cdataInner",
@@ -127,8 +126,7 @@
             {
                 "command": "tib.surveyBlock",
                 "title": "Обернуть в сворачиваемый блок",
-				"category": "tib",
-				"enablement": "editorHasSelection"
+				"category": "tib"
             },
             {
                 "command": "tib.paste",
