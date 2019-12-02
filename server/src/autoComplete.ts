@@ -1079,6 +1079,11 @@ export const Attributes = {
 			"Name": "ExportPageTime",
 			"Default": "true",
 			"Type": "Boolean"
+		},
+		{
+			"Name": "Utf8",
+			"Default": "false",
+			"Type": "Boolean"
 		}
 	],
 	"Settings": [
@@ -2084,6 +2089,11 @@ export const Attributes = {
 			"Name": "Optimistic",
 			"Default": "false",
 			"Type": "Boolean"
+		},
+		{
+			"Name": "CountStatuses",
+			"Default": "18",
+			"Type": "String"
 		}
 	],
 	"Block": [
