@@ -3061,6 +3061,7 @@ export const RangeQuestion = {
 			'\t\t</Question>',
 			'\t</Repeat>',
 			'\t<Redirect><![CDATA[',
+			'\t\t/*** ВНИМАНИЕ! Если максимальное количество выбранных элементов в первом вопросе отличается от 7, необходимо уточнить у менеджера, какие ранги должны быть проставлены невыбранным вариантам */',
 			'\t\tif (AnswerCount("$1", "$1") == 1)',
 			'\t\t{',
 			'\t\t\tvar id = AnswerIDs("$1", "$1")[0];',
@@ -3089,6 +3090,7 @@ export const RangeQuestion = {
 		\treturn true;
 		}
 		
+		/*** ВНИМАНИЕ! Если максимальное количество выбранных элементов в первом вопросе отличается от 7, необходимо уточнить у менеджера, какие ранги должны быть проставлены невыбранным вариантам */
 		public void SetRanges(string selectionQuestion, string rangeQuestionPrefix, string targetQuestion, string listId, int rangeLength)
 		{
 		\tvar listItems = CurrentSurvey.Lists[listId].Items.ItemsIdArray;
