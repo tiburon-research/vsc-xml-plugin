@@ -3045,7 +3045,7 @@ export const RangeQuestion = {
 			'<Page Id="$4">',
 			'\t<Filter><![CDATA[ return AnswerExistsAny("$1", "\\$repeat($3){@ID[,]}") && AnswerCount("$1", "$1") > 1; ]]></Filter>',
 			'\t<Ui RangeQuestions="1"/>',
-			'\t<Repeat>',
+			'\t<Repeat Length="@RangeCount">',
 			'\t\t<Question Id="$4_@Itera" Type="RadioButton" MixId="$8" Imperative="false">',
 			'\t\t\t<Filter Side="Client"><![CDATA[ return AnswerCount("$4", "$4_@Itera") > 0 || AnswerEnabled("$4_", "999", @Itera, @RangeCount); ]]></Filter>',
 			'\t\t\t<Header>$5</Header>',
