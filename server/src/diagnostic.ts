@@ -23,7 +23,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 					{ Key: ErrorCodes.duplicatedId, Value: getDuplicatedIds },
 					{ Key: ErrorCodes.wrongMixes, Value: getWrongMixes },
 					{ Key: ErrorCodes.csInAutoSplit, Value: getCsInAutoSplit },
-					{ Key: ErrorCodes.wrongSpaces, Value: getWrongSpaces }
+					{ Key: ErrorCodes.wrongSpaces, Value: getWrongSpaces },
+					{ Key: ErrorCodes.wrongQuotes, Value: wrongQuots }
 				]
 			)
 		},
@@ -33,8 +34,7 @@ const _AllDiagnostics: IDiagnosticType[] =
 				[
 					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"
 					{ Key: ErrorCodes.eqHeaders, Value: equalHeaders },
-					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS },
-					{ Key: ErrorCodes.wrongQuotes, Value: wrongQuots }
+					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS }
 				]
 			)
 		}
