@@ -1907,9 +1907,9 @@ async function registerActionCommands()
 		(data: { range: vscode.Range, lit: boolean }) => new Promise<void>((resolve, reject) =>
 		{
 			let editor = vscode.window.activeTextEditor;
-			let range = !!data.range ? data.range : new vscode.Range(editor.selection.start, editor.selection.end);
+			let range = !!data && !!data.range ? data.range : new vscode.Range(editor.selection.start, editor.selection.end);
 			let text = editor.document.getText(range);
-			let res = !data.lit ? translit(text) : translate(text);
+			let res = !!data && !data.lit ? translit(text) : translate(text);
 			editor.edit(builder =>
 			{
 				builder.replace(range, res);
