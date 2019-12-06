@@ -121,10 +121,9 @@
             {
                 "command": "tib.cdata",
                 "title": "Обернуть в CDATA",
-                "category": "tib",
-                "enablement": "editorHasSelection"
-            },
-            {
+				"category": "tib"
+			},
+			{
                 "command": "tib.cdataInner",
                 "title": "Обернуть текущий тег в CDATA",
                 "category": "tib"
@@ -132,8 +131,7 @@
             {
                 "command": "tib.surveyBlock",
                 "title": "Обернуть в сворачиваемый блок",
-                "category": "tib",
-                "enablement": "editorHasSelection"
+				"category": "tib"
             },
             {
                 "command": "tib.paste",

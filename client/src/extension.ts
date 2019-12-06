@@ -1345,13 +1345,13 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 	let text = document.getText(selection);
 	let tagFrom = await getCurrentTag(document, selection.start);
 	let tagTo = await getCurrentTag(document, selection.end);
-	if (!tagFrom || !tagTo)
+	let langFrom = Language.XML;
+	let langTo = Language.XML;
+	if (!!tagFrom && !!tagTo)
 	{
-		logError("Ошибка получения границ выделения", false, undefined);
-		return text;
+		langFrom = tagFrom.GetLaguage();
+		langTo = tagTo.GetLaguage();
 	}
-	let langFrom = tagFrom.GetLaguage();
-	let langTo = tagTo.GetLaguage();
 	if (langFrom != langTo)
 	{
 		showWarning("Начало и конец выделенного фрагмента лежат в разных языковых областях. Команда отменена.");
