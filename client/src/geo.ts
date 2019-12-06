@@ -251,7 +251,7 @@ export async function createGeoPage(groupBy: string[], questionIds: GeoClusters)
 
 	// Redirect
 	res += `
-	<Redirect Status="19">
+	<Redirect Status="19"><![CDATA[
 		string city = AnswerID("${questionIds.City}");
 		if (city == "${resetId}") return true;
 		/*
@@ -260,7 +260,7 @@ export async function createGeoPage(groupBy: string[], questionIds: GeoClusters)
 		string subject = GetListItemVar("${GeoConstants.ListNames.City}",city,2); // Область
 		*/
 		return false;
-	</Redirect>
+	]]></Redirect>
 	`;
 		
 	res += "</Page>";
