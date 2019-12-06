@@ -856,7 +856,7 @@ export function getListItem(jqObject): Structures.ListItem
 	let varsAttrs = jqObject.attr('Var');
 	let varsTags = jqObject.find('Var');
 	if (!!varsAttrs) vars = vars.concat(varsAttrs.split(','));
-	if (varsTags.length > 0) vars = vars.concat(varsTags.map(() => { $(this).text() }));
+	if (varsTags.length > 0) vars = vars.concat(varsTags.map((i, el) => el.innerHTML).get());
 
 	let res = new Structures.ListItem();
 	res.Id = parsed.Id;
