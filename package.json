@@ -169,8 +169,8 @@
                 "category": "tib"
             },
             {
-                "command": "tib.getFullPage",
-                "title": "Преобразовать в Page",
+                "command": "tib.getAnswers",
+                "title": "Преобразовать в Answers",
                 "category": "tib",
                 "enablement": "editorHasSelection"
             },
@@ -274,7 +274,7 @@
             },
             {
                 "key": "ctrl+alt+a",
-                "command": "tib.getFullPage"
+                "command": "tib.getAnswers"
             },
             {
                 "key": "ctrl+alt+i",

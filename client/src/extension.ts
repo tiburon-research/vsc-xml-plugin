@@ -302,7 +302,7 @@ async function registerCommands()
 
 
 	// выделение полного Question+Page из текста
-	registerCommand('tib.getFullPage', () => 
+	registerCommand('tib.getAnswers', () => 
 	{
 		return createElements(SurveyElementType.Page);
 	});
