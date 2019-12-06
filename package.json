@@ -293,7 +293,8 @@
             "[tib]": {
                 "editor.quickSuggestions": {
                     "strings": true
-                }
+				},
+				"editor.suggest.snippetsPreventQuickSuggestions": true
             }
         },
         "configuration": {
