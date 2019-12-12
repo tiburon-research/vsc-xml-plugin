@@ -307,6 +307,12 @@ async function registerCommands()
 		return createElements(SurveyElementType.Page);
 	});
 
+	// выделение только Answer из текста
+	registerCommand('tib.getAnswersOnly', () => 
+	{
+		return createElements(SurveyElementType.Answer);
+	});
+
 	// выделение Item из текста
 	registerCommand('tib.getItems', () => 
 	{
