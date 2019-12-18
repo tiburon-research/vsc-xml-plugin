@@ -1712,8 +1712,12 @@ async function createElements(elementType: SurveyElementType)
 		}
 		let text = editor.document.getText(editor.selection);
 		let tag = await getCurrentTag(editor.document, editor.selection.active);
-		let parentNames = tag.Parents.map(x => x.Name);
-		parentNames.push(tag.Name);
+		let parentNames = [];
+		if (!!tag)
+		{
+			parentNames = tag.Parents.map(x => x.Name);
+			parentNames.push(tag.Name);
+		}
 		if (elementType == SurveyElementType.Page)
 		{
 			if (parentNames.contains("Question")) elementType = SurveyElementType.Answer;
