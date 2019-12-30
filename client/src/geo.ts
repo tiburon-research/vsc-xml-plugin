@@ -257,6 +257,7 @@ export async function createGeoPage(groupBy: string[], questionIds: GeoClusters)
 		/*
 		string district = GetListItemVar("${GeoConstants.ListNames.City}",city,0); // ФО
 		string strata = GetListItemVar("${GeoConstants.ListNames.City}",city,1); // Страта
+		AnswerUpdateP("RespInfo", "Strata", strata);
 		string subject = GetListItemVar("${GeoConstants.ListNames.City}",city,2); // Область
 		*/
 		return false;
