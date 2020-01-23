@@ -447,7 +447,7 @@ export class TibAutoCompletes
 						switch (lastParent.Name)
 						{
 							case 'Page':
-								body = '!-- <Block Items="\\$repeat($1){$2_{{iterator}}[,]}" MixId="$2Mix"/> -->\n<Repeat {{init}}>\n\t<Question Id="${2:Q1}_{{iterator}}">\n\t\t<Header>$3</Header>\n\t\t$0\n\t</Question>\n</Repeat>';
+								body = '!-- <Block Items="\\$repeat($1){$2_{{iterator}}[,]}" MixId="$2Mix"/> -->\n<Repeat {{init}}>\n\t<Question Id="${2:Q1}_{{iterator}}" SyncId="{{iterator}}">\n\t\t<Header>$3</Header>\n\t\t$0\n\t</Question>\n</Repeat>';
 								break;
 
 							case 'Question':
