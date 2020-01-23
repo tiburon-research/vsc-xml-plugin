@@ -34,7 +34,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 				[
 					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"
 					{ Key: ErrorCodes.eqHeaders, Value: equalHeaders },
-					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS }
+					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS },
+					{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions }
 				]
 			)
 		}
@@ -100,11 +101,7 @@ export async function getDiagnosticElements(document: server.TextDocument): Prom
 /** Id с недопустимым набором символов */
 async function getWrongIds(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
-	let res = await Parse.getDocumentElements(document, /(\sId=("|'))(\w*[^\w'"\n@\-\(\)]\w*)+(\2)/, "Вот таким Id быть не может", prepearedText);
-	for (let i = 0; i < res.length; i++)
-	{
-		res[i].Range = server.Range.create(translatePosition(document, res[i].Range.start, res[i].Value[1].length), translatePosition(document, res[i].Range.end, -1));
-	}
+	let res = await Parse.getDocumentElements(document, /(\sId=("|'))(\w*[^\w'"\n@\-\(\)]\w*)/, "Вот таким Id быть не может", prepearedText, null, 1);
 	return res;
 }
 
@@ -154,6 +151,28 @@ async function getCsInAutoSplit(document: server.TextDocument, prepearedText: st
 	return await Parse.getCsInAutoSplit(document, prepearedText);
 }
 
+
+async function wrongQuots(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+{
+	let res: Parse.DocumentElement[] = [];
+	let ins = prepearedText.findAll(/(\w+=)("|')([^'"]*\[c#.+?\[\/c#\s*\][^'"]*)\2/);
+	ins.forEach(element => {
+		if (element.Result[3].contains(element.Result[2]))
+		{
+			let from = element.Index + element.Result[1].length;
+			res.push(new Parse.DocumentElement(document, {
+				From: from,
+				To: from + element.Result[2].length + element.Result[3].length + 1,
+				Message: "Конфликт кавычек. Используйте разные кавычки для C#-констант и XML-атрибутов.",
+				Value: element.Result,
+				DiagnosticProperties: {
+					Code: ErrorCodes.wrongQuotes
+				}
+			}));
+		}
+	});
+	return res;
+}
 
 //#endregion
 
@@ -244,7 +263,7 @@ async function equalHeaders(document: server.TextDocument, prepearedText: string
 }
 
 /** Повторяющиеся c# вставки */
-async function copyPastedCS(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+function copyPastedCS(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
 	return new Promise<Parse.DocumentElement[]>((resolve, reject) =>
 	{
@@ -252,7 +271,7 @@ async function copyPastedCS(document: server.TextDocument, prepearedText: string
 		let csIns = prepearedText.findAll(/\[c#[^\]]*\]([\s\S]+?)\[\/c#\s*\]/);
 		let groups = csIns.groupBy<SearchResult>(x => x.Result[1]).Filter((key, value) =>
 		{
-			if (value.length < 4) return false;
+			if (value.length < 5) return false;
 			if (key.matchAll(/\w{5,}\(/).length > 1) return true; // проверяем количество вызываемых методов
 			if (key.matchAll(/\+|(\|\|)|(\&\&)/).length > 2) return true; // проверяем количество операторов (самых частых)
 			return false;
@@ -274,25 +293,10 @@ async function copyPastedCS(document: server.TextDocument, prepearedText: string
 }
 
 
-async function wrongQuots(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+/** Повторяющиеся c# вставки */
+async function notImperativeQuestions(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
-	let res: Parse.DocumentElement[] = [];
-	let ins = prepearedText.findAll(/(\w+=)("|')([^'"]*\[c#.+?\[\/c#\s*\][^'"]*)\2/);
-	ins.forEach(element => {
-		if (element.Result[3].contains(element.Result[2]))
-		{
-			let from = element.Index + element.Result[1].length;
-			res.push(new Parse.DocumentElement(document, {
-				From: from,
-				To: from + element.Result[2].length + element.Result[3].length + 1,
-				Message: "Конфликт кавычек. Используйте разные кавычки для C#-констант и XML-атрибутов.",
-				Value: element.Result,
-				DiagnosticProperties: {
-					Code: ErrorCodes.wrongQuotes
-				}
-			}));
-		}
-	});
+	let res = await Parse.getDocumentElements(document, /(<Question[^>]+)(Imperative=('|")false(\3))/, "Риторический вопрос detected", prepearedText, { Type: server.DiagnosticSeverity.Information }, 1);
 	return res;
 }
 

@@ -38,7 +38,8 @@ export enum ErrorCodes
 	delimitedConstant = "delimitedConstant",
 	eqHeaders = "eqHeaders",
 	copyPastedCS = "copyPastedCS",
-	wrongQuotes = "wrongQuotes"
+	wrongQuotes = "wrongQuotes",
+	notImperative = "notImperative"
 };
 	
 export interface IErrorTagData
