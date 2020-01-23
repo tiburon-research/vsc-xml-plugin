@@ -650,7 +650,7 @@ export class DocumentElement implements IDocumentElement
  * Если задан `preparedText`, то используется он (но сначала сравнивается длина)
  * 
 */
-export async function getDocumentElements(document: server.TextDocument, search: RegExp, errorMessage: string, preparedText: string, diagnosticProps?: IDocumentElementDiagnosticProps): Promise<DocumentElement[]>
+export async function getDocumentElements(document: server.TextDocument, search: RegExp, errorMessage: string, preparedText: string, diagnosticProps?: IDocumentElementDiagnosticProps, indentGroup?: number): Promise<DocumentElement[]>
 {
 	let res: DocumentElement[] = [];
 	let text = preparedText;
@@ -662,7 +662,7 @@ export async function getDocumentElements(document: server.TextDocument, search:
 			let to = element.index + element[0].length;
 			res.push(new DocumentElement(document, {
 				Value: element,
-				From: element.index,
+				From: element.index + (!!indentGroup ? element[indentGroup].length : 0),
 				To: to,
 				Message: errorMessage,
 				DiagnosticProperties: diagnosticProps || {} as IDocumentElementDiagnosticProps
