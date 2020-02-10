@@ -137,12 +137,13 @@ export class TelegramBot
 					});
 					res.on("end", () =>
 					{
-						result.update(body);
 						if (!result.ok)
-						{
 							reject(result);
+						else
+						{
+							resolve(result);
+							result.update(body);
 						}
-						else resolve(result);
 					});
 				}).on('error', (e) =>
 				{
