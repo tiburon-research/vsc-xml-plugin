@@ -1106,7 +1106,8 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 			{ 
 				if (allNodes.contains(target[1])) enabledNodes = [target[1]];
 				else if (target[1] == "Store") enabledNodes = ["Question"];
-			};
+			}
+			else if (!!prevText.match(/Lists\[\s*"$/)) enabledNodes = ["List"];
 			enabledNodes.forEach(element =>
 			{
 				let item = surveyData.CurrentNodes.GetItem(word, element);
