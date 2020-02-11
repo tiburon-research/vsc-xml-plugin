@@ -33,7 +33,7 @@ const _AllDiagnostics: IDiagnosticType[] =
 			Functions: KeyedCollection.FromPairs(
 				[
 					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"
-					{ Key: ErrorCodes.duplicatedText, Value: equalHeaders },
+					{ Key: ErrorCodes.duplicatedText, Value: equalTexts },
 					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS },
 					{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions }
 				]
@@ -241,13 +241,39 @@ async function dangerousConstandIds(document: server.TextDocument, prepearedText
 }
 
 /** Одинаковые заголовки */
-async function equalHeaders(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function equalTexts(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
 	let res: Parse.DocumentElement[] = [];
 	let headers = prepearedText.findAll(/(<Header\s*>)([\s\S]+?)<\/Header\s*>/);
-	let labels = prepearedText.findAll(/(<Question[^>]+)(ExportLabel=("|')(.+?)(\3))/);
-	if (headers.length > 0) res = res.concat(await findDuplicatedText(document, headers, 2, 15, 'Найдены повторяющиеся заголовки', 1));
-	if (labels.length > 0) res = res.concat(await findDuplicatedText(document, labels, 2, 3, 'Найдены повторяющиеся метки', 1));
+	let labelsQ = prepearedText.findAll(/(<Question[^>]+)(ExportLabel=("|')(.+?)(\3))/);
+	if (headers.length > 1) res = res.concat(await findDuplicatedText(document, headers, 2, 15, 'Найдены повторяющиеся заголовки', 1));
+	if (labelsQ.length > 1) res = res.concat(await findDuplicatedText(document, labelsQ, 2, 3, 'Найдены повторяющиеся метки вопросов', 1));
+
+	// ищем ответы внутри вопросов
+	let questions = prepearedText.findAll(/(<Question[^>]+>)([\s\S]+?)<\/Question/);
+	let eqAnswers: Parse.DocumentElement[] = [];
+	await questions.forEachAsync(q => new Promise<void>((resolve, reject) =>
+	{
+		let answers = q.Result[2].findAll(/(<Answer[^>]+)(ExportLabel=("|')(.+?)(\3))/);
+		if (answers.length < 1) return resolve();
+		findDuplicatedText(document, answers, 2, 3, 'Найдены повторяющиеся метки ответов', 1).then(qAnswers =>
+		{
+			eqAnswers = eqAnswers.concat(qAnswers.map(a =>
+			{
+				let qIndent = q.Index + q.Result[1].length;
+				return new Parse.DocumentElement(document, {
+					DiagnosticProperties: a.DiagnosticProperties,
+					From: qIndent + a.From,
+					Message: a.Message,
+					To: qIndent + a.To,
+					Value: a.Value
+				});
+			}));
+			resolve();
+		});
+	}));
+	if (eqAnswers.length > 1) res = res.concat(eqAnswers);
+
 	return res;
 }
 
