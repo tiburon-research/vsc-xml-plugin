@@ -36,7 +36,7 @@ export enum ErrorCodes
 	wrongSpaces = "wrongSpaces",
 	constantIds = "constantIds",
 	delimitedConstant = "delimitedConstant",
-	eqHeaders = "eqHeaders",
+	duplicatedText = "duplicatedText",
 	copyPastedCS = "copyPastedCS",
 	wrongQuotes = "wrongQuotes",
 	notImperative = "notImperative"

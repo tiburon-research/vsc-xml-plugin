@@ -33,7 +33,7 @@ const _AllDiagnostics: IDiagnosticType[] =
 			Functions: KeyedCollection.FromPairs(
 				[
 					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"
-					{ Key: ErrorCodes.eqHeaders, Value: equalHeaders },
+					{ Key: ErrorCodes.duplicatedText, Value: equalHeaders },
 					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS },
 					{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions }
 				]
@@ -244,17 +244,27 @@ async function dangerousConstandIds(document: server.TextDocument, prepearedText
 async function equalHeaders(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
 	let res: Parse.DocumentElement[] = [];
-	let headers = prepearedText.findAll(/<Header\s*>([\s\S]+?)<\/Header\s*>/).filter(x => x.Result[1].length > 15 && !x.Result[0].match(/(\[c#\])|@/));
-	let eqHeaders = headers.findDuplicates<SearchResult>((x1, x2) => x1.Result[0] == x2.Result[0]);
-	if (eqHeaders.length > 0)
+	let headers = prepearedText.findAll(/(<Header\s*>)([\s\S]+?)<\/Header\s*>/);
+	let labels = prepearedText.findAll(/(<Question[^>]+)(ExportLabel=("|')(.+?)(\3))/);
+	if (headers.length > 0) res = res.concat(await findDuplicatedText(document, headers, 2, 15, 'Найдены повторяющиеся заголовки', 1));
+	if (labels.length > 0) res = res.concat(await findDuplicatedText(document, labels, 2, 3, 'Найдены повторяющиеся метки', 1));
+	return res;
+}
+
+async function findDuplicatedText(document: server.TextDocument, searchResults: SearchResult[], groupIndex: number, minLength: number, errText: string, groupIndent: number = -1)
+{
+	let res: Parse.DocumentElement[] = [];
+	var eqTexts = searchResults.filter(x => x.Result[groupIndex].length > minLength && !x.Result[groupIndex].match(/(\[c#\])|@/)).findDuplicates<SearchResult>((x1, x2) => x1.Result[groupIndex] == x2.Result[groupIndex]);
+	if (eqTexts.length > 0)
 	{
-		headers.filter(x => eqHeaders.contains(x, el => el.Result[0] == x.Result[0])).forEach(header =>
+		searchResults.filter(x => eqTexts.contains(x, el => el.Result[groupIndex] == x.Result[groupIndex])).forEach(header =>
 		{
+			let indent = groupIndent > -1 ? header.Result[groupIndent].length : 0;
 			res.push(new Parse.DocumentElement(document, {
-				DiagnosticProperties: { Type: server.DiagnosticSeverity.Warning, Code: ErrorCodes.eqHeaders },
-				From: header.Index,
-				Message: 'Найдены повторяющиеся заголовки',
-				To: header.Index + header.Result[0].length,
+				DiagnosticProperties: { Type: server.DiagnosticSeverity.Warning, Code: ErrorCodes.duplicatedText },
+				From: indent + header.Index,
+				Message: errText,
+				To: indent + header.Index + header.Result[groupIndex].length,
 				Value: header.Result
 			}));
 		});
