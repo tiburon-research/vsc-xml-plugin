@@ -1098,7 +1098,15 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 				}
 			}
 
-			let enabledNodes = ["Page", "List", "Question"];
+			let allNodes = ["Page", "List", "Question"];
+			let prevText = document.getText(server.Range.create(server.Position.create(range.start.line, 0), range.start));
+			let target = prevText.match(/(\w+)\s*=\s*("|')?$/);
+			let enabledNodes = allNodes;
+			if (!!target)
+			{ 
+				if (allNodes.contains(target[1])) enabledNodes = [target[1]];
+				else if (target[1] == "Store") enabledNodes = ["Question"];
+			};
 			enabledNodes.forEach(element =>
 			{
 				let item = surveyData.CurrentNodes.GetItem(word, element);
