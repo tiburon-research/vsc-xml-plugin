@@ -18,10 +18,16 @@ class TelegramResult
 	/** добавление/обновлени данных */
 	public update(data: string)
 	{
-		let obj = JSON.parse(data);
-		if (!obj) return;
-		for (let key in obj)
-			this[key] = obj[key];
+		try
+		{
+			let obj = JSON.parse(data);
+			if (!obj) return;
+			for (let key in obj)
+				this[key] = obj[key];
+		} catch (error)
+		{
+			throw 'Ошибка обработки ответа от VscTelegramApi';
+		}
 	}
 
 	public ok: boolean = false;
@@ -113,7 +119,8 @@ export class TelegramBot
 
 	private sendQueue()
 	{
-		this.queue.forEach(msg => {
+		this.queue.forEach(msg =>
+		{
 			this.sendMessage(msg.user, msg.text);
 		});
 	}
@@ -137,13 +144,12 @@ export class TelegramBot
 					});
 					res.on("end", () =>
 					{
+						result.update(body);
 						if (!result.ok)
-							reject(result);
-						else
 						{
-							resolve(result);
-							result.update(body);
+							reject(result);
 						}
+						else resolve(result);
 					});
 				}).on('error', (e) =>
 				{

@@ -1,7 +1,7 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText,  getWordRangeAtPosition, translatePosition, applyConstants, uriFromName, KeyValuePair, SimpleTag } from 'tib-api';
+import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordRangeAtPosition, translatePosition, applyConstants, uriFromName, KeyValuePair, SimpleTag } from 'tib-api';
 import { ISurveyData, TibAttribute, TextEdits } from 'tib-api/lib/surveyData';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames, PreDefinedConstants } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
@@ -1103,7 +1103,7 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 			let target = prevText.match(/(\w+)\s*=\s*("|')?$/);
 			let enabledNodes = allNodes;
 			if (!!target)
-			{ 
+			{
 				if (allNodes.contains(target[1])) enabledNodes = [target[1]];
 				else if (target[1] == "Store") enabledNodes = ["Question"];
 			}
