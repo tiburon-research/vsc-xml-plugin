@@ -26,7 +26,7 @@ export const RegExpPatterns = {
 	CDATALast: /<!\[CDATA\[[\S\s]*$/,
 	XMLComment: /(<!--([\S\s]*?)-->\s*)+/,
 	XMLLastComment: /<!--[\S\s]*$/,
-	AllowCodeTags: "(Filter)|(Redirect)|(Validate)|(Methods)",
+	AllowCodeTags: "(Filter)|(Redirect)|(Validate)|(Methods)|(CodingEntity)",
 	/** RegExp для HTML тегов, которые не нужно закрывать */
 	SelfClosedTags: "(area)|(base)|(br)|(col)|(embed)|(hr)|(img)|(input)|(keygen)|(link)|(menuitem)|(meta)|(param)|(source)|(track)|(wbr)",
 	InlineSpecial: "(repeat)|(place)",

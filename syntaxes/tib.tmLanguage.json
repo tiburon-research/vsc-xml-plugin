@@ -5,7 +5,7 @@
 	"patterns": [
 			
 		{  
-			"begin": "(<)(Filter|Redirect|Validate)(\\s*((\\w+)=((\"[^\"]*\")|('[^']*'))\\s*)*)(>)((\\s*<!\\[CDATA\\[\\s*)?)$",
+			"begin": "(<)(Filter|Redirect|Validate|CodingEntity)(\\s*((\\w+)=((\"[^\"]*\")|('[^']*'))\\s*)*)(>)((\\s*<!\\[CDATA\\[\\s*)?)$",
 			"end": "(\\]\\]>)?(</)(\\w+)(\\s*)(>)",
 			"beginCaptures": {
 				"1":
@@ -68,7 +68,7 @@
 		},
 
 		{  
-			"begin": "(<)(Filter|Redirect|Validate)(\\s*((\\w+)=((\"[^\"]*\")|('[^']*'))\\s*)*)(>)(\\s*<!\\[CDATA\\[)*(.*?)(\\]\\]>)?(</)(\\2)([^>]*)",
+			"begin": "(<)(Filter|Redirect|Validate|CodingEntity)(\\s*((\\w+)=((\"[^\"]*\")|('[^']*'))\\s*)*)(>)(\\s*<!\\[CDATA\\[)*(.*?)(\\]\\]>)?(</)(\\2)([^>]*)",
 			"end": "(>)",
 			"beginCaptures": {
 				"1":
