@@ -42,39 +42,5 @@
 			"<!--** ${1:Текст} -->"
 		],
 		"description": "Красный блок"
-	},
-	"PageUnionList": {
-		"prefix": "_uniList",
-		"body": [
-			"<Page Id=\"${1:Id}\">",
-			"\t<Repeat List=\"$2\">",
-			"\t\t<Question Id=\"${1:Id}_@ID\" Type=\"${3|RadioButton,CheckBox,Text,Memo,Integer,Number,File,Date|}\">",
-			"\t\t\t<Text>@Text</Text>",
-			"\t\t</Question>",
-			"\t</Repeat>",
-			"\t<Question Id=\"${1:Id}_dummy\" Union=\"\\$all\" Orientation=\"${5|Horizontal,Vertical|}\">",
-			"\t\t<Header>$8</Header>",
-			"\t\t$0",
-			"\t</Question>",
-			"</Page>\n"
-		],
-		"description": "Полная структура Page с Union, Repeat по List"
-	},
-	"PageUnionLength": {
-		"prefix": "_uniLength",
-		"body": [
-			"<Page Id=\"${1:Id}\">",
-			"\t<Repeat Length=\"$2\">",
-			"\t\t<Question Id=\"${1:Id}_@Itera\" Type=\"${3|RadioButton,CheckBox,Text,Memo,Integer,Number,File,Date|}\">",
-			"\t\t\t<Text>@Itera</Text>",
-			"\t\t</Question>",
-			"\t</Repeat>",
-			"\t<Question Id=\"${1:Id}_dummy\" Union=\"\\$all\" Orientation=\"${5|Horizontal,Vertical|}\">",
-			"\t\t<Header>$8</Header>",
-			"\t\t$0",
-			"\t</Question>",
-			"</Page>\n"
-		],
-		"description": "Полная структура Page с Union, Repeat по Length"
 	}
 }
