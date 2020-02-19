@@ -1,47 +1,80 @@
 {
-    "ftpPath":{
-        "prefix": "@StoreUrl",
-        "body":[
-            "@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$0"
-        ],
-        "description": "Стандартный путь к материалам проекта"
-    },
-    "src":{
-        "prefix": "[img src=\"",
-        "body": [
-            "[img src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\"/]"
-        ],
-        "description": "img с путём к материалам проекта"
+	"ftpPath": {
+		"prefix": "@StoreUrl",
+		"body": [
+			"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$0"
+		],
+		"description": "Стандартный путь к материалам проекта"
 	},
-	"contentSrc":{
-        "prefix": "[img src=\"",
-        "body": [
-            "[img src=\"@ContentUrl/$0\"/]"
-        ],
-        "description": "img с путём к материалам проекта на CDN"
-    },
-    "blockFolding":{
-        "prefix": "<!--block",
-        "body": [
-            "<!--#block ${1:Name} -->\n",
-            "\t$0",
-            "\n<!--#endblock-->"
-        ],
-        "description": "Сворачиваемый блок"
-    },
-    "blockLight":{
-        "prefix": "<!--*",
-        "body": [
-            "<!--* ${1:Текст} -->"
-        ],
-        "description": "Зелёный блок"
-    },
-    "blockWarning":{
-        "prefix": "<!--**",
-        "body": [
-            "<!--** ${1:Текст} -->"
-        ],
-        "description": "Красный блок"
-    }
-
+	"src": {
+		"prefix": "[img src=\"",
+		"body": [
+			"[img src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$2\"/]"
+		],
+		"description": "img с путём к материалам проекта"
+	},
+	"contentSrc": {
+		"prefix": "[img src=\"",
+		"body": [
+			"[img src=\"@ContentUrl/$0\"/]"
+		],
+		"description": "img с путём к материалам проекта на CDN"
+	},
+	"blockFolding": {
+		"prefix": "<!--block",
+		"body": [
+			"<!--#block ${1:Name} -->\n",
+			"\t$0",
+			"\n<!--#endblock-->"
+		],
+		"description": "Сворачиваемый блок"
+	},
+	"blockLight": {
+		"prefix": "<!--*",
+		"body": [
+			"<!--* ${1:Текст} -->"
+		],
+		"description": "Зелёный блок"
+	},
+	"blockWarning": {
+		"prefix": "<!--**",
+		"body": [
+			"<!--** ${1:Текст} -->"
+		],
+		"description": "Красный блок"
+	},
+	"PageUnionList": {
+		"prefix": "_uniList",
+		"body": [
+			"<Page Id=\"${1:Id}\">",
+			"\t<Repeat List=\"$2\">",
+			"\t\t<Question Id=\"${1:Id}_@ID\" Type=\"${3|RadioButton,CheckBox,Text,Memo,Integer,Number,File,Date|}\">",
+			"\t\t\t<Text>@Text</Text>",
+			"\t\t</Question>",
+			"\t</Repeat>",
+			"\t<Question Id=\"${1:Id}_dummy\" Union=\"\\$all\" Orientation=\"${5|Horizontal,Vertical|}\">",
+			"\t\t<Header>$8</Header>",
+			"\t\t$0",
+			"\t</Question>",
+			"</Page>\n"
+		],
+		"description": "Полная структура Page с Union, Repeat по List"
+	},
+	"PageUnionLength": {
+		"prefix": "_uniLength",
+		"body": [
+			"<Page Id=\"${1:Id}\">",
+			"\t<Repeat Length=\"$2\">",
+			"\t\t<Question Id=\"${1:Id}_@Itera\" Type=\"${3|RadioButton,CheckBox,Text,Memo,Integer,Number,File,Date|}\">",
+			"\t\t\t<Text>@Itera</Text>",
+			"\t\t</Question>",
+			"\t</Repeat>",
+			"\t<Question Id=\"${1:Id}_dummy\" Union=\"\\$all\" Orientation=\"${5|Horizontal,Vertical|}\">",
+			"\t\t<Header>$8</Header>",
+			"\t\t$0",
+			"\t</Question>",
+			"</Page>\n"
+		],
+		"description": "Полная структура Page с Union, Repeat по Length"
+	}
 }
