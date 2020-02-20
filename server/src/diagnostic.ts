@@ -273,7 +273,7 @@ async function equalTexts(document: server.TextDocument, prepearedText: string):
 		});
 	}));
 	if (eqAnswers.length > 1) res = res.concat(eqAnswers);
-
+	res.forEach(x => x.DiagnosticProperties.Type = server.DiagnosticSeverity.Information);
 	return res;
 }
 
@@ -319,7 +319,8 @@ function copyPastedCS(document: server.TextDocument, prepearedText: string): Pro
 				From: x.Index,
 				To: x.Index + x.Result[0].length,
 				Message: "Многократно повторяющийся код. Лучше использовать методы.",
-				Value: x.Result
+				Value: x.Result,
+				DiagnosticProperties: { Type: server.DiagnosticSeverity.Information }
 			}));
 			res = res.concat(ar);
 		});
@@ -332,7 +333,7 @@ function copyPastedCS(document: server.TextDocument, prepearedText: string): Pro
 /** Повторяющиеся c# вставки */
 async function notImperativeQuestions(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
-	let res = await Parse.getDocumentElements(document, /(<Question[^>]+)(Imperative=('|")false(\3))/, "Риторический вопрос detected", prepearedText, { Type: server.DiagnosticSeverity.Information }, 1);
+	let res = await Parse.getDocumentElements(document, /(<Question[^>]+)(Imperative=('|")false(\3))/, "Риторический вопрос detected", prepearedText, { Type: server.DiagnosticSeverity.Warning }, 1);
 	return res;
 }
 
