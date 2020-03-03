@@ -344,7 +344,7 @@ async function linqHelper(document: server.TextDocument, prepearedText: string):
 {
 	// ищем Count() > 0
 	let text = Encoding.clearXMLComments(document.getText());
-	let res = await Parse.getDocumentElements(document, /(\.Count)(\([^;]+)/, "Вместо `Count() > 0` лучше использовать `Any()`", text, { Type: server.DiagnosticSeverity.Information });
+	let res = await Parse.getDocumentElements(document, /(\.Count)(\([^;]+)/, "Возможно, вместо проверки `Count() > 0` лучше использовать `Any()`", text, { Type: server.DiagnosticSeverity.Information });
 	for (let i = 0; i < res.length; i++)
 	{
 		let stuff = res[i].Value[2];
@@ -360,7 +360,6 @@ async function linqHelper(document: server.TextDocument, prepearedText: string):
 			res[i] = null;
 			continue;
 		}
-		console.log(res[i].Value[1].length + compare.Index + compare.Result[0].length);
 		res[i] = new Parse.DocumentElement(document, {
 			From: res[i].From,
 			Message: res[i].Message,
