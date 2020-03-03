@@ -39,7 +39,8 @@ export enum ErrorCodes
 	duplicatedText = "duplicatedText",
 	copyPastedCS = "copyPastedCS",
 	wrongQuotes = "wrongQuotes",
-	notImperative = "notImperative"
+	notImperative = "notImperative",
+	linqHelp = "linqHelp"
 };
 	
 export interface IErrorTagData

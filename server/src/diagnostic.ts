@@ -35,7 +35,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"
 					{ Key: ErrorCodes.duplicatedText, Value: equalTexts },
 					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS },
-					{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions }
+					{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions },
+					{ Key: ErrorCodes.linqHelp, Value: linqHelper }
 				]
 			)
 		}
@@ -330,11 +331,45 @@ function copyPastedCS(document: server.TextDocument, prepearedText: string): Pro
 }
 
 
-/** Повторяющиеся c# вставки */
+/** Необязательные вопросы */
 async function notImperativeQuestions(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
 	let res = await Parse.getDocumentElements(document, /(<Question[^>]+)(Imperative=('|")false(\3))/, "Риторический вопрос detected", prepearedText, { Type: server.DiagnosticSeverity.Warning }, 1);
 	return res;
+}
+
+
+/** Помогаем писать Linq лучше */
+async function linqHelper(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+{
+	// ищем Count() > 0
+	let text = Encoding.clearXMLComments(document.getText());
+	let res = await Parse.getDocumentElements(document, /(\.Count)(\([^;]+)/, "Вместо `Count() > 0` лучше использовать `Any()`", text, { Type: server.DiagnosticSeverity.Information });
+	for (let i = 0; i < res.length; i++)
+	{
+		let stuff = res[i].Value[2];
+		let closeBracketIndex = Parse.findCloseBracket(stuff, 0);
+		if (closeBracketIndex < 0)
+		{
+			res[i] = null;
+			continue;
+		}
+		let compare = stuff.slice(closeBracketIndex + 1).find(/^\s*>\s*0/);
+		if (compare.Index < 0)
+		{
+			res[i] = null;
+			continue;
+		}
+		console.log(res[i].Value[1].length + compare.Index + compare.Result[0].length);
+		res[i] = new Parse.DocumentElement(document, {
+			From: res[i].From,
+			Message: res[i].Message,
+			To: res[i].From + res[i].Value[1].length + closeBracketIndex + 1 + compare.Index + compare.Result[0].length,
+			Value: res[i].Value,
+			DiagnosticProperties: res[i].DiagnosticProperties
+		});
+	}
+	return res.filter(x => !!x);
 }
 
 //#endregion

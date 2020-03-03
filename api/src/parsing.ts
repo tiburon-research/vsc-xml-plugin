@@ -870,3 +870,28 @@ export function getAnswer(jqObject): Structures.Answer
 {
 	return getDefaultElement(jqObject, 'Answer');
 }
+
+
+/** Находит закрывающуюся скобку */
+export function findCloseBracket(text: string, openBracketIndex: number): number
+{
+	let res = -1;
+	if (!text ||openBracketIndex < 0 || openBracketIndex >= text.length) return res;
+	let bracketMatch = KeyedCollection.FromArrays(["(", "[", "{", "<"], [")", "]", "}", ">"]);
+	let openB = text[openBracketIndex];
+	let closeB = bracketMatch.Item(openB);
+	if (!closeB) return res;
+	let openCount = 0;
+	let closeCount = 0;
+	for (let i = openBracketIndex; i < text.length; i++)
+	{
+		if (text[i] == openB) openCount++;
+		else if (text[i] == closeB) closeCount++;
+		if (openCount > 0 && openCount == closeCount)
+		{
+			res = i;
+			break;
+		};
+	}
+	return res;
+}
