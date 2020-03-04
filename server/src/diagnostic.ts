@@ -32,10 +32,17 @@ const _AllDiagnostics: IDiagnosticType[] =
 			Type: server.DiagnosticSeverity.Warning,
 			Functions: KeyedCollection.FromPairs(
 				[
-					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"
+					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"+Information
+					{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions }
+				]
+			)
+		},
+		{
+			Type: server.DiagnosticSeverity.Information,
+			Functions: KeyedCollection.FromPairs(
+				[
 					{ Key: ErrorCodes.duplicatedText, Value: equalTexts },
 					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS },
-					{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions },
 					{ Key: ErrorCodes.linqHelp, Value: linqHelper }
 				]
 			)
@@ -179,6 +186,7 @@ async function wrongQuots(document: server.TextDocument, prepearedText: string):
 
 
 
+
 //#region --------------------------- Функции получения предупреждений
 
 
@@ -241,6 +249,22 @@ async function dangerousConstandIds(document: server.TextDocument, prepearedText
 	return res;
 }
 
+/** Необязательные вопросы */
+async function notImperativeQuestions(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+{
+	let res = await Parse.getDocumentElements(document, /(<Question[^>]+)(Imperative=('|")false(\3))/, "Риторический вопрос detected", prepearedText, { Type: server.DiagnosticSeverity.Warning }, 1);
+	return res;
+}
+
+
+//#endregion
+
+
+
+
+//#region --------------------------- Функции получения подсказок
+
+
 /** Одинаковые заголовки */
 async function equalTexts(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
@@ -274,28 +298,6 @@ async function equalTexts(document: server.TextDocument, prepearedText: string):
 		});
 	}));
 	if (eqAnswers.length > 1) res = res.concat(eqAnswers);
-	res.forEach(x => x.DiagnosticProperties.Type = server.DiagnosticSeverity.Information);
-	return res;
-}
-
-async function findDuplicatedText(document: server.TextDocument, searchResults: SearchResult[], groupIndex: number, minLength: number, errText: string, groupIndent: number = -1)
-{
-	let res: Parse.DocumentElement[] = [];
-	var eqTexts = searchResults.filter(x => x.Result[groupIndex].length > minLength && !x.Result[groupIndex].match(/(\[c#\])|@/)).findDuplicates<SearchResult>((x1, x2) => x1.Result[groupIndex] == x2.Result[groupIndex]);
-	if (eqTexts.length > 0)
-	{
-		searchResults.filter(x => eqTexts.contains(x, el => el.Result[groupIndex] == x.Result[groupIndex])).forEach(header =>
-		{
-			let indent = groupIndent > -1 ? header.Result[groupIndent].length : 0;
-			res.push(new Parse.DocumentElement(document, {
-				DiagnosticProperties: { Type: server.DiagnosticSeverity.Warning, Code: ErrorCodes.duplicatedText },
-				From: indent + header.Index,
-				Message: errText,
-				To: indent + header.Index + header.Result[groupIndex].length,
-				Value: header.Result
-			}));
-		});
-	}
 	return res;
 }
 
@@ -320,8 +322,7 @@ function copyPastedCS(document: server.TextDocument, prepearedText: string): Pro
 				From: x.Index,
 				To: x.Index + x.Result[0].length,
 				Message: "Многократно повторяющийся код. Лучше использовать методы.",
-				Value: x.Result,
-				DiagnosticProperties: { Type: server.DiagnosticSeverity.Information }
+				Value: x.Result
 			}));
 			res = res.concat(ar);
 		});
@@ -330,21 +331,12 @@ function copyPastedCS(document: server.TextDocument, prepearedText: string): Pro
 	});
 }
 
-
-/** Необязательные вопросы */
-async function notImperativeQuestions(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
-{
-	let res = await Parse.getDocumentElements(document, /(<Question[^>]+)(Imperative=('|")false(\3))/, "Риторический вопрос detected", prepearedText, { Type: server.DiagnosticSeverity.Warning }, 1);
-	return res;
-}
-
-
 /** Помогаем писать Linq лучше */
 async function linqHelper(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
 	// ищем Count() > 0
 	let text = Encoding.clearXMLComments(document.getText());
-	let res = await Parse.getDocumentElements(document, /(\.Count)(\([^;]+)/, "Возможно, вместо проверки `Count() > 0` лучше использовать `Any()`", text, { Type: server.DiagnosticSeverity.Information });
+	let res = await Parse.getDocumentElements(document, /(\.Count)(\([^;]+)/, "Возможно, вместо проверки `Count() > 0` лучше использовать `Any()`", text);
 	for (let i = 0; i < res.length; i++)
 	{
 		let stuff = res[i].Value[2];
@@ -370,6 +362,7 @@ async function linqHelper(document: server.TextDocument, prepearedText: string):
 	}
 	return res.filter(x => !!x);
 }
+
 
 //#endregion
 
@@ -398,6 +391,27 @@ async function _diagnosticElements(document: server.TextDocument, type: server.D
 	return res;
 }
 
+
+async function findDuplicatedText(document: server.TextDocument, searchResults: SearchResult[], groupIndex: number, minLength: number, errText: string, groupIndent: number = -1)
+{
+	let res: Parse.DocumentElement[] = [];
+	var eqTexts = searchResults.filter(x => x.Result[groupIndex].length > minLength && !x.Result[groupIndex].match(/(\[c#\])|@/)).findDuplicates<SearchResult>((x1, x2) => x1.Result[groupIndex] == x2.Result[groupIndex]);
+	if (eqTexts.length > 0)
+	{
+		searchResults.filter(x => eqTexts.contains(x, el => el.Result[groupIndex] == x.Result[groupIndex])).forEach(header =>
+		{
+			let indent = groupIndent > -1 ? header.Result[groupIndent].length : 0;
+			res.push(new Parse.DocumentElement(document, {
+				DiagnosticProperties: { Type: server.DiagnosticSeverity.Warning, Code: ErrorCodes.duplicatedText },
+				From: indent + header.Index,
+				Message: errText,
+				To: indent + header.Index + header.Result[groupIndex].length,
+				Value: header.Result
+			}));
+		});
+	}
+	return res;
+}
 
 
 //#endregion
