@@ -337,6 +337,7 @@ async function linqHelper(document: server.TextDocument, prepearedText: string):
 {
 	// ищем Count() > 0
 	let text = Encoding.clearXMLComments(document.getText());
+	text = Encoding.clearCSComments(text);
 	let res = await Parse.getDocumentElements(document, /(\.Count)(\([^;]+)/, "Возможно, вместо проверки `Count() > 0` лучше использовать `Any()`", text);
 	for (let i = 0; i < res.length; i++)
 	{
