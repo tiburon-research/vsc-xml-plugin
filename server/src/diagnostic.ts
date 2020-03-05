@@ -43,7 +43,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 				[
 					{ Key: ErrorCodes.duplicatedText, Value: equalTexts },
 					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS },
-					{ Key: ErrorCodes.linqHelp, Value: linqHelper }
+					{ Key: ErrorCodes.linqHelp, Value: linqHelper },
+					{ Key: ErrorCodes.mixIdSuggestion, Value: mixIdSuggestion }
 				]
 			)
 		}
@@ -361,6 +362,41 @@ async function linqHelper(document: server.TextDocument, prepearedText: string):
 		});
 	}
 	return res.filter(x => !!x);
+}
+
+
+/** Предлагаем MixId вместо Mix */
+async function mixIdSuggestion(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+{
+	let res: Parse.DocumentElement[] = [];
+	let starts = prepearedText.findAll(/<Repeat[^>]+>/);
+	let repeats = starts.map(x =>
+	{
+		return {
+			Start: x,
+			End: Parse.findCloseTag("<", "Repeat", ">", x.Index, prepearedText)?.Range
+		}
+	});
+	// выкидываем вложенные
+	repeats = repeats.filter(x => !!x.End);
+	repeats = repeats.filter(x => !repeats.find(f => f.Start.Index < x.Start.Index && f.End.From > x.End.From));
+	// ищем с Mix
+	repeats.forEach(x =>
+	{
+		let text = prepearedText.slice(x.Start.Index + x.Start.Result[0].length, x.End.From);
+		if (!text) return;
+		let match = text.match(/\sMix=/);
+		if (!match) return;
+		let from = x.Start.Index + x.Start.Result[0].length + match.index + 1;
+		let el = new Parse.DocumentElement(document, {
+			From: from,
+			To: from + match[0].length - 2,
+			Message: "Возможно, внутри повтора стоит использовать MixId вместо Mix",
+			Value: match
+		});
+		res.push(el);
+	});
+	return res;
 }
 
 

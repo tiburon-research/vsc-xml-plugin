@@ -40,7 +40,8 @@ export enum ErrorCodes
 	copyPastedCS = "copyPastedCS",
 	wrongQuotes = "wrongQuotes",
 	notImperative = "notImperative",
-	linqHelp = "linqHelp"
+	linqHelp = "linqHelp",
+	mixIdSuggestion = "mixIdSuggestion"
 };
 	
 export interface IErrorTagData
