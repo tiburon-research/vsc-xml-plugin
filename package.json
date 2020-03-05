@@ -152,7 +152,12 @@
                 "command": "tib.selectTag.closest",
                 "title": "Выделить текущий тег",
                 "category": "tib"
-            },
+			},
+			{
+                "command": "tib.selectTag.inner",
+                "title": "Выделить содержимое текущего тега",
+                "category": "tib"
+			},
             {
                 "command": "tib.selectTag.global",
                 "title": "Выделить родительский тег",
@@ -265,7 +270,11 @@
             {
                 "key": "ctrl+alt+p",
                 "command": "tib.selectTag.closest"
-            },
+			},
+			{
+                "key": "ctrl+k ctrl+alt+p",
+                "command": "tib.selectTag.inner"
+			},
             {
                 "key": "ctrl+alt+shift+p",
                 "command": "tib.selectTag.global"

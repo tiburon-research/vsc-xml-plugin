@@ -345,6 +345,34 @@ async function registerCommands()
 		return prom;
 	});
 
+
+	// выделение ближайшего <тега>
+	registerCommand('tib.selectTag.inner', () => 
+	{
+		let document = vscode.window.activeTextEditor.document;
+		return new Promise<vscode.Selection>((resolve, reject) =>
+		{
+			vscode.window.activeTextEditor.selections.forEachAsync(selection =>
+			{
+				return new Promise<vscode.Selection>((resl, rej) =>
+				{
+					getCurrentTag(document, selection.active).then(tag =>
+					{
+						let startPostion = new vscode.Position(tag.OpenTagRange.end.line, tag.OpenTagRange.end.character);
+						let lastPosition = document.positionAt(tag.PreviousText.length);
+						let closeTagPosition = Parse.getCloseTagRange('<', tag.Name, '>', createServerDocument(document), ClientServerTransforms.ToServer.Position(lastPosition));
+						if (!closeTagPosition) rej("Не удалось найти закрывающийся тег");
+						resl(new vscode.Selection(startPostion.line, startPostion.character, closeTagPosition.start.line, closeTagPosition.start.character));
+					}).catch(rej);
+				});
+			}).then(selections =>
+			{
+				vscode.window.activeTextEditor.selections = selections;
+				resolve();
+			}).catch(reject);
+		});
+	});
+
 	// выделение родительского <тега>
 	registerCommand('tib.selectTag.global', () => 
 	{
