@@ -392,7 +392,7 @@
         "vscode-languageserver": "^5.2.1"
     },
     "devDependencies": {
-        "typescript": "^3.5.1",
+        "typescript": "^3.8.0",
         "@types/dateformat": "^1.0.1",
         "@types/jsdom": "^12.2.1",
         "@types/jquery": "^3.3.29",
