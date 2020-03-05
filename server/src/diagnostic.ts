@@ -385,16 +385,17 @@ async function mixIdSuggestion(document: server.TextDocument, prepearedText: str
 	{
 		let text = prepearedText.slice(x.Start.Index + x.Start.Result[0].length, x.End.From);
 		if (!text) return;
-		let match = text.match(/\sMix=/);
-		if (!match) return;
-		let from = x.Start.Index + x.Start.Result[0].length + match.index + 1;
-		let el = new Parse.DocumentElement(document, {
-			From: from,
-			To: from + match[0].length - 2,
-			Message: "Возможно, внутри повтора стоит использовать MixId вместо Mix",
-			Value: match
+		let matches = text.findAll(/\sMix=/);
+		matches.forEach(match => {
+			let from = x.Start.Index + x.Start.Result[0].length + match.Index + 1;
+			let el = new Parse.DocumentElement(document, {
+				From: from,
+				To: from + match.Result[0].length - 2,
+				Message: "Возможно, внутри повтора стоит использовать MixId вместо Mix",
+				Value: match.Result
+			});
+			res.push(el);
 		});
-		res.push(el);
 	});
 	return res;
 }
