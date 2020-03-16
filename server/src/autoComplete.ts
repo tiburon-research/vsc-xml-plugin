@@ -723,12 +723,6 @@ var KnownCode = [
 		"Documentation": "string GetAnswerID(string questionId, string val)"
 	},
 	{
-		"Name": "GetSurveyUserMails",
-		"Detail": "List<string[]>",
-		"Kind": "Function",
-		"Documentation": "List<string[]> GetSurveyUserMails(int surveyId)"
-	},
-	{
 		"Name": "AnswerDelete",
 		"Detail": "void",
 		"Kind": "Function",
