@@ -2,7 +2,7 @@
     "name": "tiburonscripter",
     "displayName": "Tiburon XML Helper",
     "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-    "version": "2.9.1",
+    "version": "2.10.0",
     "publisher": "TiburonResearch",
     "author": {
         "name": "GuRu",
@@ -68,10 +68,10 @@
             }
         ],
         "commands": [
-			{
+            {
                 "command": "tib.translateRange",
                 "title": "Транслитерация текста",
-				"category": "tib"
+                "category": "tib"
             },
             {
                 "command": "tib.ChooseGeo",
@@ -121,9 +121,9 @@
             {
                 "command": "tib.cdata",
                 "title": "Обернуть в CDATA",
-				"category": "tib"
-			},
-			{
+                "category": "tib"
+            },
+            {
                 "command": "tib.cdataInner",
                 "title": "Обернуть текущий тег в CDATA",
                 "category": "tib"
@@ -131,7 +131,7 @@
             {
                 "command": "tib.surveyBlock",
                 "title": "Обернуть в сворачиваемый блок",
-				"category": "tib"
+                "category": "tib"
             },
             {
                 "command": "tib.paste",
@@ -152,12 +152,12 @@
                 "command": "tib.selectTag.closest",
                 "title": "Выделить текущий тег",
                 "category": "tib"
-			},
-			{
+            },
+            {
                 "command": "tib.selectTag.inner",
                 "title": "Выделить содержимое текущего тега",
                 "category": "tib"
-			},
+            },
             {
                 "command": "tib.selectTag.global",
                 "title": "Выделить родительский тег",
@@ -178,13 +178,13 @@
                 "title": "Преобразовать в Answers",
                 "category": "tib",
                 "enablement": "editorHasSelection"
-			},
-			{
+            },
+            {
                 "command": "tib.getAnswersOnly",
                 "title": "Преобразовать в Answers без Question",
                 "category": "tib",
                 "enablement": "editorHasSelection"
-			},
+            },
             {
                 "command": "tib.getItems",
                 "title": "Преобразовать в Items",
@@ -227,13 +227,13 @@
             ]
         },
         "keybindings": [
-			{
+            {
                 "key": "ctrl+k ctrl+alt+t",
-				"command": "tib.translateRange",
-				"args": {
-					"range": null,
-					"lit": true
-				}
+                "command": "tib.translateRange",
+                "args": {
+                    "range": null,
+                    "lit": true
+                }
             },
             {
                 "key": "ctrl+alt+g",
@@ -270,11 +270,11 @@
             {
                 "key": "ctrl+alt+p",
                 "command": "tib.selectTag.closest"
-			},
-			{
+            },
+            {
                 "key": "ctrl+k ctrl+alt+p",
                 "command": "tib.selectTag.inner"
-			},
+            },
             {
                 "key": "ctrl+alt+shift+p",
                 "command": "tib.selectTag.global"
@@ -286,8 +286,8 @@
             {
                 "key": "ctrl+alt+shift+d",
                 "command": "tib.debugTestCommand"
-			},
-			{
+            },
+            {
                 "key": "ctrl+shift+alt+a",
                 "command": "tib.getAnswersOnly"
             },
@@ -312,8 +312,8 @@
             "[tib]": {
                 "editor.quickSuggestions": {
                     "strings": true
-				},
-				"editor.suggest.snippetsPreventQuickSuggestions": true
+                },
+                "editor.suggest.snippetsPreventQuickSuggestions": true
             }
         },
         "configuration": {
