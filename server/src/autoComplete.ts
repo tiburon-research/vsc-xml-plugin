@@ -448,6 +448,12 @@ var KnownCode = [
 		"Documentation": "bool ExtInterviewAnswerExistsAll(int externalInterview, string questionId, string srcRange)"
 	},
 	{
+		"Name": "AnswerEnabledForRanging",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerEnabledForRanging(string prefix, string answer, int current, int len)"
+	},
+	{
 		"Name": "ExtInterviewAnswerValue",
 		"Detail": "string",
 		"Kind": "Function",
@@ -682,6 +688,12 @@ var KnownCode = [
 		"Detail": "string",
 		"Kind": "Function",
 		"Documentation": "string getRedirectUrl()"
+	},
+	{
+		"Name": "SetRanges",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void SetRanges(string selectionQuestion, string rangeQuestionPrefix, string questionForRanges, string listId, string resetAnswers, int rangeForNotChosen = -974527)"
 	},
 	{
 		"Name": "ExtInterviews",
