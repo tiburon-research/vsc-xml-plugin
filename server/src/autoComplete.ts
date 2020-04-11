@@ -225,103 +225,35 @@ var ManualCode = [
 
 var KnownCode = [
 	{
-		"Name": "PinQuestion",
-		"Detail": "string",
-		"Kind": "Property",
-		Parent: "this",
-		"Documentation": "string PinQuestion",
-		ParentTag: "Validate"
+		"Name": "DataGetCustomSingleRandom",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] DataGetCustomSingleRandom(int index, int key, int updateKey)"
 	},
 	{
-		"Name": "PinAnswer",
-		"Detail": "string",
-		"Kind": "Property",
-		Parent: "this",
-		"Documentation": "string PinAnswer",
-		ParentTag: "Validate"
-	},
-	{
-		"Name": "Message",
-		"Detail": "string",
-		"Kind": "Property",
-		Parent: "this",
-		"Documentation": "string Message",
-		ParentTag: "Validate"
-	},
-	{
-		"Name": "MessageGeneral",
-		"Detail": "string",
-		"Kind": "Property",
-		Parent: "this",
-		"Documentation": "string MessageGeneral",
-		ParentTag: "Validate"
-	},
-	{
-		"Name": "Status",
-		"Detail": "int",
-		"Kind": "Property",
-		Parent: "this",
-		"Documentation": "int Status",
-		ParentTag: "Redirect"
-	},
-	{
-		"Name": "Page",
-		"Detail": "string",
-		"Kind": "Property",
-		Parent: "this",
-		"Documentation": "string Page",
-		ParentTag: "Redirect"
-	},
-	{
-		"Name": "Url",
-		"Detail": "string",
-		"Kind": "Property",
-		Parent: "this",
-		"Documentation": "string Url",
-		ParentTag: "Redirect"
-	},
-	{
-		"Name": "CurrentInterview",
-		"Detail": "int",
-		"Kind": "Property",
-		Parent: "this",
-		"Documentation": "int CurrentInterview",
-		ParentTag: "Redirect"
-	},
-	{
-		"Name": "CurrentInterviewOrder",
-		"Detail": "int",
-		"Kind": "Property",
-		Parent: "this",
-		"Documentation": "int CurrentInterviewOrder",
-		ParentTag: "Redirect"
-	},
-	{
-		"Name": "InterviewExists",
+		"Name": "ExtInterviewAnswerExistsAny",
 		"Detail": "bool",
 		"Kind": "Function",
-		"Documentation": "bool InterviewExists(string questionId, string answerId, string val)"
+		"Documentation": "bool ExtInterviewAnswerExistsAny(int externalInterview, string questionId, string srcRange)"
 	},
 	{
-		"Name": "AnswerInsert",
-		"Detail": "void",
+		"Name": "ExtSurveyAnswerCount",
+		"Detail": "int",
 		"Kind": "Function",
-		"Documentation": "void AnswerInsert(string pageId, string questionId, string answerId, string val)",
-		"Deprecated": true
+		"Documentation": "int ExtSurveyAnswerCount(int extSurveyId, string pageId, string questionId)"
 	},
 	{
-		"Name": "AnswerInsert",
-		"Detail": "void",
+		"Name": "MixItera",
+		"Detail": "string",
 		"Kind": "Function",
-		"Documentation": "void AnswerInsert(string pageId, string questionId, string answerId)",
+		"Documentation": "string MixItera(int defaultItera)",
 		"Deprecated": true
-	},
+		},
 	{
-		"Name": "ExtInterviewAnswerInsert",
-		"Detail": "void",
+		"Name": "AnswerValue",
+		"Detail": "string",
 		"Kind": "Function",
-		"Documentation": "void ExtInterviewAnswerInsert(int interviewId, string pageId, string questionId, string answerId, string val)",
-		"Deprecated": true
+		"Documentation": "string AnswerValue(string questionId, string answerId)"
 	},
 	{
 		"Name": "ExtInterviewAnswerInsert",
@@ -331,511 +263,10 @@ var KnownCode = [
 		"Deprecated": true
 	},
 	{
-		"Name": "ExtInterviewAnswerUpdate",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void ExtInterviewAnswerUpdate(int interviewId, string pageId, string questionId, string answerId, string val)"
-	},
-	{
-		"Name": "ExtInterviewAnswerDelete",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void ExtInterviewAnswerDelete(int interviewId, string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtInterviewAnswerDelete",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void ExtInterviewAnswerDelete(int interviewId, string questionId, string answerId)"
-	},
-	{
-		"Name": "AnswerInsertOnce",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void AnswerInsertOnce(string pageId, string questionId, string answerId, string val)",
-		"Deprecated": true
-	},
-	{
-		"Name": "AnswerInsertOnce",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void AnswerInsertOnce(string pageId, string questionId, string answerId)",
-		"Deprecated": true
-	},
-	{
-		"Name": "AnswerUpdateP",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void AnswerUpdateP(string pageId, string questionId, string answerId, string val)"
-	},
-	{
-		"Name": "AnswerUpdateP",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void AnswerUpdateP(string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "AnswerUpdate",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void AnswerUpdate(string questionId, string answerId, string val)"
-	},
-	{
 		"Name": "AnswerUpdate",
 		"Detail": "void",
 		"Kind": "Function",
 		"Documentation": "void AnswerUpdate(string questionId, string answerId)"
-	},
-	{
-		"Name": "PageClear",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void PageClear(string pageId)"
-	},
-	{
-		"Name": "QuestionClear",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void QuestionClear(string questionId)"
-	},
-	{
-		"Name": "QuestionClear",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void QuestionClear(int interviewId, string questionId)"
-	},
-	{
-		"Name": "AnswerClear",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void AnswerClear(string questionId, string answerId)"
-	},
-	{
-		"Name": "AnswerExistsForRange",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool AnswerExistsForRange(string questionId, string srcRange, LogicalOperator oper)"
-	},
-	{
-		"Name": "AnswerExistsAny",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool AnswerExistsAny(string questionId, string srcRange)"
-	},
-	{
-		"Name": "AnswerExistsAll",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool AnswerExistsAll(string questionId, string srcRange)"
-	},
-	{
-		"Name": "AnswerExistsOnce",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool AnswerExistsOnce(string pageId, string questionId, int answerStart, int answerEnd)"
-	},
-	{
-		"Name": "AnswerExistsOnce",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool AnswerExistsOnce(string questionId, int answerStart, int answerEnd)"
-	},
-	{
-		"Name": "AnswerID",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string AnswerID(string pageId, string questionId)"
-	},
-	{
-		"Name": "AnswerID",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string AnswerID(string questionId)"
-	},
-	{
-		"Name": "AnswerExists",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool AnswerExists(string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "AnswerExists",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool AnswerExists(string questionId, string srcRangeOrNot)"
-	},
-	{
-		"Name": "ExtAnswerExists",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtAnswerExists(int surveyId, string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtAnswerExists",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtAnswerExists(int surveyId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtInterviewAnswerExists",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtInterviewAnswerExists(int extInterviewId, string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtInterviewAnswerExists",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtInterviewAnswerExists(int extInterviewId, string questionId, string srcRangeOrNot)"
-	},
-	{
-		"Name": "ExtInterviewAnswerExistsForRange",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtInterviewAnswerExistsForRange(int externalInterview, string questionId, string srcRange, LogicalOperator logicalOperator)"
-	},
-	{
-		"Name": "ExtInterviewAnswerExistsAny",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtInterviewAnswerExistsAny(int externalInterview, string questionId, string srcRange)"
-	},
-	{
-		"Name": "ExtInterviewAnswerExistsAny",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtInterviewAnswerExistsAny(int externalInterview, string pageId, string questionId, string srcRange)"
-	},
-	{
-		"Name": "ExtInterviewAnswerExistsAll",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtInterviewAnswerExistsAll(int externalInterview, string questionId, string srcRange)"
-	},
-	{
-		"Name": "AnswerValue",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string AnswerValue(string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "AnswerValue",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string AnswerValue(string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtInterviewAnswerValue",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string ExtInterviewAnswerValue(int extInterviewId, string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtInterviewAnswerValue",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string ExtInterviewAnswerValue(int extInterviewId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtInterview",
-		"Detail": "int",
-		"Kind": "Function",
-		"Documentation": "int ExtInterview(int extSurveyId, string questionId, string answerId, string val)"
-	},
-	{
-		"Name": "ExtInterview",
-		"Detail": "int",
-		"Kind": "Function",
-		"Documentation": "int ExtInterview(int extSurveyId, string interviewRespondent)"
-	},
-	{
-		"Name": "ExtInterviews",
-		"Detail": "int[]",
-		"Kind": "Function",
-		"Documentation": "int[] ExtInterviews(int extSurveyId, int statusId, string questionId, string answerId, string val)"
-	},
-	{
-		"Name": "ExtInterviews",
-		"Detail": "int[]",
-		"Kind": "Function",
-		"Documentation": "int[] ExtInterviews(int extSurveyId, int statusId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtInterviews",
-		"Detail": "int[]",
-		"Kind": "Function",
-		"Documentation": "int[] ExtInterviews(int extSurveyId, string questionId, string answerId, string val)"
-	},
-	{
-		"Name": "ExtInterviews",
-		"Detail": "int[]",
-		"Kind": "Function",
-		"Documentation": "int[] ExtInterviews(int extSurveyId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtInterviewsAnswerExists",
-		"Detail": "bool[]",
-		"Kind": "Function",
-		"Documentation": "bool[] ExtInterviewsAnswerExists(int[] interviewList, int statusId, string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtInterviewsAnswerExists",
-		"Detail": "bool[]",
-		"Kind": "Function",
-		"Documentation": "bool[] ExtInterviewsAnswerExists(int[] interviewList, string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtInterviewsAnswerValue",
-		"Detail": "string[]",
-		"Kind": "Function",
-		"Documentation": "string[] ExtInterviewsAnswerValue(int[] interviewList, int statusId, string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtInterviewsAnswerValue",
-		"Detail": "string[]",
-		"Kind": "Function",
-		"Documentation": "string[] ExtInterviewsAnswerValue(int[] interviewList, string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtInterviewsAnswerId",
-		"Detail": "string[]",
-		"Kind": "Function",
-		"Documentation": "string[] ExtInterviewsAnswerId(int[] interviewList, int statusId, string pageId, string questionId)"
-	},
-	{
-		"Name": "ExtInterviewsAnswerId",
-		"Detail": "string[]",
-		"Kind": "Function",
-		"Documentation": "string[] ExtInterviewsAnswerId(int[] interviewList, string pageId, string questionId)"
-	},
-	{
-		"Name": "AnswerCount",
-		"Detail": "int",
-		"Kind": "Function",
-		"Documentation": "int AnswerCount(string pageId)"
-	},
-	{
-		"Name": "AnswerCount",
-		"Detail": "int",
-		"Kind": "Function",
-		"Documentation": "int AnswerCount(string pageId, string questionId)"
-	},
-	{
-		"Name": "AnswerCountRange",
-		"Detail": "int",
-		"Kind": "Function",
-		"Documentation": "int AnswerCountRange(string questionId, string srcRange)"
-	},
-	{
-		"Name": "DataExists",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool DataExists(int index, string val)"
-	},
-	{
-		"Name": "DataGetCustom",
-		"Detail": "string[]",
-		"Kind": "Function",
-		"Documentation": "string[] DataGetCustom(int index, string value)"
-	},
-	{
-		"Name": "DataGetCustoms",
-		"Detail": "string[][]",
-		"Kind": "Function",
-		"Documentation": "string[][] DataGetCustoms(int index, string value)"
-	},
-	{
-		"Name": "DataGetCustomSingleRandom",
-		"Detail": "string[]",
-		"Kind": "Function",
-		"Documentation": "string[] DataGetCustomSingleRandom(int index, int key, int updateKey)"
-	},
-	{
-		"Name": "DataGetCustomSingleRandomWithConditions",
-		"Detail": "string[]",
-		"Kind": "Function",
-		"Documentation": "string[] DataGetCustomSingleRandomWithConditions(int index, int key, int updateKey, string[] conditions)"
-	},
-	{
-		"Name": "QuotaCount",
-		"Detail": "double",
-		"Kind": "Function",
-		"Documentation": "double QuotaCount(string quotaId)"
-	},
-	{
-		"Name": "QuotaCount",
-		"Detail": "double",
-		"Kind": "Function",
-		"Documentation": "double QuotaCount(int surveyId, string quotaId)"
-	},
-	{
-		"Name": "QuotaCountStatus",
-		"Detail": "double",
-		"Kind": "Function",
-		"Documentation": "double QuotaCountStatus(string quotaId, int statusId)"
-	},
-	{
-		"Name": "QuotaCountStatus",
-		"Detail": "double",
-		"Kind": "Function",
-		"Documentation": "double QuotaCountStatus(int surveyId, string quotaId, int statusId)"
-	},
-	{
-		"Name": "QuotaLimit",
-		"Detail": "double",
-		"Kind": "Function",
-		"Documentation": "double QuotaLimit(string quotaId)"
-	},
-	{
-		"Name": "QuotaLimit",
-		"Detail": "double",
-		"Kind": "Function",
-		"Documentation": "double QuotaLimit(int surveyId, string quotaId)"
-	},
-	{
-		"Name": "QuotaIsOpen",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool QuotaIsOpen(string quotaId)"
-	},
-	{
-		"Name": "QuotaIsOpen",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool QuotaIsOpen(int surveyId, string quotaId)"
-	},
-	{
-		"Name": "IsEmailCorrect",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool IsEmailCorrect(string email)"
-	},
-	{
-		"Name": "GetAnswerID",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string GetAnswerID(string pageId, string questionId, string val)"
-	},
-	{
-		"Name": "GetAnswerID",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string GetAnswerID(string questionId, string val)"
-	},
-	{
-		"Name": "AnswerDelete",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void AnswerDelete(string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "AnswerDelete",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void AnswerDelete(string questionId, string answerId)"
-	},
-	{
-		"Name": "QuestionResults",
-		"Detail": "string[][]",
-		"Kind": "Function",
-		"Documentation": "string[][] QuestionResults(string pageId, string questionId)"
-	},
-	{
-		"Name": "QuestionResults",
-		"Detail": "string[][]",
-		"Kind": "Function",
-		"Documentation": "string[][] QuestionResults(int interviewId, string pageId, string questionId)"
-	},
-	{
-		"Name": "AnswerIDs",
-		"Detail": "string[]",
-		"Kind": "Function",
-		"Documentation": "string[] AnswerIDs(string pageId, string questionId)"
-	},
-	{
-		"Name": "AnswerIDs",
-		"Detail": "string[]",
-		"Kind": "Function",
-		"Documentation": "string[] AnswerIDs(int interviewId, string pageId, string questionId)"
-	},
-	{
-		"Name": "AnswerText",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string AnswerText(string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "InterviewResultClear",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void InterviewResultClear()"
-	},
-	{
-		"Name": "InterviewStatusChange",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void InterviewStatusChange(int statusId)"
-	},
-	{
-		"Name": "QuestionText",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string QuestionText(string pageId, string questionId)"
-	},
-	{
-		"Name": "QuestionHeader",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string QuestionHeader(string pageId, string questionId)"
-	},
-	{
-		"Name": "PageHeader",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string PageHeader(string pageId)"
-	},
-	{
-		"Name": "GetMixOrder",
-		"Detail": "string[]",
-		"Kind": "Function",
-		"Documentation": "string[] GetMixOrder(string mixId)"
-	},
-	{
-		"Name": "MixItera",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string MixItera(int defaultItera)",
-		"Deprecated": true
-	},
-	{
-		"Name": "GetDateDiff",
-		"Detail": "DateResult",
-		"Kind": "Function",
-		"Documentation": "DateResult GetDateDiff(DateTime currentDate, DateTime subtractDate)"
-	},
-	{
-		"Name": "GetAge",
-		"Detail": "DateResult",
-		"Kind": "Function",
-		"Documentation": "DateResult GetAge(DateTime subtractDate)"
-	},
-	{
-		"Name": "GetInt",
-		"Detail": "int",
-		"Kind": "Function",
-		"Documentation": "int GetInt(string rawValue, int def = -1000)"
-	},
-	{
-		"Name": "TryGetInt",
-		"Detail": "int",
-		"Kind": "Function",
-		"Documentation": "int TryGetInt(string rawValue)"
-	},
-	{
-		"Name": "GetDouble",
-		"Detail": "double",
-		"Kind": "Function",
-		"Documentation": "double GetDouble(string rawValue)"
 	},
 	{
 		"Name": "GetFloat",
@@ -844,53 +275,280 @@ var KnownCode = [
 		"Documentation": "float GetFloat(string rawValue)"
 	},
 	{
+		"Name": "DataExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool DataExists(int index, string val)"
+	},
+	{
+		"Name": "ExtInterviewsAnswerId",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] ExtInterviewsAnswerId(int[] interviewList, string pageId, string questionId)"
+	},
+	{
+		"Name": "QuestionClear",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void QuestionClear(int interviewId, string questionId)"
+	},
+	{
+		"Name": "ExtInterviewAnswerExistsForRange",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtInterviewAnswerExistsForRange(int externalInterview, string questionId, string srcRange, LogicalOperator logicalOperator)"
+	},
+	{
+		"Name": "AnswerClear",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerClear(string questionId, string answerId)"
+	},
+	{
+		"Name": "ExtSurveyInterviewStatus",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int ExtSurveyInterviewStatus(int extSurveyId)"
+	},
+	{
+		"Name": "PageClear",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void PageClear(string pageId)"
+	},
+	{
+		"Name": "ExtSurveyAnswerInsert",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerInsert(int extSurveyId, string pageId, string questionId, string answerId, string val = null)"
+	},
+	{
+		"Name": "Url",
+		"Detail": "string",
+		"Kind": "Property",
+		"Parent": "this",
+		"Documentation": "string Url",
+		"ParentTag": "Redirect"
+	},
+	{
+		"Name": "Page",
+		"Detail": "string",
+		"Kind": "Property",
+		"Parent": "this",
+		"Documentation": "string Page",
+		"ParentTag": "Redirect"
+	},
+	{
+		"Name": "AnswerUpdateP",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerUpdateP(string pageId, string questionId, string answerId, string val)"
+	},
+	{
 		"Name": "GetDateTime",
 		"Detail": "DateTime",
 		"Kind": "Function",
 		"Documentation": "DateTime GetDateTime(string rawValue)"
 	},
 	{
-		"Name": "InterviewStartDate",
-		"Detail": "DateTime",
+		"Name": "GetDouble",
+		"Detail": "double",
 		"Kind": "Function",
-		"Documentation": "DateTime InterviewStartDate()"
+		"Documentation": "double GetDouble(string rawValue)"
 	},
 	{
-		"Name": "MailSend",
+		"Name": "ExtInterviews",
+		"Detail": "int[]",
+		"Kind": "Function",
+		"Documentation": "int[] ExtInterviews(int extSurveyId, int statusId, string questionId, string answerId)"
+	},
+	{
+		"Name": "AnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExists(string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "GetInvValue",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool GetInvValue(string invId)"
+	},
+	{
+		"Name": "QuotaCountStatus",
+		"Detail": "double",
+		"Kind": "Function",
+		"Documentation": "double QuotaCountStatus(int surveyId, string quotaId, int statusId)"
+	},
+	{
+		"Name": "AnswerExistsAny",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExistsAny(string questionId, string srcRange)"
+	},
+	{
+		"Name": "QuestionClear",
 		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "void MailSend(string recipient, string body, string subject)"
+		"Documentation": "void QuestionClear(string questionId)"
 	},
 	{
-		"Name": "MailSend",
+		"Name": "ExtInterviewsAnswerExists",
+		"Detail": "bool[]",
+		"Kind": "Function",
+		"Documentation": "bool[] ExtInterviewsAnswerExists(int[] interviewList, string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "AnswerExistsOnce",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExistsOnce(string pageId, string questionId, int answerStart, int answerEnd)"
+	},
+	{
+		"Name": "ExtInterviewAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtInterviewAnswerExists(int extInterviewId, string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "ExtInterview",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int ExtInterview(int extSurveyId, string interviewRespondent)"
+	},
+	{
+		"Name": "CurrentInterview",
+		"Detail": "int",
+		"Kind": "Property",
+		"Documentation": "int CurrentInterview"
+	},
+	{
+		"Name": "DataGetCustoms",
+		"Detail": "string[][]",
+		"Kind": "Function",
+		"Documentation": "string[][] DataGetCustoms(string value)"
+	},
+	{
+		"Name": "AnswerInsert",
 		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "void MailSend(string recipient, string recipientBlind, string body, string subject)"
+		"Documentation": "void AnswerInsert(string pageId, string questionId, string answerId)",
+		"Deprecated": true
 	},
 	{
-		"Name": "MailSend",
+		"Name": "ExtSurveyAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExists(int extSurveyId, string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "ExtInterviewAnswerExistsAll",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtInterviewAnswerExistsAll(int externalInterview, string questionId, string srcRange)"
+	},
+	{
+		"Name": "ExtInterviewAnswerValue",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtInterviewAnswerValue(int extInterviewId, string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "QuotaCountStatus",
+		"Detail": "double",
+		"Kind": "Function",
+		"Documentation": "double QuotaCountStatus(string quotaId, int statusId)"
+	},
+	{
+		"Name": "ExtSurveyAnswerValue",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string ExtSurveyAnswerValue(int extSurveyId, string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "PageHeader",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string PageHeader(string pageId)"
+	},
+	{
+		"Name": "ExtInterviewAnswerDelete",
 		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "void MailSend(string mailFrom, string recipient, string recipientBlind, string body, string subject, string attachments)"
+		"Documentation": "void ExtInterviewAnswerDelete(int interviewId, string pageId, string questionId, string answerId)"
 	},
 	{
-		"Name": "GetListItemVar",
-		"Detail": "string",
+		"Name": "ExtSurveyAnswerExistsForRange",
+		"Detail": "bool",
 		"Kind": "Function",
-		"Documentation": "string GetListItemVar(string listId, string itemId, int varIndex)"
+		"Documentation": "bool ExtSurveyAnswerExistsForRange(int extSurveyId, string questionId, string srcRange, LogicalOperator oper)"
 	},
 	{
-		"Name": "GetListItemVar",
+		"Name": "QuestionHeader",
 		"Detail": "string",
 		"Kind": "Function",
-		"Deprecated": true,
-		"Documentation": "string GetListItemVar(string listId, int itemIndex, int varIndex)"
+		"Documentation": "string QuestionHeader(string pageId, string questionId)"
 	},
 	{
-		"Name": "GetListItemText",
+		"Name": "ExtSurveyAnswerID",
 		"Detail": "string",
 		"Kind": "Function",
-		"Documentation": "string GetListItemText(string listId, string itemId)"
+		"Documentation": "string ExtSurveyAnswerID(int extSurveyId, string pageId, string questionId)"
+	},
+	{
+		"Name": "ExtInterviewsAnswerValue",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] ExtInterviewsAnswerValue(int[] interviewList, int statusId, string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "ExtSurveyAnswerDelete",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerDelete(int extSurveyId, string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "AnswerExistsForRange",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExistsForRange(string questionId, string srcRange, LogicalOperator oper)"
+	},
+	{
+		"Name": "QuotaLimit",
+		"Detail": "double",
+		"Kind": "Function",
+		"Documentation": "double QuotaLimit(int surveyId, string quotaId)"
+	},
+	{
+		"Name": "ExtInterviewAnswerInsert",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtInterviewAnswerInsert(int interviewId, string pageId, string questionId, string answerId, string val)",
+		"Deprecated": true
+	},
+	{
+		"Name": "ExtSurveyAnswerExistsAny",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExistsAny(int extSurveyId, string pageId, string questionId, string srcRange)"
+	},
+	{
+		"Name": "ExtSurveyInterviewID",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int ExtSurveyInterviewID(int extSurveyId)"
+	},
+	{
+		"Name": "ExtInterviews",
+		"Detail": "int[]",
+		"Kind": "Function",
+		"Documentation": "int[] ExtInterviews(int extSurveyId, int statusId, string questionId, string answerId, string val)"
+	},
+	{
+		"Name": "InterviewResultClear",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void InterviewResultClear()"
 	},
 	{
 		"Name": "GetListItemText",
@@ -900,88 +558,28 @@ var KnownCode = [
 		"Documentation": "string GetListItemText(string listId, int itemIndex)"
 	},
 	{
-		"Name": "getRedirectUrl",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string getRedirectUrl()"
-	},
-	{
-		"Name": "GetPageTime",
-		"Detail": "DateTime",
-		"Kind": "Function",
-		"Documentation": "DateTime GetPageTime(string pageId, string side = \"Client\")"
-	},
-	{
-		"Name": "DataHashExist",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool DataHashExist(string hash)"
-	},
-	{
-		"Name": "ExtSurveyAnswerInsert",
+		"Name": "AnswerUpdateP",
 		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "void ExtSurveyAnswerInsert(int extSurveyId, string pageId, string questionId, string answerId, string val = null)"
+		"Documentation": "void AnswerUpdateP(string pageId, string questionId, string answerId)"
 	},
 	{
-		"Name": "ExtSurveyAnswerUpdateP",
-		"Detail": "void",
+		"Name": "QuotaLimit",
+		"Detail": "double",
 		"Kind": "Function",
-		"Documentation": "void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, string answerId, string val = null)"
+		"Documentation": "double QuotaLimit(string quotaId)"
 	},
 	{
-		"Name": "ExtSurveyAnswerUpdate",
-		"Detail": "void",
+		"Name": "ExtInterviewsAnswerValue",
+		"Detail": "string[]",
 		"Kind": "Function",
-		"Documentation": "void ExtSurveyAnswerUpdate(int extSurveyId, string questionId, string answerId, string val = null)"
+		"Documentation": "string[] ExtInterviewsAnswerValue(int[] interviewList, string pageId, string questionId, string answerId)"
 	},
 	{
-		"Name": "ExtSurveyAnswerDelete",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void ExtSurveyAnswerDelete(int extSurveyId, string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtSurveyAnswerDelete",
-		"Detail": "void",
-		"Kind": "Function",
-		"Documentation": "void ExtSurveyAnswerDelete(int extSurveyId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtSurveyAnswerExists",
+		"Name": "InterviewExists",
 		"Detail": "bool",
 		"Kind": "Function",
-		"Documentation": "bool ExtSurveyAnswerExists(int extSurveyId, string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtSurveyAnswerExists",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtSurveyAnswerExists(int extSurveyId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtSurveyAnswerExistsAny",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtSurveyAnswerExistsAny(int extSurveyId, string questionId, string srcRange)"
-	},
-	{
-		"Name": "ExtSurveyAnswerExistsAny",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtSurveyAnswerExistsAny(int extSurveyId, string pageId, string questionId, string srcRange)"
-	},
-	{
-		"Name": "ExtSurveyAnswerExistsForRange",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtSurveyAnswerExistsForRange(int extSurveyId, string questionId, string srcRange, LogicalOperator oper)"
-	},
-	{
-		"Name": "ExtSurveyAnswerValue",
-		"Detail": "string",
-		"Kind": "Function",
-		"Documentation": "string ExtSurveyAnswerValue(int extSurveyId, string pageId, string questionId, string answerId)"
+		"Documentation": "bool InterviewExists(string questionId, string answerId, string val)"
 	},
 	{
 		"Name": "ExtSurveyAnswerValue",
@@ -990,16 +588,402 @@ var KnownCode = [
 		"Documentation": "string ExtSurveyAnswerValue(int extSurveyId, string questionId, string answerId)"
 	},
 	{
-		"Name": "ExtSurveyAnswerID",
-		"Detail": "string",
+		"Name": "AnswerDelete",
+		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "string ExtSurveyAnswerID(int extSurveyId, string pageId, string questionId)"
+		"Documentation": "void AnswerDelete(string questionId, string answerId)"
 	},
 	{
-		"Name": "ExtSurveyAnswerMarked",
+		"Name": "AnswerExistsAll",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExistsAll(string questionId, string srcRange)"
+	},
+	{
+		"Name": "ExtInterviewAnswerUpdate",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtInterviewAnswerUpdate(int interviewId, string pageId, string questionId, string answerId, string val)"
+	},
+	{
+		"Name": "ExtAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtAnswerExists(int surveyId, string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "AnswerCount",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int AnswerCount(string pageId)"
+	},
+	{
+		"Name": "GetAge",
+		"Detail": "DateResult",
+		"Kind": "Function",
+		"Documentation": "DateResult GetAge(DateTime subtractDate)"
+	},
+	{
+		"Name": "GetPageTime",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int GetPageTime(string pageId, string side = \"Client\")"
+	},
+	{
+		"Name": "GetMixOrder",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] GetMixOrder(string mixId)"
+	},
+	{
+		"Name": "DataGetCustoms",
+		"Detail": "string[][]",
+		"Kind": "Function",
+		"Documentation": "string[][] DataGetCustoms(int index, string value)"
+	},
+	{
+		"Name": "GetInt",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int GetInt(string rawValue, int def = -1000)"
+	},
+	{
+		"Name": "QuestionResults",
+		"Detail": "string[][]",
+		"Kind": "Function",
+		"Documentation": "string[][] QuestionResults(string pageId, string questionId)"
+	},
+	{
+		"Name": "AnswerCount",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int AnswerCount(string pageId, string questionId)"
+	},
+	{
+		"Name": "GetObjectFromJson",
+		"Detail": "dynamic",
+		"Kind": "Function",
+		"Documentation": "dynamic GetObjectFromJson(string json)"
+	},
+	{
+		"Name": "DataHashExist",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool DataHashExist(string hash)"
+	},
+	{
+		"Name": "ExtInterviewAnswerValue",
 		"Detail": "string",
 		"Kind": "Function",
-		"Documentation": "string ExtSurveyAnswerMarked(int extSurveyId, string pageId, string questionId)"
+		"Documentation": "string ExtInterviewAnswerValue(int extInterviewId, string questionId, string answerId)"
+	},
+	{
+		"Name": "getRedirectUrl",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string getRedirectUrl()"
+	},
+	{
+		"Name": "ExtInterviews",
+		"Detail": "int[]",
+		"Kind": "Function",
+		"Documentation": "int[] ExtInterviews(int extSurveyId, string questionId, string answerId, string val)"
+	},
+	{
+		"Name": "MailSend",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void MailSend(string mailFrom, string recipient, string recipientBlind, string body, string subject, string attachments)"
+	},
+	{
+		"Name": "AnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExists(string questionId, string answerId)"
+	},
+	{
+		"Name": "DataGetCustom",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] DataGetCustom(int index, string value)"
+	},
+	{
+		"Name": "AnswerExistsOnce",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool AnswerExistsOnce(string questionId, int answerStart, int answerEnd)"
+	},
+	{
+		"Name": "AnswerValue",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string AnswerValue(string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "ExtAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtAnswerExists(int surveyId, string questionId, string answerId)"
+	},
+	{
+		"Name": "GetDateDiff",
+		"Detail": "DateResult",
+		"Kind": "Function",
+		"Documentation": "DateResult GetDateDiff(DateTime currentDate, DateTime subtractDate)"
+	},
+	{
+		"Name": "TryGetInt",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int TryGetInt(string rawValue)"
+	},
+	{
+		"Name": "QuotaCount",
+		"Detail": "double",
+		"Kind": "Function",
+		"Documentation": "double QuotaCount(string quotaId)"
+	},
+	{
+		"Name": "QuotaIsOpen",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool QuotaIsOpen(int surveyId, string quotaId)"
+	},
+	{
+		"Name": "AnswerInsertOnce",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerInsertOnce(string pageId, string questionId, string answerId)",
+		"Deprecated": true
+	},
+	{
+		"Name": "ExtSurveyAnswerExistsAny",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExistsAny(int extSurveyId, string questionId, string srcRange)"
+	},
+	{
+		"Name": "QuestionResults",
+		"Detail": "string[][]",
+		"Kind": "Function",
+		"Documentation": "string[][] QuestionResults(int interviewId, string pageId, string questionId)"
+	},
+	{
+		"Name": "Status",
+		"Detail": "int",
+		"Kind": "Property",
+		"Parent": "this",
+		"Documentation": "int Status",
+		"ParentTag": "Redirect"
+	},
+	{
+		"Name": "ExtInterviewsAnswerExists",
+		"Detail": "bool[]",
+		"Kind": "Function",
+		"Documentation": "bool[] ExtInterviewsAnswerExists(int[] interviewList, int statusId, string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "ExtInterviewAnswerExistsAny",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtInterviewAnswerExistsAny(int externalInterview, string pageId, string questionId, string srcRange)"
+	},
+	{
+		"Name": "GetListItemVar",
+		"Detail": "string",
+		"Kind": "Function",
+		"Deprecated": true,
+		"Documentation": "string GetListItemVar(string listId, int itemIndex, int varIndex)"
+	},
+	{
+		"Name": "AnswerInsertOnce",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerInsertOnce(string pageId, string questionId, string answerId, string val)",
+		"Deprecated": true
+	},
+	{
+		"Name": "DataGetCustomSingleRandomWithConditions",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] DataGetCustomSingleRandomWithConditions(int index, int key, int updateKey, string[] conditions)"
+	},
+	{
+		"Name": "ExtSurveyAnswerUpdateP",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, string answerId, string val = null)"
+	},
+	{
+		"Name": "InterviewStatusChange",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void InterviewStatusChange(int statusId)"
+	},
+	{
+		"Name": "CurrentInterviewOrder",
+		"Detail": "int",
+		"Kind": "Property",
+		"Parent": "this",
+		"Documentation": "int CurrentInterviewOrder",
+		"ParentTag": "Redirect"
+	},
+	{
+		"Name": "ExtSurveyAnswerDelete",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerDelete(int extSurveyId, string questionId, string answerId)"
+	},
+	{
+		"Name": "QuotaIsOpen",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool QuotaIsOpen(string quotaId)"
+	},
+	{
+		"Name": "AnswerInsert",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerInsert(string pageId, string questionId, string answerId, string val)",
+		"Deprecated": true
+	},
+	{
+		"Name": "InterviewStartDate",
+		"Detail": "DateTime",
+		"Kind": "Function",
+		"Documentation": "DateTime InterviewStartDate()"
+	},
+	{
+		"Name": "Message",
+		"Detail": "string",
+		"Kind": "Property",
+		"Parent": "this",
+		"Documentation": "string Message",
+		"ParentTag": "Validate"
+	},
+	{
+		"Name": "QuestionText",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string QuestionText(string pageId, string questionId)"
+	},
+	{
+		"Name": "AnswerDelete",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerDelete(string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "QuotaCount",
+		"Detail": "double",
+		"Kind": "Function",
+		"Documentation": "double QuotaCount(int surveyId, string quotaId)"
+	},
+	{
+		"Name": "ExtInterviewAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtInterviewAnswerExists(int extInterviewId, string questionId, string srcRangeOrNot)"
+	},
+	{
+		"Name": "ExtInterviewAnswerDelete",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtInterviewAnswerDelete(int interviewId, string questionId, string answerId)"
+	},
+	{
+		"Name": "AnswerID",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string AnswerID(string pageId, string questionId)"
+	},
+	{
+		"Name": "GetFileURL",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string GetFileURL(string questionId, string answerId)"
+	},
+	{
+		"Name": "AnswerUpdate",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void AnswerUpdate(string questionId, string answerId, string val)"
+	},
+	{
+		"Name": "PinQuestion",
+		"Detail": "string",
+		"Kind": "Property",
+		"Parent": "this",
+		"Documentation": "string PinQuestion",
+		"ParentTag": "Validate"
+	},
+	{
+		"Name": "AnswerIDs",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] AnswerIDs(int interviewId, string pageId, string questionId)"
+	},
+	{
+		"Name": "QuotaCount",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int QuotaCount(string quotaName, string statuses)"
+	},
+	{
+		"Name": "PinAnswer",
+		"Detail": "string",
+		"Kind": "Property",
+		"Parent": "this",
+		"Documentation": "string PinAnswer",
+		"ParentTag": "Validate"
+	},
+	{
+		"Name": "ExtSurveyAnswerExists",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool ExtSurveyAnswerExists(int extSurveyId, string questionId, string answerId)"
+	},
+	{
+		"Name": "MailSend",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void MailSend(string recipient, string body, string subject)"
+	},
+	{
+		"Name": "ExtInterview",
+		"Detail": "int",
+		"Kind": "Function",
+		"Documentation": "int ExtInterview(int extSurveyId, string questionId, string answerId, string val)"
+	},
+	{
+		"Name": "AnswerID",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string AnswerID(string questionId)"
+	},
+	{
+		"Name": "ExtInterviews",
+		"Detail": "int[]",
+		"Kind": "Function",
+		"Documentation": "int[] ExtInterviews(int extSurveyId, string questionId, string answerId)"
+	},
+	{
+		"Name": "GetListItemText",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string GetListItemText(string listId, string itemId)"
+	},
+	{
+		"Name": "GetAnswerID",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string GetAnswerID(string questionId, string val)"
+	},
+	{
+		"Name": "ExtSurveyAnswerUpdate",
+		"Detail": "void",
+		"Kind": "Function",
+		"Documentation": "void ExtSurveyAnswerUpdate(int extSurveyId, string questionId, string answerId, string val = null)"
 	},
 	{
 		"Name": "ExtSurveyAnswerIDs",
@@ -1008,16 +992,48 @@ var KnownCode = [
 		"Documentation": "string[] ExtSurveyAnswerIDs(int extSurveyId, string pageId, string questionId)"
 	},
 	{
-		"Name": "ExtSurveyAnswerCount",
+		"Name": "AnswerCountRange",
 		"Detail": "int",
 		"Kind": "Function",
-		"Documentation": "int ExtSurveyAnswerCount(int extSurveyId, string pageId, string questionId)"
+		"Documentation": "int AnswerCountRange(string questionId, string srcRange)"
 	},
 	{
-		"Name": "ExtSurveyInterviewID",
-		"Detail": "int",
+		"Name": "MessageGeneral",
+		"Detail": "string",
+		"Kind": "Property",
+		"Parent": "this",
+		"Documentation": "string MessageGeneral",
+		"ParentTag": "Validate"
+	},
+	{
+		"Name": "AnswerText",
+		"Detail": "string",
 		"Kind": "Function",
-		"Documentation": "int ExtSurveyInterviewID(int extSurveyId)"
+		"Documentation": "string AnswerText(string pageId, string questionId, string answerId)"
+	},
+	{
+		"Name": "GetAnswerID",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string GetAnswerID(string pageId, string questionId, string val)"
+	},
+	{
+		"Name": "GetListItemVar",
+		"Detail": "string",
+		"Kind": "Function",
+		"Documentation": "string GetListItemVar(string listId, string itemId, int varIndex)"
+	},
+	{
+		"Name": "ExtInterviewsAnswerId",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] ExtInterviewsAnswerId(int[] interviewList, int statusId, string pageId, string questionId)"
+	},
+	{
+		"Name": "IsEmailCorrect",
+		"Detail": "bool",
+		"Kind": "Function",
+		"Documentation": "bool IsEmailCorrect(string email)"
 	},
 	{
 		"Name": "ExtSurveyRespondent",
@@ -1026,10 +1042,22 @@ var KnownCode = [
 		"Documentation": "string ExtSurveyRespondent(int extSurveyId)"
 	},
 	{
-		"Name": "ExtSurveyInterviewStatus",
-		"Detail": "int",
+		"Name": "MailSend",
+		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "int ExtSurveyInterviewStatus(int extSurveyId)"
+		"Documentation": "void MailSend(string recipient, string recipientBlind, string body, string subject)"
+	},
+	{
+		"Name": "AnswerIDs",
+		"Detail": "string[]",
+		"Kind": "Function",
+		"Documentation": "string[] AnswerIDs(string pageId, string questionId)"
+	},
+	{
+		"Name": "CurrentSurveyId",
+		"Detail": "int",
+		"Kind": "Property",
+		"Documentation": "int CurrentSurveyId"
 	}
 ];
 
