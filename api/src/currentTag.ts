@@ -504,7 +504,7 @@ export class CurrentTag
 		{
 			let res = -1;
 			let prevText = this.PreviousText.slice(0, this.StartIndex);
-			let itemIndex = prevText.lastIndexOf("Item");
+			let itemIndex = prevText.lastIndexOf("<Item");
 			if (itemIndex > 0)
 			{
 				prevText = prevText.slice(itemIndex);

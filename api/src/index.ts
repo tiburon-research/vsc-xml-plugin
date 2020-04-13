@@ -174,7 +174,7 @@ function _getCurrentTag(document: server.TextDocument, position: server.Position
 			tag.SetFields({
 				StartPosition: current.OpenTagRange.start,
 				StartIndex: document.offsetAt(current.OpenTagRange.start),
-				PreviousText: text,
+				PreviousText: Encoding.clearXMLComments(text), //pure не подойдёт, потому что он чистит c#
 				Body: tag.OpenTagIsClosed ? document.getText(server.Range.create(lastRange.end, position)) : undefined,
 				LastParent: !!parents && parents.length > 0 ? parents.last() : undefined
 			});
