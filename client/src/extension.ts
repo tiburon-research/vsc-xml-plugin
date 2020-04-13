@@ -940,8 +940,8 @@ async function registerCommands()
 			}
 			caption.push('Text');
 			res.unshift(caption);
-
-			let resultText = res.map(line => line.join('\t')).join('\n');
+			// при объединении выкидываем \t\n
+			let resultText = res.map(line => line.map(str => str.replace(/[\t\n]+/g, ' ')).join('\t')).join('\n');
 			vscode.env.clipboard.writeText(resultText).then(() =>
 			{
 				showInfo('Таблица скопирована в буфер обмена');
