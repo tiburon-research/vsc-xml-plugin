@@ -308,7 +308,7 @@ export class CurrentTag
 		this._setParents(parents);
 	}
 
-	/** Подготавливает TibXML для поиска теги */
+	/** Подготавливает TibXML для поиска тега */
 	public static PrepareXML(text: string): string
 	{
 		// замазываем комментарии

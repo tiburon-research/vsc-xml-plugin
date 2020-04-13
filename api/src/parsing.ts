@@ -63,7 +63,7 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
 	{
 		let pos = typeof before == 'number' ? before : before.length;
 		pos++; // сдвигаем после <
-		let textAfter = fullText.substr(pos);
+		let textAfter = CurrentTag.PrepareXML(fullText.substr(pos));
 		if (textAfter.match(sct))
 		{
 			// SelfClosed
@@ -159,7 +159,7 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 	try
 	{
 		let curIndex = prevText.lastIndexOf(opBracket);
-		let txt = prevText.substr(0, curIndex);
+		let txt = CurrentTag.PrepareXML(prevText.substr(0, curIndex));
 		let rest = txt;
 		let regOp = new RegExp(safeString(opBracket) + safeString(tagName) + "[^\\w]");
 		let regCl = new RegExp(safeString(opBracket) + "\\/" + safeString(tagName) + "[^\\w]");
