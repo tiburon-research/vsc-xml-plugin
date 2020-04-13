@@ -1824,13 +1824,14 @@ async function createClientConnection(context: vscode.ExtensionContext)
 				_errors.logError({ text: data.MessageFriendly, data: logData, stackTrace: data.StackTrace, showerror: !data.Silent, errorMessage: data.Message, tag: data.TagData });
 			});
 
-			// запрос документа с ссервера
+			// запрос документа с сервера
 			_client.onRequest(RequestNames.GetDocumentByUri, (uri: string) =>
 			{
 				return new Promise<IServerDocument>((resolve, reject) =>
 				{
 					vscode.workspace.openTextDocument(vscode.Uri.parse(uri)).then(doc =>
 					{
+						if (doc.languageId != 'tib') resolve(null);
 						resolve(ClientServerTransforms.ToServer.Document(doc));
 					}, err => { reject(err) });
 				});

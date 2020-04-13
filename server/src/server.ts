@@ -211,6 +211,7 @@ connection.onDefinition(data =>
 // это событие дёргаем руками, чтобы передавать все нужные данные
 connection.onRequest(RequestNames.OnDidChangeTextDocument, (data: OnDidChangeDocumentData) =>
 {
+	// тут 'tib' учитывается при всех вызовах
 	return new Promise<CurrentTag>((resolve) =>
 	{
 		let doc = documents.set(data.document);
@@ -305,8 +306,9 @@ export function consoleLog(...data)
 
 /** Смена документа */
 function anotherDocument(data: IServerDocument)
-{
+{// tib учитывается при вызове
 	let doc = documents.add(data);
+	if (!doc) return;
 	_SurveyData.Clear();
 	_Cache.Clear();
 	anyChangeHandler(doc);
@@ -451,7 +453,7 @@ function getDocument(uri: string): Promise<server.TextDocument>
 		if (!!document) return resolve(document);
 		connection.sendRequest<IServerDocument>(RequestNames.GetDocumentByUri, uri).then(doc =>
 		{
-			resolve(documents.add(doc));
+			resolve(!!doc ? documents.add(doc) : null);
 		}, err => { reject(err); });
 	});
 }
