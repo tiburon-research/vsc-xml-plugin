@@ -848,7 +848,7 @@ function getDefaultElement(jqObject, name: string)
 
 
 /** Получает `Structures.ListItem` из объекта `JQuery` */
-export function getListItem(jqObject): Structures.ListItem
+export function getListItem(jqFn, jqObject): Structures.ListItem
 {
 	let parsed = getDefaultElement(jqObject, 'Item');
 	if (!parsed) return null;
@@ -856,7 +856,7 @@ export function getListItem(jqObject): Structures.ListItem
 	let varsAttrs = jqObject.attr('Var');
 	let varsTags = jqObject.find('Var');
 	if (!!varsAttrs) vars = vars.concat(varsAttrs.split(','));
-	if (varsTags.length > 0) vars = vars.concat(varsTags.map((i, el) => el.innerHTML).get());
+	if (varsTags.length > 0) vars = vars.concat(varsTags.map((i, el) => jqFn(el).text()).get());
 
 	let res = new Structures.ListItem();
 	res.Id = parsed.Id;

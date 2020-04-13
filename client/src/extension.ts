@@ -924,7 +924,7 @@ async function registerCommands()
 			elements.each((i, el) =>
 			{
 				let $el = $dom.find(el);
-				let element = isItems ? getListItem($el) : getAnswer($el);
+				let element = isItems ? getListItem($, $el) : getAnswer($el);
 				if (varCount == -1) varCount = isItems ? element['Vars'].length : 0;
 				let line = [];
 				line.push(element.Id);
