@@ -5,7 +5,7 @@ import * as Encoding from './encoding'
 import * as Parse from './parsing'
 import * as JQuery from './tibJQuery'
 import { CacheSet } from './cache'
-import { KeyValuePair, KeyedCollection, safeString, IPair, positiveMin, createDir, pathExists, uriFromName, unlockFile, showFile, fileIsLocked, lockFile, hideFile } from './customs'
+import { KeyValuePair, KeyedCollection, safeRegexp, safeSnippet, IPair, positiveMin, createDir, pathExists, uriFromName, unlockFile, showFile, fileIsLocked, lockFile, hideFile } from './customs'
 import { ISurveyData } from './surveyData'
 import { comparePositions, getCurrentLineText, getPreviousText, getWordAtPosition, getWordRangeAtPosition, isScriptLanguage, translatePosition, isValidDocumentPosition } from './vscodeDocument'
 import { CurrentTag, IProtocolTagFields, CurrentTagFields, TagInfo, TextRange, SimpleTag, ProtocolTagFields, InlineAttribute, ITextRange, CurrentTagGetFields } from './currentTag'
@@ -15,7 +15,7 @@ import { translationArray, PreDefinedConstants } from './constants';
 
 
 // проходной export, чтобы основное вызывать через import from 'tib-api'
-export { JQuery, Parse, Encoding, KeyValuePair, KeyedCollection, safeString, IPair, positiveMin, createDir, pathExists, uriFromName, ISurveyData, comparePositions, getCurrentLineText, getPreviousText, getWordAtPosition, getWordRangeAtPosition, isScriptLanguage, translatePosition, isValidDocumentPosition, CurrentTag, IProtocolTagFields, CurrentTagFields, TagInfo, TextRange, SimpleTag, ProtocolTagFields, InlineAttribute, ITextRange, CurrentTagGetFields, unlockFile, showFile, fileIsLocked, lockFile, hideFile };
+export { JQuery, Parse, Encoding, KeyValuePair, KeyedCollection, safeRegexp, safeSnippet, IPair, positiveMin, createDir, pathExists, uriFromName, ISurveyData, comparePositions, getCurrentLineText, getPreviousText, getWordAtPosition, getWordRangeAtPosition, isScriptLanguage, translatePosition, isValidDocumentPosition, CurrentTag, IProtocolTagFields, CurrentTagFields, TagInfo, TextRange, SimpleTag, ProtocolTagFields, InlineAttribute, ITextRange, CurrentTagGetFields, unlockFile, showFile, fileIsLocked, lockFile, hideFile };
 
 
 
@@ -346,7 +346,7 @@ String.prototype.replaceValues = function (elements: KeyedCollection<string>): s
 	let res = this as string;
 	elements.OrderBy((key, value) => key.length).ForEach((key, value) =>
 	{
-		res = res.replace(new RegExp(safeString(key), "g"), value);
+		res = res.replace(new RegExp(safeRegexp(key), "g"), value);
 	});
 	return res;
 }

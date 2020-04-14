@@ -103,10 +103,18 @@ export function positiveMin(a, b, negative: any = null)
 
 
 /** Подготовленная для RegExp строка */
-export function safeString(text: string): string
+export function safeRegexp(text: string): string
 {
 	if (!text) return '';
 	return text.replace(/[\|\\\{\}\(\)\[\]\^\$\+\*\?\.\/]/g, "\\$&");
+}
+
+
+/** Подготовленная для Snippet строка */
+export function safeSnippet(text: string): string
+{
+	if (!text) return '';
+	return text.replace(/\$/g, "\\$");
 }
 
 

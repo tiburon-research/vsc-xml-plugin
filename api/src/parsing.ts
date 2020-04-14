@@ -2,7 +2,7 @@
 
 import { Language, getPreviousText } from "./index";
 import { TextRange, TagInfo, CurrentTag } from './currentTag'
-import { safeString, positiveMin, KeyedCollection } from './customs'
+import { safeRegexp, positiveMin, KeyedCollection } from './customs'
 import { clearXMLComments } from "./encoding"
 import { RegExpPatterns } from './constants'
 import * as charDetect from 'charset-detector'
@@ -58,7 +58,7 @@ export class ParsedElementObject
 export function findCloseTag(opBracket: string, tagName: string, clBracket: string, before: string | number, fullText: string): FindTagResult
 {
 	let tResult: FindTagResult = { Range: null, SelfClosed: false };
-	let sct = new RegExp("^" + safeString(opBracket) + "?\\w*(\\s+\\w+=((\"[^\"]*\")|('[^']*')))*\\s*\\/" + safeString(clBracket) + ""); // для проверки на selfCloseed
+	let sct = new RegExp("^" + safeRegexp(opBracket) + "?\\w*(\\s+\\w+=((\"[^\"]*\")|('[^']*')))*\\s*\\/" + safeRegexp(clBracket) + ""); // для проверки на selfCloseed
 	try
 	{
 		let pos = typeof before == 'number' ? before : before.length;
@@ -71,8 +71,8 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
 			return tResult;
 		}
 		let rest = textAfter;
-		let regOp = new RegExp(safeString(opBracket) + safeString(tagName) + "[^\\w]");
-		let regCl = new RegExp(safeString(opBracket) + "\\/" + safeString(tagName) + "[^\\w]");
+		let regOp = new RegExp(safeRegexp(opBracket) + safeRegexp(tagName) + "[^\\w]");
+		let regCl = new RegExp(safeRegexp(opBracket) + "\\/" + safeRegexp(tagName) + "[^\\w]");
 		let op = -1;
 		let cl = -1;
 		let res = regCl.exec(rest);
@@ -161,8 +161,8 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 		let curIndex = prevText.lastIndexOf(opBracket);
 		let txt = CurrentTag.PrepareXML(prevText.substr(0, curIndex));
 		let rest = txt;
-		let regOp = new RegExp(safeString(opBracket) + safeString(tagName) + "[^\\w]");
-		let regCl = new RegExp(safeString(opBracket) + "\\/" + safeString(tagName) + "[^\\w]");
+		let regOp = new RegExp(safeRegexp(opBracket) + safeRegexp(tagName) + "[^\\w]");
+		let regCl = new RegExp(safeRegexp(opBracket) + "\\/" + safeRegexp(tagName) + "[^\\w]");
 		let cl = -1;
 		let op = -1;
 

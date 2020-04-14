@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, safeRegexp, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
@@ -1147,7 +1147,7 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 
 				if ((tagCl == -1 || tagOp > -1 && tagOp < tagCl) || result[1].match(/^(Repeat)|(Condition)|(Block)$/))
 				{
-					let closed = after.match(new RegExp("^[^<]*(<\\/)?" + safeString(result[1])));
+					let closed = after.match(new RegExp("^[^<]*(<\\/)?" + safeRegexp(result[1])));
 					if (!closed)
 					{
 						changesCount++;
@@ -1403,7 +1403,7 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 	let newText = text;
 
 	//проверяем на наличие комментов внутри
-	let inComReg = new RegExp("(" + safeString(cStart) + ")|(" + safeString(cEnd) + ")");
+	let inComReg = new RegExp("(" + safeRegexp(cStart) + ")|(" + safeRegexp(cEnd) + ")");
 
 	function checkInnerComments(text: string): boolean
 	{
@@ -1413,9 +1413,9 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 	let valid = checkInnerComments(newText);
 
 	// если это закомментированный, то снимаем комментирование
-	if (!valid && newText.match(new RegExp("^\\s*" + safeString(cStart) + "[\\S\\s]*" + safeString(cEnd) + "\\s*$")))
+	if (!valid && newText.match(new RegExp("^\\s*" + safeRegexp(cStart) + "[\\S\\s]*" + safeRegexp(cEnd) + "\\s*$")))
 	{
-		newText = newText.replace(new RegExp("^(\\s*)" + safeString(cStart) + "( ?)([\\S\\s]*)( ?)" + safeString(cEnd) + "(\\s*)$"), "$1$3$5");
+		newText = newText.replace(new RegExp("^(\\s*)" + safeRegexp(cStart) + "( ?)([\\S\\s]*)( ?)" + safeRegexp(cEnd) + "(\\s*)$"), "$1$3$5");
 		valid = checkInnerComments(newText);
 	}
 	else

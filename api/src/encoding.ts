@@ -1,7 +1,7 @@
 'use strict'
 
 import * as shortHash from "short-hash"
-import { KeyedCollection, safeString } from "./customs"
+import { KeyedCollection, safeRegexp } from "./customs"
 import { RegExpPatterns } from './constants'
 
 
@@ -88,7 +88,7 @@ export function getElementsBack(text: string, encodeResult: XMLencodeResult): st
 	let newText = text;
 	encodeResult.EncodedCollection.ForEach(function (i, e)
 	{
-		newText = newText.replace(new RegExp(safeString(encodeResult.Delimiter + i + encodeResult.Delimiter), "g"), e);
+		newText = newText.replace(new RegExp(safeRegexp(encodeResult.Delimiter + i + encodeResult.Delimiter), "g"), e);
 	})
 	return newText;
 }
@@ -149,7 +149,7 @@ export function getReplaceDelimiter(text: string, length?: number): string
 	for (let i = 0; i < dels.length; i++) 
 	{
 		let curDel = dels[i].repeat(length);
-		let mt = text.match(new RegExp(safeString(curDel) + RegExpPatterns.DelimiterContent + safeString(curDel), "g"));
+		let mt = text.match(new RegExp(safeRegexp(curDel) + RegExpPatterns.DelimiterContent + safeRegexp(curDel), "g"));
 		if (!mt || mt.length == 0) return curDel;
 	}
 	if (!del) throw 'Подходящий разделитель не найден';
@@ -238,7 +238,7 @@ export function clearCSContents(text: string): string
 		let open = element[1];
 		let inner = typeof element[7 + tCount] == 'undefined' ? '' : element[7 + tCount].replace(/./g, ' ');
 		let close = element[8 + tCount];
-		let repl = new RegExp(safeString(element[0]));
+		let repl = new RegExp(safeRegexp(element[0]));
 		res = res.replace(repl, open + inner + close);
 	});
 

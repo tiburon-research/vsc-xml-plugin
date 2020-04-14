@@ -1,6 +1,6 @@
 'use strict';
 
-import { Language, safeString, Parse, Encoding } from "tib-api";
+import { Language, safeRegexp, Parse, Encoding } from "tib-api";
 import * as Constants from "tib-api/lib/constants";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
@@ -521,9 +521,9 @@ function preFormatXML(text: string): string
 		if (!element[2].match(/\]\]>/))
 		{
 			if (element[2].match(/^.*\S.*\r?\n/)) // переносим начало
-				res = res.replace(new RegExp(safeString(element[1] + element[2]), "g"), element[1] + "\n" + element[2]);
+				res = res.replace(new RegExp(safeRegexp(element[1] + element[2]), "g"), element[1] + "\n" + element[2]);
 			if (element[2].match(/\S[ \t]*$/)) // переносим конец
-				res = res.replace(new RegExp(safeString(element[2] + element[3]), "g"), element[2] + "\n" + element[3]);
+				res = res.replace(new RegExp(safeRegexp(element[2] + element[3]), "g"), element[2] + "\n" + element[3]);
 		}
 	});
 

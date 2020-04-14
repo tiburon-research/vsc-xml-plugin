@@ -1,6 +1,6 @@
 'use strict'
 
-import { Parse, safeString, JQuery, translit, KeyedCollection } from 'tib-api'
+import { Parse, safeRegexp, JQuery, translit, KeyedCollection, safeSnippet } from 'tib-api'
 import { SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElementType, SurveyElement, SurveyListItemVars } from 'tib-api/lib/surveyObjects'
 import * as vscode from 'vscode'
 import { QuestionTypes } from 'tib-api/lib/constants';
@@ -136,7 +136,7 @@ export function RemoveQuestionIds(text: string): string
 		let questionHeader = $(this).find("Header");
 		let headerText = questionHeader.text();
 		let qIDValue = $(this).attr('Id');
-		let regex = new RegExp("^\\s*" + safeString(qIDValue) + "\\.?\\s*");
+		let regex = new RegExp("^\\s*" + safeRegexp(qIDValue) + "\\.?\\s*");
 		qIDValue = headerText.match(regex);
 		headerText = questionHeader.text().replace(qIDValue, "");
 		questionHeader.text(headerText);
@@ -300,7 +300,7 @@ export class XMLElementCreationResult
 
 export function createElements(text: string, type: SurveyElementType, settings: ExtensionSettings): XMLElementCreationResult
 {
-	let strings = text.split("\n");
+	let strings = safeSnippet(text).split("\n");
 	let questionResult: Parse.ParsedElementObject;
 	let res = new XMLElementCreationResult();
 
