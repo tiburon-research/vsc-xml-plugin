@@ -416,7 +416,7 @@
         "compile-api": "cd api && npm run compile && cd ../",
         "install-vsc": "node node_modules/vscode/bin/install",
         "postinstall": "npm run install-vsc && npm run compile-api && npm run compile && npm install -g vsce",
-        "rebuild": "cd api && rmdir /q/s lib && del tsconfig.tsbuildinfo && cd ../client && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../server && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../ && npm run compile && npm run compile",
+        "rebuild": "cd api && rmdir /q/s lib && del tsconfig.tsbuildinfo && cd ../client && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../server && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../ && npm run compile",
         "copy-signature": "copy \"client\\out\\customSurveyCode.d.ts\" \"\\\\192.168.177.11\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts\""
     }
 }
