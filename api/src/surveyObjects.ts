@@ -9,7 +9,7 @@ import { KeyedCollection } from './customs'
 
 
 
-export enum SurveyElementType { Item, ListItem, Answer, List, Question, Page };
+export enum SurveyElementType { Item, ListItem, ConstantItem, Answer, List, Question, Page };
 
 
 
@@ -191,11 +191,11 @@ export class SurveyElement
 /** <Item> */
 export class SurveyItem extends SurveyElement
 {
-	constructor(id?: string, text?: string)
+	constructor(id?: string, textOrValue?: string, withValue?: boolean)
 	{
 		super("Item", id);
-		let textItem = new SurveyElement("Text");
-		textItem.Text = text;
+		let textItem = new SurveyElement(withValue ? "Value" : "Text");
+		textItem.Text = textOrValue;
 		this.AddChild(textItem);
 		this.ElementType = SurveyElementType.Item;
 	}
@@ -274,6 +274,29 @@ export class SurveyListItem extends SurveyItem
 				res.SetAttr("Var", this.Vars.Items.join(","));
 			}
 		}
+		return res;
+	}
+
+}
+
+
+/** Элементы <Item> для <Constants> */
+export class SurveyConstantsItem extends SurveyItem
+{
+
+	constructor(id?: string, value?: string)
+	{
+		super(id, value, true);
+		this.CollapseTags = true;
+		this.ElementType = SurveyElementType.ConstantItem;
+	}
+
+	/** преобразует к стандартному классу */
+	public ToSurveyItem(separateVars: boolean): SurveyElement
+	{
+		let res = new SurveyElement("Item");
+		// копируем все свойства
+		res = Object.assign(res, this);
 		return res;
 	}
 

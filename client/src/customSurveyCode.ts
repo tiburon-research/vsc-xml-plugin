@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { JQuery } from 'tib-api';
-import { SurveyListItem, SurveyListItemVars } from 'tib-api/lib/surveyObjects';
+import { SurveyListItem, SurveyListItemVars, SurveyConstantsItem } from 'tib-api/lib/surveyObjects';
 import xlsx from 'node-xlsx';
 
 
@@ -13,6 +13,16 @@ function __getItemText($item): string
 	let res = null
 	let attr = $item.attr('Text');
 	let $tag = $item.find('Text');
+	if (typeof attr !== 'undefined' && attr !== false) res = attr;
+	else if ($tag.length > 0) res = $tag.text();
+	return res;
+}
+
+function __getItemValue($item): string
+{
+	let res = null
+	let attr = $item.attr('Value');
+	let $tag = $item.find('Value');
 	if (typeof attr !== 'undefined' && attr !== false) res = attr;
 	else if ($tag.length > 0) res = $tag.text();
 	return res;
@@ -47,10 +57,33 @@ function __getList(listId: string)
 	return $list;
 }
 
+function __getConstants()
+{
+	let $consts = $dom.find(`Constants`);
+	if ($consts.length == 0) throw `Констнанты не найдены`;
+	return $consts;
+}
+
+function __getConstantItem(itemId: string)
+{
+	let $consts = __getConstants();
+	let $item = $consts.find(`Item[Id="${itemId}"]`);
+	if ($item.length == 0) throw `Константа "${itemId}" не найдена`;
+	return $item;
+}
+
 
 
 namespace XML
 {
+	export class List
+	{
+		public readonly id: string;
+		public readonly items: ListItem[];
+		/** Представление JQuery */
+		public $element;
+	}
+
 	export class ListItem
 	{
 		public readonly id: string;
@@ -60,16 +93,25 @@ namespace XML
 		public $element;
 	}
 
-	export class List
+	export class Constants
 	{
-		public readonly id: string;
-		public readonly items: ListItem[];
+		public readonly items: ConstantItem[];
 		/** Представление JQuery */
 		public $element;
 	}
 
+	export class ConstantItem
+	{
+		public readonly id: string;
+		public readonly value: string;
+		/** Представление JQuery */
+		public $element;
+	}
+
+	
+
 	/** Работа с листами */
-	export class Lists
+	export class DocumentLists
 	{
 		constructor(private $dom)
 		{ }
@@ -154,6 +196,61 @@ namespace XML
 		}
 
 	}
+
+	export class DocumentConstants
+	{
+		constructor(private $dom)
+		{ }
+		
+		/** Получает все константы */
+		public get(): Constants
+		{
+			let $consts = __getConstants();
+			let items = $.map($consts.find('Item'), i =>
+			{
+				let $item = $dom.find(i);
+				return {
+					id: $item.attr('Id'),
+					value: __getItemValue($item)
+				} as XML.ConstantItem;
+			})
+			return {
+				items,
+				$element: $consts
+			} as XML.Constants;
+		}
+		
+		/** Получает значение константы */
+		public getItemValue(itemId: string): string
+		{
+			let $item = __getConstantItem(itemId);
+			let value = __getItemValue($item);
+			return value;
+		}
+
+		/** Добавляет элемент в конец листа */
+		public addItem(item: ConstantItem)
+		{
+			let $const = __getConstants();
+			let itemObj = new SurveyConstantsItem(item.id, item.value);
+			$const.append(itemObj.ToXML());
+		}
+
+		/** Обновляет текст элемента */
+		public setItemValue(id: string, value: string)
+		{
+			let $item = __getConstantItem(id);
+			let attr = $item.attr('Value');
+			if (typeof attr != 'undefined' && attr !== false)
+				$item.attr('Value', value);
+			else
+			{
+				let $value = $item.find('Value');
+				if ($value.length == 0) $item.append(`<Value>${value}</Value>`);
+				else $value.text(value);
+			}
+		}
+	}
 }
 
 
@@ -167,13 +264,16 @@ export class DocumentObjectModel
 		this.text = document.getText();
 		$dom = dom;
 		this.applyChanges = () => { return f($dom.xml()); };
-		this.lists = new XML.Lists($dom);
+		this.lists = new XML.DocumentLists($dom);
+		this.constants = new XML.DocumentConstants($dom)
 	}
 
 	/** Полный текст документа */
 	public text: string;
 	/** Объект для работы с листами */
-	public lists: XML.Lists;
+	public lists: XML.DocumentLists;
+	/** Объект для работы с константами */
+	public constants: XML.DocumentConstants;
 	/** Применяет к документу внесённые изменения */
 	public applyChanges: () => Promise<void>;
 
