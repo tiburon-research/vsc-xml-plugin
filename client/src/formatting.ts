@@ -97,71 +97,77 @@ async function formatXML(text: string, tab: string = "\t", indent: number = 0): 
 	let res = new FormatResult();
 	res.Result = text;
 
-	let ind = tab.repeat(indent);
-
-	let decl = Parse.ReplaceXMLDeclaration(text);
-
-	let oldText = decl.Result;
-	let tags = Parse.get1LevelNodes(oldText);
-	let newText = oldText;
-
-	// если внутри тегов нет, то возвращаем внутренность с отступом
-	if (tags.length == 0)
+	try
 	{
-		res = await formatPlainText(oldText, tab, indent);
-	}
-	else
-	{
-		// если теги есть, то рекурсивно форматируем внутренности каждого
-		for (let i = 0; i < tags.length; i++)
+		let ind = tab.repeat(indent);
+
+		let decl = Parse.ReplaceXMLDeclaration(text);
+
+		let oldText = decl.Result;
+		let tags = Parse.get1LevelNodes(oldText);
+		let newText = oldText;
+
+		// если внутри тегов нет, то возвращаем внутренность с отступом
+		if (tags.length == 0)
 		{
-			let tag = tags[i];
-			if (!!res.Error) continue; // если ошибка уже есть, то пропускаем всё
-			let body = oldText.slice(tag.Body.From, tag.Body.To);
-			let formattedBody = body;
-			let openTag = oldText.slice(tag.OpenTag.From, tag.OpenTag.To);
-			let closeTag = tag.Closed ? oldText.slice(tag.CloseTag.From, tag.CloseTag.To) : "";
-			let oldFull = oldText.slice(tag.FullLines.From, tag.FullLines.To); // то, что надо заменить на новое
-			if (!oldFull) continue;
-			let before = oldText.slice(tag.FullLines.From, tag.OpenTag.From); // то, что идёт перед <тегом> на одной строке
-			let after = oldText.slice(tag.CloseTag.To, tag.FullLines.To); // то, что идёт после </тега> на одной строке
-			let newFul;
-			// форматируем то, что вне тега на тех же строках\
-			if (!before.match(/^\s*$/)) before = before.replace(/^\s*(\S.*)\s*/, '$1\n'); else before = '';
-			if (!after.match(/^\s*$/)) after = after.replace(/^\s*(\S.*)\s*/, ' $1'); else after = '';
-
-			// если внутри что-то есть			
-			if (!body.match(/^\s*$/))
+			res = await formatPlainText(oldText, tab, indent);
+		}
+		else
+		{
+			// если теги есть, то рекурсивно форматируем внутренности каждого
+			for (let i = 0; i < tags.length; i++)
 			{
-				if (tag.Multiline)
+				let tag = tags[i];
+				if (!!res.Error) continue; // если ошибка уже есть, то пропускаем всё
+				let body = oldText.slice(tag.Body.From, tag.Body.To);
+				let formattedBody = body;
+				let openTag = oldText.slice(tag.OpenTag.From, tag.OpenTag.To);
+				let closeTag = tag.Closed ? oldText.slice(tag.CloseTag.From, tag.CloseTag.To) : "";
+				let oldFull = oldText.slice(tag.FullLines.From, tag.FullLines.To); // то, что надо заменить на новое
+				if (!oldFull) continue;
+				let before = oldText.slice(tag.FullLines.From, tag.OpenTag.From); // то, что идёт перед <тегом> на одной строке
+				let after = oldText.slice(tag.CloseTag.To, tag.FullLines.To); // то, что идёт после </тега> на одной строке
+				let newFul;
+				// форматируем то, что вне тега на тех же строках\
+				if (!before.match(/^\s*$/)) before = before.replace(/^\s*(\S.*)\s*/, '$1\n'); else before = '';
+				if (!after.match(/^\s*$/)) after = after.replace(/^\s*(\S.*)\s*/, ' $1'); else after = '';
+
+				// если внутри что-то есть			
+				if (!body.match(/^\s*$/))
 				{
-					// убираем лишние пробелы/переносы
-					formattedBody = formattedBody.replace(/^\s*?(([\t ]*)(\S[\s\S]*\S))\s*$/, "$2$3");
-					// форматируем согласно содержанию
-					let tmpRes = await formatBody(formattedBody, tab, indent + 1, tag.Language);
-					if (!!tmpRes.Error)
+					if (tag.Multiline)
 					{
-						res.Error = "Ошибка при форматировании тега" + (!!tag && !!tag.Name ? (" " + tag.Name) : "") + ":\n" + tmpRes.Error;
-						continue;
+						// убираем лишние пробелы/переносы
+						formattedBody = formattedBody.replace(/^\s*?(([\t ]*)(\S[\s\S]*\S))\s*$/, "$2$3");
+						// форматируем согласно содержанию
+						let tmpRes = await formatBody(formattedBody, tab, indent + 1, tag.Language);
+						if (!!tmpRes.Error)
+						{
+							res.Error = "Ошибка при форматировании тега" + (!!tag && !!tag.Name ? (" " + tag.Name) : "") + ":\n" + tmpRes.Error;
+							continue;
+						}
+						formattedBody = "\n" + tmpRes.Result + "\n";
 					}
-					formattedBody = "\n" + tmpRes.Result + "\n";
+					// отступ для AllowCode fake
+					if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + RegExpPatterns.AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
+						formattedBody = " " + formattedBody;
+					if (tag.Closed && !tag.SelfClosed) closeTag = (tag.Multiline ? ind : "") + closeTag;
 				}
-				// отступ для AllowCode fake
-				if (!tag.IsAllowCodeTag && !tag.SelfClosed && tag.Name.match(new RegExp("^" + RegExpPatterns.AllowCodeTags + "$")) && !formattedBody.match(/^[\t ]/))
-					formattedBody = " " + formattedBody;
-				if (tag.Closed && !tag.SelfClosed) closeTag = (tag.Multiline ? ind : "") + closeTag;
-			}
-			else formattedBody = "";
-			// формируем результат
-			newFul = before + ind + formatTag(openTag) + formattedBody + formatTag(closeTag) + after;
-			newText = newText.replace(oldFull, newFul);
-		};
+				else formattedBody = "";
+				// формируем результат
+				newFul = before + ind + formatTag(openTag) + formattedBody + formatTag(closeTag) + after;
+				newText = newText.replace(oldFull, newFul);
+			};
 
-		// форматируем между тегами
-		if (!res.Error) res = await formatBetweenTags(newText, tab, indent);
+			// форматируем между тегами
+			if (!res.Error) res = await formatBetweenTags(newText, tab, indent);
+		}
+
+		if (!!decl.Declaration) res.Result = decl.Declaration + res.Result;
+	} catch (error)
+	{
+		res.Error = "Ошибка при форматировании XML";
 	}
-
-	if (!!decl.Declaration) res.Result = decl.Declaration + res.Result;
 
 	return res;
 }
