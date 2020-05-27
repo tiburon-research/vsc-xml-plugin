@@ -116,7 +116,7 @@ export function encodeElements(text: string, elem: RegExp, delimiter: string): E
 		res.Result = result;
 	} catch (error)
 	{
-		throw "Ошибка кодирования элементов";
+		throw "Ошибка кодирования элементов" + (error?.message ? "\n" + error.message : "");
 	}
 	return res;
 }
