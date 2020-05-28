@@ -822,7 +822,7 @@ export function getCsInAutoSplit(document: server.TextDocument, prepearedText: s
 /** Ищет весь пользовательский JS и возвращает одной строкой */
 export async function getCustomJS(text: string): Promise<string>
 {
-	let res: string = null;
+	let res: string = "";
 	let jsElements = text.matchAll(/<!--#JS([\s\S]*?)-->/);
 	jsElements.forEach(body =>
 	{
