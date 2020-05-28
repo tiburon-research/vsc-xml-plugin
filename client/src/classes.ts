@@ -98,6 +98,14 @@ export function getContextChanges(document: vscode.TextDocument, selections: vsc
 }
 
 
+/** Читает содержимое файла в правиьной кодировке */
+export function readFileText(path: string): string
+{
+	let fileBuffer = fs.readFileSync(path);
+	// по возможности читаем в 1251
+	return Parse.win1251Avaliabe(fileBuffer) ? iconv.decode(fileBuffer, 'win1251') : fileBuffer.toString('utf8');
+}
+
 
 /** Открытие текста файла в новом окне */
 export function openFileText(path: string): Promise<void>
@@ -119,9 +127,7 @@ export function openFileText(path: string): Promise<void>
 			})
 		}); */
 
-		let fileBuffer = fs.readFileSync(path);
-		// по возможности читаем в 1251
-		let text = Parse.win1251Avaliabe(fileBuffer) ? iconv.decode(fileBuffer, 'win1251') : fileBuffer.toString('utf8');
+		let text = readFileText(path);
 		vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
 		{ // создаём пустой tib-файл
 			if (!newDoc) return reject();
