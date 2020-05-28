@@ -17,7 +17,7 @@ import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors, showInfo, showError } from './errors';
 import { readGeoFile, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
 import { getCustomJS, getListItem, getAnswer } from 'tib-api/lib/parsing';
-import { DocumentObjectModel } from './customSurveyCode';
+import * as customCode from './customSurveyCode';
 
 
 export { CSFormatter, _settings as Settings };
@@ -2175,18 +2175,20 @@ async function runCustomJS()
 	let code = await vscode.window.showInputBox({ placeHolder: "Код для выполнения" });
 	let resultScript = js + "\n" + code;
 
-	// переменные, которые пригодятся
-	let replaceDocumentText = function (text: string) 
-	{
-		let selections = editor.selections;
-		let change = applyChanges(getFullRange(vscode.window.activeTextEditor.document), text, editor, true);
-		change.then(() => { editor.selections = selections });
-		return change;
-	};
+	// тут надо перечислить все глобальные export, чтобы в контексте eval имена были именно такими же
+	let DocumentObjectModel = customCode.DocumentObjectModel;
+	let XML = customCode.XML;
 
-	let $dom = require('tib-api').JQuery.init().XMLDOM(editor.document.getText());
-	let document = new DocumentObjectModel(editor.document, $dom, replaceDocumentText);
-	eval(resultScript);
+	let document = new DocumentObjectModel(editor.document);
+
+	try {
+		eval(resultScript);
+	} catch (error)
+	{
+		let text = typeof error == 'string' ? error : error?.message;
+		showError(text);
+		console.error(error);
+	}
 }
 
 
