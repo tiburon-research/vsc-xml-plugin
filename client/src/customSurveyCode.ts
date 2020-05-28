@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
-import { JQuery } from 'tib-api';
+import { JQuery, Language } from 'tib-api';
 import { SurveyListItem, SurveyListItemVars, SurveyConstantsItem } from 'tib-api/lib/surveyObjects';
+import * as Parse from 'tib-api/lib/parsing';
+import * as Formatting from './formatting';
+import { Settings } from './extension';
 import xlsx from 'node-xlsx';
 import { getFullRange } from './extension';
 import * as fs from 'fs';
@@ -85,6 +88,24 @@ class XmlDocumentWorker
 
 export namespace XML
 {
+	/** Стиль отображения */
+	export enum ListItemView
+	{
+		/** <Item Var=""><Text></Text></Iteam> */
+		VarsInline,
+		/** <Item><Text></Text><Var></Var></Iteam> */
+		VarTagsInline,
+		/** <Item>
+		 * 
+		 *	 <Text></Text>
+		
+		 *	 <Var></Var>
+		
+		 * </Iteam> 
+		*/
+		Separated
+	}
+
 	export class List
 	{
 		public readonly id: string;
@@ -142,7 +163,7 @@ export namespace XML
 					vars: this.worker.getListItemVars($item),
 					$element: $item
 				} as XML.ListItem;
-			})
+			});
 			return {
 				id: $list.attr('Id'),
 				items,
@@ -175,12 +196,17 @@ export namespace XML
 		}
 
 		/** Добавляет элемент в конец листа */
-		public addItem(listId: string, item: ListItem)
+		public addItem(listId: string, item: ListItem, style?: ListItemView)
 		{
 			let $list = this.worker.getList(listId);
 			let itemObj = new SurveyListItem(item.id, item.text);
+			if (typeof style != 'undefined')
+			{
+				itemObj.SeparateVars = style == ListItemView.Separated || style == ListItemView.VarTagsInline;
+				itemObj.CollapseTags = style == ListItemView.VarsInline || style == ListItemView.VarTagsInline;
+			}
 			if (typeof item.vars != 'undefined' && item.vars.length > 0) itemObj.Vars = new SurveyListItemVars(item.vars);
-			$list.append(itemObj.ToXML());
+			$list.append($.XML(itemObj.ToXML()));
 		}
 
 		/** Обновляет текст элемента */
@@ -210,6 +236,7 @@ export namespace XML
 
 	}
 
+	/** Работа с константами */
 	export class DocumentConstants
 	{
 		private worker: XmlDocumentWorker;
@@ -286,10 +313,13 @@ export class DocumentObjectModel
 		{
 			return new Promise<void>((resolve, reject) =>
 			{
-				vscode.window.activeTextEditor.edit(builder =>
+				this.getText().then(text =>
 				{
-					builder.replace(getFullRange(document), this.$dom.xml());
-				}).then(() => { resolve(); });
+					vscode.window.activeTextEditor.edit(builder =>
+					{
+						builder.replace(getFullRange(document), text);
+					}).then(() => { resolve(); });
+				});
 			});
 		};
 		this.lists = new XML.DocumentLists(this.$dom);
@@ -300,7 +330,27 @@ export class DocumentObjectModel
 	public static async loadFileAsync(path: string): Promise<DocumentObjectModel>
 	{
 		let doc = await vscode.workspace.openTextDocument(path);
-		return new DocumentObjectModel(doc);
+		let dom = new DocumentObjectModel(doc);
+		dom.applyChanges = () =>
+		{
+			return new Promise<void>((resolve, reject) =>
+			{
+				dom.getText().then(text =>
+				{
+					let fileBuffer = fs.readFileSync(path);
+					let encoding = Parse.win1251Avaliabe(fileBuffer) ? 'windows-1251' : 'utf-8';
+					fs.writeFileSync(path, text, { encoding });
+					resolve();
+				});
+			});
+		}
+		return dom;
+	}
+
+	/** Возвращает отформатированный текст документа */
+	public getText(): Promise<string>
+	{
+		return Formatting.format(this.$dom.xml(), Language.XML, Settings, '\t', 0);
 	}
 
 	/** Полный текст документа */
