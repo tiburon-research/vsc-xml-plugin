@@ -270,13 +270,14 @@ async function notImperativeQuestions(document: server.TextDocument, prepearedTe
 async function equalTexts(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
 {
 	let res: Parse.DocumentElement[] = [];
-	let headers = prepearedText.findAll(/(<Header\s*>\s*)([\s\S]+?)\s*<\/Header\s*>/);
-	let labelsQ = prepearedText.findAll(/(<Question[^>]+)(ExportLabel=("|')(.+?)(\3))/);
+	let text = Encoding.clearXMLComments(document.getText());
+	let headers = text.findAll(/(<Header\s*>\s*)([\s\S]+?)\s*<\/Header\s*>/);
+	let labelsQ = text.findAll(/(<Question[^>]+)(ExportLabel=("|')(.+?)(\3))/);
 	if (headers.length > 1) res = res.concat(await findDuplicatedText(document, headers, 2, 15, 'Найдены повторяющиеся заголовки', 1));
 	if (labelsQ.length > 1) res = res.concat(await findDuplicatedText(document, labelsQ, 2, 3, 'Найдены повторяющиеся метки вопросов', 1));
 
 	// ищем ответы внутри вопросов
-	let questions = prepearedText.findAll(/(<Question[^>]+>)([\s\S]+?)<\/Question/);
+	let questions = text.findAll(/(<Question[^>]+>)([\s\S]+?)<\/Question/);
 	let eqAnswers: Parse.DocumentElement[] = [];
 	await questions.forEachAsync(q => new Promise<void>((resolve, reject) =>
 	{
@@ -433,10 +434,12 @@ async function _diagnosticElements(document: server.TextDocument, type: server.D
 async function findDuplicatedText(document: server.TextDocument, searchResults: SearchResult[], groupIndex: number, minLength: number, errText: string, groupIndent: number = -1)
 {
 	let res: Parse.DocumentElement[] = [];
-	var eqTexts = searchResults.filter(x => x.Result[groupIndex].length > minLength && !x.Result[groupIndex].match(/(\[c#\])|@/)).findDuplicates<SearchResult>((x1, x2) => x1.Result[groupIndex] == x2.Result[groupIndex]);
+	let filteredREsults = searchResults.filter(x => x.Result[groupIndex].length > minLength && !x.Result[groupIndex].match(/(\[c#\])|@(ID|Text|Pure|Var|Itera)/));
+	let eqComparer = (result: SearchResult) => { return result.Result[groupIndex].replace(/(<!\[CDATA\[)|(\]\]>)/g, '').trim() };
+	let eqTexts = filteredREsults.findDuplicates<SearchResult>((x1, x2) => eqComparer(x1) == eqComparer(x2));
 	if (eqTexts.length > 0)
 	{
-		searchResults.filter(x => eqTexts.contains(x, el => el.Result[groupIndex] == x.Result[groupIndex])).forEach(header =>
+		searchResults.filter(x => eqTexts.contains(x, el => eqComparer(el) == eqComparer(x))).forEach(header =>
 		{
 			let indent = groupIndent > -1 ? header.Result[groupIndent].length : 0;
 			res.push(new Parse.DocumentElement(document, {
