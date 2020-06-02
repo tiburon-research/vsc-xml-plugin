@@ -1,12 +1,11 @@
 import * as vscode from 'vscode';
 import { JQuery, Language } from 'tib-api';
 import { SurveyListItem, SurveyListItemVars, SurveyConstantsItem } from 'tib-api/lib/surveyObjects';
-import * as Parse from 'tib-api/lib/parsing';
 import * as Formatting from './formatting';
 import { Settings } from './extension';
 import xlsx from 'node-xlsx';
 import { getFullRange } from './extension';
-import * as fs from 'fs';
+import { updateFileText } from './classes';
 
 
 var $ = JQuery.init();
@@ -16,7 +15,7 @@ class XmlDocumentWorker
 {
 
 	constructor(private $dom)
-	{}
+	{ }
 
 	public getItemText($item): string
 	{
@@ -57,6 +56,17 @@ class XmlDocumentWorker
 		let $item = $list.find(`Item[Id="${itemId}"]`);
 		if ($item.length == 0) throw `Элемент "${itemId}" не найден в списке ${listId}`;
 		return $item;
+	}
+
+
+	public getListItemObject($item): XML.ListItem
+	{
+		return {
+			id: $item.attr('Id'),
+			text: this.getItemText($item),
+			vars: this.getListItemVars($item),
+			$element: $item
+		} as XML.ListItem;
 	}
 
 
@@ -156,19 +166,29 @@ export namespace XML
 			let $list = this.worker.getList(id);
 			let items = $.map($list.find('Item'), i =>
 			{
-				let $item = this.$dom.find(i);
-				return {
-					id: $item.attr('Id'),
-					text: this.worker.getItemText($item),
-					vars: this.worker.getListItemVars($item),
-					$element: $item
-				} as XML.ListItem;
+				return this.worker.getListItemObject(this.$dom.find(i));
 			});
 			return {
 				id: $list.attr('Id'),
 				items,
 				$element: $list
 			} as XML.List;
+		}
+
+
+		/** Очищает лист от Item */
+		public clear(listId: string): void
+		{
+			let $list = this.worker.getList(listId);
+			$list.find('Item').remove();
+		}
+
+
+		/** Должно работать быстрее, чем полный Lists.get() */
+		public getItem(listId: string, itemId: string): ListItem
+		{
+			let $item = this.worker.getListItem(listId, itemId);			
+			return this.worker.getListItemObject($item);
 		}
 
 		/** Должно работать быстрее, чем полный Lists.get() */
@@ -206,7 +226,7 @@ export namespace XML
 				itemObj.CollapseTags = style == ListItemView.VarsInline || style == ListItemView.VarTagsInline;
 			}
 			if (typeof item.vars != 'undefined' && item.vars.length > 0) itemObj.Vars = new SurveyListItemVars(item.vars);
-			$list.append($.XML(itemObj.ToXML()));
+			$list.append(itemObj.ToXML()+ '\n');
 		}
 
 		/** Обновляет текст элемента */
@@ -277,7 +297,7 @@ export namespace XML
 		{
 			let $const = this.worker.getConstants();
 			let itemObj = new SurveyConstantsItem(item.id, item.value);
-			$const.append(itemObj.ToXML());
+			$const.append(itemObj.ToXML() + '\n');
 		}
 
 		/** Обновляет текст элемента */
@@ -337,9 +357,7 @@ export class DocumentObjectModel
 			{
 				dom.getText().then(text =>
 				{
-					let fileBuffer = fs.readFileSync(path);
-					let encoding = Parse.win1251Avaliabe(fileBuffer) ? 'windows-1251' : 'utf-8';
-					fs.writeFileSync(path, text, { encoding });
+					updateFileText(path, text, 'utf-8'); // на данный момент include в двигле работает только в utf-8
 					resolve();
 				});
 			});
@@ -361,5 +379,6 @@ export class DocumentObjectModel
 	public constants: XML.DocumentConstants;
 	/** Применяет к документу внесённые изменения */
 	public applyChanges: () => Promise<void>;
+
 
 }
