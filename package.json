@@ -212,7 +212,12 @@
                 "title": "Вынести ответы в List",
                 "category": "tib",
                 "enablement": "editorHasSelection"
-            }
+			},
+			{
+                "command": "tib.customScriptDocs",
+                "title": "Документация по пользовательским скриптам",
+                "category": "tib"
+			}
         ],
         "menus": {
             "editor/context": [
@@ -306,7 +311,7 @@
             {
                 "key": "ctrl+alt+j",
                 "command": "tib.runCustomScript"
-            }
+			}
         ],
         "configurationDefaults": {
             "[tib]": {

@@ -858,6 +858,28 @@ async function registerCommands()
 		});
 	});
 
+
+	registerCommand('tib.customScriptDocs', () => 
+	{
+		return new Promise<void>((resolve, reject) =>
+		{
+			let path = TibPaths.CustomCodeSignatures;
+			if (!path)
+			{
+				logError("Невозможно получить доступ к файлу сигнатур", true, undefined);
+				return resolve();
+			}
+			_currentStatus.setProcessMessage("Открывается файл...").then(x =>
+			{
+				openFileText(path, 'typescript').then(() => _currentStatus.removeCurrentMessage()).then(() =>
+				{
+					x.dispose();
+					resolve();
+				});
+			});
+		});
+	});
+
 	//Создание tibXML шаблона
 	registerCommand('tib.template', () =>
 	{
