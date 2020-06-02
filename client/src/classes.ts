@@ -115,7 +115,7 @@ export function readFileText(path: string): string
 
 
 /** Открытие текста файла в новом окне */
-export function openFileText(path: string): Promise<void>
+export function openFileText(path: string, language?: string): Promise<void>
 {
 	return new Promise<void>((resolve, reject) =>
 	{
@@ -133,9 +133,9 @@ export function openFileText(path: string): Promise<void>
 				});
 			})
 		}); */
-
+		language = language || 'tib';
 		let text = readFileText(path);
-		vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+		vscode.workspace.openTextDocument({ language }).then(newDoc =>
 		{ // создаём пустой tib-файл
 			if (!newDoc) return reject();
 			vscode.window.showTextDocument(newDoc).then(editor => 
