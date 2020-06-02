@@ -1234,7 +1234,7 @@ function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 {
 	let res: Thenable<any>[] = [];
 	// если хоть одна позиция такова, то нафиг
-	if (!data.tag || !data.changes || data.changes.length == 0 || !_settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return res;
+	if (!data.editor || !data.tag || !data.changes || data.changes.length == 0 || !_settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return res;
 	let tagRegex = /(<\/?)(\w+)$/;
 	let nullPosition = new vscode.Position(0, 0);
 	try
@@ -2051,9 +2051,10 @@ async function registerActionCommands()
 /** Отправка документа на сервер */
 async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null)
 {
+	let editor = vscode.window.activeTextEditor;
+	if (!editor) return null;
 	if (!changeData)
 	{
-		let editor = vscode.window.activeTextEditor;
 		let doc = editor.document;
 		let documentData = ClientServerTransforms.ToServer.Document(doc);
 		let position = ClientServerTransforms.ToServer.Position(editor.selection.active);
