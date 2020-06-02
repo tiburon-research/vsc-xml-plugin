@@ -98,6 +98,13 @@ export function getContextChanges(document: vscode.TextDocument, selections: vsc
 }
 
 
+export function updateFileText(path: string, text: string, encoding?: string)
+{
+	let fileBuffer = fs.readFileSync(path);	
+	encoding = encoding || (Parse.win1251Avaliabe(fileBuffer) ? 'win1251' : 'utf-8');
+	fs.writeFileSync(path, iconv.encode(text, encoding));
+}
+
 /** Читает содержимое файла в правиьной кодировке */
 export function readFileText(path: string): string
 {
