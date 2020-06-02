@@ -9,7 +9,7 @@ import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSetti
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
-import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, LogPath, GenerableRepeats, RequestNames } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames } from 'tib-api/lib/constants'
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
@@ -217,7 +217,7 @@ async function getStaticData()
 		_userInfo = getUserData();
 		// сохраняем нужные значения
 		_settings = new ExtensionSettings();
-		if (!pathExists(LogPath)) _outChannel.logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
+		if (!pathExists(TibPaths.Logs)) _outChannel.logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
 		_useLinq = _settings.Item("useLinq");
 
 		// получаем фунцию форматирования C#
@@ -226,7 +226,7 @@ async function getStaticData()
 		else _outChannel.logToOutput("Расширение 'Leopotam.csharpfixformat' не установлено, C# будет форматироваться, как простой текст", _WarningLogPrefix);
 
 		// запускаем бота
-		let dataPath = LogPath + "\\data.json";
+		let dataPath = TibPaths.Logs + "\\data.json";
 		if (pathExists(dataPath))
 		{
 			let data = JSON.parse(fs.readFileSync(dataPath).toString());
@@ -2179,7 +2179,6 @@ async function runCustomJS()
 	// тут надо перечислить все глобальные export, чтобы в контексте eval имена были именно такими же
 	let DocumentObjectModel = customCode.DocumentObjectModel;
 	let XML = customCode.XML;
-
 	let document = new DocumentObjectModel(editor.document);
 
 	try {

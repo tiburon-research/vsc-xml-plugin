@@ -101,7 +101,10 @@ export const PreDefinedConstants = {
 };
 
 
-export const LogPath = "G:\\Разное\\TiburonXMLHelper\\Logs";
+export const TibPaths = {
+	Logs: "G:\\Разное\\TiburonXMLHelper\\Logs",
+	CustomCodeSignatures: "\\\\192.168.177.11\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts"
+}
 
 
 export const GenerableRepeats = {
