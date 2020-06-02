@@ -46,7 +46,7 @@
 	"customJS": {
 		"prefix": "<!--#JS",
 		"body": [
-			"<!--#JS",
+			"<!--#JS // эти методы можно вызывать командой Ctrl+Alt+J",
 			"",
 			"\tfunction ${1:method}() {",
 			"\t\t$0",
