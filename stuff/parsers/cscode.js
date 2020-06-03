@@ -74,27 +74,9 @@ public int CurrentInterviewOrder
 }
 
 #region Api services
-private IQuotaSharedService QuotaSharedService
-{
-	get
-	{
-		return CacheHelper.GetQuotaSharedService(_db.ConnectionString, _db.ConnectionStringArchive);
-	}
-}
-private IInterviewSharedService InterviewSharedService
-{
-	get
-	{
-		return CacheHelper.GetInterviewSharedService(_db.ConnectionString, _db.ConnectionStringArchive);
-	}
-}
-private ISharedInterviewFacadeService SharedInterviewFacadeService
-{
-	get
-	{
-		return CacheHelper.GetSharedInterviewFacadeService(_db.ConnectionString, _db.ConnectionStringArchive);
-	}
-}
+private IQuotaSharedService QuotaSharedService { get; set; }
+private IInterviewSharedService InterviewSharedService { get; set; }
+private ISharedInterviewFacadeService SharedInterviewFacadeService { get; set; }
 #endregion
 
 #region Новые процедуры/функции
@@ -136,21 +118,42 @@ private void ExtInterviewAnswerInsert(int interviewId, string pageId, string que
 	this.ExtInterviewAnswerInsert(interviewId, pageId, questionId, answerId, String.Empty);
 }
 
-public void ExtSurveyAnswerInsert(int extSurveyId, string pageId, string questionId, string answerId, string val = null)
+public void ExtSurveyAnswerInsert(int extSurveyId, string pageId, string questionId, string answerId, int[] statuses, string val = null)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
-		ExtInterviewAnswerInsert(extInterviewId, pageId, questionId, answerId, val);
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+		ExtInterviewAnswerInsert((int)extInterviewIdSearchResult, pageId, questionId, answerId, val);
 	else
 	{
-		Log.Write("", "ExtSurveyAnswerInsert", "Метод ExtSurveyAnswerInsert вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
 		return;
+	}
+}
+
+public void ExtSurveyAnswerInsert(int extSurveyId, string pageId, string questionId, string answerId, string val = null)
+{
+	ExtSurveyAnswerInsert(extSurveyId, pageId, questionId, answerId, new int[] { 18 }, val);
+}
+
+private static void ExtSurveyInterviewSerchResultCeck(int extSurveyId, ExtInterviewSearchResult extInterviewIdSearchResult, [CallerMemberName]string methodName = null)
+{
+	switch (extInterviewIdSearchResult)
+	{
+		case ExtInterviewSearchResult.NotFound:
+			Log.Write("", methodName, "Метод " + methodName + ". Указанный respuid не найден в проекте " + extSurveyId, null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Warning);
+			break;
+		case ExtInterviewSearchResult.RespUidIsEmpty:
+			Log.Write("", methodName, "Метод " + methodName + " вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
+			break;
+		default:
+			Log.Write("", methodName, "Ошибка выполнения метода " + methodName, null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
+			break;
 	}
 }
 
 private void ExtInterviewAnswerInsert(int interviewId, string pageId, string questionId, string answerId, string val)
 {
-		SharedInterviewFacadeService.InterviewResultAdd(pageId, questionId, answerId, val, CurrentSurvey.ID, interviewId);
+	SharedInterviewFacadeService.InterviewResultAdd(pageId, questionId, answerId, val, CurrentSurvey.ID, interviewId);
 }
 #endregion
 
@@ -183,11 +186,11 @@ private void AnswerUpdate(int? surveyId, int interviewId, string pageId, string 
 
 	string answerValue = string.IsNullOrEmpty(val) ? null : val;
 
-		int status = -1;
-		if (pageId == "$interview" && questionId == "$interview" && answerId == "Status" && int.TryParse(answerValue, out status))
-			SharedInterviewFacadeService.InterviewDataUpdate(status, surveyId ?? CurrentSurvey.ID, interviewId);
-		else
-			SharedInterviewFacadeService.InterviewResultAdd(pageId, questionId, answerId, answerValue, surveyId ?? CurrentSurvey.ID, interviewId);
+	int status = -1;
+	if (pageId == "$interview" && questionId == "$interview" && answerId == "Status" && int.TryParse(answerValue, out status))
+		SharedInterviewFacadeService.InterviewDataUpdate(status, surveyId ?? CurrentSurvey.ID, interviewId);
+	else
+		SharedInterviewFacadeService.InterviewResultAdd(pageId, questionId, answerId, answerValue, surveyId ?? CurrentSurvey.ID, interviewId);
 }
 
 private void AnswerUpdate(int interviewId, string questionId, string answerId, string val)
@@ -203,6 +206,22 @@ private void AnswerUpdateP(string pageId, string questionId, string answerId, st
 private void AnswerUpdateP(string pageId, string questionId, string answerId)
 {
 	this.AnswerUpdateP(pageId, questionId, answerId, String.Empty);
+}
+
+private void AnswerUpdateP(string pageId, string questionId, IEnumerable<string> answerIds)
+{
+	foreach (var answerId in answerIds)
+	{
+		this.AnswerUpdateP(pageId, questionId, answerId, String.Empty);
+	}
+}
+
+private void AnswerUpdateP(string pageId, string questionId, Dictionary<string, string> answerDict)
+{
+	foreach (var answerD in answerDict)
+	{
+		this.AnswerUpdateP(pageId, questionId, answerD.Key, answerD.Value);
+	}
 }
 
 private void AnswerUpdate(string questionId, string answerId, string val)
@@ -222,28 +241,104 @@ private void ExtInterviewAnswerUpdate(int interviewId, string pageId, string que
 	AnswerUpdate(id.Value, interviewId, pageId, questionId, answerId, val);
 }
 
-public void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, string answerId, string val = null)
+public void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, string answerId, int[] statuses, string val = null)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
-		AnswerUpdate(extSurveyId, extInterviewId, pageId, questionId, answerId, val);
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+		AnswerUpdate(extSurveyId, (int)extInterviewIdSearchResult, pageId, questionId, answerId, val);
 	else
 	{
-		Log.Write("", "ExtSurveyAnswerUpdateP", "Метод ExtSurveyAnswerUpdateP вызван с пустым respuid",null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
+		return;
+	}
+}
+
+public void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, string answerId, string val = null)
+{
+	ExtSurveyAnswerUpdateP(extSurveyId, pageId, questionId, answerId, new int[] { 18 }, val);
+}
+
+public void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, IEnumerable<string> answerIds, int[] statuses)
+{
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+	{
+		foreach (var aId in answerIds)
+		{
+			AnswerUpdate(extSurveyId, (int)extInterviewIdSearchResult, pageId, questionId, aId, string.Empty);
+		}
+	}
+	else
+	{
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
+		return;
+	}
+}
+
+public void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, IEnumerable<string> answerIds)
+{
+	ExtSurveyAnswerUpdateP(extSurveyId, pageId, questionId, answerIds, new int[] { 18 });
+}
+
+public void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, Dictionary<string, string> answerDict, int[] statuses)
+{
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+	{
+		foreach (var aDict in answerDict)
+		{
+			AnswerUpdate(extSurveyId, (int)extInterviewIdSearchResult, pageId, questionId, aDict.Key, aDict.Value);
+		}
+	}
+	else
+	{
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
+		return;
+	}
+}
+
+public void ExtSurveyAnswerUpdateP(int extSurveyId, string pageId, string questionId, Dictionary<string, string> answerDict)
+{
+	ExtSurveyAnswerUpdateP(extSurveyId, pageId, questionId, answerDict, new int[] { 18 });
+}
+
+public void ExtInterviewAnswerUpdateP(int interviewId, string pageId, string questionId, IEnumerable<string> answerIds)
+{
+	var surveyId = AsyncHelpers.RunSync(async () => await InterviewSharedService.GetSurveyByInterviewId(interviewId));
+	if (!surveyId.HasValue) throw new Exception(String.Format("Cannot find survey for interview with id {0}", interviewId));
+
+	foreach (var aId in answerIds)
+	{
+		AnswerUpdate(surveyId, interviewId, pageId, questionId, aId, string.Empty);
+	}
+}
+
+public void ExtInterviewAnswerUpdateP(int interviewId, string pageId, string questionId, Dictionary<string, string> answerDict)
+{
+	var surveyId = AsyncHelpers.RunSync(async () => await InterviewSharedService.GetSurveyByInterviewId(interviewId));
+	if (!surveyId.HasValue) throw new Exception(String.Format("Cannot find survey for interview with id {0}", interviewId));
+
+	foreach (var aDict in answerDict)
+	{
+		AnswerUpdate(surveyId, interviewId, pageId, questionId, aDict.Key, aDict.Value);
+	}
+}
+
+public void ExtSurveyAnswerUpdate(int extSurveyId, string questionId, string answerId, int[] statuses, string val = null)
+{
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+		AnswerUpdate(extSurveyId, (int)extInterviewIdSearchResult, String.Empty, questionId, answerId, val);
+	else
+	{
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
 		return;
 	}
 }
 
 public void ExtSurveyAnswerUpdate(int extSurveyId, string questionId, string answerId, string val = null)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
-		AnswerUpdate(extSurveyId, extInterviewId, String.Empty, questionId, answerId, val);
-	else
-	{
-		Log.Write("", "ExtSurveyAnswerUpdate", "Метод ExtSurveyAnswerUpdate вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
-		return;
-	}
+	ExtSurveyAnswerUpdate(extSurveyId, questionId, answerId, new int[] { 18 }, val);
 }
 #endregion
 
@@ -252,29 +347,29 @@ public void ExtSurveyAnswerUpdate(int extSurveyId, string questionId, string ans
 ///базовые методы удаления ответов
 private void ExtInterviewResultsDeleteQuotaV3(int interviewId, string pageId, string questionId, string answerId)
 {
-		SharedInterviewFacadeService.InterviewResultsDelete(pageId, questionId, answerId, CurrentSurvey.ID, interviewId);
+	SharedInterviewFacadeService.InterviewResultsDelete(pageId, questionId, answerId, CurrentSurvey.ID, interviewId);
 
 }
 
 private void ExtInterviewAnswerDelete(int interviewId, string pageId, string questionId, string answerId)
 {
-		ExtInterviewResultsDeleteQuotaV3(interviewId, pageId, questionId, answerId);
+	ExtInterviewResultsDeleteQuotaV3(interviewId, pageId, questionId, answerId);
 }
 private void ExtInterviewQuestionDelete(int interviewId, string questionId)
 {
-		ExtInterviewResultsDeleteQuotaV3(interviewId, null, questionId, null);
+	ExtInterviewResultsDeleteQuotaV3(interviewId, null, questionId, null);
 }
 private void ExtInterviewPageDelete(int interviewId, string pageId)
 {
-		ExtInterviewResultsDeleteQuotaV3(interviewId, pageId, null, null);
+	ExtInterviewResultsDeleteQuotaV3(interviewId, pageId, null, null);
 }
 private void ExtInterviewQuestionByPageDelete(int interviewId, string pageId, string questionId)
 {
-		ExtInterviewResultsDeleteQuotaV3(interviewId, pageId, questionId, null);
+	ExtInterviewResultsDeleteQuotaV3(interviewId, pageId, questionId, null);
 }
 private void ExtInterviewResultsDelete(int interviewId)
 {
-		ExtInterviewResultsDeleteQuotaV3(interviewId, null, null, null);
+	ExtInterviewResultsDeleteQuotaV3(interviewId, null, null, null);
 }
 
 private void ExtInterviewAnswerDelete(int interviewId, string questionId, string answerId)
@@ -282,28 +377,38 @@ private void ExtInterviewAnswerDelete(int interviewId, string questionId, string
 	ExtInterviewAnswerDelete(interviewId, string.Empty, questionId, answerId);
 }
 
-public void ExtSurveyAnswerDelete(int extSurveyId, string pageId, string questionId, string answerId)
+public void ExtSurveyAnswerDelete(int extSurveyId, string pageId, string questionId, string answerId, int[] statuses)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
-		ExtInterviewAnswerDelete(extInterviewId, pageId, questionId, answerId);
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+		ExtInterviewAnswerDelete((int)extInterviewIdSearchResult, pageId, questionId, answerId);
 	else
 	{
-		Log.Write("", "ExtSurveyAnswerDelete", "Метод ExtSurveyAnswerDelete вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
+		return;
+	}
+}
+
+public void ExtSurveyAnswerDelete(int extSurveyId, string pageId, string questionId, string answerId)
+{
+	ExtSurveyAnswerDelete(extSurveyId, pageId, questionId, answerId, new int[] { 18 });
+}
+
+public void ExtSurveyAnswerDelete(int extSurveyId, string questionId, string answerId, int[] statuses)
+{
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+		ExtInterviewAnswerDelete((int)extInterviewIdSearchResult, questionId, answerId);
+	else
+	{
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
 		return;
 	}
 }
 
 public void ExtSurveyAnswerDelete(int extSurveyId, string questionId, string answerId)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
-		ExtInterviewAnswerDelete(extInterviewId, questionId, answerId);
-	else
-	{
-		Log.Write("", "ExtSurveyAnswerDelete", "Метод ExtSurveyAnswerDelete вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
-		return;
-	}
+	ExtSurveyAnswerDelete(extSurveyId, questionId, answerId, new int[] { 18 });
 }
 
 private void AnswerDelete(string pageId, string questionId, string answerId)
@@ -394,24 +499,26 @@ public double QuotaCount(int surveyId, string quotaId)
 	Common.ValidateQuotaID(quotaId);
 	if (CurrentSurvey.Settings.QuotaType.GetVersion() == SurveyQuotaVersion.Version3)
 	{
-		var surveyQuotas = AsyncHelpers.RunSync(async () => await QuotaSharedService.GetCountBySurveyAsync(surveyId));
-		QuotaCountByStatuses counts;
-		if (surveyQuotas.QuotaCounts.TryGetValue(quotaId, out counts))
-			return counts.SumCountStatuses;
-		else
-			return -1;
+		var getCountResponse = AsyncHelpers.RunSync(async () => (await QuotaSharedService.GetCountByQuotaNamesAsync(surveyId, new[] { quotaId }, CurrentInterview)));
+		if (getCountResponse.HasError)
+			throw new Exception("Ошибка во время применения квот. Присутствуют необработанные данные");
+
+		return getCountResponse.QuotaCounts.Count > 0 ? getCountResponse.QuotaCounts[quotaId].SumCountStatuses : 0;
 	}
 	else
 		return _db.DataQuotaGetCount(surveyId, quotaId, CurrentInterview);
 }
 
-public int QuotaCount(string quotaName, string statuses)
+public double QuotaCount(string quotaName, string statuses)
 {
 	Common.ValidateQuotaID(quotaName);
 	var intStatuses = statuses.Split(',')
 		.Select(Int32.Parse);
-		var quotaCounts = AsyncHelpers.RunSync<Dictionary<int, int>>(async () => (await QuotaSharedService.GetCountAsync(CurrentSurvey.ID, quotaName)).StatusCount);
-		return quotaCounts.Where(x => intStatuses.Contains(x.Key)).Sum(x => x.Value);
+	var quotaCountResponse = AsyncHelpers.RunSync(async () => (await QuotaSharedService.GetCountAsync(CurrentSurvey.ID, quotaName, interviewToSubstract: CurrentInterview)));
+	if (quotaCountResponse.HasError)
+		throw new Exception("Ошибка во время применения квот. Присутствуют необработанные данные");
+
+	return (double)(quotaCountResponse.StatusCount.Where(x => intStatuses.Contains(x.Key)).Sum(x => x.Value));
 }
 
 public double QuotaCountStatus(string quotaId, int statusId)
@@ -424,12 +531,11 @@ public double QuotaCountStatus(int surveyId, string quotaId, int statusId)
 	Common.ValidateQuotaID(quotaId);
 	if (CurrentSurvey.Settings.QuotaType.GetVersion() == SurveyQuotaVersion.Version3)
 	{
-		var quotaCounts = AsyncHelpers.RunSync<Dictionary<int, int>>(async () => (await QuotaSharedService.GetCountAsync(CurrentSurvey.ID, quotaId)).StatusCount);
-		int countOut = 0;
-		if (quotaCounts.TryGetValue(statusId, out countOut))
-			return countOut;
-		else
-			return -1;
+		var getCountResult = AsyncHelpers.RunSync(async () => await QuotaSharedService.GetCountByStatus(CurrentSurvey.ID, quotaId, statusId));
+		if (getCountResult.HasError)
+			throw new Exception("Ошибка во время применения квот. Присутствуют необработанные данные");
+
+		return getCountResult.Count;
 	}
 	else
 		return _db.DataQuotaGetCountStatus(surveyId, quotaId, statusId);
@@ -438,31 +544,46 @@ public double QuotaCountStatus(int surveyId, string quotaId, int statusId)
 
 private void InterviewStatusChange(int statusId)
 {
-		SharedInterviewFacadeService.InterviewDataUpdate(statusId, CurrentSurvey.ID, CurrentInterview);
+	SharedInterviewFacadeService.InterviewDataUpdate(statusId, CurrentSurvey.ID, CurrentInterview);
+}
+
+public bool ExtSurveyAnswerExists(int extSurveyId, string pageId, string questionId, string answerId, int[] statuses)
+{
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+		return _dbWrapper.DataResultGetWithCache((int)extInterviewIdSearchResult, pageId, questionId, answerId).Found;
+	else
+	{
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
+		return false;
+	}
 }
 
 public bool ExtSurveyAnswerExists(int extSurveyId, string pageId, string questionId, string answerId)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
-		return _dbWrapper.DataResultGetWithCache(extInterviewId, pageId, questionId, answerId).Found;
+	return ExtSurveyAnswerExists(extSurveyId, pageId, questionId, answerId, new int[] { 18 });
+}
+
+public bool ExtSurveyAnswerExists(int extSurveyId, string questionId, string answerId, int[] statuses)
+{
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+		return _dbWrapper.DataResultGetWithCache((int)extInterviewIdSearchResult, questionId, answerId).Found;
 	else
 	{
-		Log.Write("", "ExtSurveyAnswerExists", "Метод ExtSurveyAnswerExists вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
 		return false;
 	}
 }
 
 public bool ExtSurveyAnswerExists(int extSurveyId, string questionId, string answerId)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
-		return _dbWrapper.DataResultGetWithCache(extInterviewId, questionId, answerId).Found;
-	else
-	{
-		Log.Write("", "ExtSurveyAnswerExists", "Метод ExtSurveyAnswerExists вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
-		return false;
-	}
+	return ExtSurveyAnswerExists(extSurveyId, questionId, answerId, new int[] { 18 });
+}
+
+public bool ExtSurveyAnswerExistsAny(int extSurveyId, string questionId, string srcRange, int[] statuses)
+{
+	return ExtSurveyAnswerExistsForRange(extSurveyId, questionId, srcRange, LogicalOperator.Or, statuses);
 }
 
 public bool ExtSurveyAnswerExistsAny(int extSurveyId, string questionId, string srcRange)
@@ -470,12 +591,17 @@ public bool ExtSurveyAnswerExistsAny(int extSurveyId, string questionId, string 
 	return ExtSurveyAnswerExistsForRange(extSurveyId, questionId, srcRange, LogicalOperator.Or);
 }
 
+public bool ExtSurveyAnswerExistsAny(int extSurveyId, string pageId, string questionId, string srcRange, int[] statuses)
+{
+	return ExtSurveyAnswerExistsForRange(extSurveyId, questionId, srcRange, LogicalOperator.Or, statuses);
+}
+
 public bool ExtSurveyAnswerExistsAny(int extSurveyId, string pageId, string questionId, string srcRange)
 {
 	return ExtSurveyAnswerExistsForRange(extSurveyId, questionId, srcRange, LogicalOperator.Or);
 }
 
-public bool ExtSurveyAnswerExistsForRange(int extSurveyId, string questionId, string srcRange, LogicalOperator oper)
+public bool ExtSurveyAnswerExistsForRange(int extSurveyId, string questionId, string srcRange, LogicalOperator oper, int[] statuses)
 {
 	char replacementSymbol = '&';
 	switch (oper)
@@ -492,8 +618,8 @@ public bool ExtSurveyAnswerExistsForRange(int extSurveyId, string questionId, st
 
 	bool ret = (oper == LogicalOperator.Or ? false : true);
 
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	var answers = _dbWrapper.DataAnswerSelectList(extInterviewId, String.Empty, questionId);
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	var answers = _dbWrapper.DataAnswerSelectList((int)extInterviewIdSearchResult, String.Empty, questionId);
 
 	foreach (var answer in answers)
 	{
@@ -503,105 +629,153 @@ public bool ExtSurveyAnswerExistsForRange(int extSurveyId, string questionId, st
 			ret &= range.IsInRange(answer[0]);
 	}
 
-	if (extInterviewId > 0)
+	if (extInterviewIdSearchResult > 0)
 		return ret;
 	else
 	{
-		Log.Write("", "ExtSurveyAnswerExistsForRange", "Метод ExtSurveyAnswerExistsForRange вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
 		return false;
+	}
+}
+
+public bool ExtSurveyAnswerExistsForRange(int extSurveyId, string questionId, string srcRange, LogicalOperator oper)
+{
+	return ExtSurveyAnswerExistsForRange(extSurveyId, questionId, srcRange, oper, new int[] { 18 });
+}
+
+public string ExtSurveyAnswerValue(int extSurveyId, string pageId, string questionId, string answerId, int[] statuses)
+{
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+	{
+		var ret = _dbWrapper.DataExtResultGet((int)extInterviewIdSearchResult, extSurveyId, pageId, questionId, answerId);
+		return ret.Found ? ret.Value : String.Empty;
+	}
+	else
+	{
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
+		return null;
 	}
 }
 
 public string ExtSurveyAnswerValue(int extSurveyId, string pageId, string questionId, string answerId)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId < 0)
-	{
-		Log.Write("", "ExtSurveyAnswerValue", "Метод ExtSurveyAnswerValue вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
-		return null;
-	}
-	var ret = _dbWrapper.DataExtResultGet(extInterviewId, extSurveyId, pageId, questionId, answerId);
-	return ret.Found ? ret.Value : String.Empty;
+	return ExtSurveyAnswerValue(extSurveyId, pageId, questionId, answerId, new int[] { 18 });
 }
 
-public string ExtSurveyAnswerValue(int extSurveyId, string questionId, string answerId)
+public string ExtSurveyAnswerValue(int extSurveyId, string questionId, string answerId, int[] statuses)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
 	{
-		var ret = _dbWrapper.DataExtInterviewResultGet(InterviewPars.GetInstance().InterviewId, extInterviewId, questionId, answerId);
+		var ret = _dbWrapper.DataExtInterviewResultGet((int)extInterviewIdSearchResult, questionId, answerId);
 		return ret.Found ? ret.Value : String.Empty;
 	}
 	else
 	{
-		Log.Write("", "ExtSurveyAnswerValue", "Метод ExtSurveyAnswerValue вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
+		return null;
+	}
+}
+
+public string ExtSurveyAnswerValue(int extSurveyId, string questionId, string answerId)
+{
+	return ExtSurveyAnswerValue(extSurveyId, questionId, answerId, new int[] { 18 });
+}
+
+public string ExtSurveyAnswerID(int extSurveyId, string pageId, string questionId, int[] statuses)
+{
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+		return _dbWrapper.GetExtSurveyAnswerId((int)extInterviewIdSearchResult, pageId, questionId);
+	else
+	{
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
 		return null;
 	}
 }
 
 public string ExtSurveyAnswerID(int extSurveyId, string pageId, string questionId)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
-		return _dbWrapper.GetExtSurveyAnswerId(extInterviewId, pageId, questionId);
+	return ExtSurveyAnswerID(extSurveyId, pageId, questionId, new int[] { 18 });
+}
+
+private string[] ExtSurveyAnswerIDs(int extSurveyId, string pageId, string questionId, int[] statuses)
+{
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+		return _dbWrapper.DataAnswerSelectedId((int)extInterviewIdSearchResult, pageId, questionId).ToArray();
 	else
 	{
-		Log.Write("", "ExtSurveyAnswerID", "Метод ExtSurveyAnswerID вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
 		return null;
 	}
 }
 
 private string[] ExtSurveyAnswerIDs(int extSurveyId, string pageId, string questionId)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
-		return _dbWrapper.DataAnswerSelectedId(extInterviewId, pageId, questionId).ToArray();
+	return ExtSurveyAnswerIDs(extSurveyId, pageId, questionId, new int[] { 18 });
+}
+
+public int ExtSurveyAnswerCount(int extSurveyId, string pageId, string questionId, int[] statuses)
+{
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+		return _dbWrapper.DataAnswerGetCount((int)extInterviewIdSearchResult, pageId, questionId);
 	else
 	{
-		Log.Write("", "ExtSurveyAnswerIDs", "Метод ExtSurveyAnswerIDs вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
-		return null;
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
+		return -1;
 	}
 }
 
 public int ExtSurveyAnswerCount(int extSurveyId, string pageId, string questionId)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
-		return _dbWrapper.DataAnswerGetCount(extInterviewId, pageId, questionId);
-	else
-	{
-		Log.Write("", "ExtSurveyAnswerCount", "Метод ExtSurveyAnswerCount вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
-		return -1;
-	}
+	return ExtSurveyAnswerCount(extSurveyId, pageId, questionId, new int[] { 18 });
+}
+
+public int ExtSurveyInterviewID(int extSurveyId, int[] statuses)
+{
+	return (int)_dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
 }
 
 public int ExtSurveyInterviewID(int extSurveyId)
 {
-	return _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
+	return ExtSurveyInterviewID(extSurveyId, new int[] { 18 });
+}
+
+public string ExtSurveyRespondent(int extSurveyId, int[] statuses)
+{
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+		return _dbWrapper.GetExtSurveyRespondent((int)extInterviewIdSearchResult);
+	else
+	{
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
+		return null;
+	}
 }
 
 public string ExtSurveyRespondent(int extSurveyId)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
-		return _dbWrapper.GetExtSurveyRespondent(extInterviewId);
+	return ExtSurveyRespondent(extSurveyId, new int[] { 18 });
+}
+
+public int ExtSurveyInterviewStatus(int extSurveyId, int[] statuses)
+{
+	var extInterviewIdSearchResult = _dbWrapper.GetExtSurveyInterviewID(extSurveyId, statuses);
+	if (extInterviewIdSearchResult > 0)
+		return _dbWrapper.GetExtSurveyInterviewStatus((int)extInterviewIdSearchResult);
 	else
 	{
-		Log.Write("", "ExtSurveyRespondent", "Метод ExtSurveyRespondent вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
-		return null;
+		ExtSurveyInterviewSerchResultCeck(extSurveyId, extInterviewIdSearchResult);
+		return -1;
 	}
 }
 
 public int ExtSurveyInterviewStatus(int extSurveyId)
 {
-	int extInterviewId = _dbWrapper.GetExtSurveyInterviewID(extSurveyId);
-	if (extInterviewId > 0)
-		return _dbWrapper.GetExtSurveyInterviewStatus(extInterviewId);
-	else
-	{
-		Log.Write("", "ExtSurveyInterviewStatus", "Метод ExtSurveyInterviewStatus вызван с пустым respuid", null, errorLevel: SEServerCore.CustomExceptions.ErrorLevel.Error);
-		return -1;
-	}
+	return ExtSurveyInterviewStatus(extSurveyId, new int[] { 18 });
 }
 
 //end https://github.com/tinchurin/survey.engine/issues/345
@@ -671,16 +845,28 @@ public bool AnswerExistsAll(string questionId, string srcRange)
 
 public bool AnswerExistsOnce(string pageId, string questionId, int answerStart, int answerEnd)
 {
-	bool ret = AnswerExists(pageId, questionId, answerStart.ToString());
-	for (int i = answerStart + 1; i <= answerEnd; i++)
-		ret |= AnswerExists(pageId, questionId, i.ToString());
+	bool ret = false;
+	for (int i = answerStart; i <= answerEnd; i++)
+	{
+		if (AnswerExists(pageId, questionId, i.ToString()))
+		{
+			if (ret) return false;
+			else ret = true;
+		}
+	}
 	return ret;
 }
 public bool AnswerExistsOnce(string questionId, int answerStart, int answerEnd)
 {
-	bool ret = AnswerExists(questionId, answerStart.ToString());
-	for (int i = answerStart + 1; i <= answerEnd; i++)
-		ret |= AnswerExists(questionId, i.ToString());
+	bool ret = false;
+	for (int i = answerStart; i <= answerEnd; i++)
+	{
+		if (AnswerExists(questionId, i.ToString()))
+		{
+			if (ret) return false;
+			else ret = true;
+		}
+	}
 	return ret;
 }
 
@@ -712,7 +898,7 @@ public bool AnswerExists(string questionId, string answerId)
 {
 	Common.ValidateID(new Dictionary<string, string>()
 	{{"Question", questionId},
-	 {"Answer", answerId}});
+		{"Answer", answerId}});
 
 	Common.ValidateAnswerExists(questionId, answerId);
 	return _dbWrapper.DataResultGet(CurrentInterview, questionId, answerId).Found;
@@ -729,12 +915,12 @@ public bool ExtAnswerExists(int surveyId, string questionId, string answerId)
 
 public bool ExtInterviewAnswerExists(int extInterviewId, string pageId, string questionId, string answerId)
 {
-	return _dbWrapper.DataExtInterviewResultGet(CurrentInterview, extInterviewId, pageId, questionId, answerId).Found;
+	return _dbWrapper.DataExtInterviewResultGet(extInterviewId, pageId, questionId, answerId).Found;
 }
 
 public bool ExtInterviewAnswerExists(int extInterviewId, string questionId, string srcRangeOrNot)
 {
-	return _dbWrapper.DataExtInterviewResultGet(CurrentInterview, extInterviewId, questionId, srcRangeOrNot).Found;
+	return _dbWrapper.DataExtInterviewResultGet(extInterviewId, questionId, srcRangeOrNot).Found;
 }
 
 public bool ExtInterviewAnswerExistsForRange(int externalInterview, string questionId, string srcRange, LogicalOperator logicalOperator)
@@ -896,12 +1082,12 @@ public string ExtAnswerValue(int surveyId, string questionId, string answerId)
 
 public string ExtInterviewAnswerValue(int extInterviewId, string pageId, string questionId, string answerId)
 {
-	var result = _dbWrapper.DataExtInterviewResultGet(CurrentInterview, extInterviewId, pageId, questionId, answerId);
+	var result = _dbWrapper.DataExtInterviewResultGet(extInterviewId, pageId, questionId, answerId);
 	return result.Found ? result.Value : String.Empty;
 }
 public string ExtInterviewAnswerValue(int extInterviewId, string questionId, string answerId)
 {
-	var result = _dbWrapper.DataExtInterviewResultGet(CurrentInterview, extInterviewId, questionId, answerId);
+	var result = _dbWrapper.DataExtInterviewResultGet(extInterviewId, questionId, answerId);
 	return result.Found ? result.Value : String.Empty;
 }
 
@@ -1049,8 +1235,7 @@ public double QuotaLimit(string quotaId)
 	Common.ValidateQuotaID(quotaId);
 	if (CurrentSurvey.Settings.QuotaType.GetVersion() == SurveyQuotaVersion.Version2)
 		return _db.DataQuotaGetLimit(CurrentSurvey.ID, quotaId);
-	var quotaSharedService = CacheHelper.GetQuotaSharedService(_db.ConnectionString, _db.ConnectionStringArchive);
-	return AsyncHelpers.RunSync(async () => await quotaSharedService.CountQuotaLimitAsync(quotaId, CurrentSurvey.ID));
+	return AsyncHelpers.RunSync(async () => await QuotaSharedService.CountQuotaLimitAsync(quotaId, CurrentSurvey.ID));
 }
 
 public double QuotaLimit(int surveyId, string quotaId)
@@ -1058,8 +1243,7 @@ public double QuotaLimit(int surveyId, string quotaId)
 	Common.ValidateQuotaID(quotaId);
 	if (CurrentSurvey.Settings.QuotaType.GetVersion() == SurveyQuotaVersion.Version2)
 		return _db.DataQuotaGetLimit(surveyId, quotaId);
-	var quotaSharedService = CacheHelper.GetQuotaSharedService(_db.ConnectionString, _db.ConnectionStringArchive);
-	return AsyncHelpers.RunSync(async () => await quotaSharedService.CountQuotaLimitAsync(quotaId, surveyId));
+	return AsyncHelpers.RunSync(async () => await QuotaSharedService.CountQuotaLimitAsync(quotaId, surveyId));
 }
 
 public bool QuotaIsOpen(string quotaId)
@@ -1095,11 +1279,6 @@ public string GetAnswerID(string questionId, string val)
 
 	var result = _dbWrapper.DataAnswerIdByValueGet(CurrentInterview, questionId, val);
 	return result.Found ? result.Value : String.Empty;
-}
-
-public List<string[]> GetSurveyUserMails(int surveyId)
-{
-	return _db.DataSurveyUserMails(surveyId);
 }
 
 public string WriteFlash(string id, int width, int height, string filePath, string flashVars)
@@ -1233,7 +1412,7 @@ public bool GetInvValue(string invId)
 {
 	Common.ValidateInvId(invId);
 	Block block = null;
-	Survey survey = CacheHelper.CurrentSurvey;
+	Survey survey = CurrentSurvey;
 
 	block = survey.InnerBlocks.Items.FirstOrDefault(x => x.Value.InvId == invId).Value;
 
@@ -1334,7 +1513,6 @@ public string BlockItera(int defaultItera)
 	{
 		return defaultItera.ToString();
 	}
-	return defaultItera.ToString();
 }
 
 public string PlayAudio(string audioPath, bool autoPlay)
@@ -1644,9 +1822,22 @@ public bool AnswerEnabledForRanging(string prefix, string answer, int current, i
 		if (AnswerExists(prefix + i.ToString(), answer)) return false;
 	}
 	return true;
-
+}
 `;
 
+
+Object.defineProperty(String.prototype, 'hashCode', {
+	value: function() {
+	  var hash = 0, i, chr;
+	  for (i = 0; i < this.length; i++) {
+		chr   = this.charCodeAt(i);
+		hash  = ((hash << 5) - hash) + chr;
+		hash |= 0; // Convert to 32bit integer
+	  }
+	  return hash;
+	}
+});
+  
 
 /** Сортировка элементов */
 function sortArray(a, b) {
@@ -1655,7 +1846,7 @@ function sortArray(a, b) {
     if (!!a.Documentation && !!b.Documentation) {
         aVal = a.Documentation;
         bVal = b.Documentation;
-    }
+	}
     return aVal.hashCode() - bVal.hashCode();
 }
 
@@ -1664,13 +1855,31 @@ var res = raw.match(/((public)|(private)|(protected))\s+([^\s]+)\s+((\w+)(\(.*\)
 
 var ar = [];
 
+var excludeNames = ['GetPanelRespData', 'AnswersSelect', 'ExtInterviewPageDelete', 'ExtAnswerID', 'PlayAudio', 'ExtInterviewResultsDelete', 'ListText', 'BlockItera', 'ExtAnswerValue', 'ExtInterviewQuestionByPageDelete', 'PlayVideo', 'WriteFlash', 'CheckRotation', 'ExtAnswerID', 'ClearResults', 'AnswersSelect', 'ExtInterviewResultsDeleteQuotaV3', 'AnswerMarked', 'ClearResults', 'AuthCookieReset', ]
+
+var redirectProperies = ['Page', 'Status', 'Url'];
+var validateProperies = ['Message', 'MessageGeneral', 'PinQuestion', 'PinAnswer'];
+
 res.forEach(function (e)
 {
-    var obj = {};
-	var parse = e.match(/((public)|(private)|(protected))\s+([^\s]+)\s+((\w+)(\(.*\))?)/);
-	obj["Name"] = parse[7];
+    let obj = {};
+	let parse = e.match(/((public)|(private)|(protected))\s+([^\s]+)\s+((\w+)(\(.*\))?)/);
+	let name = parse[7];
+	if (excludeNames.indexOf(name) > -1) return;
+	obj["Name"] = name;
 	obj["Detail"] = parse[5];
-	obj["Kind"] = parse[8] ? "Function" : "Property";
+	let isFunction = !!parse[8];
+	obj["Kind"] = isFunction ? "Function" : "Property";
+	if (!isFunction) {
+		if (redirectProperies.indexOf(name) > -1) {
+			obj["ParentTag"] = 'Redirect';
+			obj["Parent"] = 'this';
+		}
+		else if (validateProperies.indexOf(name) > -1) {
+			obj["ParentTag"] = 'Validate';
+			obj["Parent"] = 'this';
+		}
+	}	
 	obj["Documentation"] = parse[5] + " " + parse[6];
 	ar.push(obj);
 });
