@@ -161,8 +161,8 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 		let curIndex = prevText.lastIndexOf(opBracket);
 		let txt = CurrentTag.PrepareXML(prevText.substr(0, curIndex));
 		let rest = txt;
-		let regOp = new RegExp(safeRegexp(opBracket) + safeRegexp(tagName) + "[^\\w]");
-		let regCl = new RegExp(safeRegexp(opBracket) + "\\/" + safeRegexp(tagName) + "[^\\w]");
+		//let regOp = new RegExp(safeRegexp(opBracket) + safeRegexp(tagName) + "[^\\w]");
+		//let regCl = new RegExp(safeRegexp(opBracket) + "\\/" + safeRegexp(tagName) + "[^\\w]");
 		let cl = -1;
 		let op = -1;
 
