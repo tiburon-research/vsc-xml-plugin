@@ -7,7 +7,7 @@ import * as AutoCompleteArray from './autoComplete';
 import { _NodeStoreNames, _pack, RequestNames } from 'tib-api/lib/constants';
 import { getDiagnosticElements } from './diagnostic';
 import { CacheSet } from 'tib-api/lib/cache';
-import { SurveyData, TibMethods, SurveyNodes, getDocumentMethods, getDocumentNodeIds, getMixIds, getIncludePaths, getConstants, SurveyNode } from 'tib-api/lib/surveyData';
+import { SurveyData, TibMethods, SurveyNodes, getDocumentMethods, getDocumentNodeIds, getMixIds, getIncludePaths, getConstants, SurveyNode, ExportLabel, getExportLabels } from 'tib-api/lib/surveyData';
 
 
 
@@ -411,6 +411,7 @@ async function updateSurveyData(document: server.TextDocument)
 	let nodes = new SurveyNodes();
 	let constants = new KeyedCollection<SurveyNode>();
 	let mixIds: string[] = [];
+	let exportLabels: ExportLabel[] = [];
 
 	// если Include поменялись, то обновляем все
 	if (!_SurveyData.Includes || !_SurveyData.Includes.equalsTo(includes))
@@ -434,11 +435,13 @@ async function updateSurveyData(document: server.TextDocument)
 			nodes.AddRange(await getDocumentNodeIds(doc, _NodeStoreNames));
 			mixIds = mixIds.concat(await getMixIds(doc));
 			constants.AddRange(await getConstants(doc));
+			exportLabels = exportLabels.concat(await getExportLabels(doc));
 		}
 		_SurveyData.Methods = methods;
 		_SurveyData.CurrentNodes = nodes;
 		_SurveyData.MixIds = mixIds;
 		_SurveyData.ConstantItems = constants;
+		_SurveyData.ExportLabels = exportLabels;
 	} catch (error)
 	{
 		logError("Ошибка при сборе сведений о документе", false, error);
