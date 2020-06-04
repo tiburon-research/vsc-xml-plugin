@@ -42,7 +42,8 @@ export enum ErrorCodes
 	notImperative = "notImperative",
 	linqHelp = "linqHelp",
 	mixIdSuggestion = "mixIdSuggestion",
-	oldCustomMethods = "oldCustomMethods"
+	oldCustomMethods = "oldCustomMethods",
+	exportLabelsWithCS = "csInLabels"
 };
 	
 export interface IErrorTagData

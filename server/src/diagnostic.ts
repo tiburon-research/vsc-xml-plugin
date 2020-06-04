@@ -25,7 +25,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 				{ Key: ErrorCodes.wrongMixes, Value: getWrongMixes },
 				{ Key: ErrorCodes.csInAutoSplit, Value: getCsInAutoSplit },
 				{ Key: ErrorCodes.wrongSpaces, Value: getWrongSpaces },
-				{ Key: ErrorCodes.wrongQuotes, Value: wrongQuots }
+				{ Key: ErrorCodes.wrongQuotes, Value: wrongQuots },
+				{ Key: ErrorCodes.exportLabelsWithCS, Value: wrongExportLabel }
 			]
 		)
 	},
@@ -208,6 +209,24 @@ async function wrongQuots(data: IDiagnosticFunctionData): Promise<Parse.Document
 	return res;
 }
 
+
+export async function wrongExportLabel(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
+{
+	let res: Parse.DocumentElement[] = [];
+	let labelsWithCS = data.surveyData.ExportLabels.filter(x => !!x.Value.match(/(\[c#\])|(\$(?!repeat\()\w+\()/));
+	labelsWithCS.forEach(label =>
+	{
+		let obj: Parse.IDocumentElement = {
+			From: data.document.offsetAt(label.Range.start),
+			To: data.document.offsetAt(label.Range.end),
+			Value: label.Value.match(/^[\s\S]+$/),
+			Message: "ExportLabel не может содержать кодовые вставки"
+		};
+		res.push(new Parse.DocumentElement(data.document, obj));
+	});
+	return res;
+}
+
 //#endregion
 
 
@@ -298,7 +317,7 @@ async function oldRangeMethods(data: IDiagnosticFunctionData): Promise<Parse.Doc
 		let obj: Parse.IDocumentElement = {
 			From: data.document.offsetAt(location.start),
 			To: data.document.offsetAt(location.end),
-			Value: setRanges.Signature.match(/[\s\S]+/),
+			Value: setRanges.Signature.match(/^[\s\S]+$/),
 			Message: "Метод SetRanges больше не нужен для вопросов с ранжированием"
 		}
 		res.push(new Parse.DocumentElement(data.document, obj));
