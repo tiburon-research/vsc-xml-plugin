@@ -264,7 +264,7 @@ connection.onNotification(RequestNames.UpdateExtensionSettings, (data: Object) =
 
 async function sendDiagnostic(document: server.TextDocument)
 {
-	let diagnostics = await getDiagnosticElements(document);
+	let diagnostics = await getDiagnosticElements(document, _SurveyData);
 	let clientDiagnostic: server.PublishDiagnosticsParams = {
 		diagnostics,
 		uri: document.uri
@@ -317,8 +317,10 @@ function anotherDocument(data: IServerDocument)
 /** Дёргаем при изменении или открытии */
 function anyChangeHandler(document: server.TextDocument)
 {
-	updateSurveyData(document);
-	sendDiagnostic(document);
+	updateSurveyData(document).then(() =>
+	{
+		sendDiagnostic(document);
+	});
 }
 
 

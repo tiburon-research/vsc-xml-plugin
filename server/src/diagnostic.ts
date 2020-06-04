@@ -3,6 +3,7 @@ import * as server from 'vscode-languageserver';
 import { KeyedCollection, translatePosition, Encoding, Parse, ErrorCodes, SearchResult } from 'tib-api';
 import { RegExpPatterns } from 'tib-api/lib/constants';
 import { logError, consoleLog } from './server';
+import { SurveyData } from 'tib-api/lib/surveyData';
 
 
 //#region --------------------------- const type interface
@@ -12,45 +13,54 @@ import { logError, consoleLog } from './server';
 
 /** Массив из всех типов диагностик */
 const _AllDiagnostics: IDiagnosticType[] =
-	[
-		{
-			Type: server.DiagnosticSeverity.Error,
-			Functions: KeyedCollection.FromPairs(
-				[
-					{ Key: ErrorCodes.wrongIds, Value: getWrongIds },
-					{ Key: ErrorCodes.longIds, Value: getLongIds },
-					{ Key: ErrorCodes.wrongXML, Value: getWrongXML },
-					{ Key: ErrorCodes.duplicatedId, Value: getDuplicatedIds },
-					{ Key: ErrorCodes.wrongMixes, Value: getWrongMixes },
-					{ Key: ErrorCodes.csInAutoSplit, Value: getCsInAutoSplit },
-					{ Key: ErrorCodes.wrongSpaces, Value: getWrongSpaces },
-					{ Key: ErrorCodes.wrongQuotes, Value: wrongQuots }
-				]
-			)
-		},
-		{
-			Type: server.DiagnosticSeverity.Warning,
-			Functions: KeyedCollection.FromPairs(
-				[
-					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"+Information
-					{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions }
-				]
-			)
-		},
-		{
-			Type: server.DiagnosticSeverity.Information,
-			Functions: KeyedCollection.FromPairs(
-				[
-					{ Key: ErrorCodes.duplicatedText, Value: equalTexts },
-					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS },
-					{ Key: ErrorCodes.linqHelp, Value: linqHelper },
-					{ Key: ErrorCodes.mixIdSuggestion, Value: mixIdSuggestion }
-				]
-			)
-		}
-	];
+[
+	{
+		Type: server.DiagnosticSeverity.Error,
+		Functions: KeyedCollection.FromPairs(
+			[
+				{ Key: ErrorCodes.wrongIds, Value: getWrongIds },
+				{ Key: ErrorCodes.longIds, Value: getLongIds },
+				{ Key: ErrorCodes.wrongXML, Value: getWrongXML },
+				{ Key: ErrorCodes.duplicatedId, Value: getDuplicatedIds },
+				{ Key: ErrorCodes.wrongMixes, Value: getWrongMixes },
+				{ Key: ErrorCodes.csInAutoSplit, Value: getCsInAutoSplit },
+				{ Key: ErrorCodes.wrongSpaces, Value: getWrongSpaces },
+				{ Key: ErrorCodes.wrongQuotes, Value: wrongQuots }
+			]
+		)
+	},
+	{
+		Type: server.DiagnosticSeverity.Warning,
+		Functions: KeyedCollection.FromPairs(
+			[
+				{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"+Information
+				{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions }
+			]
+		)
+	},
+	{
+		Type: server.DiagnosticSeverity.Information,
+		Functions: KeyedCollection.FromPairs(
+			[
+				{ Key: ErrorCodes.duplicatedText, Value: equalTexts },
+				{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS },
+				{ Key: ErrorCodes.linqHelp, Value: linqHelper },
+				{ Key: ErrorCodes.mixIdSuggestion, Value: mixIdSuggestion }
+			]
+		)
+	}
+];
 
 
+interface IDiagnosticFunctionData
+{
+	document: server.TextDocument;
+	/** Текст документа без XML-комментариев */
+	text: string;
+	/** Текст без XML-комментариев и CDATA */
+	preparedText: string
+	surveyData?: SurveyData;
+}
 
 /** Интерфейс для одного типа диагностики */
 interface IDiagnosticType
@@ -58,7 +68,7 @@ interface IDiagnosticType
 	/** Тип диагностики */
 	Type: server.DiagnosticSeverity;
 	/** Массив функций для этого типа диагностики */
-	Functions: KeyedCollection<(document: server.TextDocument, preparedText: string) => Promise<Parse.DocumentElement[]>>;
+	Functions: KeyedCollection<(data: IDiagnosticFunctionData) => Promise<Parse.DocumentElement[]>>;
 }
 
 
@@ -72,7 +82,7 @@ interface IDiagnosticType
 
 
 /** Возвращает все найденные предупреждения/ошибки */
-export async function getDiagnosticElements(document: server.TextDocument): Promise<server.Diagnostic[]>
+export async function getDiagnosticElements(document: server.TextDocument, surveyData: SurveyData): Promise<server.Diagnostic[]>
 {
 	let res: server.Diagnostic[] = [];
 	try
@@ -80,13 +90,19 @@ export async function getDiagnosticElements(document: server.TextDocument): Prom
 		let stack = [];
 		let text = document.getText();
 		text = Encoding.clearXMLComments(text);
-		text = Encoding.clearCDATA(text);
+		let preparedText = Encoding.clearCDATA(text);
+		let data: IDiagnosticFunctionData = {
+			document,
+			text,
+			preparedText,
+			surveyData
+		}
 
 		for (const diagnosticType of _AllDiagnostics) 
 		{
 			diagnosticType.Functions.ForEach((name, func) =>
 			{
-				stack.push(_diagnosticElements(document, diagnosticType.Type, text, func, name).then(x => res = res.concat(x)));
+				stack.push(_diagnosticElements(data, diagnosticType.Type, func, name).then(x => res = res.concat(x)));
 			});
 		};
 		await Promise.all(stack);
@@ -108,63 +124,71 @@ export async function getDiagnosticElements(document: server.TextDocument): Prom
 
 
 /** Id с недопустимым набором символов */
-async function getWrongIds(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function getWrongIds(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
-	let res = await Parse.getDocumentElements(document, /(\sId=("|'))(\w*[^\w'"\n@\-\(\)]\w*)/, "Вот таким Id быть не может", prepearedText, null, 1);
+	let { document, preparedText } = data;
+	let res = await Parse.getDocumentElements(document, /(\sId=("|'))(\w*[^\w'"\n@\-\(\)]\w*)/, "Вот таким Id быть не может", preparedText, null, 1);
 	return res;
 }
 
 
 /** слишком длинные Id */
-async function getLongIds(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function getLongIds(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
-	let res = await Parse.getDocumentElements(document, new RegExp("<(Page|Answer|Block)(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{25,}('|\"))"), "Слишком много букв", prepearedText);
-	res = res.concat(await Parse.getDocumentElements(document, new RegExp("<Question(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{33,}('|\"))"), "Слишком много букв", prepearedText));
+	let { document, preparedText } = data;
+	let res = await Parse.getDocumentElements(document, new RegExp("<(Page|Answer|Block)(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{25,}('|\"))"), "Слишком много букв", preparedText);
+	res = res.concat(await Parse.getDocumentElements(document, new RegExp("<Question(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{33,}('|\"))"), "Слишком много букв", preparedText));
 	return res;
 }
 
 
 /** проверка недопустимых символов XML */
-async function getWrongXML(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function getWrongXML(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
+	let { document, preparedText } = data;
 	let res: Parse.DocumentElement[] = [];
-	res = res.concat(await Parse.getDocumentElements(document, /(&(?!(lt|gt|amp|quot|apos))(\w*);?)+/, "Такое надо прикрывать посредством CDATA", prepearedText)); // &
-	res = res.concat(await Parse.getDocumentElements(document, /<((?![?\/!]|\w)(.*))/, "Тут, вроде, CDATA надо", prepearedText)); // <
+	res = res.concat(await Parse.getDocumentElements(document, /(&(?!(lt|gt|amp|quot|apos))(\w*);?)+/, "Такое надо прикрывать посредством CDATA", preparedText)); // &
+	res = res.concat(await Parse.getDocumentElements(document, /<((?![?\/!]|\w)(.*))/, "Тут, вроде, CDATA надо", preparedText)); // <
 	return res;
 }
 
 /** проверка недопустимых пробелов в XML */
-async function getWrongSpaces(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function getWrongSpaces(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
+	let { document, preparedText } = data;
 	let res: Parse.DocumentElement[] = [];
-	res = res.concat(await Parse.getDocumentElements(document, RegExpPatterns.wrongSpaseChars, "Недопустимый символ (на самом деле, это не пробел)", prepearedText, { Code: ErrorCodes.wrongSpaces })); // 0xA0
+	res = res.concat(await Parse.getDocumentElements(document, RegExpPatterns.wrongSpaseChars, "Недопустимый символ (на самом деле, это не пробел)", preparedText, { Code: ErrorCodes.wrongSpaces })); // 0xA0
 	return res;
 }
 
 
 /** проверка уникальности Id */
-async function getDuplicatedIds(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function getDuplicatedIds(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
-	return await Parse.getDuplicatedElementsIds(document, prepearedText);
+	let { document, preparedText } = data;
+	return await Parse.getDuplicatedElementsIds(document, preparedText);
 }
 
 /** временная проверка миксов в Repeat и родителях */
-async function getWrongMixes(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function getWrongMixes(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
-	return await Parse.getWrongMixedElements(document, prepearedText);
+	let { document, preparedText } = data;
+	return await Parse.getWrongMixedElements(document, preparedText);
 }
 
 
-async function getCsInAutoSplit(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function getCsInAutoSplit(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
-	return await Parse.getCsInAutoSplit(document, prepearedText);
+	let { document, preparedText } = data;
+	return await Parse.getCsInAutoSplit(document, preparedText);
 }
 
 
-async function wrongQuots(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function wrongQuots(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
+	let { document, preparedText } = data;
 	let res: Parse.DocumentElement[] = [];
-	let ins = prepearedText.findAll(/(\w+=)("|')([^'"]*\[c#.+?\[\/c#\s*\][^'"]*)\2/);
+	let ins = preparedText.findAll(/(\w+=)("|')([^'"]*\[c#.+?\[\/c#\s*\][^'"]*)\2/);
 	ins.forEach(element => {
 		if (element.Result[3].contains(element.Result[2]))
 		{
@@ -192,10 +216,11 @@ async function wrongQuots(document: server.TextDocument, prepearedText: string):
 
 
 /** Константы, начинающиеся не с того */
-async function dangerousConstandIds(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function dangerousConstandIds(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
+	let { document, preparedText } = data;
 	let res: Parse.DocumentElement[] = [];
-	let constants = await Parse.getDocumentElements(document, /(<Constants[^>]*>)([\s\S]+?)<\/Constants[^>]*>/, "", prepearedText);
+	let constants = await Parse.getDocumentElements(document, /(<Constants[^>]*>)([\s\S]+?)<\/Constants[^>]*>/, "", preparedText);
 	const itemsGroup = 2;
 	const constTagGroup = 1;
 	const regStart = /^(ID|Text|Pure|Itera|Var|AnswerExists)/;
@@ -251,9 +276,10 @@ async function dangerousConstandIds(document: server.TextDocument, prepearedText
 }
 
 /** Необязательные вопросы */
-async function notImperativeQuestions(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function notImperativeQuestions(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
-	let res = await Parse.getDocumentElements(document, /(<Question[^>]+)(Imperative=('|")false(\3))/, "Риторический вопрос detected", prepearedText, { Type: server.DiagnosticSeverity.Warning }, 1);
+	let { document, preparedText } = data;
+	let res = await Parse.getDocumentElements(document, /(<Question[^>]+)(Imperative=('|")false(\3))/, "Риторический вопрос detected", preparedText, { Type: server.DiagnosticSeverity.Warning }, 1);
 	return res;
 }
 
@@ -267,10 +293,10 @@ async function notImperativeQuestions(document: server.TextDocument, prepearedTe
 
 
 /** Одинаковые заголовки */
-async function equalTexts(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function equalTexts(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
+	let { document, text } = data;
 	let res: Parse.DocumentElement[] = [];
-	let text = Encoding.clearXMLComments(document.getText());
 	let headers = text.findAll(/(<Header\s*>\s*)([\s\S]+?)\s*<\/Header\s*>/);
 	let labelsQ = text.findAll(/(<Question[^>]+)(ExportLabel=("|')(.+?)(\3))/);
 	if (headers.length > 1) res = res.concat(await findDuplicatedText(document, headers, 2, 15, 'Найдены повторяющиеся заголовки', 1));
@@ -304,12 +330,13 @@ async function equalTexts(document: server.TextDocument, prepearedText: string):
 }
 
 /** Повторяющиеся c# вставки */
-function copyPastedCS(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+function copyPastedCS(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
+	let { document, preparedText } = data;
 	return new Promise<Parse.DocumentElement[]>((resolve, reject) =>
 	{
 		let res: Parse.DocumentElement[] = [];
-		let csIns = prepearedText.findAll(/\[c#[^\]]*\]([\s\S]+?)\[\/c#\s*\]/);
+		let csIns = preparedText.findAll(/\[c#[^\]]*\]([\s\S]+?)\[\/c#\s*\]/);
 		let groups = csIns.groupBy<SearchResult>(x => x.Result[1]).Filter((key, value) =>
 		{
 			if (value.length < 5) return false;
@@ -334,10 +361,10 @@ function copyPastedCS(document: server.TextDocument, prepearedText: string): Pro
 }
 
 /** Помогаем писать Linq лучше */
-async function linqHelper(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function linqHelper(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
+	let { document, text } = data;
 	// ищем Count() > 0
-	let text = Encoding.clearXMLComments(document.getText());
 	text = Encoding.clearCSComments(text);
 	let res = await Parse.getDocumentElements(document, /(\.Count)(\([^;]+)/, "Возможно, вместо проверки `Count() > 0` лучше использовать `Any()`", text);
 	for (let i = 0; i < res.length; i++)
@@ -368,15 +395,16 @@ async function linqHelper(document: server.TextDocument, prepearedText: string):
 
 
 /** Предлагаем MixId вместо Mix */
-async function mixIdSuggestion(document: server.TextDocument, prepearedText: string): Promise<Parse.DocumentElement[]>
+async function mixIdSuggestion(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
+	let { document, preparedText } = data;
 	let res: Parse.DocumentElement[] = [];
-	let starts = prepearedText.findAll(/<Repeat[^>]+>/);
+	let starts = preparedText.findAll(/<Repeat[^>]+>/);
 	let repeats = starts.map(x =>
 	{
 		return {
 			Start: x,
-			End: Parse.findCloseTag("<", "Repeat", ">", x.Index, prepearedText)?.Range
+			End: Parse.findCloseTag("<", "Repeat", ">", x.Index, preparedText)?.Range
 		}
 	});
 	// выкидываем вложенные
@@ -385,7 +413,7 @@ async function mixIdSuggestion(document: server.TextDocument, prepearedText: str
 	// ищем с Mix
 	repeats.forEach(x =>
 	{
-		let text = prepearedText.slice(x.Start.Index + x.Start.Result[0].length, x.End.From);
+		let text = preparedText.slice(x.Start.Index + x.Start.Result[0].length, x.End.From);
 		if (!text) return;
 		let matches = text.findAll(/\sMix=/);
 		matches.forEach(match => {
@@ -412,10 +440,10 @@ async function mixIdSuggestion(document: server.TextDocument, prepearedText: str
 
 
 /** универсальная функция для преобразования `DocumentElement[]` в `Diagnostic[]` */
-async function _diagnosticElements(document: server.TextDocument, type: server.DiagnosticSeverity, preparedText: string, func: (document: server.TextDocument, prepearedText: string) => Promise<Parse.DocumentElement[]>, diagnosticId: number | string): Promise<server.Diagnostic[]>
+async function _diagnosticElements(data: IDiagnosticFunctionData, type: server.DiagnosticSeverity, func: (data: IDiagnosticFunctionData) => Promise<Parse.DocumentElement[]>, diagnosticId: number | string): Promise<server.Diagnostic[]>
 {
 	let res: server.Diagnostic[] = [];
-	let elements = await func(document, preparedText);
+	let elements = await func(data);
 	if (!!elements)
 	{
 		elements.forEach(element =>
