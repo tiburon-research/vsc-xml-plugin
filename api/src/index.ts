@@ -41,7 +41,8 @@ export enum ErrorCodes
 	wrongQuotes = "wrongQuotes",
 	notImperative = "notImperative",
 	linqHelp = "linqHelp",
-	mixIdSuggestion = "mixIdSuggestion"
+	mixIdSuggestion = "mixIdSuggestion",
+	oldCustomMethods = "oldCustomMethods"
 };
 	
 export interface IErrorTagData
