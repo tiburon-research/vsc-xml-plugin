@@ -471,7 +471,7 @@ async function findDuplicatedText(document: server.TextDocument, searchResults: 
 		{
 			let indent = groupIndent > -1 ? header.Result[groupIndent].length : 0;
 			res.push(new Parse.DocumentElement(document, {
-				DiagnosticProperties: { Type: server.DiagnosticSeverity.Warning, Code: ErrorCodes.duplicatedText },
+				DiagnosticProperties: { Code: ErrorCodes.duplicatedText },
 				From: indent + header.Index,
 				Message: errText,
 				To: indent + header.Index + header.Result[groupIndex].length,
