@@ -34,7 +34,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 		Functions: KeyedCollection.FromPairs(
 			[
 				{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"+Information
-				{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions }
+				{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions },
+				{ Key: ErrorCodes.oldCustomMethods, Value: oldRangeMethods}
 			]
 		)
 	},
@@ -280,6 +281,28 @@ async function notImperativeQuestions(data: IDiagnosticFunctionData): Promise<Pa
 {
 	let { document, preparedText } = data;
 	let res = await Parse.getDocumentElements(document, /(<Question[^>]+)(Imperative=('|")false(\3))/, "Риторический вопрос detected", preparedText, { Type: server.DiagnosticSeverity.Warning }, 1);
+	return res;
+}
+
+
+
+/** Наличие устаревших пользовательских методов */
+async function oldRangeMethods(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
+{
+	let res: Parse.DocumentElement[] = [];
+	let methods = data.surveyData.Methods;
+	let setRanges = methods.Item("SetRanges");
+	if (!!setRanges)
+	{
+		let location = setRanges.GetLocation().range;
+		let obj: Parse.IDocumentElement = {
+			From: data.document.offsetAt(location.start),
+			To: data.document.offsetAt(location.end),
+			Value: setRanges.Signature.match(/[\s\S]+/),
+			Message: "Метод SetRanges больше не нужен для вопросов с ранжированием"
+		}
+		res.push(new Parse.DocumentElement(data.document, obj));
+	}
 	return res;
 }
 
