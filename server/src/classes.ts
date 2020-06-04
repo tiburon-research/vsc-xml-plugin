@@ -361,7 +361,7 @@ export class TibAutoCompletes
 					// добавляем snippet для ранжирования
 					let rangeSnippet = snippetToCompletitionItem(AutoCompleteArray.RangeQuestion.QuestionSnippet);
 					rangeSnippet.additionalTextEdits = [
-						TextEdits.insertInMethods(this.document, AutoCompleteArray.RangeQuestion.Methods),
+						//TextEdits.insertInMethods(this.document, AutoCompleteArray.RangeQuestion.Methods),
 						TextEdits.insertInConstants(this.document, AutoCompleteArray.RangeQuestion.Constant)
 					];
 					snippets.push(rangeSnippet);

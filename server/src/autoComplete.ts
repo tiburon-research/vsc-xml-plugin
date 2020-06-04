@@ -3288,13 +3288,13 @@ export const RangeQuestion = {
 			'\t<Ui RangeQuestions="1"/>',
 			'\t<Repeat Length="@RangeCount">',
 			'\t\t<Question Id="$4_@Itera" Type="RadioButton" MixId="$8" Imperative="false">',
-			'\t\t\t<Filter Side="Client"><![CDATA[ return AnswerCount("$4", "$4_@Itera") > 0 || AnswerEnabled("$4_", "999", @Itera, @RangeCount); ]]></Filter>',
+			'\t\t\t<Filter Side="Client"><![CDATA[ return AnswerCount("$4", "$4_@Itera") > 0 || AnswerEnabledForRanging("$4_", "999", @Itera, @RangeCount); ]]></Filter>',
 			'\t\t\t<Header>$5</Header>',
 			'\t\t\t<Ui Extend="ContentOnly"/>',
 			'\t\t\t<Repeat List="$3">',
 			'\t\t\t\t<Answer Id="@ID">',
 			'\t\t\t\t\t<Filter><![CDATA[ return AnswerExists("$1", "@ID"); ]]></Filter>',
-			'\t\t\t\t\t<Filter Side="Client"><![CDATA[ return AnswerEnabled("$4_", "@ID", @Itera(-1), @RangeCount); ]]></Filter>',
+			'\t\t\t\t\t<Filter Side="Client"><![CDATA[ return AnswerEnabledForRanging("$4_", "@ID", @Itera(-1), @RangeCount); ]]></Filter>',
 			'\t\t\t\t\t<Text>[img src="@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/@ID.jpg"/]@Text</Text>',
 			'\t\t\t\t</Answer>',
 			'\t\t\t</Repeat>',
@@ -3310,7 +3310,7 @@ export const RangeQuestion = {
 			'\t\t}',
 			'\t\t/** Считается что "$1" и "$1_range" находятся на странице "$1" */',
 			'\t\t/** По умолчанию невыбранным элементам проставляется ранг в зависимости от длины листа "$3". Если нужен другой, то надо передать его ещё одним параметром в SetRanges. */',
-			'\t\tSetRanges("$1", "$4_", "$1_range", "$3", @RangeCount);',
+			'\t\tSetRanges("$1", "$4_", "$1_range", "$3", "999");',
 			'\t\treturn false;',
 			'\t]]></Redirect>',
 			'</Page>',
@@ -3319,61 +3319,6 @@ export const RangeQuestion = {
 		"description": "Ранжирование"
 	},
 
-	Constant: '\t\t<Item Id="RangeCount"><Value>7</Value></Item>',
+	Constant: '\t\t<Item Id="RangeCount"><Value>7</Value></Item>'
 
-	Methods: `
-		public bool AnswerEnabled(string prefix, string answer, int current, int len)
-		{
-		\tfor (int i = 1; i <= len; i++)
-		\t{
-		\t\tif (i == current) continue;
-		\t\tif (AnswerExists(prefix + i.ToString(), answer)) return false;
-		\t}
-		\treturn true;
-		}
-		
-		/*** ВНИМАНИЕ! Если максимальное количество выбранных элементов в первом вопросе отличается от 7, необходимо уточнить у менеджера, какие ранги должны быть проставлены невыбранным вариантам */
-		public void SetRanges(string selectionQuestion, string rangeQuestionPrefix, string targetQuestion, string listId, int rangeLength)
-		{
-		\tvar listItems = CurrentSurvey.Lists[listId].Items.ItemsIdArray;
-		\tvar answers = AnswerIDs(selectionQuestion, selectionQuestion);
-		\tvar selected = listItems.Intersect(answers); /** тут не учитывается другое */
-		\tvar notSelected = listItems.Except(answers);
-
-		\t/** проставляем ранг не выбранным в selectionQuestion */
-		\tvar listLength = listItems.Length;
-		\tvar rangeValue = 8;
-		\tif (listLength > 10) rangeValue = 10;
-		\telse if (listLength < 8) rangeValue = listLength;
-		\tstring value = rangeValue.ToString();
-		\tforeach (var item in notSelected)
-		\t{
-		\t\tAnswerUpdateP(selectionQuestion, targetQuestion, item, value);
-		\t}
-
-		\t/** проставляем ранги оценённым */
-		\tint selectedCount = selected.Count();
-		\tvar ranged = new List<string>();
-		\tfor(int i = 1; i <= selectedCount; i++)
-		\t{
-		\t\tvar currentRange = i.ToString();
-		\t\tvar ans = AnswerID(rangeQuestionPrefix + currentRange);
-		\t\tif (ans == "999")
-		\t\t{ /** Если з.о., то всем остальным проставляется вот такой ранг */
-		\t\t\tstring resetRange = Math.Ceiling((double) (i + selectedCount) / 2).ToString();
-		\t\t\tvar selectedNotRanged = selected.Except(ranged);
-		\t\t\tforeach (var item in selectedNotRanged)
-		\t\t\t{
-		\t\t\t\tAnswerUpdateP(selectionQuestion, targetQuestion, item, resetRange);
-		\t\t\t}
-		\t\t\tbreak;
-		\t\t}
-		\t\telse
-		\t\t{
-		\t\t\tAnswerUpdateP(selectionQuestion, targetQuestion, ans, currentRange);
-		\t\t\tranged.Add(ans);
-		\t\t}
-		\t}
-		}
-	`
 }
