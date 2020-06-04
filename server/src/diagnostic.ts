@@ -59,7 +59,7 @@ interface IDiagnosticFunctionData
 	text: string;
 	/** Текст без XML-комментариев и CDATA */
 	preparedText: string
-	surveyData?: SurveyData;
+	surveyData: SurveyData;
 }
 
 /** Интерфейс для одного типа диагностики */
