@@ -756,7 +756,9 @@ export class TibAutoCompletes
 		if (type == 'List')
 		{
 			let extractor = new ElementExtractor(this.surveyData);
-			init = `\${1|${extractor.getAllLists().join(',')}|}`;
+			let lists = extractor.getAllLists().join(',');
+			if (!!lists) lists = '|' + lists + '|';
+			init = `\${1${lists}}`;
 		}
 		res = res.replace(/\{\{iterator\}\}/g, type == 'List' ? '@ID' : '@Itera');
 		res = res.replace(/\{\{textIterator\}\}/g, type == 'List' ? '@Text' : '@Itera');
