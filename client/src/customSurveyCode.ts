@@ -6,6 +6,7 @@ import { Settings } from './extension';
 import xlsx from 'node-xlsx';
 import { getFullRange } from './extension';
 import { updateFileText } from './classes';
+import * as Errors from './errors';
 
 
 var $ = JQuery.init();
@@ -93,6 +94,7 @@ class XmlDocumentWorker
 	}
 	
 }
+
 
 
 
@@ -381,4 +383,25 @@ export class DocumentObjectModel
 	public applyChanges: () => Promise<void>;
 
 
+}
+
+
+
+/** Вывод сообщений */
+export namespace FeedBack
+{
+	export function showError(text: string)
+	{
+		return Errors.showError(text);
+	}
+
+	export function showWarning(text: string)
+	{
+		return Errors.showWarning(text);
+	}
+
+	export function showInfo(text: string)
+	{
+		return Errors.showInfo(text);
+	}
 }

@@ -2202,6 +2202,7 @@ async function runCustomJS()
 	let DocumentObjectModel = customCode.DocumentObjectModel;
 	let XML = customCode.XML;
 	let document = new DocumentObjectModel(editor.document);
+	let FeedBack = customCode.FeedBack;
 
 	try {
 		eval(resultScript);
