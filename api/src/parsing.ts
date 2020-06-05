@@ -2,7 +2,7 @@
 
 import { Language, getPreviousText } from "./index";
 import { TextRange, TagInfo, CurrentTag } from './currentTag'
-import { safeString, positiveMin, KeyedCollection } from './customs'
+import { safeRegexp, positiveMin, KeyedCollection } from './customs'
 import { clearXMLComments } from "./encoding"
 import { RegExpPatterns } from './constants'
 import * as charDetect from 'charset-detector'
@@ -58,12 +58,12 @@ export class ParsedElementObject
 export function findCloseTag(opBracket: string, tagName: string, clBracket: string, before: string | number, fullText: string): FindTagResult
 {
 	let tResult: FindTagResult = { Range: null, SelfClosed: false };
-	let sct = new RegExp("^" + safeString(opBracket) + "?\\w*(\\s+\\w+=((\"[^\"]*\")|('[^']*')))*\\s*\\/" + safeString(clBracket) + ""); // для проверки на selfCloseed
+	let sct = new RegExp("^" + safeRegexp(opBracket) + "?\\w*(\\s+\\w+=((\"[^\"]*\")|('[^']*')))*\\s*\\/" + safeRegexp(clBracket) + ""); // для проверки на selfCloseed
 	try
 	{
 		let pos = typeof before == 'number' ? before : before.length;
 		pos++; // сдвигаем после <
-		let textAfter = fullText.substr(pos);
+		let textAfter = CurrentTag.PrepareXML(fullText.substr(pos));
 		if (textAfter.match(sct))
 		{
 			// SelfClosed
@@ -71,8 +71,8 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
 			return tResult;
 		}
 		let rest = textAfter;
-		let regOp = new RegExp(safeString(opBracket) + safeString(tagName) + "[^\\w]");
-		let regCl = new RegExp(safeString(opBracket) + "\\/" + safeString(tagName) + "[^\\w]");
+		let regOp = new RegExp(safeRegexp(opBracket) + safeRegexp(tagName) + "[^\\w]");
+		let regCl = new RegExp(safeRegexp(opBracket) + "\\/" + safeRegexp(tagName) + "[^\\w]");
 		let op = -1;
 		let cl = -1;
 		let res = regCl.exec(rest);
@@ -159,10 +159,10 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 	try
 	{
 		let curIndex = prevText.lastIndexOf(opBracket);
-		let txt = prevText.substr(0, curIndex);
+		let txt = CurrentTag.PrepareXML(prevText.substr(0, curIndex));
 		let rest = txt;
-		let regOp = new RegExp(safeString(opBracket) + safeString(tagName) + "[^\\w]");
-		let regCl = new RegExp(safeString(opBracket) + "\\/" + safeString(tagName) + "[^\\w]");
+		//let regOp = new RegExp(safeRegexp(opBracket) + safeRegexp(tagName) + "[^\\w]");
+		//let regCl = new RegExp(safeRegexp(opBracket) + "\\/" + safeRegexp(tagName) + "[^\\w]");
 		let cl = -1;
 		let op = -1;
 
@@ -822,7 +822,7 @@ export function getCsInAutoSplit(document: server.TextDocument, prepearedText: s
 /** Ищет весь пользовательский JS и возвращает одной строкой */
 export async function getCustomJS(text: string): Promise<string>
 {
-	let res: string = null;
+	let res: string = "";
 	let jsElements = text.matchAll(/<!--#JS([\s\S]*?)-->/);
 	jsElements.forEach(body =>
 	{
@@ -848,7 +848,7 @@ function getDefaultElement(jqObject, name: string)
 
 
 /** Получает `Structures.ListItem` из объекта `JQuery` */
-export function getListItem(jqObject): Structures.ListItem
+export function getListItem(jqFn, jqObject): Structures.ListItem
 {
 	let parsed = getDefaultElement(jqObject, 'Item');
 	if (!parsed) return null;
@@ -856,7 +856,7 @@ export function getListItem(jqObject): Structures.ListItem
 	let varsAttrs = jqObject.attr('Var');
 	let varsTags = jqObject.find('Var');
 	if (!!varsAttrs) vars = vars.concat(varsAttrs.split(','));
-	if (varsTags.length > 0) vars = vars.concat(varsTags.map((i, el) => el.innerHTML).get());
+	if (varsTags.length > 0) vars = vars.concat(varsTags.map((i, el) => jqFn(el).text()).get());
 
 	let res = new Structures.ListItem();
 	res.Id = parsed.Id;

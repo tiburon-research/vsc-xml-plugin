@@ -3,13 +3,13 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, safeString, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, safeRegexp, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
-import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, LogPath, GenerableRepeats, RequestNames } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames } from 'tib-api/lib/constants'
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
@@ -17,7 +17,7 @@ import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors, showInfo, showError } from './errors';
 import { readGeoFile, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
 import { getCustomJS, getListItem, getAnswer } from 'tib-api/lib/parsing';
-import { DocumentObjectModel } from './customSurveyCode';
+import * as customCode from './customSurveyCode';
 
 
 export { CSFormatter, _settings as Settings };
@@ -217,7 +217,7 @@ async function getStaticData()
 		_userInfo = getUserData();
 		// сохраняем нужные значения
 		_settings = new ExtensionSettings();
-		if (!pathExists(LogPath)) _outChannel.logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
+		if (!pathExists(TibPaths.Logs)) _outChannel.logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
 		_useLinq = _settings.Item("useLinq");
 
 		// получаем фунцию форматирования C#
@@ -226,7 +226,7 @@ async function getStaticData()
 		else _outChannel.logToOutput("Расширение 'Leopotam.csharpfixformat' не установлено, C# будет форматироваться, как простой текст", _WarningLogPrefix);
 
 		// запускаем бота
-		let dataPath = LogPath + "\\data.json";
+		let dataPath = TibPaths.Logs + "\\data.json";
 		if (pathExists(dataPath))
 		{
 			let data = JSON.parse(fs.readFileSync(dataPath).toString());
@@ -858,6 +858,28 @@ async function registerCommands()
 		});
 	});
 
+
+	registerCommand('tib.customScriptDocs', () => 
+	{
+		return new Promise<void>((resolve, reject) =>
+		{
+			let path = TibPaths.CustomCodeSignatures;
+			if (!path)
+			{
+				logError("Невозможно получить доступ к файлу сигнатур", true, undefined);
+				return resolve();
+			}
+			_currentStatus.setProcessMessage("Открывается файл...").then(x =>
+			{
+				openFileText(path, 'typescript').then(() => _currentStatus.removeCurrentMessage()).then(() =>
+				{
+					x.dispose();
+					resolve();
+				});
+			});
+		});
+	});
+
 	//Создание tibXML шаблона
 	registerCommand('tib.template', () =>
 	{
@@ -924,7 +946,7 @@ async function registerCommands()
 			elements.each((i, el) =>
 			{
 				let $el = $dom.find(el);
-				let element = isItems ? getListItem($el) : getAnswer($el);
+				let element = isItems ? getListItem($, $el) : getAnswer($el);
 				if (varCount == -1) varCount = isItems ? element['Vars'].length : 0;
 				let line = [];
 				line.push(element.Id);
@@ -940,8 +962,8 @@ async function registerCommands()
 			}
 			caption.push('Text');
 			res.unshift(caption);
-
-			let resultText = res.map(line => line.join('\t')).join('\n');
+			// при объединении выкидываем \t\n
+			let resultText = res.map(line => line.map(str => str.replace(/[\t\n]+/g, ' ')).join('\t')).join('\n');
 			vscode.env.clipboard.writeText(resultText).then(() =>
 			{
 				showInfo('Таблица скопирована в буфер обмена');
@@ -1147,7 +1169,7 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 
 				if ((tagCl == -1 || tagOp > -1 && tagOp < tagCl) || result[1].match(/^(Repeat)|(Condition)|(Block)$/))
 				{
-					let closed = after.match(new RegExp("^[^<]*(<\\/)?" + safeString(result[1])));
+					let closed = after.match(new RegExp("^[^<]*(<\\/)?" + safeRegexp(result[1])));
 					if (!closed)
 					{
 						changesCount++;
@@ -1234,7 +1256,7 @@ function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 {
 	let res: Thenable<any>[] = [];
 	// если хоть одна позиция такова, то нафиг
-	if (!data.tag || !data.changes || data.changes.length == 0 || !_settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return res;
+	if (!data.editor || !data.tag || !data.changes || data.changes.length == 0 || !_settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return res;
 	let tagRegex = /(<\/?)(\w+)$/;
 	let nullPosition = new vscode.Position(0, 0);
 	try
@@ -1403,7 +1425,7 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 	let newText = text;
 
 	//проверяем на наличие комментов внутри
-	let inComReg = new RegExp("(" + safeString(cStart) + ")|(" + safeString(cEnd) + ")");
+	let inComReg = new RegExp("(" + safeRegexp(cStart) + ")|(" + safeRegexp(cEnd) + ")");
 
 	function checkInnerComments(text: string): boolean
 	{
@@ -1413,9 +1435,9 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 	let valid = checkInnerComments(newText);
 
 	// если это закомментированный, то снимаем комментирование
-	if (!valid && newText.match(new RegExp("^\\s*" + safeString(cStart) + "[\\S\\s]*" + safeString(cEnd) + "\\s*$")))
+	if (!valid && newText.match(new RegExp("^\\s*" + safeRegexp(cStart) + "[\\S\\s]*" + safeRegexp(cEnd) + "\\s*$")))
 	{
-		newText = newText.replace(new RegExp("^(\\s*)" + safeString(cStart) + "( ?)([\\S\\s]*)( ?)" + safeString(cEnd) + "(\\s*)$"), "$1$3$5");
+		newText = newText.replace(new RegExp("^(\\s*)" + safeRegexp(cStart) + "( ?)([\\S\\s]*)( ?)" + safeRegexp(cEnd) + "(\\s*)$"), "$1$3$5");
 		valid = checkInnerComments(newText);
 	}
 	else
@@ -1824,13 +1846,14 @@ async function createClientConnection(context: vscode.ExtensionContext)
 				_errors.logError({ text: data.MessageFriendly, data: logData, stackTrace: data.StackTrace, showerror: !data.Silent, errorMessage: data.Message, tag: data.TagData });
 			});
 
-			// запрос документа с ссервера
+			// запрос документа с сервера
 			_client.onRequest(RequestNames.GetDocumentByUri, (uri: string) =>
 			{
 				return new Promise<IServerDocument>((resolve, reject) =>
 				{
 					vscode.workspace.openTextDocument(vscode.Uri.parse(uri)).then(doc =>
 					{
+						if (doc.languageId != 'tib') resolve(null);
 						resolve(ClientServerTransforms.ToServer.Document(doc));
 					}, err => { reject(err) });
 				});
@@ -2050,9 +2073,10 @@ async function registerActionCommands()
 /** Отправка документа на сервер */
 async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null)
 {
+	let editor = vscode.window.activeTextEditor;
+	if (!editor) return null;
 	if (!changeData)
 	{
-		let editor = vscode.window.activeTextEditor;
 		let doc = editor.document;
 		let documentData = ClientServerTransforms.ToServer.Document(doc);
 		let position = ClientServerTransforms.ToServer.Position(editor.selection.active);
@@ -2174,18 +2198,20 @@ async function runCustomJS()
 	let code = await vscode.window.showInputBox({ placeHolder: "Код для выполнения" });
 	let resultScript = js + "\n" + code;
 
-	// переменные, которые пригодятся
-	let replaceDocumentText = function (text: string) 
-	{
-		let selections = editor.selections;
-		let change = applyChanges(getFullRange(vscode.window.activeTextEditor.document), text, editor, true);
-		change.then(() => { editor.selections = selections });
-		return change;
-	};
+	// тут надо перечислить все глобальные export, чтобы в контексте eval имена были именно такими же
+	let DocumentObjectModel = customCode.DocumentObjectModel;
+	let XML = customCode.XML;
+	let document = new DocumentObjectModel(editor.document);
+	let FeedBack = customCode.FeedBack;
 
-	let $dom = require('tib-api').JQuery.init().XMLDOM(editor.document.getText());
-	let document = new DocumentObjectModel(editor.document, $dom, replaceDocumentText);
-	eval(resultScript);
+	try {
+		eval(resultScript);
+	} catch (error)
+	{
+		let text = typeof error == 'string' ? error : error?.message;
+		showError(text);
+		console.error(error);
+	}
 }
 
 

@@ -93,14 +93,18 @@ export const XMLEmbeddings = [
 
 export const PreDefinedConstants = {
 	Scripts: "\\\\tib-srv-debug.corp.tiburon-research.ru\\scripts",
-	StoreUrl: "S:",
+	StoreUrl: "https://content.survstat.ru/content",
 	ContentUrl: "Путь к папке проекта на CDN-сервере",
 	RespID: "Подстановка: InterviewPars.GetInstance().RespId",
+	InterviewUID: "Подстановка: InterviewPars.GetInstance().RespId",
 	BinderID: "Подстановка: survey.BinderId"
 };
 
 
-export const LogPath = "G:\\Разное\\TiburonXMLHelper\\Logs";
+export const TibPaths = {
+	Logs: "G:\\Разное\\TiburonXMLHelper\\Logs",
+	CustomCodeSignatures: "\\\\192.168.177.11\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts"
+}
 
 
 export const GenerableRepeats = {

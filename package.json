@@ -2,7 +2,7 @@
     "name": "tiburonscripter",
     "displayName": "Tiburon XML Helper",
     "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-    "version": "2.9.1",
+    "version": "2.10.0",
     "publisher": "TiburonResearch",
     "author": {
         "name": "GuRu",
@@ -68,10 +68,10 @@
             }
         ],
         "commands": [
-			{
+            {
                 "command": "tib.translateRange",
                 "title": "Транслитерация текста",
-				"category": "tib"
+                "category": "tib"
             },
             {
                 "command": "tib.ChooseGeo",
@@ -121,9 +121,9 @@
             {
                 "command": "tib.cdata",
                 "title": "Обернуть в CDATA",
-				"category": "tib"
-			},
-			{
+                "category": "tib"
+            },
+            {
                 "command": "tib.cdataInner",
                 "title": "Обернуть текущий тег в CDATA",
                 "category": "tib"
@@ -131,7 +131,7 @@
             {
                 "command": "tib.surveyBlock",
                 "title": "Обернуть в сворачиваемый блок",
-				"category": "tib"
+                "category": "tib"
             },
             {
                 "command": "tib.paste",
@@ -152,12 +152,12 @@
                 "command": "tib.selectTag.closest",
                 "title": "Выделить текущий тег",
                 "category": "tib"
-			},
-			{
+            },
+            {
                 "command": "tib.selectTag.inner",
                 "title": "Выделить содержимое текущего тега",
                 "category": "tib"
-			},
+            },
             {
                 "command": "tib.selectTag.global",
                 "title": "Выделить родительский тег",
@@ -178,13 +178,13 @@
                 "title": "Преобразовать в Answers",
                 "category": "tib",
                 "enablement": "editorHasSelection"
-			},
-			{
+            },
+            {
                 "command": "tib.getAnswersOnly",
                 "title": "Преобразовать в Answers без Question",
                 "category": "tib",
                 "enablement": "editorHasSelection"
-			},
+            },
             {
                 "command": "tib.getItems",
                 "title": "Преобразовать в Items",
@@ -212,7 +212,12 @@
                 "title": "Вынести ответы в List",
                 "category": "tib",
                 "enablement": "editorHasSelection"
-            }
+			},
+			{
+                "command": "tib.customScriptDocs",
+                "title": "Документация по пользовательским скриптам",
+                "category": "tib"
+			}
         ],
         "menus": {
             "editor/context": [
@@ -227,13 +232,13 @@
             ]
         },
         "keybindings": [
-			{
+            {
                 "key": "ctrl+k ctrl+alt+t",
-				"command": "tib.translateRange",
-				"args": {
-					"range": null,
-					"lit": true
-				}
+                "command": "tib.translateRange",
+                "args": {
+                    "range": null,
+                    "lit": true
+                }
             },
             {
                 "key": "ctrl+alt+g",
@@ -270,11 +275,11 @@
             {
                 "key": "ctrl+alt+p",
                 "command": "tib.selectTag.closest"
-			},
-			{
+            },
+            {
                 "key": "ctrl+k ctrl+alt+p",
                 "command": "tib.selectTag.inner"
-			},
+            },
             {
                 "key": "ctrl+alt+shift+p",
                 "command": "tib.selectTag.global"
@@ -286,8 +291,8 @@
             {
                 "key": "ctrl+alt+shift+d",
                 "command": "tib.debugTestCommand"
-			},
-			{
+            },
+            {
                 "key": "ctrl+shift+alt+a",
                 "command": "tib.getAnswersOnly"
             },
@@ -306,14 +311,14 @@
             {
                 "key": "ctrl+alt+j",
                 "command": "tib.runCustomScript"
-            }
+			}
         ],
         "configurationDefaults": {
             "[tib]": {
                 "editor.quickSuggestions": {
                     "strings": true
-				},
-				"editor.suggest.snippetsPreventQuickSuggestions": true
+                },
+                "editor.suggest.snippetsPreventQuickSuggestions": true
             }
         },
         "configuration": {
@@ -416,7 +421,7 @@
         "compile-api": "cd api && npm run compile && cd ../",
         "install-vsc": "node node_modules/vscode/bin/install",
         "postinstall": "npm run install-vsc && npm run compile-api && npm run compile && npm install -g vsce",
-        "rebuild": "cd api && rmdir /q/s lib && del tsconfig.tsbuildinfo && cd ../client && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../server && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../ && npm run compile && npm run compile",
+        "rebuild": "cd api && rmdir /q/s lib && del tsconfig.tsbuildinfo && cd ../client && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../server && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../ && npm run compile",
         "copy-signature": "copy \"client\\out\\customSurveyCode.d.ts\" \"\\\\192.168.177.11\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts\""
     }
 }

@@ -7,7 +7,7 @@ import * as AutoCompleteArray from './autoComplete';
 import { _NodeStoreNames, _pack, RequestNames } from 'tib-api/lib/constants';
 import { getDiagnosticElements } from './diagnostic';
 import { CacheSet } from 'tib-api/lib/cache';
-import { SurveyData, TibMethods, SurveyNodes, getDocumentMethods, getDocumentNodeIds, getMixIds, getIncludePaths, getConstants, SurveyNode } from 'tib-api/lib/surveyData';
+import { SurveyData, TibMethods, SurveyNodes, getDocumentMethods, getDocumentNodeIds, getMixIds, getIncludePaths, getConstants, SurveyNode, ExportLabel, getExportLabels } from 'tib-api/lib/surveyData';
 
 
 
@@ -211,6 +211,7 @@ connection.onDefinition(data =>
 // это событие дёргаем руками, чтобы передавать все нужные данные
 connection.onRequest(RequestNames.OnDidChangeTextDocument, (data: OnDidChangeDocumentData) =>
 {
+	// тут 'tib' учитывается при всех вызовах
 	return new Promise<CurrentTag>((resolve) =>
 	{
 		let doc = documents.set(data.document);
@@ -263,7 +264,7 @@ connection.onNotification(RequestNames.UpdateExtensionSettings, (data: Object) =
 
 async function sendDiagnostic(document: server.TextDocument)
 {
-	let diagnostics = await getDiagnosticElements(document);
+	let diagnostics = await getDiagnosticElements(document, _SurveyData);
 	let clientDiagnostic: server.PublishDiagnosticsParams = {
 		diagnostics,
 		uri: document.uri
@@ -305,8 +306,9 @@ export function consoleLog(...data)
 
 /** Смена документа */
 function anotherDocument(data: IServerDocument)
-{
+{// tib учитывается при вызове
 	let doc = documents.add(data);
+	if (!doc) return;
 	_SurveyData.Clear();
 	_Cache.Clear();
 	anyChangeHandler(doc);
@@ -315,8 +317,10 @@ function anotherDocument(data: IServerDocument)
 /** Дёргаем при изменении или открытии */
 function anyChangeHandler(document: server.TextDocument)
 {
-	updateSurveyData(document);
-	sendDiagnostic(document);
+	updateSurveyData(document).then(() =>
+	{
+		sendDiagnostic(document);
+	});
 }
 
 
@@ -407,6 +411,7 @@ async function updateSurveyData(document: server.TextDocument)
 	let nodes = new SurveyNodes();
 	let constants = new KeyedCollection<SurveyNode>();
 	let mixIds: string[] = [];
+	let exportLabels: ExportLabel[] = [];
 
 	// если Include поменялись, то обновляем все
 	if (!_SurveyData.Includes || !_SurveyData.Includes.equalsTo(includes))
@@ -430,11 +435,13 @@ async function updateSurveyData(document: server.TextDocument)
 			nodes.AddRange(await getDocumentNodeIds(doc, _NodeStoreNames));
 			mixIds = mixIds.concat(await getMixIds(doc));
 			constants.AddRange(await getConstants(doc));
+			exportLabels = exportLabels.concat(await getExportLabels(doc));
 		}
 		_SurveyData.Methods = methods;
 		_SurveyData.CurrentNodes = nodes;
 		_SurveyData.MixIds = mixIds;
 		_SurveyData.ConstantItems = constants;
+		_SurveyData.ExportLabels = exportLabels;
 	} catch (error)
 	{
 		logError("Ошибка при сборе сведений о документе", false, error);
@@ -451,7 +458,7 @@ function getDocument(uri: string): Promise<server.TextDocument>
 		if (!!document) return resolve(document);
 		connection.sendRequest<IServerDocument>(RequestNames.GetDocumentByUri, uri).then(doc =>
 		{
-			resolve(documents.add(doc));
+			resolve(!!doc ? documents.add(doc) : null);
 		}, err => { reject(err); });
 	});
 }

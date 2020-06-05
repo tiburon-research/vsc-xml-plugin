@@ -98,9 +98,24 @@ export function getContextChanges(document: vscode.TextDocument, selections: vsc
 }
 
 
+export function updateFileText(path: string, text: string, encoding?: string)
+{
+	let fileBuffer = fs.readFileSync(path);	
+	encoding = encoding || (Parse.win1251Avaliabe(fileBuffer) ? 'win1251' : 'utf-8');
+	fs.writeFileSync(path, iconv.encode(text, encoding));
+}
+
+/** Читает содержимое файла в правиьной кодировке */
+export function readFileText(path: string): string
+{
+	let fileBuffer = fs.readFileSync(path);
+	// по возможности читаем в 1251
+	return Parse.win1251Avaliabe(fileBuffer) ? iconv.decode(fileBuffer, 'win1251') : fileBuffer.toString('utf8');
+}
+
 
 /** Открытие текста файла в новом окне */
-export function openFileText(path: string): Promise<void>
+export function openFileText(path: string, language?: string): Promise<void>
 {
 	return new Promise<void>((resolve, reject) =>
 	{
@@ -118,11 +133,9 @@ export function openFileText(path: string): Promise<void>
 				});
 			})
 		}); */
-
-		let fileBuffer = fs.readFileSync(path);
-		// по возможности читаем в 1251
-		let text = Parse.win1251Avaliabe(fileBuffer) ? iconv.decode(fileBuffer, 'win1251') : fileBuffer.toString('utf8');
-		vscode.workspace.openTextDocument({ language: "tib" }).then(newDoc =>
+		language = language || 'tib';
+		let text = readFileText(path);
+		vscode.workspace.openTextDocument({ language }).then(newDoc =>
 		{ // создаём пустой tib-файл
 			if (!newDoc) return reject();
 			vscode.window.showTextDocument(newDoc).then(editor => 

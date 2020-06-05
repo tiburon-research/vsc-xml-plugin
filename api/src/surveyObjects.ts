@@ -9,7 +9,7 @@ import { KeyedCollection } from './customs'
 
 
 
-export enum SurveyElementType { Item, ListItem, Answer, List, Question, Page };
+export enum SurveyElementType { Item, ListItem, ConstantItem, Answer, List, Question, Page };
 
 
 
@@ -191,11 +191,11 @@ export class SurveyElement
 /** <Item> */
 export class SurveyItem extends SurveyElement
 {
-	constructor(id?: string, text?: string)
+	constructor(id?: string, textOrValue?: string, withValue?: boolean)
 	{
 		super("Item", id);
-		let textItem = new SurveyElement("Text");
-		textItem.Text = text;
+		let textItem = new SurveyElement(withValue ? "Value" : "Text");
+		textItem.Text = textOrValue;
 		this.AddChild(textItem);
 		this.ElementType = SurveyElementType.Item;
 	}
@@ -241,6 +241,8 @@ export class SurveyListItem extends SurveyItem
 {
 	/** Коллекция Var */
 	public Vars: SurveyListItemVars;
+	/** Var отдельными тэгами */
+	public SeparateVars: boolean;
 
 
 	constructor(id?: string, text?: string)
@@ -251,7 +253,7 @@ export class SurveyListItem extends SurveyItem
 	}
 
 	/** преобразует к стандартному классу */
-	public ToSurveyItem(separateVars: boolean): SurveyElement
+	public ToSurveyItem(): SurveyElement
 	{
 		let res = new SurveyElement("Item");
 		// копируем все свойства
@@ -260,7 +262,7 @@ export class SurveyListItem extends SurveyItem
 		// добавляем Var
 		if (!!this.Vars && this.Vars.Count() > 0)
 		{
-			if (separateVars)
+			if (this.SeparateVars)
 			{
 				this.Vars.Items.forEach(x =>
 				{
@@ -274,6 +276,34 @@ export class SurveyListItem extends SurveyItem
 				res.SetAttr("Var", this.Vars.Items.join(","));
 			}
 		}
+		return res;
+	}
+
+	public ToXML(): string
+	{
+		return this.ToSurveyItem().ToXML();
+	}
+
+}
+
+
+/** Элементы <Item> для <Constants> */
+export class SurveyConstantsItem extends SurveyItem
+{
+
+	constructor(id?: string, value?: string)
+	{
+		super(id, value, true);
+		this.CollapseTags = true;
+		this.ElementType = SurveyElementType.ConstantItem;
+	}
+
+	/** преобразует к стандартному классу */
+	public ToSurveyItem(separateVars: boolean): SurveyElement
+	{
+		let res = new SurveyElement("Item");
+		// копируем все свойства
+		res = Object.assign(res, this);
 		return res;
 	}
 
@@ -326,6 +356,7 @@ export class SurveyList extends SurveyElement
 		else id = item.Id;
 
 		let res = new SurveyListItem(id, item.Text);
+		res.SeparateVars = this.VarsAsTags;
 		if (!!item.Vars && item.Vars.length > 0) res.Vars = new SurveyListItemVars(item.Vars);
 		if (!!item.Text) res.Text = item.Text;
 		// предупреждаем о перезаписи
@@ -346,7 +377,7 @@ export class SurveyList extends SurveyElement
 		// Items не числятся в Children
 		this.Items.ForEach((key, value) =>
 		{
-			this.AddChild(value.ToSurveyItem(this.VarsAsTags));
+			this.AddChild(value.ToSurveyItem());
 		})
 		return super.ToXML();
 	}

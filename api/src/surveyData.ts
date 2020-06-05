@@ -21,6 +21,8 @@ export interface ISurveyData
 	Includes: string[];
 	/** Константы */
 	ConstantItems: KeyedCollection<SurveyNode>;
+	/** Список ExportLabel по родителям */
+	ExportLabels: ExportLabel[];
 }
 
 
@@ -36,6 +38,8 @@ export class SurveyData implements ISurveyData
 	Includes: string[];
 	/** Константы */
 	ConstantItems: KeyedCollection<SurveyNode>;
+	/** Список ExportLabel по родителям */
+	ExportLabels: ExportLabel[];
 
 	/** Очистка */
 	public Clear()
@@ -45,6 +49,7 @@ export class SurveyData implements ISurveyData
 		this.MixIds = [];
 		this.Includes = [];
 		this.ConstantItems = new KeyedCollection<SurveyNode>();
+		this.ExportLabels = [];
 	}
 }
 
@@ -298,6 +303,30 @@ export class SurveyNodes extends KeyedCollection<SurveyNode[]>
 }
 
 
+interface ExportLabelParent
+{
+	TagName: string;
+	Start: server.Position;
+}
+
+export class ExportLabel
+{
+	/** Диапазон атрибута целиком */
+	Range: server.Range;
+	/** Родитель */
+	Parent: ExportLabelParent;
+	/** Значение атрибута */
+	Value: string;
+
+	constructor(range: server.Range, parent: ExportLabelParent, value: string)
+	{
+		this.Parent = parent;
+		this.Range = range;
+		this.Value = value;
+	}
+}
+
+
 /** Возвращает список public-методов из `<Methods>` */
 export async function getDocumentMethods(document: server.TextDocument): Promise<TibMethods>
 {
@@ -427,6 +456,36 @@ export function getIncludePaths(text: string): string[]
 	let txt = text;
 	txt = Encoding.clearXMLComments(txt);
 	res = txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x)).map(x => uriFromName(x));
+	return res;
+}
+
+
+/** Возвращает список ExportLabel */
+export async function getExportLabels(document: server.TextDocument): Promise<ExportLabel[]>
+{
+	let res: ExportLabel[] = [];
+	let txt = document.getText();
+	txt = Encoding.clearXMLComments(txt);
+	txt = Encoding.clearCSContents(txt);
+	let exportLabels = txt.findAll(/\sExportLabel=(('[^']*')|("[^"]*"))/);
+	exportLabels.forEach(match =>
+	{
+		let before = txt.slice(0, match.Index);
+		let parentTag = before.match(/<(\w+)\s*(\s*(\w+)=(("[^"]*")|('[^']*'))\s*)*$/);
+		if (!!parentTag)
+		{
+			let from = document.positionAt(match.Index + 1);
+			let to = document.positionAt(match.Index + match.Result[0].length);
+			let range = server.Range.create(from, to);
+			let parent: ExportLabelParent = {
+				Start: from,
+				TagName: parentTag[1]
+			}
+			let value = match.Result[1].slice(1, match.Result[1].length - 1);
+			let result = new ExportLabel(range, parent, value);
+			res.push(result);
+		}
+	});
 	return res;
 }
 

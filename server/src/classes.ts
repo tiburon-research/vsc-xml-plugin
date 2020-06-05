@@ -361,7 +361,7 @@ export class TibAutoCompletes
 					// добавляем snippet для ранжирования
 					let rangeSnippet = snippetToCompletitionItem(AutoCompleteArray.RangeQuestion.QuestionSnippet);
 					rangeSnippet.additionalTextEdits = [
-						TextEdits.insertInMethods(this.document, AutoCompleteArray.RangeQuestion.Methods),
+						//TextEdits.insertInMethods(this.document, AutoCompleteArray.RangeQuestion.Methods),
 						TextEdits.insertInConstants(this.document, AutoCompleteArray.RangeQuestion.Constant)
 					];
 					snippets.push(rangeSnippet);
@@ -520,7 +520,7 @@ export class TibAutoCompletes
 			let text = getPreviousText(this.document, this.position, true);
 			//let needClose = !getCurrentLineText(document, position).substr(position.character).match(/^[\w@]*['"]/);
 
-			let curAttr = text.match(/(\w+)=(["'])(:?\w*)$/);
+			let curAttr = text.match(/(\w+)=(["'])([@:]?\w*)$/);
 			if (!curAttr) return completionItems;
 
 			let atrs: TibAttribute[] = AutoCompleteArray.Attributes[this.tag.Id];
@@ -542,7 +542,7 @@ export class TibAutoCompletes
 			vals.forEach(v =>
 			{
 				let ci = server.CompletionItem.create(v);
-				ci.insertText = v;
+				ci.textEdit = server.TextEdit.replace(server.Range.create(this.position.line, this.position.character - curAttr[3]?.length, this.position.line, this.position.character), v);
 				ci.kind = server.CompletionItemKind.Enum;
 				completionItems.push(ci);
 			});
@@ -756,7 +756,9 @@ export class TibAutoCompletes
 		if (type == 'List')
 		{
 			let extractor = new ElementExtractor(this.surveyData);
-			init = `\${1|${extractor.getAllLists().join(',')}|}`;
+			let lists = extractor.getAllLists().join(',');
+			if (!!lists) lists = '|' + lists + '|';
+			init = `\${1${lists}}`;
 		}
 		res = res.replace(/\{\{iterator\}\}/g, type == 'List' ? '@ID' : '@Itera');
 		res = res.replace(/\{\{textIterator\}\}/g, type == 'List' ? '@Text' : '@Itera');
