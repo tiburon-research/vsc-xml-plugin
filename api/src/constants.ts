@@ -3,7 +3,7 @@
 
 
 /** Тип сборки */
-export const _pack: ("debug" | "release") = "debug";
+export const _pack: ("debug" | "release") = "release";
 
 /** XML теги, которые сохраняются в CurrentNodes */
 export const _NodeStoreNames = ["Page", "Question", "Quota", "List"];
