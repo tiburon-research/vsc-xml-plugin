@@ -2203,6 +2203,8 @@ async function runCustomJS()
 	let XML = customCode.XML;
 	let document = new DocumentObjectModel(editor.document);
 	let FeedBack = customCode.FeedBack;
+	let $ = JQuery.init();
+	let $dom = $.XMLDOM(editor.document.getText());
 
 	try {
 		eval(resultScript);
