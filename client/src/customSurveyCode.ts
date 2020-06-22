@@ -325,7 +325,7 @@ export namespace XML
 /** Реализует удобную работу с документом tib-xml */
 export class DocumentObjectModel
 {
-	private $dom;
+	public readonly $dom;
 
 	constructor(document: vscode.TextDocument)
 	{
