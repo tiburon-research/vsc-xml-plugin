@@ -1254,7 +1254,7 @@ export const Attributes = {
 		},
 		{
 			"Name": "CheckBoxMultiple",
-			"Default": "true",
+			"Default": "false",
 			"Type": "Boolean"
 		},
 		{
@@ -1573,12 +1573,12 @@ export const Attributes = {
 		},
 		{
 			"Name": "SupportEditText",
-			"Default": "Опишите проблему здесь",
+			"Default": "Сообщить о проблеме",
 			"Type": "String"
 		},
 		{
 			"Name": "SupportSendText",
-			"Default": "Отправить",
+			"Default": "Сообщить о проблеме",
 			"Type": "String"
 		},
 		{
@@ -1588,7 +1588,17 @@ export const Attributes = {
 		},
 		{
 			"Name": "SupportSuccessText",
-			"Default": "Спасибо! Информация о Вашей проблеме будет передана администрации проекта.",
+			"Default": "Спасибо за обращение, в ближайшее время мы постараемся решить Вашу проблему.",
+			"Type": "String"
+		},
+		{
+			"Name": "SupportSuccessHeader",
+			"Default": "Сообщение успешно отправлено!",
+			"Type": "String"
+		},
+		{
+			"Name": "SupportSuccessButton",
+			"Default": "Продолжить",
 			"Type": "String"
 		},
 		{
