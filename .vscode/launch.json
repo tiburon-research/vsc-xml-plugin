@@ -1,6 +1,6 @@
 // A launch configuration that compiles the extension and then opens it inside a new window
 {
-    "version": "0.1.0",
+    "version": "0.2.0",
     "configurations": [
         {
             "name": "Client",
@@ -10,19 +10,20 @@
             "args": ["--extensionDevelopmentPath=${workspaceRoot}"],
             "stopOnEntry": false,
             "sourceMaps": true,
-            "outFiles": [ 
-                "${workspaceRoot}/node_modules/tib-api/lib/*.js",
-                "${workspaceRoot}/client/out/*.js"
+            "outFiles": [
+				"${workspaceRoot}/client/out/*.js",
+				"${workspaceRoot}/node_modules/tib-api/lib/*.js"
             ]
         },
         {
 			"type": "node",
-			"request": "launch",
+			"request": "attach",
 			"name": "Server",
-            "port": 6009,
+			"protocol": "legacy",
+            "port": 4711,
             "restart": true,
 			"outFiles": [
-                "${workspaceRoot}/server/out/*.js"
+				"${workspaceRoot}/server/out/*.js",
             ]
 		},
     ],
