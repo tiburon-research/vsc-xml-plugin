@@ -99,7 +99,6 @@ export async function getDiagnosticElements(document: server.TextDocument, surve
 			preparedText,
 			surveyData
 		}
-
 		for (const diagnosticType of _AllDiagnostics) 
 		{
 			diagnosticType.Functions.ForEach((name, func) =>
@@ -440,13 +439,14 @@ async function linqHelper(data: IDiagnosticFunctionData): Promise<Parse.Document
 async function mixIdSuggestion(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
 	let { document, preparedText } = data;
+	preparedText = Encoding.clearCSContents(preparedText);
 	let res: Parse.DocumentElement[] = [];
 	let starts = preparedText.findAll(/<Repeat[^>]+>/);
 	let repeats = starts.map(x =>
 	{
 		return {
 			Start: x,
-			End: Parse.findCloseTag("<", "Repeat", ">", x.Index, preparedText)?.Range
+			End: Parse.findCloseTag("<", "Repeat", ">", x.Index, preparedText, false)?.Range
 		}
 	});
 	// выкидываем вложенные

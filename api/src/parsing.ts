@@ -50,20 +50,24 @@ export class ParsedElementObject
 /** 
  * Поиск закрывающего тега.
  * 
- * @param before предыдущий текст или позиция (== его длина)
- * @returns `FindTagResult` или `null`, если тег не закрыт
+ * `before` - предыдущий текст или позиция (== его длина)
  * 
- * Если selfClosed, то `Range = null`
+ * `needClear` - вызывает CurrentTag.PrepareXML
+ * 
+ * Если `selfClosed`, то `Range = null`
+ * 
+ * Возвращает`FindTagResult` или `null`, если тег не закрыт
 */
-export function findCloseTag(opBracket: string, tagName: string, clBracket: string, before: string | number, fullText: string): FindTagResult
+export function findCloseTag(opBracket: string, tagName: string, clBracket: string, before: string | number, fullText: string, needClear = true): FindTagResult
 {
 	let tResult: FindTagResult = { Range: null, SelfClosed: false };
-	let sct = new RegExp("^" + safeRegexp(opBracket) + "?\\w*(\\s+\\w+=((\"[^\"]*\")|('[^']*')))*\\s*\\/" + safeRegexp(clBracket) + ""); // для проверки на selfCloseed
+	let sct = new RegExp("^" + safeRegexp(opBracket) + "?\\w*(\\s+\\w+=((\"[^\"]*\")|('[^']*')))*\\s*\\/" + safeRegexp(clBracket)); // для проверки на selfCloseed
 	try
 	{
 		let pos = typeof before == 'number' ? before : before.length;
 		pos++; // сдвигаем после <
-		let textAfter = CurrentTag.PrepareXML(fullText.substr(pos));
+		let textAfter = fullText.substr(pos);
+		if (needClear) textAfter = CurrentTag.PrepareXML(textAfter);
 		if (textAfter.match(sct))
 		{
 			// SelfClosed
@@ -128,11 +132,11 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
 }
 
 /** Возвращает диапазон закрывающегося тега или null */
-export function getCloseTagRange(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
+export function getCloseTagRange(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position, needClear = true): server.Range
 {
 	let fullText = document.getText();
 	let prevText = getPreviousText(document, position);
-	let res = findCloseTag(opBracket, tagName, clBracket, prevText, fullText);
+	let res = findCloseTag(opBracket, tagName, clBracket, prevText, fullText, needClear);
 	if (!res || !res.Range) return null;
 	let startPos = document.positionAt(res.Range.From);
 	let endPos = document.positionAt(res.Range.To + 1);
@@ -143,10 +147,13 @@ export function getCloseTagRange(opBracket: string, tagName: string, clBracket: 
 /** 
  * Поиск открывающего тега.
  * 
- * @param prevText предыдущий текст
- * @returns `FindTagResult` или `null`, если открывающий тег не найден
+ *  prevText предыдущий текст
+ * 
+ * needClear вызывает CurrentTag.PrepareXML
+ * 
+ * Возвращает `FindTagResult` или `null`, если открывающий тег не найден
 */
-export function findOpenTag(opBracket: string, tagName: string, clBracket: string, prevText: string): FindTagResult
+export function findOpenTag(opBracket: string, tagName: string, clBracket: string, prevText: string, needClear = true): FindTagResult
 {
 	let tResult: FindTagResult = { Range: null, SelfClosed: false };
 
@@ -159,7 +166,8 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 	try
 	{
 		let curIndex = prevText.lastIndexOf(opBracket);
-		let txt = CurrentTag.PrepareXML(prevText.substr(0, curIndex));
+		let txt = prevText.substr(0, curIndex);
+		if (needClear) txt = CurrentTag.PrepareXML(txt);
 		let rest = txt;
 		//let regOp = new RegExp(safeRegexp(opBracket) + safeRegexp(tagName) + "[^\\w]");
 		//let regCl = new RegExp(safeRegexp(opBracket) + "\\/" + safeRegexp(tagName) + "[^\\w]");
@@ -207,10 +215,10 @@ export function findOpenTag(opBracket: string, tagName: string, clBracket: strin
 }
 
 /** Возвращает диапазон открывающегося тега или null */
-export function getOpenTagRange(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position): server.Range
+export function getOpenTagRange(opBracket: string, tagName: string, clBracket: string, document: server.TextDocument, position: server.Position, needUpdate = true): server.Range
 {
 	let prevText = getPreviousText(document, position);
-	let res = findOpenTag(opBracket, tagName, clBracket, prevText);
+	let res = findOpenTag(opBracket, tagName, clBracket, prevText, needUpdate);
 	if (!res) return null;
 	let startPos = document.positionAt(res.Range.From);
 	let endPos = document.positionAt(res.Range.To + 1);
@@ -509,14 +517,15 @@ interface ParentSearchResult
 export function getParentRanges(document: server.TextDocument, prevText: string, startFrom: number = 0): server.Range[]
 {
 	let res: server.Range[] = [];
-	let rest = prevText.slice(startFrom);
-	let next = getNextParent(document, rest, prevText);
+	let preparedText = CurrentTag.PrepareXML(prevText);
+	let rest = preparedText.slice(startFrom);
+	let next = getNextParent(document, rest, preparedText);
 	let i = 0;
 	while (!!next && i < 50)
 	{
 		res.push(next.Range);
-		rest = prevText.slice(document.offsetAt(next.Range.end));
-		next = getNextParent(document, rest, prevText);
+		rest = preparedText.slice(document.offsetAt(next.Range.end));
+		next = getNextParent(document, rest, preparedText);
 		if (!!next && !tagNeedToBeParsed(next.TagName))
 		{
 			res.push(next.Range);
@@ -556,7 +565,7 @@ function getNextParent(document: server.TextDocument, text: string, fullPrevText
 	lastIndex += shift;
 
 	// ищем закрывающий
-	let closingTag = findCloseTag("<", res.Result[1], ">", shift, fullPrevText);
+	let closingTag = findCloseTag("<", res.Result[1], ">", shift, fullPrevText, false);
 
 	if (!closingTag) // если не закрыт, то возвращаем его
 	{
