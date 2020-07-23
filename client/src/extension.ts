@@ -1802,7 +1802,7 @@ async function createClientConnection(context: vscode.ExtensionContext)
 	try
 	{
 		let serverModule = context.asAbsolutePath(path.join('server', 'out', 'server.js'));
-		let debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] };
+		let debugOptions = { execArgv: ['--nolazy', '--inspect=4711'] };
 
 		let serverOptions: client.ServerOptions = {
 			run: { module: serverModule, transport: client.TransportKind.ipc },
