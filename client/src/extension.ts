@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, safeRegexp, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, safeRegexp, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit, Watcher } from "tib-api";
 import { SurveyElementType } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
@@ -1834,9 +1834,9 @@ async function createClientConnection(context: vscode.ExtensionContext)
 				_outChannel.logToOutput(data);
 			});
 
-			_client.onNotification(RequestNames.LogToConsole, data =>
+			_client.onNotification(RequestNames.LogToConsole, (req: { data: string[] }) =>
 			{
-				console.log(data);
+				console.log(...req.data);
 			});
 
 			// отчёт об ошибках
@@ -2073,6 +2073,8 @@ async function registerActionCommands()
 /** Отправка документа на сервер */
 async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null)
 {
+	let log = new Watcher('updateDocumentOnServer').CreateLogger();
+	log('start');
 	let editor = vscode.window.activeTextEditor;
 	if (!editor) return null;
 	if (!changeData)
@@ -2088,8 +2090,9 @@ async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null
 			previousText: text
 		};
 	}
-
-	let serverTag = await createRequest<OnDidChangeDocumentData, CurrentTag>('onDidChangeTextDocument', changeData);
+	log('getting tag');
+	let serverTag = await createRequest<OnDidChangeDocumentData, CurrentTag>(RequestNames.OnDidChangeTextDocument, changeData);
+	log('got tag from server');
 	return tagFromServerTag(serverTag);
 	//await sendNotification('forceDocumentUpdate', documentData);
 }

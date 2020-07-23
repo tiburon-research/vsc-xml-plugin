@@ -1,7 +1,7 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData, isValidDocumentPosition, IErrorTagData } from 'tib-api';
+import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData, isValidDocumentPosition, IErrorTagData, Watcher } from 'tib-api';
 import { TibAutoCompleteItem, getCompletions, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition, LanguageString } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { _NodeStoreNames, _pack, RequestNames } from 'tib-api/lib/constants';
@@ -212,9 +212,12 @@ connection.onDefinition(data =>
 connection.onRequest(RequestNames.OnDidChangeTextDocument, (data: OnDidChangeDocumentData) =>
 {
 	// тут 'tib' учитывается при всех вызовах
+	let log = new Watcher('CurrentTagRequest').CreateLogger(x => { consoleLog(x); });
+	log('started');
 	return new Promise<CurrentTag>((resolve) =>
 	{
 		let doc = documents.set(data.document);
+		log('server document updated');
 		let fields: IProtocolTagFields = {
 			uri: data.document.uri,
 			position: data.currentPosition,
@@ -222,6 +225,7 @@ connection.onRequest(RequestNames.OnDidChangeTextDocument, (data: OnDidChangeDoc
 			text: data.previousText
 		};
 		anyChangeHandler(doc);
+		log('getting tag');
 		resolve(getServerTag(new ProtocolTagFields(fields).toCurrentTagGetFields(documents.get(fields.uri))))
 	});
 })
@@ -288,7 +292,7 @@ function getServerTag(data: CurrentTagGetFields): CurrentTag
 {
 	try
 	{
-		let tag = getCurrentTag(data, _Cache);
+		let tag = getCurrentTag(data, _Cache, (data: string[]) => { consoleLog(data) });
 		_Cache.Tag.Set(tag);
 		return tag;
 	} catch (error)
@@ -299,9 +303,9 @@ function getServerTag(data: CurrentTagGetFields): CurrentTag
 }
 
 
-export function consoleLog(...data)
+export function consoleLog(data: string[])
 {
-	connection.sendNotification(RequestNames.LogToConsole, data);
+	if (!!data) connection.sendNotification(RequestNames.LogToConsole, { data });
 }
 
 /** Смена документа */

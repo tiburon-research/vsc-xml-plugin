@@ -5,7 +5,7 @@ import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePosition
 import { ISurveyData, TibAttribute, TextEdits } from 'tib-api/lib/surveyData';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames, PreDefinedConstants } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
-import { logError, consoleLog } from './server';
+import { logError } from './server';
 
 
 /** Возвращает все автозавершения для текущего места */
