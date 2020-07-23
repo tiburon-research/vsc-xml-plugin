@@ -9,7 +9,7 @@ import { KeyValuePair, KeyedCollection, safeRegexp, safeSnippet, IPair, positive
 import { ISurveyData } from './surveyData'
 import { comparePositions, getCurrentLineText, getPreviousText, getWordAtPosition, getWordRangeAtPosition, isScriptLanguage, translatePosition, isValidDocumentPosition } from './vscodeDocument'
 import { CurrentTag, IProtocolTagFields, CurrentTagFields, TagInfo, TextRange, SimpleTag, ProtocolTagFields, InlineAttribute, ITextRange, CurrentTagGetFields } from './currentTag'
-import { translationArray, PreDefinedConstants } from './constants';
+import { translationArray, PreDefinedConstants, _pack } from './constants';
 
 
 
@@ -24,7 +24,69 @@ export { JQuery, Parse, Encoding, KeyValuePair, KeyedCollection, safeRegexp, saf
 /* ---------------------------------------- Classes, Structs, Namespaces, Enums, Consts, Interfaces ----------------------------------------*/
 //#region
 
-	
+
+//enum WatcherCallContext { Client, Server };
+
+/** Класс для получения логов внутри метода */
+export class Watcher
+{
+	private _caller = "";
+	private _hash = "";
+	private _startTime: number;
+	private _color = "";
+	private _enabled = false;
+
+	constructor(method: string)
+	{
+		if (_pack == 'debug')
+		{
+			this._enabled = true;
+			let rand = Math.floor(Math.random() * 10 ** 8);
+			this._caller = method;
+			this._hash = '' + rand;
+			this._startTime = Date.now();
+			let colorsArray = ['darkslategray', 'orange', 'limegreen', 'indianred', 'olivedrab', 'olive', 'orangered', 'steelblue', 'cadetblue', 'navy', 'indigo', 'magenta', 'sienna', 'saddlebrown', 'brown'];
+			let randomIndex = method.getHashCode() % colorsArray.length;
+			this._color = colorsArray[randomIndex];
+		}
+	}
+
+	/** Возвращает строку для логирования на Client, чтоб в debugConsole */
+	public GetLog(message: string): string[]
+	{
+		if (!this._enabled) return undefined;
+		let now = Date.now();
+		let diff = now - this._startTime;
+		let data = `%c[%c${this._caller}.%c${this._hash}]: %c` + message + ` %c<${now}-${diff}>`;
+		return [data, 'color: #ccc', `color: ${this._color}`, 'color: #ccc', 'color: black', `color: ${this._color}; font-weight: bold;`];
+	}
+
+	/** Для Client: создаёт метод логирования */
+	public CreateLogger(fn?: (data: string[]) => void)
+	{
+		if (!this._enabled) return (data: string) => { };
+		let res = fn;
+		if (!fn) res = (data: string[]) => { if (!!data) console.log(...data); };
+		return (data: string) =>
+		{
+			res(this.GetLog(data));
+		}
+	}
+
+	/*private _checkContext(): WatcherCallContext
+	{
+		let stack = new Error().stack.split('\n');
+		let res: WatcherCallContext = WatcherCallContext.Server;
+		if (!!stack && stack.length > 3)
+		{
+			let caller = stack[3]; // 1 = _checkContext, 2 = Log
+			if (caller.contains('\\vsc-xml-plugin\\client\\')) res = WatcherCallContext.Client;
+		}
+		return res;
+	}*/
+
+}
+
 export enum ErrorCodes
 {
 	wrongIds = "wrongIds",
@@ -45,7 +107,7 @@ export enum ErrorCodes
 	oldCustomMethods = "oldCustomMethods",
 	exportLabelsWithCS = "csInLabels"
 };
-	
+
 export interface IErrorTagData
 {
 	Language: Language;
@@ -133,21 +195,30 @@ export function applyConstants(input: string): string
 	return input.replaceValues(cons);
 }
 
+type LoggerFunction = (logData: string[]) => void;
 
-export function getCurrentTag(data: CurrentTagGetFields, cache: CacheSet)
+export function getCurrentTag(data: CurrentTagGetFields, cache: CacheSet, logger?: LoggerFunction)
 {
-	return _getCurrentTag(data.document, data.position, cache, data.text, data.force);
+	return _getCurrentTag(data.document, data.position, cache, data.text, data.force, logger);
 }
 
 
-function _getCurrentTag(document: server.TextDocument, position: server.Position, cache: CacheSet, txt?: string, force = false): CurrentTag
+function _getCurrentTag(document: server.TextDocument, position: server.Position, cache: CacheSet, txt?: string, force = false, logger?: LoggerFunction): CurrentTag
 {
+	let watcher = new Watcher("CurrentTag");
+	let log = !!logger ? (data: string) =>
+	{
+		logger(watcher.GetLog(data));
+	} : (data: string) => { };
+
+	log('start');
 	let tag: CurrentTag;
 	let text = txt || getPreviousText(document, position);
 
 	// сначала пытаемся вытащить из кэша (сначала обновить, если позиция изменилась)
 	if (!force)
 	{
+		log('checking cache');
 		if (cache.Active())
 		{
 			cache.Update(document, position, text);
@@ -157,6 +228,7 @@ function _getCurrentTag(document: server.TextDocument, position: server.Position
 
 	if (!tag)
 	{
+		log('updating tag');
 		// собираем тег заново
 		let pure: string;
 		if (!pure) pure = CurrentTag.PrepareXML(text);
@@ -182,6 +254,7 @@ function _getCurrentTag(document: server.TextDocument, position: server.Position
 			});
 		}
 	}
+	log('complete');
 	return tag;
 }
 
@@ -198,7 +271,7 @@ export function translit(input: string, allowIterators = true): string
 	return _changeLanguage(input, _translitaration, allowIterators);
 }
 
-function _changeLanguage(input: string, dict: KeyedCollection<string> , allowIterators = true): string
+function _changeLanguage(input: string, dict: KeyedCollection<string>, allowIterators = true): string
 {
 	let res = "";
 	let reg = allowIterators ? /[\dA-Za-z_@\-\(\)]/ : /[\dA-Za-z_]/;
@@ -248,9 +321,11 @@ declare global
 		/** Замена, начиная с `from` длиной `subsr` символов (если string, то берётся длина строки) */
 		replaceRange(from: number, substr: string | number, newValue: string): string;
 		/** Заменяет все Key (отсортированные) на Value */
-		replaceValues(items: KeyedCollection<string>): string
+		replaceValues(items: KeyedCollection<string>): string;
 		/** Проверяет вхождение */
-		contains(search: string): boolean
+		contains(search: string): boolean;
+		/** Числовой хэш */
+		getHashCode(): number;
 	}
 
 	interface Array<T>
@@ -260,25 +335,27 @@ declare global
 		/** Проверяет, что все элементы совпадают, независимо от порядка */
 		equalsTo(ar: Array<T>): boolean;
 		//** Возвращает массив уникальных значений */
-		distinct(): T[]
+		distinct(): T[];
 		/** Содержит элемент */
 		contains(element: T, compareFunc?: (elem1: T, elem2: T) => boolean): boolean;
 		/** Удаляет элемент из массива и возвращает этот элемент */
 		remove(element: T): T;
 		/** Преобразует массив в коллекцию */
-		toKeyedCollection<Q>(func: (x: T) => KeyValuePair<Q>): KeyedCollection<Q>
+		toKeyedCollection<Q>(func: (x: T) => KeyValuePair<Q>): KeyedCollection<Q>;
 		/** Преобразует массив в коллекцию T */
-		toKeyedCollection<Q>(func: (x: T) => Q): KeyedCollection<Q>
+		toKeyedCollection<Q>(func: (x: T) => Q): KeyedCollection<Q>;
 		/** Асинхронный forEach */
-		forEachAsync<R>(func: (x: T, i?: number) => Promise<R>): Promise<R[]>
+		forEachAsync<R>(func: (x: T, i?: number) => Promise<R>): Promise<R[]>;
 		/** Сортировка массива с сохранением порядка индексов (аналогично `sort`) */
-		orderBy<T>(func?: (a: T, b: T) => number): SortedArrayResult<T>
+		orderBy<T>(func?: (a: T, b: T) => number): SortedArrayResult<T>;
 		/** Сортировка преобразованного массива */
-		orderByValue<T>(this: Array<T>, func: (a: T) => string | number, desc?: boolean): T[]
+		orderByValue<T>(this: Array<T>, func: (a: T) => string | number, desc?: boolean): T[];
 		/** Находит повторяющиеся значения */
-		findDuplicates<T>(compareFunc?: (elem1: T, elem2: T) => boolean): T[]
+		findDuplicates<T>(compareFunc?: (elem1: T, elem2: T) => boolean): T[];
 		/** Группирует элементы по ключу */
-		groupBy<T>(keyFunc: (el: T) => string): KeyedCollection<T[]>
+		groupBy<T>(keyFunc: (el: T) => string): KeyedCollection<T[]>;
+		/** Возвращает случайный элемент */
+		getRandom<T>(): T;
 	}
 
 }
@@ -358,6 +435,19 @@ String.prototype.contains = function (search: string): boolean
 {
 	return this.indexOf(search) > -1;
 }
+
+String.prototype.getHashCode = function (this: string): number
+{
+	let hash = 0, i: number, chr: number;
+	for (i = 0; i < this.length; i++)
+	{
+		chr = this.charCodeAt(i);
+		hash = ((hash << 5) - hash) + chr;
+		hash |= 0; // Convert to 32bit integer
+	}
+	return hash;
+}
+
 
 
 
@@ -445,7 +535,8 @@ Array.prototype.forEachAsync = function <T, R>(this: T[], func: (x: T, i?: numbe
 
 Array.prototype.orderBy = function <T>(this: Array<T>, func?: (a: T, b: T) => number): SortedArrayResult<T>
 {
-	let sortFunction = !!func ? func : (a: T, b: T) => {
+	let sortFunction = !!func ? func : (a: T, b: T) =>
+	{
 		if (a > b) return 1;
 		if (b > a) return -1;
 		return 0;
@@ -463,7 +554,7 @@ Array.prototype.orderByValue = function <T>(this: Array<T>, func: (a: T) => stri
 	// стандартная функция сортировки
 	let sortingData = this.map(x => func(x)).orderBy((a, b) =>
 	{
-		if (a > b) return desc? -1 : 1;
+		if (a > b) return desc ? -1 : 1;
 		if (b > a) return desc ? 1 : -1;
 		return 0;
 	})
@@ -490,7 +581,8 @@ Array.prototype.findDuplicates = function <T>(this: Array<T>, compareFunc?: (ele
 Array.prototype.groupBy = function <T>(this: Array<T>, keyFunc: (el: T) => string): KeyedCollection<T[]>
 {
 	let res = new KeyedCollection<T[]>();
-	this.forEach(element => {
+	this.forEach(element =>
+	{
 		let key = keyFunc(element);
 		let existing = res.Item(key);
 		if (!existing) existing = [];
@@ -498,6 +590,13 @@ Array.prototype.groupBy = function <T>(this: Array<T>, keyFunc: (el: T) => strin
 		res.AddPair(key, existing);
 	});
 	return res;
+}
+
+
+Array.prototype.getRandom = function <T>(this: Array<T>): T
+{
+	let index = Math.floor(Math.random() * this.length);
+	return this[index];
 }
 
 
