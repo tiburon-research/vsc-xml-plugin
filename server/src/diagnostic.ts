@@ -1,9 +1,9 @@
 'use strict'
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, translatePosition, Encoding, Parse, ErrorCodes, SearchResult } from 'tib-api';
+import { KeyedCollection, translatePosition, Encoding, Parse, ErrorCodes, SearchResult, Watcher } from 'tib-api';
 import { RegExpPatterns } from 'tib-api/lib/constants';
 import { logError, consoleLog } from './server';
-import { SurveyData } from 'tib-api/lib/surveyData';
+import { SurveyData, SurveyNode } from 'tib-api/lib/surveyData';
 
 
 //#region --------------------------- const type interface
@@ -133,12 +133,60 @@ async function getWrongIds(data: IDiagnosticFunctionData): Promise<Parse.Documen
 }
 
 
+/* function getIdElementFromSurveyNode(document: server.TextDocument, node: SurveyNode): Parse.DocumentElement
+{
+	let text = document.getText();
+	let from = document.offsetAt(node.Position);
+	let start = text.find(/\sId=('|")/, from);
+	if (start.Index > -1)
+	{
+		from = start.Index + start.Result[0].length;
+		let to = text.indexOf(start.Result[1], from + 1);
+		return new Parse.DocumentElement(document, {
+			From: from,
+			To: to,
+			Message: "Слишком много букв",
+			Value: text.slice(from, to).match(/.+/)
+		});
+	}
+} */
+
 /** слишком длинные Id */
 async function getLongIds(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
-	let { document, preparedText } = data;
-	let res = await Parse.getDocumentElements(document, new RegExp("<(Page|Answer|Block)(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{25,}('|\"))"), "Слишком много букв", preparedText);
+	//let log = new Watcher("longIds", true).CreateLogger();
+	//log('start');
+	let { document, surveyData, preparedText } = data;
+	let res: Parse.DocumentElement[] = [];
+
+	/* этот код почему-то работает дольше
+	let proms: Promise<void>[] = [];
+	let questions = surveyData.CurrentNodes.Item("Question");
+	let other = surveyData.CurrentNodes.Filter((key, value) => ['Page', 'Answer,', 'Block'].contains(key));
+	if (!!questions)
+	{
+		proms.push(new Promise<void>((resolve, reject) =>
+		{
+			let longQuestions = questions.filter(x => x.Id.length > 25).map(x => getIdElementFromSurveyNode(document, x));
+			res = res.concat(longQuestions);
+			resolve();
+		}));
+	}
+	other.ForEach((key, value) =>
+	{
+		proms.push(new Promise<void>((resolve, reject) =>
+		{
+			let longIds = value.filter(x => x.Id.length > 33).map(x => getIdElementFromSurveyNode(document, x));
+			res = res.concat(longIds);
+			resolve();
+		}));
+		
+	});
+	await Promise.all(proms);*/
+
+	res = res.concat(await Parse.getDocumentElements(document, new RegExp("<(Page|Answer|Block)(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{25,}('|\"))"), "Слишком много букв", preparedText));
 	res = res.concat(await Parse.getDocumentElements(document, new RegExp("<Question(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\w{33,}('|\"))"), "Слишком много букв", preparedText));
+	//log('end');
 	return res;
 }
 

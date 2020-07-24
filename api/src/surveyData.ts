@@ -178,6 +178,7 @@ export class SurveyNode
 
 	private Uri: string;
 
+	/** Location начала тега */
 	GetLocation(): server.Location
 	{
 		return server.Location.create(this.Uri, server.Range.create(this.Position, this.Position));
