@@ -94,6 +94,8 @@ connection.onDidCloseTextDocument(event =>
 
 connection.onCompletion(context =>
 {
+	let log = new Watcher('Completions').CreateLogger(x => { consoleLog(x) });
+	log('start');
 	let document = documents.get(context.textDocument.uri);
 	if (!document)
 	{
@@ -108,6 +110,7 @@ connection.onCompletion(context =>
 	let items = getCompletions(tag, document, context.position, _SurveyData, TibAutoCompleteList, _Settings, ClassTypes, context.context.triggerCharacter);
 	// костыль для понимания в каком документе произошло onCompletionResolve
 	items = items.map(x => Object.assign(x, { data: document.uri }));
+	log('end');
 	return items;
 })
 
@@ -131,6 +134,8 @@ connection.onSignatureHelp(data =>
 
 connection.onHover(data =>
 {
+	let log = new Watcher('Hover').CreateLogger(x => { consoleLog(x) });
+	log('start');
 	let document = documents.get(data.textDocument.uri);
 	let contents: LanguageString[] = [];
 	
@@ -158,12 +163,14 @@ connection.onHover(data =>
 		}
 	}
 	else logError("Данные о документе отсутствуют на сервере", false);
-
+	log('end');
 	return { contents };
 })
 
 connection.onDocumentHighlight(data =>
 {
+	let log = new Watcher('Highlight').CreateLogger(x => { consoleLog(x) });
+	log('start');
 	let document = documents.get(data.textDocument.uri);
 	if (!document)
 	{
@@ -182,7 +189,9 @@ connection.onDocumentHighlight(data =>
 	});
 	let higlights = new TibDocumentHighLights(tag, document, data.position);
 	sendTagToClient(tag);
-	return higlights.getAll();
+	let allH = higlights.getAll();
+	log('end');
+	return allH;
 })
 
 
@@ -408,6 +417,8 @@ async function getAutoComleteList()
 /** Собирает данные из текущего документа и Includ'ов */
 async function updateSurveyData(document: server.TextDocument)
 {
+	let log = new Watcher('SurveyData').CreateLogger(x => { consoleLog(x) });
+	log('start');
 	let docs = [document.uri];
 	let includes = getIncludePaths(document.getText());
 	let methods = new TibMethods();
@@ -449,6 +460,7 @@ async function updateSurveyData(document: server.TextDocument)
 	{
 		logError("Ошибка при сборе сведений о документе", false, error);
 	}
+	log('end');
 }
 
 
