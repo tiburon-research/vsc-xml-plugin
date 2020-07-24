@@ -212,12 +212,9 @@ connection.onDefinition(data =>
 connection.onRequest(RequestNames.OnDidChangeTextDocument, (data: OnDidChangeDocumentData) =>
 {
 	// тут 'tib' учитывается при всех вызовах
-	let log = new Watcher('CurrentTagRequest').CreateLogger(x => { consoleLog(x); });
-	log('started');
 	return new Promise<CurrentTag>((resolve) =>
 	{
 		let doc = documents.set(data.document);
-		log('server document updated');
 		let fields: IProtocolTagFields = {
 			uri: data.document.uri,
 			position: data.currentPosition,
@@ -225,7 +222,6 @@ connection.onRequest(RequestNames.OnDidChangeTextDocument, (data: OnDidChangeDoc
 			text: data.previousText
 		};
 		anyChangeHandler(doc);
-		log('getting tag');
 		resolve(getServerTag(new ProtocolTagFields(fields).toCurrentTagGetFields(documents.get(fields.uri))))
 	});
 })
@@ -268,11 +264,14 @@ connection.onNotification(RequestNames.UpdateExtensionSettings, (data: Object) =
 
 async function sendDiagnostic(document: server.TextDocument)
 {
+	let log = new Watcher('Diagnostic').CreateLogger(x => { consoleLog(x) });
+	log('start');
 	let diagnostics = await getDiagnosticElements(document, _SurveyData);
 	let clientDiagnostic: server.PublishDiagnosticsParams = {
 		diagnostics,
 		uri: document.uri
 	};
+	log('complete');
 	connection.sendDiagnostics(clientDiagnostic);
 }
 
