@@ -35,8 +35,10 @@ export class Watcher
 	private _startTime: number;
 	private _color = "";
 	private _enabled = false;
+	private _serverSide = false;
 
-	constructor(method: string)
+	/** `serverSide` - логи без подсветки */
+	constructor(method: string, serverSide = false)
 	{
 		if (_pack == 'debug')
 		{
@@ -44,27 +46,33 @@ export class Watcher
 			let rand = Math.floor(Math.random() * 10 ** 8);
 			this._caller = method;
 			this._hash = '' + rand;
+			this._serverSide = serverSide;
 			this._startTime = Date.now();
+			if (!serverSide)
+			{
 			let colorsArray = ['darkslategray', 'orange', 'limegreen', 'indianred', 'olivedrab', 'olive', 'orangered', 'steelblue', 'cadetblue', 'navy', 'indigo', 'magenta', 'sienna', 'saddlebrown', 'brown'];
 			let randomIndex = method.getHashCode() % colorsArray.length;
 			this._color = colorsArray[randomIndex];
 		}
+	}
 	}
 
 	/** Возвращает строку для логирования на Client, чтоб в debugConsole */
 	public GetLog(message: string): string[]
 	{
 		if (!this._enabled) return undefined;
-		let now = Date.now();
-		let diff = now - this._startTime;
-		let data = `%c[%c${this._caller}.%c${this._hash}]: %c` + message + ` %c<${now}-${diff}>`;
+		let data = this.generateString(message);
 		return [data, 'color: #ccc', `color: ${this._color}`, 'color: #ccc', 'color: black', `color: ${this._color}; font-weight: bold;`];
 	}
 
-	/** Для Client: создаёт метод логирования */
-	public CreateLogger(fn?: (data: string[]) => void)
+	/** Создаёт метод логирования 
+	 * 
+	 * Для логов на клиенте можно передавать callback
+	*/
+	public CreateLogger(fn?: (data: string[]) => void): (data: String) => void
 	{
 		if (!this._enabled) return (data: string) => { };
+		if (this._serverSide) return (data: string) => { console.log(this.generateString(data)); };
 		let res = fn;
 		if (!fn) res = (data: string[]) => { if (!!data) console.log(...data); };
 		return (data: string) =>
@@ -85,6 +93,13 @@ export class Watcher
 		return res;
 	}*/
 
+	private generateString(message: string): string
+	{
+		let now = Date.now();
+		let diff = now - this._startTime;
+		let separator = this._serverSide ? '' : '%c';
+		return `${separator}[${separator}${this._caller}.${separator}${this._hash}]: ${separator}` + message + ` ${separator}<${now}-${diff}>`;
+	}
 }
 
 export enum ErrorCodes
