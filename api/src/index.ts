@@ -50,11 +50,11 @@ export class Watcher
 			this._startTime = Date.now();
 			if (!serverSide)
 			{
-			let colorsArray = ['darkslategray', 'orange', 'limegreen', 'indianred', 'olivedrab', 'olive', 'orangered', 'steelblue', 'cadetblue', 'navy', 'indigo', 'magenta', 'sienna', 'saddlebrown', 'brown'];
-			let randomIndex = method.getHashCode() % colorsArray.length;
-			this._color = colorsArray[randomIndex];
+				let colorsArray = ['darkslategray', 'orange', 'limegreen', 'indianred', 'olivedrab', 'olive', 'orangered', 'steelblue', 'cadetblue', 'navy', 'indigo', 'magenta', 'sienna', 'saddlebrown', 'brown'];
+				let randomIndex = method.getHashCode() % colorsArray.length;
+				this._color = colorsArray[randomIndex];
+			}
 		}
-	}
 	}
 
 	/** Возвращает строку для логирования на Client, чтоб в debugConsole */
@@ -320,7 +320,7 @@ declare global
 	interface String
 	{
 		/** Продвинутый indexOf */
-		find(search: string | RegExp): SearchResult;
+		find(search: string | RegExp, startFrom?: number): SearchResult;
 		/** Находит все вхождения
 		 * 
 		 * Нельзя использовать флаг `g`!
@@ -375,11 +375,18 @@ declare global
 
 }
 
-String.prototype.find = function (this: string, search: string | RegExp): SearchResult
+String.prototype.find = function (this: string, search: string | RegExp, startFrom?: number): SearchResult
 {
-	let res = new RegExp(search).exec(this);
+	let text = this;
+	let indent = 0;
+	if (typeof startFrom != 'undefined')
+	{
+		text = this.slice(startFrom);
+		indent = startFrom;
+	}
+	let res = new RegExp(search).exec(text);
 	let ind = !!res ? res.index : -1;
-	return { Index: ind, Result: res };
+	return { Index: ind + indent, Result: res };
 }
 
 String.prototype.findAll = function (this: string, search: string | RegExp): SearchResult[]
