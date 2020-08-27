@@ -2022,7 +2022,7 @@ async function registerActionCommands()
 	);
 
 	// исправление 0xA0 на пробел
-	createCommandActionPair("tib.makeRealSpaces", "Сделать все пробелы нормальными",
+	createCommandActionPair("tib.makeRealSpaces", "Убрать кривые символы",
 		() => new Promise<void>((resolve, reject) =>
 		{
 			let editor = vscode.window.activeTextEditor;

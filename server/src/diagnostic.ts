@@ -206,7 +206,7 @@ async function getWrongSpaces(data: IDiagnosticFunctionData): Promise<Parse.Docu
 {
 	let { document, preparedText } = data;
 	let res: Parse.DocumentElement[] = [];
-	res = res.concat(await Parse.getDocumentElements(document, RegExpPatterns.wrongSpaseChars, "Недопустимый символ (на самом деле, это не пробел)", preparedText, { Code: ErrorCodes.wrongSpaces })); // 0xA0
+	res = res.concat(await Parse.getDocumentElements(document, RegExpPatterns.wrongSpaseChars, "Недопустимый символ (может маскироваться под пробел или вообще под ничего)", preparedText, { Code: ErrorCodes.wrongSpaces })); // 0xA0
 	return res;
 }
 
