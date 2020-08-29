@@ -9,7 +9,7 @@ import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSetti
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
-import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames, LargeFileLineCount } from 'tib-api/lib/constants'
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
@@ -61,6 +61,9 @@ var _currentStatus = new StatusBar();
 
 /** Данные о пользователе */
 var _userInfo = new UserData();
+
+/** Упрощённый режим */
+var _largeFileMode = false;
 
 //#endregion
 
@@ -1331,7 +1334,8 @@ function __getCurrentTag(document: vscode.TextDocument, position: vscode.Positio
 function tagFromServerTag(tag: CurrentTag): CurrentTag
 {
 	let newTag = ClientServerTransforms.FromServer.Tag(tag);
-	if (!!_settings.Item("showTagInfo")) _currentStatus.setTagInfo(newTag);
+	if (_largeFileMode) _currentStatus.setInfoMessage("TibXML: LargeFile", null);
+	else if (!!_settings.Item("showTagInfo")) _currentStatus.setTagInfo(newTag);
 	return newTag;
 }
 
@@ -2077,9 +2081,9 @@ async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null
 	log('start');
 	let editor = vscode.window.activeTextEditor;
 	if (!editor) return null;
+	let doc = editor.document;
 	if (!changeData)
 	{
-		let doc = editor.document;
 		let documentData = ClientServerTransforms.ToServer.Document(doc);
 		let position = ClientServerTransforms.ToServer.Position(editor.selection.active);
 		let text = getPreviousText(createServerDocument(doc), position);
@@ -2089,6 +2093,15 @@ async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null
 			currentPosition: position,
 			previousText: text
 		};
+	}
+	else
+	{
+		let isLarge = doc.lineCount > LargeFileLineCount;
+		if (isLarge && !_largeFileMode)
+		{
+			showInfo("Файл слишком большой. В целях повышения производительности некоторые функции отключены. Подробнее: см. раздел \"Упрощённый режим\" в Readme.");
+		}
+		_largeFileMode = isLarge;
 	}
 	log('getting tag');
 	let serverTag = await createRequest<OnDidChangeDocumentData, CurrentTag>(RequestNames.OnDidChangeTextDocument, changeData);

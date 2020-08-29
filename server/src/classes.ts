@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordRangeAtPosition, translatePosition, applyConstants, uriFromName, KeyValuePair, SimpleTag } from 'tib-api';
 import { ISurveyData, TibAttribute, TextEdits } from 'tib-api/lib/surveyData';
-import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames, PreDefinedConstants } from 'tib-api/lib/constants';
+import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames, PreDefinedConstants, LargeFileLineCount } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
 import { logError } from './server';
 
@@ -160,6 +160,11 @@ export class DocumentBuffer
 		}
 	}
 
+	public isLarge()
+	{
+		return this.document.lineCount > LargeFileLineCount;
+	}
+
 	private _uri: string
 }
 
@@ -203,6 +208,12 @@ export class ServerDocumentStore
 		this._docs.Remove(uri);
 	}
 
+	/** Размер документа слишком большой */
+	public isLarge(uri: string): boolean
+	{
+		let doc = this._docs.Item(uri);
+		return doc?.isLarge();
+	}
 }
 
 
@@ -877,7 +888,7 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
 			}
 		}
 		let customMethods = surveyData.Methods.HoverArray(text);
-		if (customMethods) res = res.concat(customMethods);
+		if (!!customMethods) res = res.concat(customMethods);
 	} catch (error)
 	{
 		if (!testVar) logError('Ошибка в getWordAtPosition', false, error);

@@ -329,9 +329,21 @@ function anotherDocument(data: IServerDocument)
 /** Дёргаем при изменении или открытии */
 function anyChangeHandler(document: server.TextDocument)
 {
+	// при largeMode надо инвертировать все действия в restChangeHandler
+	if (documents.isLarge(document.uri)) return restChangeHandler(document.uri);
 	updateSurveyData(document).then(() =>
 	{
 		sendDiagnostic(document);
+	});
+}
+
+/** Сброс функционала в связи с largeMode */
+function restChangeHandler(uri: string)
+{
+	_SurveyData.Clear();
+	connection.sendDiagnostics({
+		diagnostics: [],
+		uri
 	});
 }
 

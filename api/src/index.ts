@@ -174,7 +174,7 @@ export interface IServerDocument
 {
 	uri: string;
 	version: number;
-	content: string
+	content: string;
 }
 
 
