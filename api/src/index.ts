@@ -181,7 +181,8 @@ export interface IServerDocument
 export interface OnDidChangeDocumentData
 {
 	document: IServerDocument;
-	//contentChanges: server.TextDocumentContentChangeEvent[];
+	// на contentChanges нельзя полагаться, т.к. при удалении он пустой
+	// contentChanges: server.TextDocumentContentChangeEvent[];
 	currentPosition?: server.Position;
 	previousText?: string;
 }

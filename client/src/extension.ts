@@ -2074,7 +2074,7 @@ async function registerActionCommands()
 }
 
 
-/** Отправка документа на сервер */
+/** Отправка документа на сервер. При вызове с вустым `changeData` не возвращает tag */
 async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null)
 {
 	let log = new Watcher('updateDocumentOnServer').CreateLogger();
@@ -2082,7 +2082,7 @@ async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null
 	let editor = vscode.window.activeTextEditor;
 	if (!editor) return null;
 	let doc = editor.document;
-	if (!changeData)
+	/*if (!changeData)
 	{
 		let documentData = ClientServerTransforms.ToServer.Document(doc);
 		let position = ClientServerTransforms.ToServer.Position(editor.selection.active);
@@ -2094,7 +2094,9 @@ async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null
 			previousText: text
 		};
 	}
-	else
+	else*/
+	let res: CurrentTag = null;
+	if (!!changeData)
 	{
 		let isLarge = doc.lineCount > LargeFileLineCount;
 		if (isLarge && !_largeFileMode)
@@ -2102,11 +2104,13 @@ async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null
 			showInfo("Файл слишком большой. В целях повышения производительности некоторые функции отключены. Подробнее: см. раздел \"Упрощённый режим\" в Readme.");
 		}
 		_largeFileMode = isLarge;
+		log('getting tag');
+		let serverTag = await createRequest<OnDidChangeDocumentData, CurrentTag>(RequestNames.OnDidChangeTextDocument, changeData);
+		log('got tag from server');
+		res = tagFromServerTag(serverTag);
 	}
-	log('getting tag');
-	let serverTag = await createRequest<OnDidChangeDocumentData, CurrentTag>(RequestNames.OnDidChangeTextDocument, changeData);
-	log('got tag from server');
-	return tagFromServerTag(serverTag);
+	log('complete');
+	return res;	
 	//await sendNotification('forceDocumentUpdate', documentData);
 }
 

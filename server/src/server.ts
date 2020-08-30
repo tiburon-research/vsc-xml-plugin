@@ -223,6 +223,7 @@ connection.onRequest(RequestNames.OnDidChangeTextDocument, (data: OnDidChangeDoc
 	// тут 'tib' учитывается при всех вызовах
 	return new Promise<CurrentTag>((resolve) =>
 	{
+		if (!data) return resolve(null);
 		let doc = documents.set(data.document);
 		let fields: IProtocolTagFields = {
 			uri: data.document.uri,
