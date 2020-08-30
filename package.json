@@ -217,6 +217,11 @@
                 "command": "tib.customScriptDocs",
                 "title": "Документация по пользовательским скриптам",
                 "category": "tib"
+			},
+			{
+                "command": "tib.runDiagnostic",
+                "title": "Запустить проверку на ошибки",
+                "category": "tib"
 			}
         ],
         "menus": {

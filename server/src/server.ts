@@ -138,7 +138,7 @@ connection.onHover(data =>
 	log('start');
 	let document = documents.get(data.textDocument.uri);
 	let contents: LanguageString[] = [];
-	
+
 	if (!!document)
 	{
 		if (isValidDocumentPosition(document, data.position))
@@ -148,9 +148,9 @@ connection.onHover(data =>
 				position: data.position,
 				force: false
 			});
-			
+
 			sendTagToClient(tag);
-		
+
 			contents = getHovers(tag, document, data.position, _SurveyData, CodeAutoCompleteArray);
 		}
 		else
@@ -261,6 +261,23 @@ connection.onRequest(RequestNames.OnAnotherDocumentActivated, (data: IServerDocu
 connection.onNotification(RequestNames.UpdateExtensionSettings, (data: Object) =>
 {
 	_Settings = KeyedCollection.FromObject(data);
+});
+
+
+connection.onNotification(RequestNames.RunDiagnostic, (document: IServerDocument) =>
+{
+	try
+	{
+		let doc = documents.get(document.uri);
+		updateSurveyData(doc).then(() =>
+		{
+			sendDiagnostic(doc);
+		});
+	}
+	catch (error)
+	{
+		logError("Ошибка получения диагностики", true, error);
+	}
 });
 
 
@@ -432,28 +449,29 @@ async function updateSurveyData(document: server.TextDocument)
 {
 	let log = new Watcher('SurveyData').CreateLogger(x => { consoleLog(x) });
 	log('start');
-	let docs = [document.uri];
-	let includes = getIncludePaths(document.getText());
-	let methods = new TibMethods();
-	let nodes = new SurveyNodes();
-	let constants = new KeyedCollection<SurveyNode>();
-	let mixIds: string[] = [];
-	let exportLabels: ExportLabel[] = [];
-
-	// если Include поменялись, то обновляем все
-	if (!_SurveyData.Includes || !_SurveyData.Includes.equalsTo(includes))
-	{
-		docs = docs.concat(includes);
-		_SurveyData.Includes = includes;
-	}
-	else // иначе обновляем только текущий документ
-	{
-		methods = _SurveyData.Methods.Filter((name, element) => element.FileName != document.uri);
-		nodes = _SurveyData.CurrentNodes.FilterNodes((node) => node.FileName != document.uri);
-	}
-
 	try
 	{
+		let docs = [document.uri];
+		let includes = getIncludePaths(document.getText());
+		let methods = new TibMethods();
+		let nodes = new SurveyNodes();
+		let constants = new KeyedCollection<SurveyNode>();
+		let mixIds: string[] = [];
+		let exportLabels: ExportLabel[] = [];
+
+		// если Include поменялись, то обновляем все
+		if (!_SurveyData.Includes || !_SurveyData.Includes.equalsTo(includes))
+		{
+			docs = docs.concat(includes);
+			_SurveyData.Includes = includes;
+		}
+		else // иначе обновляем только текущий документ
+		{
+			methods = _SurveyData.Methods.Filter((name, element) => element.FileName != document.uri);
+			nodes = _SurveyData.CurrentNodes.FilterNodes((node) => node.FileName != document.uri);
+		}
+
+
 		for (let i = 0; i < docs.length; i++) 
 		{
 			// либо этот, либо надо открыть

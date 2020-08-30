@@ -976,6 +976,14 @@ async function registerCommands()
 	});
 
 
+	registerCommand('tib.runDiagnostic', () => 
+	{
+		return new Promise<void>((resolve, reject) =>
+		{
+			sendNotification(RequestNames.RunDiagnostic, ClientServerTransforms.ToServer.Document(vscode.window.activeTextEditor.document));
+		});
+	}, false);
+
 	vscode.languages.registerDocumentFormattingEditProvider('tib', {
 		provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[]
 		{
@@ -1071,7 +1079,7 @@ async function registerCommands()
 
 			return res;
 		}
-	})
+	});
 }
 
 

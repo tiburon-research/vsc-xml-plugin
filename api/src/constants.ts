@@ -180,6 +180,7 @@ export const RequestNames = {
 	GetDocumentByUri: 'getDocument',
 	
 	UpdateExtensionSettings: 'updateSettings',
+	RunDiagnostic: "runDiagnostic",
 	
 	LogToConsole: 'console.log',
 	LogToOutput: 'client.out',
