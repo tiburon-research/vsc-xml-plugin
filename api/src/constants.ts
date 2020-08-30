@@ -187,4 +187,4 @@ export const RequestNames = {
 }
 
 
-export const LargeFileLineCount = 5000;
+export const LargeFileLineCount = 2500;
