@@ -153,6 +153,7 @@ export interface IProtocolTagFields
 {
 	uri: string;
 	position: server.Position;
+	/** Текст от начала документа до текущей позиции */
 	text?: string;
 	force?: boolean;
 }

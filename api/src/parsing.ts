@@ -46,6 +46,16 @@ export class ParsedElementObject
 	}
 }
 
+export class ParsedQuestion
+{
+	public QuestionFound = false;
+	public Question: {
+		Id: string,
+		Header: string
+	}
+	public Answers: ParsedElementObject[];
+}
+
 
 /** 
  * Поиск закрывающего тега.
@@ -478,7 +488,29 @@ function parseTableForItems(strings: string[]): ParsedElementObject[]
  * 
  * `force` - искать русские буквы и числовой Id
  *  */
-export function parseQuestion(text: string, force = false): ParsedElementObject
+export function parseQuestion(text: string, force = false): ParsedQuestion
+{
+	let res = new ParsedQuestion();
+	let strings = breakText(text);
+	let q = parseQuestionString(strings[0], true);
+	if (!!q.Id) res.QuestionFound = true;
+	let rest = strings.slice(1);
+	res.Question = { Id: q.Id, Header: q.Text.trim() };
+	res.Answers = parseElements(rest);
+	return res;
+}
+
+
+/** Разбивает текст по \n или \t */
+export function breakText(text: string): string[]
+{
+	let byBreak = text.split("\n").filter(x => x.trim().length > 0);
+	let byTab = text.split("\t").filter(x => x.trim().length > 0);
+	let strings = byTab.length > 0 && !byTab.find(x => x.contains("\n")) ? byTab : byBreak;
+	return strings;
+}
+
+export function parseQuestionString(text: string, force = false): ParsedElementObject
 {
 	let res = new ParsedElementObject("", text);
 	let regex = /^([a-zA-Z]\w+)(\.?\s*)(.*)/;
@@ -496,8 +528,13 @@ export function parseQuestion(text: string, force = false): ParsedElementObject
 	}
 	let match = text.match(regex);
 	if (!match) return res;
-	res.Id = match[indexes.id];
-	res.Text = match[indexes.text];
+	let id = match[indexes.id]
+	if (!!id.match(/\d/))
+	{
+		res.Id = id;
+		res.Text = match[indexes.text];
+	}
+	else res.Text = match[0];
 	return res;
 }
 

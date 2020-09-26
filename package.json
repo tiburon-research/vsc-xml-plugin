@@ -184,7 +184,13 @@
                 "title": "Преобразовать в Answers без Question",
                 "category": "tib",
                 "enablement": "editorHasSelection"
-            },
+			},
+			{
+                "command": "tib.getQuestions",
+                "title": "Получть Question из выделенного текста",
+                "category": "tib",
+                "enablement": "editorHasSelection"
+			},
             {
                 "command": "tib.getItems",
                 "title": "Преобразовать в Items",
@@ -304,7 +310,11 @@
             {
                 "key": "ctrl+alt+a",
                 "command": "tib.getAnswers"
-            },
+			},
+			{
+                "key": "ctrl+alt+q",
+                "command": "tib.getQuestions"
+			},
             {
                 "key": "ctrl+alt+i",
                 "command": "tib.getItems"

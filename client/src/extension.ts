@@ -4,12 +4,12 @@ import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
 import { CurrentTag, Language, positiveMin, isScriptLanguage, safeRegexp, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit, Watcher } from "tib-api";
-import { SurveyElementType } from 'tib-api/lib/surveyObjects'
+import { SurveyElementType, SurveyQuestionBlock } from 'tib-api/lib/surveyObjects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
-import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames, LargeFileLineCount } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames, LargeFileLineCount, QuestionTypes } from 'tib-api/lib/constants'
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
@@ -18,6 +18,7 @@ import { TibOutput, showWarning, LogData, TibErrors, showInfo, showError } from 
 import { readGeoFile, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
 import { getCustomJS, getListItem, getAnswer } from 'tib-api/lib/parsing';
 import * as customCode from './customSurveyCode';
+import { createAnswers } from './documentEdits';
 
 
 export { CSFormatter, _settings as Settings };
@@ -64,6 +65,12 @@ var _userInfo = new UserData();
 
 /** Упрощённый режим */
 var _largeFileMode = false;
+
+/** Последняя вызванная команда */
+var _lastCommand = {
+	name: '',
+	data: null
+}
 
 //#endregion
 
@@ -307,7 +314,7 @@ async function registerCommands()
 	// выделение полного Question+Page из текста
 	registerCommand('tib.getAnswers', () => 
 	{
-		return createElements(SurveyElementType.Page);
+		return getAnswers();
 	});
 
 	// выделение только Answer из текста
@@ -321,6 +328,28 @@ async function registerCommands()
 	{
 		return createElements(SurveyElementType.List);
 	});
+
+	registerCommand('tib.getQuestions', () => 
+	{
+		return new Promise<any>((resolve, reject) =>
+		{
+			let editor = vscode.window.activeTextEditor;
+			let text = editor.document.getText(editor.selection);
+			// находим оптимальный вариант того, как распарсить текст на вопросы
+			let strings = Parse.breakText(text);
+			let questions = strings.map(x => Parse.parseQuestionString(x, true));
+			if (questions.filter(x => !!x.Id).length != questions.length) questions = strings.map(x => new Parse.ParsedElementObject(null, x));
+			let validQuestionsCount = questions.filter(q => !!q.Id).length;
+			let elements = Parse.parseElements(strings);
+			let validElementsCount = elements.filter(q => !!q.Id).length;
+			let results = validQuestionsCount >= validElementsCount ? questions : elements;
+			resolve(results);
+			editor.edit(builder =>
+			{
+				builder.delete(editor.selection);
+			});
+		});
+	}, false);
 
 
 	// выделение ближайшего <тега>
@@ -1808,6 +1837,67 @@ async function createElements(elementType: SurveyElementType)
 }
 
 
+/** Команда выделения ответов с выбором */
+async function getAnswers()
+{
+	let simple = true;
+	if (_lastCommand.name == 'tib.getQuestions' && !!_lastCommand.data)
+	{
+		let editor = vscode.window.activeTextEditor;
+		let text = editor.document.getText(editor.selection);
+		let tag = await getCurrentTag(editor.document, editor.selection.active);
+		let request = new CustomQuickPick({
+			canSelectMany: false,
+			title: 'Объединение вопросов',
+			items: [
+				{ label: 'Блок вопросов' },
+				{ label: 'Union' },
+				{ label: 'Игнорировать вопросы', description: 'Игнорировать предыдущую команду, при которой был получен список вопросов' }
+			]
+		});
+		let t = await request.execute();
+		if (!!t?.length)
+		{
+			let res = t[0];
+			let result = '';
+			if (res != 'Игнорировать вопросы')
+			{
+				let answers = TibDocumentEdits.createElements(text, SurveyElementType.Question, _settings);
+				if (answers.Ok)
+				{
+					simple = false;
+					let data = _lastCommand.data as Parse.ParsedElementObject[];
+					let qData = Parse.parseQuestion(text, true);
+					let qId = !!qData.Question.Id ? '${1:'+qData.Question.Id+'}' : '$1';
+					let xml = new SurveyQuestionBlock(qId);
+					xml.QuestionMix = qId + 'mix';
+					xml.AddQuestions(qId + '_QList', data);
+					xml.AddAnswers(createAnswers(qData.Answers, _settings).ToArray((key, value) => value));
+					xml.Header = qData.Question.Header;
+					if (res == 'Union') result += xml.ToUnionXml(qId, "${2|" + QuestionTypes.join(',') + "|}");
+					else result += xml.ToQuestionBlock("${2|" + QuestionTypes.join(',') + "|}");
+					_inProcess = true;
+					let indent = !!tag ? tag.GetIndent() : 1;
+					Formatting.format(result, Language.XML, _settings, "\t", indent).then(x =>
+					{
+						// преобразования обычного xml под snippet
+						x = x.replace(/\$all/, '\\$all');
+						x = x.replace(/\$repeat/, '\\$repeat');
+						vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString(x)).then(() => { _inProcess = false });
+					});	
+				}
+			}
+		}
+
+	}
+
+	if (simple)
+	{
+		await createElements(SurveyElementType.Page);
+	}
+}
+
+
 /** Настройка соединения с сервером */
 async function createClientConnection(context: vscode.ExtensionContext)
 {
@@ -2118,7 +2208,7 @@ async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null
 		res = tagFromServerTag(serverTag);
 	}
 	log('complete');
-	return res;	
+	return res;
 	//await sendNotification('forceDocumentUpdate', documentData);
 }
 
@@ -2131,9 +2221,13 @@ async function registerCommand(name: string, command: (...args) => Promise<any>,
 	{
 		if (!isTib()) return;
 		let result = command(...argArray);
-		if (updateDocument) result.then(() =>
+		result.then(commandResult =>
 		{
-			updateDocumentOnServer();
+			if (updateDocument) updateDocumentOnServer();
+			_lastCommand = {
+				name,
+				data: commandResult
+			}
 		});
 	});
 }
@@ -2232,7 +2326,8 @@ async function runCustomJS()
 	let document = new DocumentObjectModel(editor.document);
 	let FeedBack = customCode.FeedBack;
 
-	try {
+	try
+	{
 		eval(resultScript);
 	} catch (error)
 	{

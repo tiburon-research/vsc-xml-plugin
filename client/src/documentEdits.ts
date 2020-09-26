@@ -298,18 +298,56 @@ export class XMLElementCreationResult
 	}
 }
 
+export function createAnswers(elements: Parse.ParsedElementObject[], settings: ExtensionSettings)
+{
+	let answerItems = new KeyedCollection<SurveyAnswer>();
+	for (let i = 0; i < elements.length; i++)
+	{
+		const element = elements[i];
+		let answer = new SurveyAnswer(element.Id, element.Text);
+		if (i > elements.length - 3) // проставляем доп атрибуты только 2 последним Answer'ам
+		{
+			if (i == elements.length - 1 && element.IsResetAnswer()) // Reset только для последнего
+			{
+				answer.AddAttr('Reset', 'true');
+				answer.AddAttr('Fix', 'true');
+				answer.AddAttr('NoUseInQstFilter', 'true');
+				if (settings.Item('enableUiIsolateGen'))
+				{
+					let uiElement = new SurveyElement('Ui');
+					uiElement.AddAttr('Isolate', '1');
+					answer.AddChild(uiElement);
+				}
+			}
+			else if (element.IsTextAnswer())
+			{
+				answer.AddAttr('Fix', 'true');
+				answer.AddAttr('Type', 'Text');
+				answer.AddAttr('ExportLabel', 'Другое');
+			}
+		}
+		answerItems.AddPair(element.Id, answer, false);
+	};
+	return answerItems;
+}
+
+
 export function createElements(text: string, type: SurveyElementType, settings: ExtensionSettings): XMLElementCreationResult
 {
-	let strings = safeSnippet(text).split("\n");
-	let questionResult: Parse.ParsedElementObject;
+	let questionResult: {
+		Id: string,
+		Header: string
+	};
 	let res = new XMLElementCreationResult();
 
-	if (type == SurveyElementType.Page || type == SurveyElementType.Question)
+	let elements: Parse.ParsedElementObject[];
+	let p = Parse.parseQuestion(text, true);
+	if ((type == SurveyElementType.Page || type == SurveyElementType.Question) && p.QuestionFound)
 	{ // пробуем найти Question
-		questionResult = Parse.parseQuestion(strings[0], true);
-		strings.shift();
+		questionResult = p.Question;
+		elements = p.Answers;
 	}
-	let elements = Parse.parseElements(strings);
+	else elements = Parse.parseElements(Parse.breakText(text));
 	// заменяем 001 на 1
 	for (let i = 0; i < elements.length; i++)
 	{
@@ -337,33 +375,7 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 	}
 	else
 	{
-		for (let i = 0; i < elements.length; i++)
-		{
-			const element = elements[i];
-			let answer = new SurveyAnswer(element.Id, element.Text);
-			if (i > elements.length - 3) // проставляем доп атрибуты только 2 последним Answer'ам
-			{
-				if (i == elements.length - 1 && element.IsResetAnswer()) // Reset только для последнего
-				{
-					answer.SetAttr('Reset', 'true');
-					answer.SetAttr('Fix', 'true');
-					answer.SetAttr('NoUseInQstFilter', 'true');
-					if (settings.Item('enableUiIsolateGen'))
-					{
-						let uiElement = new SurveyElement('Ui');
-						uiElement.SetAttr('Isolate', '1');
-						answer.AddChild(uiElement);
-					}
-				}
-				else if (element.IsTextAnswer())
-				{
-					answer.SetAttr('Fix', 'true');
-					answer.SetAttr('Type', 'Text');
-					answer.SetAttr('ExportLabel', 'Другое');
-				}
-			}
-			answerItems.AddPair(element.Id, answer, false);
-		};
+		answerItems = createAnswers(elements, settings);
 	}
 
 	switch (type)
@@ -375,7 +387,7 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 				let id = "${1:" + parsedId + "}";
 				let q = new SurveyQuestion(id, "${2|" + QuestionTypes.join(',') + "|}");
 				q.Answers = answerItems;
-				q.Header = !!questionResult ? questionResult.Text.trim() : '';
+				q.Header = !!questionResult ? questionResult.Header : '';
 				if (type == SurveyElementType.Page)
 				{
 					let p = new SurveyPage(id);

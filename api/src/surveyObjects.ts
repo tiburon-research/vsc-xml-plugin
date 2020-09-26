@@ -6,6 +6,7 @@
 
 import { InlineAttribute } from './currentTag';
 import { KeyedCollection } from './customs'
+import { Parse } from '.';
 
 
 
@@ -22,18 +23,20 @@ export class SurveyElement
 	protected Attributes = new KeyedCollection<InlineAttribute>();
 	/** Дети поимённо */
 	protected Children = new KeyedCollection<SurveyElement[]>();
-	/** текст элемента */
-	public Text: string;
+	/** Содержимое тэга */
+	public Content: string;
 	/** Оставить однострочные дочерние теги на той же строке */
 	public CollapseTags = false;
 	/** Хранит тип элемента (если известен) */
 	public ElementType: SurveyElementType;
+	/** Без отдельного закрывающегося тэга */
+	public SelfClosed: boolean;
 
 
 	constructor(name: string, id?: string, type?: SurveyElementType)
 	{
 		this.TagName = name;
-		if (!!id) this.SetAttr("Id", id);
+		if (!!id) this.AddAttr("Id", id);
 		if (!!type) this.ElementType = type;
 	}
 
@@ -60,19 +63,31 @@ export class SurveyElement
 	public ToXML(): string
 	{
 		let res = "<" + this.TagName;
-		res += this.GetAttributes() + ">";
-		// получаем всё внутри рекурсивно
-		if (this.Children.Count > 0)
+		let attrs = this.GetAttributes();
+		res += attrs;
+		if (this.SelfClosed)
 		{
-			res += this.XMLbodyFormatter();
+			if (this.Children.Count > 0) throw 'Свойство  не может быть установлено при наличии дочерних узлов';
+			if (!!this.Content) throw 'Свойство SelfClosed не может быть установлено одновременно с Content';
+			res += " />";
 		}
-		else if (!!this.Text)
+		else
 		{
-			if (this.Text.indexOf('\n') > -1)
-				res += "\n" + this.Text + "\n";
-			else res += this.Text;
+			res += ">";
+			// получаем всё внутри рекурсивно
+			if (this.Children.Count > 0)
+			{
+				if (!!this.Content) throw 'Свойство Content не может быть установлено при наличии дочерних узлов';
+				res += this.XMLbodyFormatter();
+			}
+			else if (!!this.Content)
+			{
+				if (this.Content.indexOf('\n') > -1)
+					res += "\n" + this.Content + "\n";
+				else res += this.Content;
+			}
+			res += "</" + this.TagName + ">";
 		}
-		res += "</" + this.TagName + ">";
 		return res;
 	}
 
@@ -100,8 +115,8 @@ export class SurveyElement
 		return this.Attributes.Item(name).Value;
 	}
 
-	/** задаёт значение атрибута (или создаёт новый) */
-	public SetAttr(name: string, value: string): void
+	/** Добавляет атрибут */
+	public AddAttr(name: string, value: string): void
 	{
 		this.Attributes.AddPair(name, new InlineAttribute(name, value), false);
 	}
@@ -175,14 +190,27 @@ export class SurveyElement
 		else this.Children.UpdateValue(name, (val) => { return val.concat([value]) });
 	}
 
+	/** Возвращает массив дочерних тэгов с указанным именем */
+	public GetChildrenByName(tagName: string): SurveyElement[]
+	{
+		return this.Children.Item(tagName);
+	}
+
+	/** Возвращает содержимое тэга Text */
+	public GetText(): string
+	{
+		let children = this.GetChildrenByName("Text");
+		return !!children && children.length > 0 ? children[0].Content : null;
+	}
+
 	public ToListItem(): SurveyListItem
 	{
-		return new SurveyListItem(this.AttrValue("Id"), this.Text);
+		return new SurveyListItem(this.AttrValue("Id"), this.GetText());
 	}
 
 	public ToAnswer(): SurveyAnswer
 	{
-		return new SurveyAnswer(this.AttrValue("Id"), this.Text);
+		return new SurveyAnswer(this.AttrValue("Id"), this.GetText());
 	}
 
 }
@@ -195,7 +223,7 @@ export class SurveyItem extends SurveyElement
 	{
 		super("Item", id);
 		let textItem = new SurveyElement(withValue ? "Value" : "Text");
-		textItem.Text = textOrValue;
+		textItem.Content = textOrValue;
 		this.AddChild(textItem);
 		this.ElementType = SurveyElementType.Item;
 	}
@@ -267,13 +295,13 @@ export class SurveyListItem extends SurveyItem
 				this.Vars.Items.forEach(x =>
 				{
 					let Var = new SurveyElement("Var");
-					Var.Text = x;
+					Var.Content = x;
 					res.AddChild(Var);
 				})
 			}
 			else
 			{
-				res.SetAttr("Var", this.Vars.Items.join(","));
+				res.AddAttr("Var", this.Vars.Items.join(","));
 			}
 		}
 		return res;
@@ -358,7 +386,6 @@ export class SurveyList extends SurveyElement
 		let res = new SurveyListItem(id, item.Text);
 		res.SeparateVars = this.VarsAsTags;
 		if (!!item.Vars && item.Vars.length > 0) res.Vars = new SurveyListItemVars(item.Vars);
-		if (!!item.Text) res.Text = item.Text;
 		// предупреждаем о перезаписи
 		if (this.Items.ContainsKey(id)) console.warn("Элемент '" + id + "' уже существует в листе '" + this.AttrValue("Id") + "', он будет заменён.");
 		this.Items.AddPair(id, res);
@@ -391,7 +418,7 @@ export class SurveyAnswer extends SurveyElement
 	{
 		super("Answer", id);
 		let textItem = new SurveyElement("Text");
-		textItem.Text = text;
+		textItem.Content = text;
 		this.AddChild(textItem);
 		this.ElementType = SurveyElementType.Answer;
 		this.CollapseTags = true;
@@ -419,7 +446,7 @@ export class SurveyQuestion extends SurveyElement
 	constructor(id?: string, questionType?: string)
 	{
 		super("Question", id);
-		if (!!questionType) this.SetAttr("Type", questionType);
+		if (!!questionType) this.AddAttr("Type", questionType);
 		this.ElementType = SurveyElementType.Question;
 	}
 
@@ -436,18 +463,17 @@ export class SurveyQuestion extends SurveyElement
 	{
 		let id = answer.AttrValue("Id");
 		// генерируем Id автоматически
-		if (!!id)
+		if (!id)
 		{
 			let answerIds = this.Answers.Keys.map(x => Number(x)).filter(x => !!x).sort(x => x);
 			if (answerIds.length == 0) id = "1";
 			else id = '' + (answerIds[answerIds.length - 1] + 1);
 		}
 
-		let res = new SurveyAnswer(id, answer.Text);
-		if (!!answer.Text) res.Text = answer.Text;
+		answer.UpdateAttr('Id', x => id);
 		// предупреждаем о перезаписи
 		if (this.Answers.ContainsKey(id)) console.warn("Ответ '" + id + "' уже существует в вопросе '" + this.AttrValue("Id") + "', он будет заменён.");
-		this.Answers.AddPair(id, res);
+		this.Answers.AddPair(id, answer);
 		return id;
 	}
 
@@ -455,7 +481,7 @@ export class SurveyQuestion extends SurveyElement
 	public ToXML(): string
 	{
 		let headerTag = new SurveyElement("Header");
-		headerTag.Text = this.Header;
+		headerTag.Content = this.Header;
 		this.AddChild(headerTag);
 		// Answers не числятся в Children
 		this.Answers.ForEach((key, value) =>
@@ -476,6 +502,100 @@ export class SurveyPage extends SurveyElement
 }
 
 
+export class SurveyQuestionBlock
+{
+	private questions: SurveyList;
+	private answers: SurveyAnswer[];
+	private pageId: string;
+	/** Заголовок вопроса */
+	public Header: string;
+	public QuestionMix: string;
+
+	constructor(pageId: string)
+	{
+		this.pageId = pageId;
+	}
+
+	public AddQuestions(listName: string, questions: Parse.ParsedElementObject[])
+	{
+		this.questions = new SurveyList(listName);
+		this.questions.AddItemRange(questions);
+	}
+
+	public AddAnswers(answers: SurveyAnswer[])
+	{
+		this.answers = answers;
+	}
+
+	public ToUnionXml(qPrefix: string, qType: string): string
+	{
+		let res = '';
+		res += this.questions.ToXML() + '\n\n';
+		let question = this.setQuestion(qPrefix + "_dummy", qType);
+		question.AddAttr('Union', '$all');
+		question.Header = this.Header;
+		let page = new SurveyPage(this.pageId);
+		let repeat = new SurveyElement("Repeat");
+		repeat.AddAttr('List', this.questions.AttrValue("Id"));
+		let subQuestion = new SurveyElement("Question", qPrefix + "_@ID");
+		subQuestion.AddAttr("Type", qType);
+		let subQText = new SurveyElement("Text");
+		subQText.Content = "@Text";
+		subQText.CollapseTags = true;
+		subQuestion.AddChild(subQText);
+		if (!!this.QuestionMix)
+		{
+			question.AddAttr('MixId', this.QuestionMix);
+			subQuestion.AddAttr('SyncId', '@ID');
+		}
+		repeat.AddChild(subQuestion);
+		repeat.CollapseTags = false;
+		page.AddChild(repeat);
+		page.AddChild(question);
+		res += page.ToXML();
+		return res;
+	}
+
+	public ToQuestionBlock(qType?: string)
+	{
+		let res = '';
+		res += this.questions.ToXML() + '\n\n';
+		let qId = this.pageId + "_@ID";
+		let question = this.setQuestion(qId, qType);
+		question.Header = "@Text";
+		let repeat = new SurveyElement("Repeat");
+		repeat.AddAttr('List', this.questions.AttrValue("Id"));
+		repeat.AddChild(question);
+		let page = new SurveyPage(this.pageId);
+		let pageHeader = new SurveyElement("Header");
+		pageHeader.Content = this.Header;
+		page.AddChild(pageHeader);
+		if (!!this.QuestionMix)
+		{
+			let block = new SurveyElement('Block');
+			block.SelfClosed = true;
+			block.AddAttr('Items', '$repeat(' + this.questions.AttrValue("Id") + '){' + qId + '[,]}');
+			block.AddAttr('MixId', this.QuestionMix);
+			question.AddAttr('SyncId', '@ID');
+			page.AddChild(block);
+		}
+		page.AddChild(repeat);
+		res += page.ToXML();
+		return res;
+	}
+
+	private setQuestion(id: string, qType: string)
+	{
+		let question = new SurveyQuestion(id, qType);
+		this.answers.forEach(a =>
+		{
+			question.AddAnswer(a);
+		});
+		return question;
+	}
+}
+
+
 export namespace Structures
 {
 	class DefaultElement
@@ -491,6 +611,6 @@ export namespace Structures
 
 	export class Answer extends DefaultElement
 	{
-		
+
 	}
 }

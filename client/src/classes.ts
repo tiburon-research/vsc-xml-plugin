@@ -514,6 +514,7 @@ export class CustomQuickPick
 		Object.assign(this.qickPick, options);
 	}
 
+	/** Возвращает label */
 	public execute(): Promise<string[]>
 	{
 		return new Promise<string[]>((resolve, reject) =>
@@ -531,11 +532,15 @@ export class CustomQuickPick
 
 export interface CustomInputBoxOptions
 {
+	/** Оставлять ввод активным, даже если фокус ушёл */
 	ignoreFocusOut?: boolean;
 	placeholder?: string;
+	/** Порядковый номер шага */
 	step?: number;
 	title?: string;
+	/** Общее количество шагов */
 	totalSteps?: number;
+	/** Начальное значение */
 	value?: string;
 }
 
