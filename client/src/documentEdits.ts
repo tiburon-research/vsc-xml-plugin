@@ -366,10 +366,17 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 	let itemItems = new KeyedCollection<SurveyListItem>();
 	if (type == SurveyElementType.ListItem || type == SurveyElementType.List)
 	{
+		let varsAsTags = false;
+		elements.forEach(element =>
+		{
+			if (varsAsTags) return;
+			if (element.Vars.length > 0) varsAsTags = !!element.Vars.find(v => v.contains(","));
+		});
 		elements.forEach(element =>
 		{
 			let item = new SurveyListItem(element.Id, element.Text);
 			if (element.Vars.length > 0) item.Vars = new SurveyListItemVars(element.Vars);
+			item.SeparateVars = varsAsTags;
 			itemItems.AddPair(element.Id, item, false);
 		});
 	}
