@@ -9,7 +9,8 @@
             "runtimeExecutable": "${execPath}",
             "args": ["--extensionDevelopmentPath=${workspaceRoot}"],
             "stopOnEntry": false,
-            "sourceMaps": true,
+			"sourceMaps": true,
+			"skipFiles": ["**/node_modules.asar/**"],
             "outFiles": [
 				"${workspaceRoot}/client/out/*.js",
 				"${workspaceRoot}/node_modules/tib-api/lib/*.js"
