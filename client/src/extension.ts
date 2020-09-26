@@ -1638,7 +1638,9 @@ export async function applyChanges(range: vscode.Range, text: string, editor: vs
 	{
 		try
 		{
-			let sel = selectLines(editor.document, new vscode.Selection(range.start.line, range.start.character, range.end.line, range.end.character));
+			let startPosition = new vscode.Position(range.start.line, range.start.character);
+			let endPosition = editor.document.positionAt(editor.document.offsetAt(startPosition) + text.length);
+			let sel = selectLines(editor.document, new vscode.Selection(startPosition, endPosition));
 			editor.selection = sel;
 			let tag = await getCurrentTag(editor.document, sel.start);
 			let ind = !!tag ? tag.GetIndent() : 0;
