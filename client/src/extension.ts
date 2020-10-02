@@ -3,9 +3,9 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, safeRegexp, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit, Watcher } from "tib-api";
+import { CurrentTag, Language, positiveMin, isScriptLanguage, safeRegexp, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit, Watcher, Encoding } from "tib-api";
 import { SurveyElementType, SurveyQuestionBlock } from 'tib-api/lib/surveyObjects'
-import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox } from "./classes";
+import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox, readFileText, openTextInNewTab } from "./classes";
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
@@ -881,7 +881,28 @@ async function registerCommands()
 			}
 			_currentStatus.setProcessMessage("Открывается демка...").then(x =>
 			{
-				openFileText(path).then(() => _currentStatus.removeCurrentMessage()).then(() =>
+				let text = readFileText(path);
+				// преобразуем для безопасности
+				//text = Encoding.clearXMLComments(text);
+				let pages = text.findAll(/<Page ([\s\S]+?)<\/Page>/);
+				let indexes: number[] = [];
+				pages.forEach(match =>
+				{
+					if (!match.Result[1].match(/<Ui\s+RangeQuestions=("|')1\1/))
+					{
+						let imp = match.Result[0].findAll(/(<Question [^>]*)Imperative=("|')false\2/);
+						if (imp.length > 0)
+						{
+							imp.forEach(x => { indexes.push(match.Index + x.Index + x.Result[1].length); });
+						}
+					}
+				});
+				let len = "Imperative='false'".length;
+				indexes.orderByValue(x => x, true).forEach(i =>
+				{
+					text = text.replaceRange(i, len, '');
+				});
+				openTextInNewTab(text).then(() => _currentStatus.removeCurrentMessage()).then(() =>
 				{
 					x.dispose();
 					resolve();
