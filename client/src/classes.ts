@@ -548,6 +548,10 @@ export class CustomInputBox
 {
 	private inputBox: vscode.InputBox;
 
+	/** Разрешать ввод только цифр */
+	public intOnly: boolean;
+	
+
 	constructor(options: CustomInputBoxOptions)
 	{
 		this.inputBox = vscode.window.createInputBox();
@@ -559,6 +563,10 @@ export class CustomInputBox
 		return new Promise<string>((resolve, reject) =>
 		{
 			this.inputBox.show();
+			if (this.intOnly) this.inputBox.onDidChangeValue((val) =>
+			{
+				this.inputBox.validationMessage = !!val.match(/^[\d\-]+$/) ? null : "Можно вводить только цифры!";
+			});
 			this.inputBox.onDidAccept(() =>
 			{
 				resolve(this.inputBox.value);
