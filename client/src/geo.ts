@@ -5,6 +5,8 @@ import xlsx from 'node-xlsx';
 import { SurveyList } from 'tib-api/lib/surveyObjects';
 
 
+var geoFileCache: GeoFileLineData[] = [];
+
 export interface GeoClusters
 {
 	District: string;
@@ -101,16 +103,20 @@ async function parseGeoList(data: [][]): Promise<GeoFileLineData[]>
 /** Возвращает все города */
 export async function readGeoFile(): Promise<GeoFileLineData[]>
 {
-	let path = getGeoPath();
-	if (!path) throw "Путь к файлу с георафией не найден";
-	let geoList = await readGeoFileList(path);
-	let res = await parseGeoList(geoList);
-	return res.filter(x => !!x.CityId && !!x.CityName); // фильтруем косяки
+	if (geoFileCache.length == 0)
+	{
+		let path = getGeoPath();
+		if (!path) throw "Путь к файлу с георафией не найден";
+		let geoList = await readGeoFileList(path);
+		let res = await parseGeoList(geoList);
+		geoFileCache = res.filter(x => !!x.CityId && !!x.CityName); // фильтруем косяки
+	}
+	return geoFileCache;
 }
 
 
 /** Создаёт все нужные списки для географии */
-export async function createGeolists(cities: GeoFileLineData[], groupBy: string[]): Promise<string>
+export async function createGeolists(cities: GeoFileLineData[], groupBy: string[], withPopulation: boolean): Promise<string>
 {
 	let res = '\n\n';
 
@@ -141,24 +147,32 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 		res += subjectList.ToXML() + '\n\n';
 	}
 
+
 	// страты
-	let stratalist = new SurveyList(GeoConstants.ListNames.Strata);
-	let stratas = KeyedCollection.FromPairs(cities.map(x => { return { Key: x.StrataId, Value: x.StrataName } }))
-	stratalist.AddItemRange(stratas.ToArray((key, value) => { return { Id: key, Text: value }; }));
-	res += stratalist.ToXML() + '\n\n';
+	if (!withPopulation)
+	{
+		let stratalist = new SurveyList(GeoConstants.ListNames.Strata);
+		let stratas = KeyedCollection.FromPairs(cities.map(x => { return { Key: x.StrataId, Value: x.StrataName } }))
+		stratalist.AddItemRange(stratas.ToArray((key, value) => { return { Id: key, Text: value }; }));
+		res += stratalist.ToXML() + '\n\n';
+	}
+
 
 	// города
 	let cityList = new SurveyList(GeoConstants.ListNames.City);
 	cityList.VarsAsTags = false;
-	cities.orderByValue(x => x.CityName).forEach(city => {
-		cityList.AddItem({ Id: city.CityId, Text: city.CityName, Vars: [city.DistrictId, city.StrataId, city.SubjectId] });
+	cities.orderByValue(x => x.CityName).forEach(city =>
+	{
+		let vars = [city.DistrictId, city.StrataId, city.SubjectId];
+		if (withPopulation) vars.push('' + city.CityPopulation);
+		cityList.AddItem({ Id: city.CityId, Text: city.CityName, Vars: vars });
 	});
 
 	res += `
 	<!--*
 		Var[0] - ФО (District/Регион)
 		Var[1] - Страта
-		Var[2] - Область (Subject)
+		Var[2] - Область (Subject)${withPopulation ? "\n\t\tVar[3] - Население" : ""}
 	-->
 	`;
 
@@ -168,7 +182,7 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 }
 
 
-export async function createGeoPage(groupBy: string[], questionIds: GeoClusters): Promise<string>
+export async function createGeoPage(groupBy: string[], questionIds: GeoClusters, withPopulation: boolean): Promise<string>
 {
 	let pageName = "Geo";
 	let res = `<Page Id="${pageName}">\n`;
@@ -236,7 +250,7 @@ export async function createGeoPage(groupBy: string[], questionIds: GeoClusters)
 	{
 		cityAnswerFilter = `<Filter Side="Client">@AnswerExists("${questionIds.District}","@Var(0)");</Filter>`;
 		cityQuestionFilter = `<Filter Side="Client">return AnswerExistsAny("${questionIds.District}","$repeat(${GeoConstants.ListNames.District}){@ID[,]}");</Filter>`;
-	}		
+	}
 
 	// Город
 	res += `
@@ -259,11 +273,12 @@ export async function createGeoPage(groupBy: string[], questionIds: GeoClusters)
 		string strata = GetListItemVar("${GeoConstants.ListNames.City}",city,1); // Страта
 		AnswerUpdateP("RespInfo", "Strata", strata);
 		string subject = GetListItemVar("${GeoConstants.ListNames.City}",city,2); // Область
+		AnswerUpdateP("RespInfo", "Subject", subject);${withPopulation ? `\n\t\tint population = int.Parse(GetListItemVar("${GeoConstants.ListNames.City}",city,3)); // население` : ''}
 		*/
 		return false;
 	]]></Redirect>
 	`;
-		
+
 	res += "</Page>";
 	return res;
 }

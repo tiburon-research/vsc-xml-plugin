@@ -2239,9 +2239,21 @@ async function registerCommand(name: string, command: (...args) => Promise<any>,
 async function chooseGeo()
 {
 	let geoData = await readGeoFile();
-	let step = 0;
+	let step = 1;
 	let ignoreFocusOut = true;
-	let totalSteps = 5;
+	let totalSteps = 6;
+	let minPopulation = 100000;
+
+	let qp = new CustomQuickPick({
+		canSelectMany: false,
+		step,
+		totalSteps,
+		items: [{ label: "страте" }, { label: "численности" }],
+		title: "Фильтровать население по:",
+		placeHolder: "Фильтровать население по:"
+	});
+
+	let byPop = (await qp.execute())[0] == 'численности';
 
 	let nextStep = function (propertyName: string, placeHolder: string, selectedItems?: string[]): Promise<string[]>
 	{
@@ -2269,7 +2281,14 @@ async function chooseGeo()
 	// спрашиваем географию
 	await nextStep("CountryName", "Страна:", ["Россия"]);
 	await nextStep("DistrictName", "Федеральный округ:", ["Центральный", "Северо-Западный", "Сибирский", "Уральский", "Приволжский", "Южный", "Дальневосточный", "Северо-Кавказский"]);
-	await nextStep("StrataName", "Население:", ["1млн +", "500тыс.-1 млн.", "250тыс.-500тыс.", "100тыс. - 250тыс."]);
+	if (!byPop) await nextStep("StrataName", "Страта:", ["1млн +", "500тыс.-1 млн.", "250тыс.-500тыс.", "100тыс. - 250тыс."]);
+	else
+	{
+		let input = new CustomInputBox({ title: 'Минимальная численность населения', value: ''+minPopulation, totalSteps, step: ++step });
+		input.intOnly = true;
+		minPopulation = Number(await input.execute());
+		geoData = geoData.filter(x => x.CityPopulation >= minPopulation);
+	}
 
 	// спрашиваем разбивку
 	let grouping = [{ label: GeoConstants.GroupBy.District }, { label: GeoConstants.GroupBy.Subject }];
@@ -2308,8 +2327,8 @@ async function chooseGeo()
 
 
 	// генерация XML
-	let lists = await createGeolists(geoData, groupBy);
-	let page = await createGeoPage(groupBy, qIds);
+	let lists = await createGeolists(geoData, groupBy, byPop);
+	let page = await createGeoPage(groupBy, qIds, byPop);
 	return lists + page;
 }
 
