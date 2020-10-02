@@ -114,8 +114,8 @@ export function readFileText(path: string): string
 }
 
 
-/** Открытие текста файла в новом окне */
-export function openFileText(path: string, language?: string): Promise<void>
+/** Открытие текста в новой вкладке */
+export function openTextInNewTab(text: string, language?: string): Promise<void>
 {
 	return new Promise<void>((resolve, reject) =>
 	{
@@ -133,8 +133,7 @@ export function openFileText(path: string, language?: string): Promise<void>
 				});
 			})
 		}); */
-		language = language || 'tib';
-		let text = readFileText(path);
+		
 		vscode.workspace.openTextDocument({ language }).then(newDoc =>
 		{ // создаём пустой tib-файл
 			if (!newDoc) return reject();
@@ -148,6 +147,18 @@ export function openFileText(path: string, language?: string): Promise<void>
 				});
 			});
 		})
+	});
+}
+
+
+/** Открытие текста файла в новой вкладке */
+export function openFileText(path: string, language?: string): Promise<void>
+{
+	return new Promise<void>((resolve, reject) =>
+	{
+		language = language || 'tib';
+		let text = readFileText(path);
+		openTextInNewTab(text, language).then(resolve).catch(reject);
 	});
 }
 
