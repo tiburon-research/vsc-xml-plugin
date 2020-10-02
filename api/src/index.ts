@@ -393,7 +393,13 @@ String.prototype.find = function (this: string, search: string | RegExp, startFr
 String.prototype.findAll = function (this: string, search: string | RegExp): SearchResult[]
 {
 	let res: SearchResult[] = [];
-	let value = typeof search == "string" ? search : search.source;
+	let value: string;
+	if (typeof search == "string") value = search
+	else
+	{
+		if (search.flags.contains('g')) throw "Флаг `g` нельзя использовать в `findAll`";
+		value = search.source;
+	}
 	let reg = new RegExp(value);
 	let match: RegExpExecArray;
 	let restText = this;
