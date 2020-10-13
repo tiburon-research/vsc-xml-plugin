@@ -2301,6 +2301,10 @@ export const Attributes = {
 			"Name": "CountStatuses",
 			"Default": "18",
 			"Type": "String"
+		},
+		{
+			Name: "Tech",
+			Type: "Boolean"
 		}
 	],
 	"Block": [
