@@ -902,7 +902,7 @@ async function registerCommands()
 				{
 					text = text.replaceRange(i, len, '');
 				});
-				openTextInNewTab(text).then(() => _currentStatus.removeCurrentMessage()).then(() =>
+				openTextInNewTab(text, 'tib').then(() => _currentStatus.removeCurrentMessage()).then(() =>
 				{
 					x.dispose();
 					resolve();
