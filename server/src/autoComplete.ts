@@ -1264,7 +1264,7 @@ export const Attributes = {
 		},
 		{
 			"Name": "CutLabels",
-			"Default": "false",
+			"Default": "true",
 			"Type": "Boolean"
 		},
 		{
