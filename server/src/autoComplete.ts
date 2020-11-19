@@ -2911,7 +2911,7 @@ export const XMLFeatures = [
 	{
 		"prefix": "_shape",
 		"body": [
-			"<Ui Extend=\"Shape\" Color=\"#F0FF00\" Opacity=\"0.3\" OpacitySelected=\"0.6\" WidthBorder=\"2\" ColorBorder=\"#f00\" Src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1\"/>"
+			"<Ui Extend=\"Shape\" Color=\"#F0FF00\" Opacity=\"0.3\" OpacitySelected=\"0.6\" WidthBorder=\"2\" ColorBorder=\"#f00\" Src=\"@ContentUrl\"/>"
 		],
 		"description": "QuestionUi: Областной клик-тест/полка"
 	},
@@ -2967,14 +2967,14 @@ export const XMLFeatures = [
 	{
 		"prefix": "_video",
 		"body": [
-			"<Ui Extend=\"MediaPlayer\" Type=\"Video\" Src=\"@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.mp4,@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.webm,@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.ogv\" PlayAuto=\"1\" SeekEnable=\"1\"/>"
+			"<Ui Extend=\"MediaPlayer\" Type=\"Video\" Src=\"@ContentUrl/$1/}/$1.mp4,@ContentUrl/$1/}/$1.webm,@ContentUrl/$1.ogv\" PlayAuto=\"1\" SeekEnable=\"1\"/>"
 		],
 		"description": "QuestionUi: MediaPlayer Video"
 	},
 	{
 		"prefix": "_audio",
 		"body": [
-			"<Ui Extend=\"MediaPlayer\" Type=\"Audio\" Src='@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.mp3;@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/$1.ogg' PlayAuto=\"1\" PlayRedirect=\"1\" PauseEnable=\"0\" SeekEnable=\"1\"/>"
+			"<Ui Extend=\"MediaPlayer\" Type=\"Audio\" Src='@ContentUrl/$1/}/$1.mp3;@ContentUrl/$1/}/$1.ogg' PlayAuto=\"1\" PlayRedirect=\"1\" PauseEnable=\"0\" SeekEnable=\"1\"/>"
 		],
 		"description": "QuestionUi: MediaPlayer Audio"
 	},
@@ -3284,7 +3284,7 @@ export const RangeQuestion = {
 			'\t\t<Header>$2</Header>',
 			'\t\t<Ui Extend="ContentOnly"/>',
 			'\t\t<Repeat List="${3:list}">',
-			'\t\t\t<Answer Id="@ID"><Text>[img src="@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/@ID.jpg"/]@Text</Text></Answer>',
+			'\t\t\t<Answer Id="@ID"><Text>[img src="@ContentUrl/$1/}/@ID.jpg"/]@Text</Text></Answer>',
 			'\t\t</Repeat>',
 			'\t\t<Answer Id="999" Reset="true" Fix="true" NoUseInQstFilter="true"><Ui Isolate="1"/><Text>${6:Ни один}</Text></Answer>',
 			'\t</Question>',
@@ -3310,7 +3310,7 @@ export const RangeQuestion = {
 			'\t\t\t\t<Answer Id="@ID">',
 			'\t\t\t\t\t<Filter><![CDATA[ return AnswerExists("$1", "@ID"); ]]></Filter>',
 			'\t\t\t\t\t<Filter Side="Client"><![CDATA[ return AnswerEnabledForRanging("$4_", "@ID", @Itera(-1), @RangeCount); ]]></Filter>',
-			'\t\t\t\t\t<Text>[img src="@StoreUrl/t/tib_${TM_FILENAME/^(\\d+)(.*)$/$1/}/@ID.jpg"/]@Text</Text>',
+			'\t\t\t\t\t<Text>[img src="@ContentUrl/$1/}/@ID.jpg"/]@Text</Text>',
 			'\t\t\t\t</Answer>',
 			'\t\t\t</Repeat>',
 			'\t\t\t<Answer Id="999" Reset="true" Fix="true" NoUseInQstFilter="true"><Ui Isolate="1"/><Text>$6</Text></Answer>',

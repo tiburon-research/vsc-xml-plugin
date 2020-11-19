@@ -93,7 +93,7 @@ export const XMLEmbeddings = [
 
 export const PreDefinedConstants = {
 	Scripts: "\\\\tib-srv-debug.corp.tiburon-research.ru\\scripts",
-	StoreUrl: "https://content.survstat.ru/content",
+	StoreUrl: "https://content.survstat.ru/content (диск S)",
 	ContentUrl: "Путь к папке проекта на CDN-сервере",
 	RespID: "Подстановка: InterviewPars.GetInstance().RespId",
 	InterviewUID: "Подстановка: InterviewPars.GetInstance().RespId",
