@@ -2985,7 +2985,7 @@ export const XMLFeatures = [
 	{
 		"prefix": "_contentOnly",
 		"body": [
-			"<Ui Extend=\"ContentOnly\"/>"
+			"<Ui Extend=\"ContentOnly\" Cols=\"${1:6}\" MinCols=\"2\"/>"
 		],
 		"description": "QuestionUi: ContentOnly"
 	},
