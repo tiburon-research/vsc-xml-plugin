@@ -27,7 +27,7 @@ export class ParsedElementObject
 	/** Инициализация */
 	constructor(Id?: string, Text?: string )
 	{
-		if (!!Id) this.Id = Id;
+		if (!!Id) this.Id = Id.replace(/\s*(\.|\)|-)\s*$/, '');
 		if (!!Text) this.Text = Text;
 	}
 
