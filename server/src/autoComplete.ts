@@ -2305,6 +2305,10 @@ export const Attributes = {
 		{
 			Name: "Tech",
 			Type: "Boolean"
+		},
+		{
+			Name: "Manual",
+			Type: "Boolean"
 		}
 	],
 	"Block": [

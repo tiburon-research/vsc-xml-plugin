@@ -114,7 +114,7 @@ export const GenerableRepeats = {
 </Constants>
 
 <Repeat List="$1">
-	<Quota Id="zzz_\${2:concept}_@ID" Apply="$4" Limit="1000">
+	<Quota Id="zzz_\${2:concept}_@ID" Tech="true" Apply="$4" Limit="1000">
 		<Item Page="RespInfo" Question="$2" Answer="@ID" Generable="true"/>
 	</Quota>
 </Repeat>
