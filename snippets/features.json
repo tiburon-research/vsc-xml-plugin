@@ -48,5 +48,9 @@
 			"-->"
 		],
 		"description": "Блок пользовательского кода JS"
+	},
+	"pageHint": {
+		"prefix": "_hintForPage",
+		"body": "[div class=\"question-hint\"]$0[/div]"
 	}
 }
