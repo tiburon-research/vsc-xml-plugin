@@ -9,7 +9,7 @@ import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSetti
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
-import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames, LargeFileLineCount, QuestionTypes } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames, LargeFileLineCount, QuestionTypes, OpenQuestionTagNames } from 'tib-api/lib/constants'
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
@@ -176,7 +176,7 @@ export function activate(context: vscode.ExtensionContext)
 				editor
 			};
 			_inProcess = true;
-			tibEdit([insertAutoCloseTags, insertSpecialSnippets, upcaseFirstLetter], data).then(() =>
+			tibEdit([insertAutoCloseTags, insertSpecialSnippets, upcaseFirstLetter, checkCodingEntity], data).then(() =>
 			{
 				_inProcess = false;
 				updateDocumentOnServer();
@@ -1357,6 +1357,32 @@ function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 
 
 
+/** Добавляет CodingEntity для открытых */
+function checkCodingEntity(data: ITibEditorData): Thenable<any>[]
+{
+	let res: Thenable<any>[] = [];
+	if (!data.editor || !data.tag || data.tag.OpenTagIsClosed || data.tag.Name != "Question" || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return res;
+	let fullText = data.editor.document.getText();
+	let indexOf = data.editor.document.offsetAt(data.editor.selection.active);
+	let prevText = fullText.slice(0, indexOf);
+	let curAttr = prevText.match(/\sType=(["'])(\w+)$/);
+	console.log(curAttr);
+	if (!curAttr || !OpenQuestionTagNames.contains(curAttr[2])) return res;
+	let value = '\t'.repeat(data.tag.GetIndent()) + '<CodingEntity></CodingEntity>\n';
+	let lastIndex = data.editor.document.getText().indexOf("\n", indexOf) + 1;
+	if (lastIndex < 1) return res;
+	let lastPosition = data.editor.document.positionAt(lastIndex);
+	let closedIndex = fullText.indexOf("<Question", lastIndex);
+	if (fullText.slice(lastIndex, closedIndex).contains("<CodingEntity")) return res;
+	
+	res.push(data.editor.edit(builder =>
+	{
+		builder.insert(lastPosition, value);
+	}));
+	return res;
+}
+
+
 //#endregion
 
 
@@ -1891,7 +1917,7 @@ async function getAnswers()
 					simple = false;
 					let data = _lastCommand.data as Parse.ParsedElementObject[];
 					let qData = Parse.parseQuestion(text, true);
-					let qId = !!qData.Question.Id ? '${1:'+qData.Question.Id+'}' : '$1';
+					let qId = !!qData.Question.Id ? '${1:' + qData.Question.Id + '}' : '$1';
 					let xml = new SurveyQuestionBlock(qId);
 					xml.QuestionMix = qId + 'mix';
 					xml.AddQuestions(qId + '_QList', data);
@@ -1907,7 +1933,7 @@ async function getAnswers()
 						x = x.replace(/\$all/, '\\$all');
 						x = x.replace(/\$repeat/, '\\$repeat');
 						vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString(x)).then(() => { _inProcess = false });
-					});	
+					});
 				}
 			}
 		}
@@ -2305,7 +2331,7 @@ async function chooseGeo()
 	if (!byPop) await nextStep("StrataName", "Страта:", ["1млн +", "500тыс.-1 млн.", "250тыс.-500тыс.", "100тыс. - 250тыс."]);
 	else
 	{
-		let input = new CustomInputBox({ title: 'Минимальная численность населения', value: ''+minPopulation, totalSteps, step: ++step });
+		let input = new CustomInputBox({ title: 'Минимальная численность населения', value: '' + minPopulation, totalSteps, step: ++step });
 		input.intOnly = true;
 		minPopulation = Number(await input.execute());
 		geoData = geoData.filter(x => x.CityPopulation >= minPopulation);
