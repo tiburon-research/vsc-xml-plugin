@@ -120,7 +120,8 @@ export enum ErrorCodes
 	linqHelp = "linqHelp",
 	mixIdSuggestion = "mixIdSuggestion",
 	oldCustomMethods = "oldCustomMethods",
-	exportLabelsWithCS = "csInLabels"
+	exportLabelsWithCS = "csInLabels",
+	notDigitalAnswerIds = "notDigitalAnswerIds"
 };
 
 export interface IErrorTagData

@@ -36,7 +36,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 			[
 				{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"+Information
 				{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions },
-				{ Key: ErrorCodes.oldCustomMethods, Value: oldRangeMethods}
+				{ Key: ErrorCodes.oldCustomMethods, Value: oldRangeMethods },
+				{ Key: ErrorCodes.oldCustomMethods, Value: notDigitalAnswerIds}
 			]
 		)
 	},
@@ -370,6 +371,13 @@ async function oldRangeMethods(data: IDiagnosticFunctionData): Promise<Parse.Doc
 		res.push(new Parse.DocumentElement(data.document, obj));
 	}
 	return res;
+}
+
+/** AnswerId, который включает в себя что-то кроме цифр */
+async function notDigitalAnswerIds(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
+{
+	let res = await Parse.getDocumentElements(data.document, new RegExp("<(Answer)(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\d*[^\\d]+\\d*('|\"))"), "Id ответа лучше не делать буквенным", data.preparedText);
+	return res.filter(x => !x.Value[0].match(/\sId=("|')\w*@\w*\1/));
 }
 
 
