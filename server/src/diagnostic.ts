@@ -37,7 +37,7 @@ const _AllDiagnostics: IDiagnosticType[] =
 				{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"+Information
 				{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions },
 				{ Key: ErrorCodes.oldCustomMethods, Value: oldRangeMethods },
-				{ Key: ErrorCodes.oldCustomMethods, Value: notDigitalAnswerIds}
+				{ Key: ErrorCodes.notDigitalAnswerIds, Value: notDigitalAnswerIds}
 			]
 		)
 	},
