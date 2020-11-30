@@ -376,7 +376,7 @@ async function oldRangeMethods(data: IDiagnosticFunctionData): Promise<Parse.Doc
 /** AnswerId, который включает в себя что-то кроме цифр */
 async function notDigitalAnswerIds(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
-	let res = await Parse.getDocumentElements(data.document, new RegExp("<(Answer)(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")\\d*[^\\d]+\\d*('|\"))"), "Id ответа лучше не делать буквенным", data.preparedText);
+	let res = await Parse.getDocumentElements(data.document, new RegExp("<((Answer)(" + RegExpPatterns.SingleAttribute + ")*\\s*)(Id=('|\")\\d*[^\\d'\"]+\\d*('|\"))"), "Id ответа лучше не делать буквенным", data.preparedText, null, 1);
 	return res.filter(x => !x.Value[0].match(/\sId=("|')\w*@\w*\1/));
 }
 
