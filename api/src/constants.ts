@@ -8,6 +8,8 @@ export const _pack: ("debug" | "release") = "debug";
 /** XML теги, которые сохраняются в CurrentNodes */
 export const _NodeStoreNames = ["Page", "Question", "Quota", "List"];
 
+export const OpenQuestionTagNames = ["Memo", "Text"];
+
 /** Snippets для разных типов Item */
 export const ItemSnippets = {
 	List: "Item Id=\"$1\"><Text>$2</Text></Item>",

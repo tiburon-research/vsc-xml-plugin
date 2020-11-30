@@ -62,7 +62,7 @@ export class Watcher
 	{
 		if (!this._enabled) return undefined;
 		let data = this.generateString(message);
-		return [data, 'color: #ccc', `color: ${this._color}`, 'color: #ccc', 'color: black', `color: ${this._color}; font-weight: bold;`];
+		return [data, 'color: #ccc', `color: ${this._color}`, 'color: #ccc', `color: ${this._color}; font-weight: bold;`, 'color: black'];
 	}
 
 	/** Создаёт метод логирования 
@@ -98,7 +98,7 @@ export class Watcher
 		let now = Date.now();
 		let diff = now - this._startTime;
 		let separator = this._serverSide ? '' : '%c';
-		return `${separator}[${separator}${this._caller}.${separator}${this._hash}]: ${separator}` + message + ` ${separator}<${now}-${diff}>`;
+		return `${separator}[${separator}${this._caller}.${separator}${this._hash}]: ${separator}<${now}-${diff}> ${separator}` + message;
 	}
 }
 

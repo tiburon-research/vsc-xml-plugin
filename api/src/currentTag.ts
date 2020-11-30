@@ -212,7 +212,7 @@ export class CurrentTag
 	public LastParent: SimpleTag;
 	/** Откуда начинается */
 	public StartIndex: number;
-	/** Открывающийся тег */
+	/** Открывающийся тег (имеет смысл при `OpenTagIsClosed`) */
 	public OpenTagRange: server.Range;
 	/** Текст от начала документа до Position */
 	public PreviousText: string = null;
