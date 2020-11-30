@@ -2604,7 +2604,7 @@ export const Attributes = {
 		{
 			"Name": "Operator",
 			"Default": "Exists",
-			"Values": ["Nothing", "NotExists", "More", "MoreEquals", "Less", "LessEquals", "Equals"]
+			"Values": ["Nothing", "NotExists", "MoreEquals", "LessEquals", "Equals"]
 		},
 		{
 			Name: "Value"
