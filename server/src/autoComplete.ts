@@ -796,7 +796,7 @@ var KnownCode = [
 		"Name": "SetRanges",
 		"Detail": "void",
 		"Kind": "Function",
-		"Documentation": "void SetRanges(string selectionQuestion, string rangeQuestionPrefix, string questionForRanges, string listId, string resetAnswers, int rangeForNotChosen = -974527)"
+		"Documentation": "void SetRanges(string selectionQuestion, string rangeQuestionPrefix, string questionForRanges, string listId, string resetAnswers, int? rangeForNotChosen)"
 	},
 	{
 		"Name": "AnswerUpdate",
