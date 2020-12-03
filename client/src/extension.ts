@@ -1366,7 +1366,6 @@ function checkCodingEntity(data: ITibEditorData): Thenable<any>[]
 	let indexOf = data.editor.document.offsetAt(data.editor.selection.active);
 	let prevText = fullText.slice(0, indexOf);
 	let curAttr = prevText.match(/\sType=(["'])(\w+)$/);
-	console.log(curAttr);
 	if (!curAttr || !OpenQuestionTagNames.contains(curAttr[2])) return res;
 	let value = '\t'.repeat(data.tag.GetIndent()) + '<CodingEntity></CodingEntity>\n';
 	let lastIndex = data.editor.document.getText().indexOf("\n", indexOf) + 1;
