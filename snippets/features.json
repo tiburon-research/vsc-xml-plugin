@@ -7,9 +7,9 @@
 		"description": "Стандартный путь к материалам проекта"
 	},
 	"contentSrc": {
-		"prefix": "[img src=\"",
+		"prefix": "[img src",
 		"body": [
-			"[img src=\"@ContentUrl/$0\"/]"
+			"[img src='@ContentUrl/$0'/]"
 		],
 		"description": "img с путём к материалам проекта на CDN"
 	},
@@ -51,6 +51,6 @@
 	},
 	"pageHint": {
 		"prefix": "_hintForPage",
-		"body": "[div class=\"question-hint\"]$0[/div]"
+		"body": "[div class='question-hint']$0[/div]"
 	}
 }
