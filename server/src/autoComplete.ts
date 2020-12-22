@@ -709,12 +709,6 @@ var KnownCode = [
 		"Documentation": "bool ExtSurveyAnswerExists(int extSurveyId, string pageId, string questionId, string answerId, int[] statuses)"
 	},
 	{
-		"Name": "ExtAnswerExists",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtAnswerExists(int surveyId, string pageId, string questionId, string answerId)"
-	},
-	{
 		"Name": "AnswerCount",
 		"Detail": "int",
 		"Kind": "Function",
@@ -845,12 +839,6 @@ var KnownCode = [
 		"Detail": "string",
 		"Kind": "Function",
 		"Documentation": "string AnswerValue(string pageId, string questionId, string answerId)"
-	},
-	{
-		"Name": "ExtAnswerExists",
-		"Detail": "bool",
-		"Kind": "Function",
-		"Documentation": "bool ExtAnswerExists(int surveyId, string questionId, string answerId)"
 	},
 	{
 		"Name": "GetDateDiff",
