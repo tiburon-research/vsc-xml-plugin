@@ -2971,7 +2971,7 @@ export const XMLFeatures = [
 	{
 		"prefix": "_video",
 		"body": [
-			"<Ui Extend=\"MediaPlayer\" Type=\"Video\" Src=\"@ContentUrl/$1/}/$1.mp4,@ContentUrl/$1/}/$1.webm,@ContentUrl/$1.ogv\" PlayAuto=\"1\" SeekEnable=\"1\"/>"
+			"<Ui Extend=\"MediaPlayer\" Type=\"Video\" Src=\"@ContentUrl/$1/}/$1.mp4,@ContentUrl/$1/}/$1.webm\" PlayAuto=\"1\" SeekEnable=\"1\"/>"
 		],
 		"description": "QuestionUi: MediaPlayer Video"
 	},
