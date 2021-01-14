@@ -242,13 +242,14 @@ class ElementExtractor
 			{
 				if (!!parent[element[1]] && !res.ContainsKey(element[1]))
 				{
-					res.AddPair(element[1], parent[element[1]].call(this)); // почему-то при вызове GeAll* this'ом считается _ElementFunctions
+					res.AddPair(element[1], parent[element[1]].call(this));
 				}
 			});
 			let i = 1;
 			res.ForEach((key, value) =>
 			{
-				resultStr = resultStr.replace(new RegExp("{{" + key + "}}", "g"), "${" + i + "|" + value.join(",") + "|}");
+				let elementsSet = value.length > 0 ? "|" + value.join(",") + "|" : "";
+				resultStr = resultStr.replace(new RegExp("{{" + key + "}}", "g"), "${" + i + elementsSet + "}");
 				i++;
 			});
 		}
