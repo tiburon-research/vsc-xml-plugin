@@ -3354,3 +3354,91 @@ export const RangeQuestion = {
 	Constant: '\t\t<Item Id="RangeCount"><Value>7</Value></Item>'
 
 }
+
+
+export const CognitoBlock = {
+	prefix: "_cognito",
+	body: `
+	<List Id="agecheckList">
+		<Item Id="1"><Text>Возраст совпал</Text></Item>
+		<Item Id="2"><Text>Возраст не совпал</Text></Item>
+	</List>
+	
+	<List Id="SegmentList">
+		<Item Id="1"><Text>High-energy diva</Text></Item>
+		<Item Id="2"><Text>Success-driven queen</Text></Item>
+		<Item Id="3"><Text>Non-conformist princess</Text></Item>
+		<Item Id="4"><Text>Creative rebel</Text></Item>
+		<Item Id="5"><Text>Alternative arty girl</Text></Item>
+		<Item Id="6"><Text>Social-status seeker</Text></Item>
+		<Item Id="7"><Text>Holistic wellness lover</Text></Item>
+		<Item Id="8"><Text>Nature amp; health protector</Text></Item>
+		<Item Id="9"><Text>Cute dreamer</Text></Item>
+		<Item Id="10"><Text>Self-confidence seeker</Text></Item>
+		<Item Id="11"><Text>Antimaterialist</Text></Item>
+	</List>
+
+
+	<Page Id="RespInfo">
+		<Filter>false;</Filter>
+		<Header>Опросные данные</Header>
+		<Question Id="Segment" Type="RadioButton">
+			<Header>Сегмент</Header>
+			<Repeat List="SegmentList">
+				<Answer Id="@ID"><Text>@Text</Text></Answer>
+			</Repeat>
+		</Question>
+		<Question Id="GenderCog" Type="RadioButton">
+			<Header>Пол из Cognito</Header>
+			<Answer Id="0"><Text>Мужской</Text></Answer>
+			<Answer Id="1"><Text>Женский</Text></Answer>
+		</Question>
+		<Question Id="AgeCog" Type="Integer">
+			<Header>Возраст из Cognito</Header>
+			<Answer Id="1"><Text></Text></Answer>
+		</Question>		
+		<Question Id="Agecheck" Type="RadioButton">
+			<Header>Совпадение возраста на круге и в Cognito</Header>
+			<Repeat List="agecheckList">
+				<Answer Id="@ID"><Text>@Text</Text></Answer>
+			</Repeat>
+		</Question>
+	</Page>
+
+<!--#block #Блок D. Демография -->
+
+	<Page Id="techSOCIOVISION" CountProgress="false">
+		<Header>[center]Пожалуйста, нажмите Далее для продолжения[/center]</Header>
+		<Redirect><![CDATA[
+			string url = "https://cognitosurvey.com/?cognito_id=LOREAL_SEG2019_WOMEN_RUSSIA&callback_url=https%3A%2F%2Fcloudsurvey.survstat.ru%2F%3Fp%3D"+InterviewPars.ProjectId+"%26a%3D"+\\$age+"%26back%3D1%26i%3D@RespID";
+			if (AnswerValue("pre_data","back") != "1") {
+				this.Url = url;
+				return true;
+			}
+			return false;
+		]]></Redirect>
+	</Page>
+
+	<Page Id="preD"><Header>[center]В заключение несколько вопросов о Вас.[/center]</Header>
+		<Redirect><![CDATA[
+			if (AnswerValue("pre_data","MAIN_TYPE").Length>1) AnswerUpdateP("RespInfo","Segment",AnswerValue("pre_data","MAIN_TYPE").Substring(1));
+			string gender = AnswerValue("pre_data","GENDER");
+			AnswerUpdateP("RespInfo","GenderCog",gender);
+			if (gender == "0") return false;			
+			int age_round = int.Parse(AnswerValue("pre_data","pre_age","1"));
+			int age_cognito = int.Parse(AnswerValue("pre_data","AGE"));		
+			AnswerUpdateP("RespInfo","AgeCog","1",AnswerValue("pre_data","AGE"));
+			if (age_round != age_cognito)
+			{
+				AnswerUpdateP("RespInfo","Agecheck","2");
+				return false;
+			}
+			if (age_round == age_cognito) AnswerUpdateP("RespInfo","Agecheck","1");
+			return false;
+		]]></Redirect>			
+	</Page>
+
+<!--#endblock-->
+	`,
+	description: "Блок XML для Cognito"
+}

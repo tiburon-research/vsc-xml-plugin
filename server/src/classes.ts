@@ -370,13 +370,20 @@ export class TibAutoCompletes
 				if (this.tag.OpenTagIsClosed && text.match(/\b_\w*$/))
 				{
 					let snippets = AutoCompleteArray.XMLFeatures.map(x => snippetToCompletitionItem(x));
-					// добавляем snippet для ранжирования
-					let rangeSnippet = snippetToCompletitionItem(AutoCompleteArray.RangeQuestion.QuestionSnippet);
-					rangeSnippet.additionalTextEdits = [
-						//TextEdits.insertInMethods(this.document, AutoCompleteArray.RangeQuestion.Methods),
-						TextEdits.insertInConstants(this.document, AutoCompleteArray.RangeQuestion.Constant)
-					];
-					snippets.push(rangeSnippet);
+					if (this.tag.Name == "Survey")
+					{
+						// добавляем snippet для ранжирования
+						let rangeSnippet = snippetToCompletitionItem(AutoCompleteArray.RangeQuestion.QuestionSnippet);
+						rangeSnippet.additionalTextEdits = [
+							//TextEdits.insertInMethods(this.document, AutoCompleteArray.RangeQuestion.Methods),
+							TextEdits.insertInConstants(this.document, AutoCompleteArray.RangeQuestion.Constant)
+						];
+						snippets.push(rangeSnippet);
+
+						// сниппет для Cognito
+						let cognitoBlock = snippetToCompletitionItem(AutoCompleteArray.CognitoBlock);
+						snippets.push(cognitoBlock);
+					}
 					return snippets;
 				}
 
