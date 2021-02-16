@@ -2978,7 +2978,7 @@ export const XMLFeatures = [
 	{
 		"prefix": "_audio",
 		"body": [
-			"<Ui Extend=\"MediaPlayer\" Type=\"Audio\" Src='@ContentUrl/$1/}/$1.mp3;@ContentUrl/$1/}/$1.ogg' PlayAuto=\"1\" PlayRedirect=\"1\" PauseEnable=\"0\" SeekEnable=\"1\"/>"
+			"<Ui Extend=\"MediaPlayer\" Type=\"Audio\" Src='@ContentUrl/$1/}/$1.mp3' PlayAuto=\"1\" PlayRedirect=\"1\" PauseEnable=\"0\" SeekEnable=\"1\"/>"
 		],
 		"description": "QuestionUi: MediaPlayer Audio"
 	},
