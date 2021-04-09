@@ -267,7 +267,7 @@ export async function createGeoPage(groupBy: string[], questionIds: GeoClusters,
 	res += `
 	<Redirect Status="19"><![CDATA[
 		string city = AnswerID("${questionIds.City}");
-		if (city == "${resetId}") return true;
+		if (city == "${resetId}") return true; /*** выше этой строчки не должно быть ничего кроме получения city */
 		/*
 		string district = GetListItemVar("${GeoConstants.ListNames.City}",city,0); // ФО
 		string strata = GetListItemVar("${GeoConstants.ListNames.City}",city,1); // Страта
