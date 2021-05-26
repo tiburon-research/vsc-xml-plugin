@@ -7,7 +7,8 @@
   - добавлен `Tech="true"` в генерацию ротации,
   - `Cols` и `MinCols` в шаблон ContentOnly,
   - `InteriviewUID`: вызов через InterviewPars и через `$`,
-  - значения `More` и `Less` удалены из Quota.Item.Operator.
+  - значения `More` и `Less` удалены из Quota.Item.Operator,
+  - добавлен шаблон `_openSelected`.
 
 * Добавлен текстовый шаблон `_pageHint`, подставляющий `[div class="question-hint"][/div]`.
 * Для открытых вопросов (Memo и Text) теперь добавляется тэг `<CodingEntity>`.

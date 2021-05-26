@@ -2885,6 +2885,13 @@ export const XMLFeatures = [
 		"description": "Открытый ответ"
 	},
 	{
+		"prefix": "_openSelected",
+		"body": [
+			"<Answer Id=\"${1:98}\" Fix=\"true\" ExportLabel=\"Другое\"><Filter>return AnswerExists(\"${2:Q1}\", \"${1}\");</Filter><Text>[c#]AnswerValue(\"${2}\", \"${1}\");[/c#]</Text></Answer>"
+		],
+		"description": "Подстнановка на основе открытого ответа"
+	},
+	{
 		"prefix": "_stepQuestions",
 		"body": [
 			"<Ui Step=\"1\" HeaderFix=\"1\"/>"
