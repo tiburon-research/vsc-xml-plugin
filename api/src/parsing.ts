@@ -484,19 +484,26 @@ function parseTableForItems(strings: string[]): ParsedElementObject[]
 }
 
 
-/** Вычленяет вопрос из строки 
- * 
- * `force` - искать русские буквы и числовой Id
- *  */
-export function parseQuestion(text: string, force = false): ParsedQuestion
+/** Вычленяет вопрос из строки */
+export function parseQuestion(text: string): ParsedQuestion
 {
 	let res = new ParsedQuestion();
 	let strings = breakText(text);
-	let q = parseQuestionString(strings[0], true);
+	let q = parseQuestionString(strings[0], false);
 	if (!!q.Id) res.QuestionFound = true;
 	let rest = strings.slice(1);
 	res.Question = { Id: q.Id, Header: q.Text.trim() };
 	res.Answers = parseElements(rest);
+	// пытаемся найти Id без цифр
+	if (!res.QuestionFound && res.Answers.length > 0 && !res.Answers.find(x => !x.Id.match(/^\d+$/)))
+	{
+		q = parseQuestionString(strings[0], true);
+		if (!!q.Id)
+		{
+			res.QuestionFound = true;
+			res.Question = { Id: q.Id, Header: q.Text.trim() };
+		}
+	}
 	return res;
 }
 
@@ -510,26 +517,19 @@ export function breakText(text: string): string[]
 	return strings;
 }
 
-export function parseQuestionString(text: string, force = false): ParsedElementObject
+/** `force` — искать Id без цифр */
+export function parseQuestionString(text: string, force: boolean): ParsedElementObject
 {
 	let res = new ParsedElementObject("", text);
-	let regex = /^([a-zA-Z]\w+)(\.?\s*)(.*)/;
+	let regex = /^((\d+)|([A-Za-zА-Яа-я][А-Яа-я\w]+))(\.?\s*)(.*)/;
 	let indexes = {
 		id: 1,
-		text: 3
-	}
-	if (force)
-	{
-		regex = /^((\d+)|([A-Za-zА-Яа-я][А-Яа-я\w]+))(\.?\s*)(.*)/;
-		indexes = {
-			id: 1,
-			text: 5
-		}
+		text: 5
 	}
 	let match = text.match(regex);
 	if (!match) return res;
 	let id = match[indexes.id]
-	if (!!id.match(/\d/))
+	if (force && id.length < 8 || !!id.match(/\d/))
 	{
 		res.Id = id;
 		res.Text = match[indexes.text];

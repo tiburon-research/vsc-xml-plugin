@@ -363,10 +363,10 @@ async function registerCommands()
 			{
 				getCurrentTag(editor.document, selection.active).then(tag =>
 				{
-					if (!tag) return resolve();
+					if (!tag) return resolve(null);
 					let from = tag.OpenTagRange.start;
 					var cl = Parse.getCloseTagRange("<", tag.Name, ">", document, translatePosition(document, from, 1));
-					if (!cl) return resolve();
+					if (!cl) return resolve(null);
 					let to = cl.end;
 					let range = createSelection(from, to);
 					resolve(range);
@@ -400,7 +400,7 @@ async function registerCommands()
 			}).then(selections =>
 			{
 				vscode.window.activeTextEditor.selections = selections;
-				resolve();
+				resolve(null);
 			}).catch(reject);
 		});
 	});
@@ -417,7 +417,7 @@ async function registerCommands()
 				let txt = getPreviousText(document, selection.active);
 				getCurrentTag(editor.document, selection.active, txt).then(tag =>
 				{
-					if (!tag || tag.Parents.length < 1) return resolve();
+					if (!tag || tag.Parents.length < 1) return resolve(null);
 					// если это первый вложенный тег
 					let par: string;
 					let from: server.Position;
@@ -432,7 +432,7 @@ async function registerCommands()
 						from = tag.Parents[1].OpenTagRange.start;
 					}
 					let cl = Parse.getCloseTagRange("<", par, ">", document, translatePosition(document, from, 1));
-					if (!cl) return resolve();
+					if (!cl) return resolve(null);
 					let to = cl.end;
 					let range = createSelection(from, to);;
 					resolve(range);
@@ -1915,7 +1915,7 @@ async function getAnswers()
 				{
 					simple = false;
 					let data = _lastCommand.data as Parse.ParsedElementObject[];
-					let qData = Parse.parseQuestion(text, true);
+					let qData = Parse.parseQuestion(text);
 					let qId = !!qData.Question.Id ? '${1:' + qData.Question.Id + '}' : '$1';
 					let xml = new SurveyQuestionBlock(qId);
 					xml.QuestionMix = qId + 'mix';

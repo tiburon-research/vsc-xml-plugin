@@ -341,7 +341,7 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 	let res = new XMLElementCreationResult();
 
 	let elements: Parse.ParsedElementObject[];
-	let p = Parse.parseQuestion(text, true);
+	let p = Parse.parseQuestion(text);
 	if ((type == SurveyElementType.Page || type == SurveyElementType.Question) && p.QuestionFound)
 	{ // пробуем найти Question
 		questionResult = p.Question;
