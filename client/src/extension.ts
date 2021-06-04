@@ -2305,7 +2305,8 @@ async function chooseGeo()
 	{
 		return new Promise<string[]>((resolve, reject) =>
 		{
-			let items = geoData.map(x => { return x[propertyName] as string }).distinct().map(x => { return { label: x } });
+			let items = geoData.map(x => { return x[propertyName] as string }).distinct().filter(x => !!x).map(x => { return { label: x } });
+			if (items.length == 0) return resolve([]);
 			let options: CustomQuickPickOptions = {
 				canSelectMany: true,
 				ignoreFocusOut,

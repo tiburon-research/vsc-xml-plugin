@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { pathExists, KeyedCollection } from 'tib-api';
 import { Path } from './classes';
 import xlsx from 'node-xlsx';
-import { SurveyList } from 'tib-api/lib/surveyObjects';
+import { SurveyList, SurveyListItem, SurveyListItemObject } from 'tib-api/lib/surveyObjects';
 
 
 var geoFileCache: GeoFileLineData[] = [];
@@ -25,7 +25,8 @@ export const GeoConstants = {
 		City: "cityList",
 		District: "districtList",
 		Subject: "subjectList",
-		Strata: "strataList"
+		Strata: "strataList",
+		Country: "countryList"
 	},
 	QuestionNames: {
 		District: "District",
@@ -119,17 +120,37 @@ export async function readGeoFile(): Promise<GeoFileLineData[]>
 export async function createGeolists(cities: GeoFileLineData[], groupBy: string[], withPopulation: boolean): Promise<string>
 {
 	let res = '\n\n';
+	let international = cities.map(x => x.CountryId).distinct().length > 1
+
+	// Страны
+	if (international)
+	{
+		let cityList = new SurveyList(GeoConstants.ListNames.Country);
+		cityList.VarsAsTags = false;
+		let filteredCountries = KeyedCollection.FromPairs(cities.map(x => { return { Key: x.CountryId, Value: x.CountryName } }));
+		filteredCountries.OrderBy((key, value) => value).ForEach((key, value) =>
+		{
+			cityList.AddItem({ Id: key, Text: value });
+		});
+		res += cityList.ToXML() + '\n\n';
+	}
 
 	// ФО
 	if (groupBy.contains(GeoConstants.GroupBy.District))
 	{
 		let districtList = new SurveyList(GeoConstants.ListNames.District);
 		districtList.VarsAsTags = false;
-		let filteredDistricts = KeyedCollection.FromPairs(cities.map(x => { return { Key: x.DistrictId, Value: x.DistrictName } }));
-		filteredDistricts.OrderBy((key, value) => value).ForEach((key, value) =>
+		let filteredDistricts = KeyedCollection.FromPairs(cities.map(x => { return { Key: x.DistrictId, Value: { Name: x.DistrictName, Country: x.CountryId } } }));
+		filteredDistricts.OrderBy((key, value) => value.Name).ForEach((key, value) =>
 		{
-			districtList.AddItem({ Id: key, Text: value });
+			let item: SurveyListItemObject = {
+				Id: key,
+				Text: value.Name
+			}
+			if (international) item.Vars = [value.Country];
+			districtList.AddItem(item);
 		});
+		if (international) res += '\t<!--* Var[0] - Страна -->';
 		res += districtList.ToXML() + '\n\n';
 	}
 

@@ -339,7 +339,7 @@ export class SurveyConstantsItem extends SurveyItem
 
 
 /** Объект элемента листа */
-interface SurveyListItemObject
+export interface SurveyListItemObject
 {
 	Id?: string;
 	Text?: string;
