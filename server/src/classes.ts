@@ -3,9 +3,9 @@
 import * as server from 'vscode-languageserver';
 import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordRangeAtPosition, translatePosition, applyConstants, uriFromName, KeyValuePair, SimpleTag } from 'tib-api';
 import { ISurveyData, TibAttribute, TextEdits } from 'tib-api/lib/surveyData';
-import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames, PreDefinedConstants, LargeFileLineCount } from 'tib-api/lib/constants';
+import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames, PreDefinedConstants } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
-import { logError } from './server';
+import { logError, _Settings } from './server';
 
 
 /** Возвращает все автозавершения для текущего места */
@@ -162,7 +162,7 @@ export class DocumentBuffer
 
 	public isLarge()
 	{
-		return this.document.lineCount > LargeFileLineCount;
+		return this.document.lineCount > _Settings.Item("largeFileLineCount");
 	}
 
 	private _uri: string

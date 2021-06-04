@@ -16,7 +16,7 @@ import { SurveyData, TibMethods, SurveyNodes, getDocumentMethods, getDocumentNod
 
 
 var connection = server.createConnection();
-var _Settings = new KeyedCollection<any>();
+export var _Settings = new KeyedCollection<any>();
 var documents = new ServerDocumentStore();
 
 var TibAutoCompleteList = new KeyedCollection<TibAutoCompleteItem[]>();

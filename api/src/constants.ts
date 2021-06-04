@@ -189,6 +189,3 @@ export const RequestNames = {
 	LogToOutput: 'client.out',
 	LogError: 'logError'
 }
-
-
-export const LargeFileLineCount = 2500;

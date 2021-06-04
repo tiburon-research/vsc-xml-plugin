@@ -9,7 +9,7 @@ import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSetti
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
-import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames, LargeFileLineCount, QuestionTypes, OpenQuestionTagNames } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames, QuestionTypes, OpenQuestionTagNames } from 'tib-api/lib/constants'
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient';
 import * as path from 'path';
@@ -2244,7 +2244,7 @@ async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null
 	let res: CurrentTag = null;
 	if (!!changeData)
 	{
-		let isLarge = doc.lineCount > LargeFileLineCount;
+		let isLarge = doc.lineCount > _settings.Item("largeFileLineCount");
 		if (isLarge && !_largeFileMode)
 		{
 			showInfo("Файл слишком большой. В целях повышения производительности некоторые функции отключены. Подробнее: см. раздел \"Упрощённый режим\" в Readme.");

@@ -339,6 +339,11 @@
         "configuration": {
             "title": "Tiburon XML Helper",
             "properties": {
+				"tib.largeFileLineCount": {
+					"description": "Число строк файла, больше которого он считается тяжёлым",
+					"type": "number",
+					"default": "2500"
+				},
                 "tib.demoPath": {
                     "description": "Путь к скрипту демонстрационной анкеты",
                     "type": "string",
