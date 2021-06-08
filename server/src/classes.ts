@@ -600,7 +600,9 @@ export class TibAutoCompletes
 				ci.detail = "Строчный repeat";
 				ci.kind = server.CompletionItemKind.Snippet;
 				ci.insertTextFormat = server.InsertTextFormat.Snippet;
-				ci.insertText = "repeat(${1|" + extractor.getAllLists().join(',') + "|}){${2:@ID}[${3:,}]}";
+				let lists = extractor.getAllLists();
+				let listsList = lists.length > 0 ? ("|" + extractor.getAllLists().join(',') + "|") : "";
+				ci.insertText = "repeat(${1" + listsList + "}){${2:@ID}[${3:,}]}";
 				completionItems.push(ci);
 				// добавляем snippet для $place
 				ci = server.CompletionItem.create("place");
