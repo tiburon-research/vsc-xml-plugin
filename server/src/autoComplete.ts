@@ -3336,7 +3336,7 @@ export const RangeQuestion = {
 			'\t\telse // проверяем на заполненность ранжирования',
 			'\t\t{',
 			'\t\t\tbool noAnswers = true;',
-			'\t\t\tfor (int i = 0; i <= @RangeCount; i++)',
+			'\t\t\tfor (int i = 1; i <= @RangeCount; i++)',
 			'\t\t\t{',
 			'\t\t\t\tif (AnswerCount("$4", "$4_" + i.ToString()) > 0)',
 			'\t\t\t\t{',
