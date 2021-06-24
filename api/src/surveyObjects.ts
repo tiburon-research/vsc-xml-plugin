@@ -533,6 +533,7 @@ export class SurveyQuestionBlock
 		res += this.questions.ToXML() + '\n\n';
 		let question = this.setQuestion(qPrefix + "_dummy", qType);
 		question.AddAttr('Union', '$all');
+		question.AddAttr('TextWidth', '');
 		question.Header = this.Header;
 		let page = new SurveyPage(this.pageId);
 		let repeat = new SurveyElement("Repeat");
