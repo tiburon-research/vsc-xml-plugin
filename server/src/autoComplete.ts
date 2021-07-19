@@ -2880,7 +2880,7 @@ export const XMLFeatures = [
 	{
 		"prefix": "_open",
 		"body": [
-			"<Answer Id=\"${1:98}\" Type=\"Text\" Fix=\"true\"><Text>${2:Другое;Что именно?}</Text></Answer>"
+			"<Answer Id=\"${1:98}\" Type=\"Text\" Fix=\"true\" ExportLabel=\"Другое\"><Text>${2:Другое;Что именно?}</Text></Answer>"
 		],
 		"description": "Открытый ответ"
 	},
