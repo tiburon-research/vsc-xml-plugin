@@ -2971,7 +2971,7 @@ export const XMLFeatures = [
 	{
 		"prefix": "_maxDiff",
 		"body": [
-			"<Ui Extend=\"MaxDiff\" LabelMost=\"$1\" LabelLeast=\"$2\"/>"
+			"<Ui Extend=\"MaxDiff\" LabelMost=\"$1\" LabelLeast=\"$2\" Reverse=\"0\"/>"
 		],
 		"description": "QuestionUi: MaxDiff"
 	},
