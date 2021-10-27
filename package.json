@@ -1,8 +1,8 @@
 {
     "name": "tiburonscripter",
     "displayName": "Tiburon XML Helper",
-    "description": "Подсветка синтаксиса, Autocomplete и другие фишки",
-    "version": "2.14.6",
+    "description": "Плагин для работы с языком Tiburon XML script",
+    "version": "2.15.1",
     "publisher": "TiburonResearch",
     "author": {
         "name": "GuRu",
@@ -41,13 +41,6 @@
                     "xml"
                 ],
                 "configuration": "./language-configuration.json"
-            }
-        ],
-        "themes": [
-            {
-                "label": "Tiburon Dark",
-                "path": "./themes/tib-dark.json",
-                "uiTheme": "vs-dark"
             }
         ],
         "grammars": [
@@ -405,7 +398,12 @@
                     "description": "Добавлять Isolate при генерации ответов",
                     "type": "boolean",
                     "default": true
-                }
+                },
+				"tib.themeExtensionChecked": {
+					"description": "Установка плагина с темами проверена",
+					"type": "boolean",
+					"default": false
+				}
             }
         }
     },

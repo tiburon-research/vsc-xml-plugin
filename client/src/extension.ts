@@ -223,18 +223,6 @@ async function getStaticData()
 {
 	try 
 	{
-		// получаем информацию о пользователе
-		_userInfo = getUserData();
-		// сохраняем нужные значения
-		_settings = new ExtensionSettings();
-		if (!pathExists(TibPaths.Logs)) _outChannel.logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
-		_useLinq = _settings.Item("useLinq");
-
-		// получаем фунцию форматирования C#
-		let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
-		if (!!csharpfixformat) getCSFormatter(csharpfixformat).then(formatter => { CSFormatter = formatter });
-		else _outChannel.logToOutput("Расширение 'Leopotam.csharpfixformat' не установлено, C# будет форматироваться, как простой текст", _WarningLogPrefix);
-
 		// запускаем бота
 		let dataPath = TibPaths.Logs + "\\data.json";
 		if (pathExists(dataPath))
@@ -252,6 +240,34 @@ async function getStaticData()
 
 		// инициализируем errors
 		_errors = new TibErrors(_bot, _outChannel);
+
+		// получаем информацию о пользователе
+		_userInfo = getUserData();
+		// сохраняем нужные значения
+		_settings = new ExtensionSettings();
+		if (!pathExists(TibPaths.Logs)) _outChannel.logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
+		_useLinq = _settings.Item("useLinq");
+
+		// получаем фунцию форматирования C#
+		let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
+		if (!!csharpfixformat) getCSFormatter(csharpfixformat).then(formatter => { CSFormatter = formatter });
+		else _outChannel.logToOutput("Расширение 'Leopotam.csharpfixformat' не установлено, C# будет форматироваться, как простой текст", _WarningLogPrefix);
+
+		if (!_settings.Item("themeExtensionChecked"))
+		{
+			let themeExtension = vscode.extensions.all.find(x => x.id == "TiburonResearch.tiburon-xml-themes");
+			if (!themeExtension)
+			{
+				let needInstall = await yesNoHelper("Внимание! Тема для подсветки синтаксиса теперь находится в отдельном плагине (Tiburon XML themes). Установить сейчас?");
+				if (needInstall)
+				{
+					let terminal = vscode.window.createTerminal();
+					terminal.sendText("code --install-extension TiburonResearch.tiburon-xml-themes");
+					showInfo("Расширение 'Tiburon XML themes' установлено");
+				}
+			}
+			await _settings.Set("themeExtensionChecked", true);
+		}
 	} catch (er)
 	{
 		logError("Ошибка при инициализации расширения", true, er)

@@ -11,3 +11,5 @@ api
 **/tib-api/src
 dev_info.md
 stuff
+**/tsconfig.json
+**/tsconfig.tsbuildinfo
