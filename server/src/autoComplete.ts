@@ -3039,7 +3039,7 @@ export const XMLFeatures = [
 			"<CustomText2 Action=\"Append\"><![CDATA[",
 			"\t<!-- Yandex.Metrika counter -->",
 			"\t<script type=\"text/javascript\">",
-			"\tvar yaParams = {'project': '[c#]InterviewPars.ProjectID;[/c#]', 'interview': '[c#]InterviewPars.RespID;[/c#]'};",
+			"\tvar yaParams = {'project': '[c#]InterviewPars.GetInstance().ProjectID;[/c#]', 'interview': '[c#]InterviewPars.RespID;[/c#]'};",
 			"\t(function (d, w, c) {",
 			"\t\t(w[c] = w[c] || []).push(function() {",
 			"\t\t\ttry {",
@@ -3416,7 +3416,7 @@ export const CognitoBlock = {
 	<Page Id="techSOCIOVISION" CountProgress="false">
 		<Header>[center]Пожалуйста, нажмите Далее для продолжения[/center]</Header>
 		<Redirect><![CDATA[
-			string url = "https://cognitosurvey.com/?cognito_id=LOREAL_SEG2019_WOMEN_RUSSIA&callback_url=https%3A%2F%2Fcloudsurvey.survstat.ru%2F%3Fp%3D"+InterviewPars.ProjectId+"%26a%3D"+\\$age+"%26back%3D1%26i%3D@RespID";
+			string url = "https://cognitosurvey.com/?cognito_id=LOREAL_SEG2019_WOMEN_RUSSIA&callback_url=https%3A%2F%2Fcloudsurvey.survstat.ru%2F%3Fp%3D"+InterviewPars.GetInstance().ProjectId+"%26a%3D"+\\$age+"%26back%3D1%26i%3D@RespID";
 			if (AnswerValue("pre_data","back") != "1") {
 				this.Url = url;
 				return true;
