@@ -806,7 +806,7 @@ async function registerCommands()
 	});
 
 	// комментирование блока
-	registerCommand('editor.action.blockComment', () => 
+	registerCommand('tib.blockComment', () => 
 	{
 		let editor = vscode.window.activeTextEditor;
 		let selections = editor.selections;
@@ -819,7 +819,7 @@ async function registerCommands()
 	});
 
 	// комментирование строки
-	registerCommand('editor.action.commentLine', () => 
+	registerCommand('tib.commentLine', () => 
 	{
 		let editor = vscode.window.activeTextEditor;
 		let selections = editor.selections;
