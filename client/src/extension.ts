@@ -846,6 +846,14 @@ async function registerCommands()
 		return commentAllBlocks(selections);
 	});
 
+	// вторая команда для другого сочетания
+	registerCommand('tib.toggleLineComment', () => 
+	{
+		return new Promise<any>((resolve, reject) => {
+			vscode.commands.executeCommand('tib.commentLine').then(resolve, reject);
+		});
+	});
+
 	registerCommand('tib.paste', () => 
 	{
 		let prom = new Promise<void>((resolve, reject) =>
