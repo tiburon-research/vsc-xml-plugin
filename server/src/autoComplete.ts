@@ -3039,7 +3039,7 @@ export const XMLFeatures = [
 			"<CustomText2 Action=\"Append\"><![CDATA[",
 			"\t<!-- Yandex.Metrika counter -->",
 			"\t<script type=\"text/javascript\">",
-			"\tvar yaParams = {'project': '[c#]InterviewPars.GetInstance().ProjectID;[/c#]', 'interview': '[c#]InterviewPars.RespID;[/c#]'};",
+			"\tvar yaParams = {'project': '[c#]InterviewPars.ProjectID;[/c#]', 'interview': '[c#]InterviewPars.RespID;[/c#]'};",
 			"\t(function (d, w, c) {",
 			"\t\t(w[c] = w[c] || []).push(function() {",
 			"\t\t\ttry {",
