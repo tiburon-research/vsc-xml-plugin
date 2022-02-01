@@ -61,22 +61,22 @@
             }
         ],
         "commands": [
-			{
-				"command": "tib.blockComment",
-				"title": "Комментирование блока кода",
-				"category": "tib",
-				"enablement": "editorHasSelection"
-			},
-			{
-				"command": "tib.commentLine",
-				"title": "Комментирование строки",
-				"category": "tib"
-			},
-			{
-				"command": "tib.toggleLineComment",
-				"title": "Переключить комментирование строки",
-				"category": "tib"
-			},
+            {
+                "command": "tib.blockComment",
+                "title": "Комментирование блока кода",
+                "category": "tib",
+                "enablement": "editorHasSelection"
+            },
+            {
+                "command": "tib.commentLine",
+                "title": "Комментирование строки",
+                "category": "tib"
+            },
+            {
+                "command": "tib.toggleLineComment",
+                "title": "Переключить комментирование строки",
+                "category": "tib"
+            },
             {
                 "command": "tib.translateRange",
                 "title": "Транслитерация текста",
@@ -193,13 +193,13 @@
                 "title": "Преобразовать в Answers без Question",
                 "category": "tib",
                 "enablement": "editorHasSelection"
-			},
-			{
+            },
+            {
                 "command": "tib.getQuestions",
                 "title": "Получть Question из выделенного текста",
                 "category": "tib",
                 "enablement": "editorHasSelection"
-			},
+            },
             {
                 "command": "tib.getItems",
                 "title": "Преобразовать в Items",
@@ -227,17 +227,17 @@
                 "title": "Вынести ответы в List",
                 "category": "tib",
                 "enablement": "editorHasSelection"
-			},
-			{
+            },
+            {
                 "command": "tib.customScriptDocs",
                 "title": "Документация по пользовательским скриптам",
                 "category": "tib"
-			},
-			{
+            },
+            {
                 "command": "tib.runDiagnostic",
                 "title": "Запустить проверку на ошибки",
                 "category": "tib"
-			}
+            }
         ],
         "menus": {
             "editor/context": [
@@ -252,21 +252,21 @@
             ]
         },
         "keybindings": [
-			{
-				"key": "ctrl+/",
-				"command": "tib.commentLine",
-				"when": "editorLangId == tib"
-			},
-			{
-				"key": "ctrl+k ctrl+c",
-				"command": "tib.toggleLineComment",
-				"when": "editorLangId == tib"
-			},
-			{
-				"key": "shift+alt+a",
-				"command": "tib.blockComment",
-				"when": "editorLangId == tib && editorHasSelection"
-			},
+            {
+                "key": "ctrl+/",
+                "command": "tib.commentLine",
+                "when": "editorLangId == tib"
+            },
+            {
+                "key": "ctrl+k ctrl+c",
+                "command": "tib.toggleLineComment",
+                "when": "editorLangId == tib"
+            },
+            {
+                "key": "shift+alt+a",
+                "command": "tib.blockComment",
+                "when": "editorLangId == tib && editorHasSelection"
+            },
             {
                 "key": "ctrl+k ctrl+alt+t",
                 "command": "tib.translateRange",
@@ -334,11 +334,11 @@
             {
                 "key": "ctrl+alt+a",
                 "command": "tib.getAnswers"
-			},
-			{
+            },
+            {
                 "key": "ctrl+alt+q",
                 "command": "tib.getQuestions"
-			},
+            },
             {
                 "key": "ctrl+alt+i",
                 "command": "tib.getItems"
@@ -350,7 +350,7 @@
             {
                 "key": "ctrl+alt+j",
                 "command": "tib.runCustomScript"
-			}
+            }
         ],
         "configurationDefaults": {
             "[tib]": {
@@ -363,11 +363,11 @@
         "configuration": {
             "title": "Tiburon XML Helper",
             "properties": {
-				"tib.largeFileLineCount": {
-					"description": "Число строк файла, больше которого он считается тяжёлым",
-					"type": "number",
-					"default": "2500"
-				},
+                "tib.largeFileLineCount": {
+                    "description": "Число строк файла, больше которого он считается тяжёлым",
+                    "type": "number",
+                    "default": "2500"
+                },
                 "tib.demoPath": {
                     "description": "Путь к скрипту демонстрационной анкеты",
                     "type": "string",
@@ -430,11 +430,11 @@
                     "type": "boolean",
                     "default": true
                 },
-				"tib.themeExtensionChecked": {
-					"description": "Установка плагина с темами проверена",
-					"type": "boolean",
-					"default": false
-				}
+                "tib.themeExtensionChecked": {
+                    "description": "Установка плагина с темами проверена",
+                    "type": "boolean",
+                    "default": false
+                }
             }
         }
     },
@@ -465,13 +465,11 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run compile && npm run copy-signature",
-        "compile": "tsc -b",
-        "watch": "tsc -b -w",
-        "compile-api": "cd api && npm run compile && cd ../",
-        "install-vsc": "node node_modules/vscode/bin/install",
-        "postinstall": "npm run install-vsc && npm run compile-api && npm run compile && npm install -g vsce",
-		"rebuild": "cd api && rmdir /q/s lib && del tsconfig.tsbuildinfo && cd ../client && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../server && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../ && npm run compile",
-		"restore-modules": "rmdir /q/s node_modules && npm i && npm run rebuild",
+        "compile": "tsc -b api client server",
+        "watch": "tsc -b -w  api client server",
+        "postinstall": "npm run compile && npm install -g vsce",
+        "rebuild": "cd api && rmdir /q/s lib && del tsconfig.tsbuildinfo && cd ../client && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../server && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../ && npm run compile",
+        "restore-modules": "rmdir /q/s node_modules && npm i && npm run rebuild",
         "copy-signature": "copy \"client\\out\\customSurveyCode.d.ts\" \"\\\\192.168.177.11\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts\""
     }
 }
