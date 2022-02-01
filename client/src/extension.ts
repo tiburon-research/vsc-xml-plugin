@@ -846,11 +846,31 @@ async function registerCommands()
 		return commentAllBlocks(selections);
 	});
 
-	// вторая команда для другого сочетания
+	// комментирование строк отдельно
 	registerCommand('tib.toggleLineComment', () => 
 	{
-		return new Promise<any>((resolve, reject) => {
-			vscode.commands.executeCommand('tib.commentLine').then(resolve, reject);
+		return new Promise<any>((resolve, reject) =>
+		{
+			let editor = vscode.window.activeTextEditor;
+			let fullSelections: vscode.Selection[] = [];
+			let singleLineSelections: vscode.Selection[] = [];
+			// разбиваем выделение на отдельные строки
+			editor.selections.forEach(sel =>
+			{
+				let linesSelection = selectLines(editor.document, sel);
+				fullSelections.push(linesSelection);
+				for (let line = sel.start.line; line <= sel.end.line; line++)
+				{
+					let lineRange = editor.document.lineAt(line).range;
+					let lineSelection = new vscode.Selection(lineRange.start, lineRange.end);
+					singleLineSelections.push(lineSelection);
+				}
+			});
+			vscode.commands.executeCommand('tib.commentLine').then(res =>
+			{
+				editor.selections = fullSelections;
+				resolve(res);
+			}, reject);
 		});
 	});
 
@@ -1569,16 +1589,13 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 
 
 /** Последовательное комментирование выделенных фрагментов */
-function commentAllBlocks(selections: vscode.Selection[]): Promise<string[]>
+async function commentAllBlocks(selections: vscode.Selection[]): Promise<string[]>
 {
 	let editor = vscode.window.activeTextEditor;
 	editor.selections = selections; // это изменённые выделения
-	let result = selections.forEachAsync(selection =>
-	{
-		return commentBlock(editor, selection);
-	});
-	result.then(results => { multiPaste(editor, editor.selections, results) });
-	return result;
+	let results = await selections.forEachAsync(selection => commentBlock(editor, selection));
+	await multiPaste(editor, selections, results);
+	return results;
 }
 
 
