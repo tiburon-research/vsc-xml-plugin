@@ -1414,6 +1414,16 @@ export const Attributes = {
 	],
 	"Defaults": [
 		{
+			"Name": "ProductProhibitedText",
+			"Type": "String",
+			"Default": "* Продукт компании Meta, деятельность которой запрещена на территории России."
+		},
+		{
+			"Name": "CompanyProhibitedText",
+			"Type": "String",
+			"Default": "** Деятельность компании запрещена на территории России."
+		},
+		{
 			"Name": "LogoText",
 			"Type": "String"
 		},
