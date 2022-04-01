@@ -170,6 +170,7 @@ export class SurveyNode
 	public Id: string = "";
 	/** Тэг */
 	public Type: string = "";
+	/** Начало */
 	public Position: server.Position;
 	public FileName: string;
 	public IconKind: server.CompletionItemKind;

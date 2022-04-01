@@ -100,7 +100,9 @@ export const PreDefinedConstants = {
 	ContentUrl: "Путь к папке проекта на CDN-сервере",
 	RespID: "Подстановка: InterviewPars.GetInstance().RespId",
 	InterviewUID: "Подстановка: InterviewPars.GetInstance().RespId",
-	BinderID: "Подстановка: survey.BinderId"
+	BinderID: "Подстановка: survey.BinderId",
+	CompanyProhibited: "Добавляет сноску о запрещённой организации Meta",
+	ProductProhibited: "Добавляет сноску о продукте запрещённой организации Meta"
 };
 
 

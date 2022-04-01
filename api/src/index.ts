@@ -121,7 +121,8 @@ export enum ErrorCodes
 	mixIdSuggestion = "mixIdSuggestion",
 	oldCustomMethods = "oldCustomMethods",
 	exportLabelsWithCS = "csInLabels",
-	notDigitalAnswerIds = "notDigitalAnswerIds"
+	notDigitalAnswerIds = "notDigitalAnswerIds",
+	metaNotProhibited = "metaNotProhibited"
 };
 
 export interface IErrorTagData

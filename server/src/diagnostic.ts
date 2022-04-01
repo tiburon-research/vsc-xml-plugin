@@ -37,7 +37,8 @@ const _AllDiagnostics: IDiagnosticType[] =
 				{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"+Information
 				{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions },
 				{ Key: ErrorCodes.oldCustomMethods, Value: oldRangeMethods },
-				{ Key: ErrorCodes.notDigitalAnswerIds, Value: notDigitalAnswerIds}
+				{ Key: ErrorCodes.notDigitalAnswerIds, Value: notDigitalAnswerIds },
+				{ Key: ErrorCodes.metaNotProhibited, Value: metaNotProhibited}
 			]
 		)
 	},
@@ -291,7 +292,7 @@ async function dangerousConstandIds(data: IDiagnosticFunctionData): Promise<Pars
 	let constants = await Parse.getDocumentElements(document, /(<Constants[^>]*>)([\s\S]+?)<\/Constants[^>]*>/, "", preparedText);
 	const itemsGroup = 2;
 	const constTagGroup = 1;
-	const regStart = /^(ID|Text|Pure|Itera|Var|AnswerExists)/;
+	const regStart = /^(ID|Text|Pure|Itera|Var|AnswerExists|CompanyProhibited|ProductProhibited)/;
 	const regItem = /(<Item[^>]*Id=("|'))([^"'\n]+)(\2)/;
 	const itemPreGroup = 1;
 	const itemIdGroup = 3;
@@ -378,6 +379,42 @@ async function notDigitalAnswerIds(data: IDiagnosticFunctionData): Promise<Parse
 {
 	let res = await Parse.getDocumentElements(data.document, new RegExp("<((Answer)(" + RegExpPatterns.SingleAttribute + ")*\\s*)(Id=('|\")\\d*[^\\d'\"]+\\d*('|\"))"), "Id ответа лучше не делать буквенным", data.preparedText, null, 1);
 	return res.filter(x => !x.Value[0].match(/\sId=("|')\w*@\w*\1/));
+}
+
+
+/** Запрещённая Meta */
+async function metaNotProhibited(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
+{
+	let res: Parse.DocumentElement[] = [];
+	const { document, preparedText } = data;
+	const keyWords = /(Product|Company)Prohibited/;
+	const prohibitedTexts = /(Инстаграм|Instagram|Фейсбук|Facebook|(\bМета\b)|(\bMeta\b))/i;
+	const pages = preparedText.findAll(/(<Page[^>]+>)([\s\S]+?)<\/Page/);
+	const listItems = preparedText
+		.findAll(/(<List[^>]+>)([\s\S]+?)<\/List/)
+		.map(l =>
+			l.Result[2]
+				.findAll(/(<Text[^>]*>)([\s\S]+?)<\/Text/)
+				.map(t => ({ Result: t.Result, Index: l.Index + t.Index + l.Result[1].length } as SearchResult))
+		);
+	const listItemsText: SearchResult[] = [].concat(...listItems);
+	[...pages, ...listItemsText].forEach(tag =>
+	{
+		const tagContent = tag.Result[2];
+		const prohibited = tagContent?.find(prohibitedTexts);
+		if (!!prohibited?.Result && !tagContent?.match(keyWords))
+		{
+			const from = tag.Index + prohibited.Index + tag.Result[1].length;
+			res.push(new Parse.DocumentElement(document, {
+				From: from,
+				Message: "Возможно пропущена сноска про запрещённую организацию. Используйте константу @ProductProhibited или @CompanyProhibited",
+				To: from + prohibited.Result[0].length,
+				Value: prohibited.Result
+			}));
+		}
+	});
+	
+	return res;
 }
 
 
