@@ -2,7 +2,7 @@
     "name": "tiburonscripter",
     "displayName": "Tiburon XML Helper",
     "description": "Плагин для работы с языком Tiburon XML script",
-    "version": "2.15.14",
+    "version": "2.15.15",
     "publisher": "TiburonResearch",
     "author": {
         "name": "GuRu",
@@ -273,83 +273,103 @@
                 "args": {
                     "range": null,
                     "lit": true
-                }
+                },
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+g",
-                "command": "tib.ChooseGeo"
+                "command": "tib.ChooseGeo",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+t",
-                "command": "tib.insertTag"
+                "command": "tib.insertTag",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+c",
-                "command": "tib.cdata"
+                "command": "tib.cdata",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+shift+alt+c",
-                "command": "tib.cdataInner"
+                "command": "tib.cdataInner",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+b",
-                "command": "tib.surveyBlock"
+                "command": "tib.surveyBlock",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+shift+v",
-                "command": "tib.paste"
+                "command": "tib.paste",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+d",
-                "command": "tib.demo"
+                "command": "tib.demo",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+shift+n",
-                "command": "tib.template"
+                "command": "tib.template",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+p",
-                "command": "tib.selectTag.closest"
+                "command": "tib.selectTag.closest",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+k ctrl+alt+p",
-                "command": "tib.selectTag.inner"
+                "command": "tib.selectTag.inner",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+shift+p",
-                "command": "tib.selectTag.global"
+                "command": "tib.selectTag.global",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+l",
-                "command": "tib.linqToggle"
+                "command": "tib.linqToggle",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+shift+d",
-                "command": "tib.debugTestCommand"
+                "command": "tib.debugTestCommand",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+shift+alt+a",
-                "command": "tib.getAnswersOnly"
+                "command": "tib.getAnswersOnly",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+a",
-                "command": "tib.getAnswers"
+                "command": "tib.getAnswers",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+q",
-                "command": "tib.getQuestions"
+                "command": "tib.getQuestions",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+i",
-                "command": "tib.getItems"
+                "command": "tib.getItems",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+r",
-                "command": "tib.rotationTemplate"
+                "command": "tib.rotationTemplate",
+                "when": "editorLangId == tib"
             },
             {
                 "key": "ctrl+alt+j",
-                "command": "tib.runCustomScript"
+                "command": "tib.runCustomScript",
+                "when": "editorLangId == tib"
             }
         ],
         "configurationDefaults": {
