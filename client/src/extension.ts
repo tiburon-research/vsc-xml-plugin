@@ -991,6 +991,7 @@ async function registerCommands()
 
 			let tibXMLFiles = fs.readdirSync(templatePathFolder).filter(x =>
 			{
+				if (!x.endsWith('.xml')) return false;
 				let state = fs.statSync(templatePathFolder + x);
 				return !state.isDirectory();
 			})
