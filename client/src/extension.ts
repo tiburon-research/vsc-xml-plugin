@@ -306,6 +306,25 @@ async function registerCommands()
 
 
 	// география
+	registerCommand('tib.ChooseGeoOld', () =>
+	{
+		return new Promise<void>((resolve, reject) =>
+		{
+			chooseGeo(true).then(geoXML =>
+			{
+				_inProcess = true;
+				Formatting.format(geoXML, Language.XML, _settings, "\t", 1).then(formatted =>
+				{
+					vscode.window.activeTextEditor.edit(builder =>
+					{
+						builder.insert(vscode.window.activeTextEditor.selection.active, formatted);
+						_inProcess = false;
+						resolve();
+					})
+				});
+			}).catch(er => { logError("Ошибка получения географии", true, er) });
+		});
+	});
 	registerCommand('tib.ChooseGeo', () =>
 	{
 		return new Promise<void>((resolve, reject) =>
@@ -2324,7 +2343,7 @@ async function registerCommand(name: string, command: (...args) => Promise<any>,
 
 
 
-async function chooseGeo()
+async function chooseGeo(oldVariant = false)
 {
 	let geoData = await readGeoFile();
 	let step = 1;
@@ -2379,6 +2398,7 @@ async function chooseGeo()
 		geoData = geoData.filter(x => x.CityPopulation >= minPopulation);
 	}
 
+	let groupBy: string[] = [];
 	// спрашиваем разбивку
 	let grouping = [{ label: GeoConstants.GroupBy.District }, { label: GeoConstants.GroupBy.Subject }];
 	let qpOptions: CustomQuickPickOptions = {
@@ -2386,16 +2406,16 @@ async function chooseGeo()
 		ignoreFocusOut,
 		totalSteps,
 		step: ++step,
-		title: 'Группировать по:',
+		title: oldVariant ? 'Группировать по:' : 'Дополнительные листы:',
 		items: grouping,
 		selectedItems: [grouping[0]]
 	}
 	let q = new CustomQuickPick(qpOptions);
-	let groupBy = await q.execute();
+	groupBy = await q.execute();
 
 	// спрашиваем QuestionIds
 	let qIds: GeoClusters = GeoConstants.QuestionNames;
-	totalSteps += groupBy.length;
+	if (oldVariant) totalSteps += groupBy.length;
 
 	async function getNextQuestionId(questionName: string, placeholder: string, title: string): Promise<void>
 	{
@@ -2410,14 +2430,17 @@ async function chooseGeo()
 		qIds[questionName] = await ib.execute();
 	}
 
-	if (groupBy.contains(GeoConstants.GroupBy.District)) await getNextQuestionId("District", GeoConstants.QuestionNames.District, GeoConstants.GroupBy.District);
-	if (groupBy.contains(GeoConstants.GroupBy.Subject)) await getNextQuestionId("Subject", GeoConstants.QuestionNames.Subject, GeoConstants.GroupBy.Subject);
+	if (oldVariant)
+	{
+		if (groupBy.contains(GeoConstants.GroupBy.District)) await getNextQuestionId("District", GeoConstants.QuestionNames.District, GeoConstants.GroupBy.District);
+		if (groupBy.contains(GeoConstants.GroupBy.Subject)) await getNextQuestionId("Subject", GeoConstants.QuestionNames.Subject, GeoConstants.GroupBy.Subject);
+	}
 	await getNextQuestionId("City", GeoConstants.QuestionNames.City, "Город");
 
 
 	// генерация XML
 	let lists = await createGeolists(geoData, groupBy, byPop);
-	let page = await createGeoPage(groupBy, qIds, byPop);
+	let page = await createGeoPage(oldVariant ? groupBy : [], qIds, byPop, !oldVariant);
 	return lists + page;
 }
 

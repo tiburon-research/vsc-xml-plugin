@@ -117,7 +117,7 @@ export async function readGeoFile(): Promise<GeoFileLineData[]>
 
 
 /** Создаёт все нужные списки для географии */
-export async function createGeolists(cities: GeoFileLineData[], groupBy: string[], withPopulation: boolean): Promise<string>
+export async function createGeolists(cities: GeoFileLineData[], lists: string[], withPopulation: boolean): Promise<string>
 {
 	let res = '\n\n';
 	let international = cities.map(x => x.CountryId).distinct().length > 1
@@ -136,7 +136,7 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 	}
 
 	// ФО
-	if (groupBy.contains(GeoConstants.GroupBy.District))
+	if (lists.contains(GeoConstants.GroupBy.District))
 	{
 		let districtList = new SurveyList(GeoConstants.ListNames.District);
 		districtList.VarsAsTags = false;
@@ -155,7 +155,7 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 	}
 
 	// Области
-	if (groupBy.contains(GeoConstants.GroupBy.Subject))
+	if (lists.contains(GeoConstants.GroupBy.Subject))
 	{
 		let subjectList = new SurveyList(GeoConstants.ListNames.Subject);
 		subjectList.VarsAsTags = false;
@@ -203,7 +203,7 @@ export async function createGeolists(cities: GeoFileLineData[], groupBy: string[
 }
 
 
-export async function createGeoPage(groupBy: string[], questionIds: GeoClusters, withPopulation: boolean): Promise<string>
+export async function createGeoPage(groupBy: string[], questionIds: GeoClusters, withPopulation: boolean, asComboBox: boolean): Promise<string>
 {
 	let pageName = "Geo";
 	let res = `<Page Id="${pageName}">\n`;
@@ -276,11 +276,11 @@ export async function createGeoPage(groupBy: string[], questionIds: GeoClusters,
 	// Город
 	res += `
 	<Question Id="${questionIds.City}" Type="RadioButton">${cityQuestionFilter}
-		<Header>В каком городе Вы проживаете?</Header>
+		<Header>В каком городе Вы проживаете?</Header>${asComboBox ? '\n<Ui Extend="ComboBox" Search="1" Label="Выберите из списка"/>' : ''}
 		<Repeat List="${GeoConstants.ListNames.City}">
 			<Answer Id="@ID"><Text>@Text</Text>${cityAnswerFilter}</Answer>
 		</Repeat>
-		<Answer Id="${resetId}"><Text>Другой</Text></Answer>
+		<Answer Id="${resetId}" Reset="true"><Text>${asComboBox ? "Моего города нет в списке" : "Другой"}</Text></Answer>
 	</Question>
 	`;
 
