@@ -195,18 +195,18 @@ connection.onDocumentHighlight(data =>
 })
 
 
-connection.onDefinition(data =>
+connection.onDefinition(async data =>
 {
 	let document = documents.get(data.textDocument.uri);
 	if (!document)
 	{
 		logError("Данные о документе отсутствуют на сервере", false);
-		return [];
+		return null;
 	}
 	if (!data.position)
 	{
 		logError("Нет данных о положении курсора", false);
-		return [];
+		return null;
 	}
 	let tag = getServerTag({
 		document,
@@ -214,7 +214,8 @@ connection.onDefinition(data =>
 		force: false
 	});
 	sendTagToClient(tag);
-	return getDefinition(tag, document, data.position, _SurveyData);
+	let res = getDefinition(tag, document, data.position, _SurveyData);
+	return [res];
 })
 
 // это событие дёргаем руками, чтобы передавать все нужные данные

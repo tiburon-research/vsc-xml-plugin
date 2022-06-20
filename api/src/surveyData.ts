@@ -7,6 +7,7 @@
 import * as server from 'vscode-languageserver';
 import * as Encoding from './encoding'
 import { KeyedCollection, pathExists, uriFromName } from './customs';
+import { CurrentTag, SimpleTag } from '.';
 
 
 export interface ISurveyData
@@ -78,6 +79,11 @@ export class TibMethod
 	public GetLocation(): server.Location
 	{
 		return server.Location.create(this.Uri, this.Location)
+	}
+
+	public GetLocationLink(): server.LocationLink
+	{
+		return server.LocationLink.create(this.Uri, this.Location, this.Location);
 	}
 
 	ToCompletionItem()
@@ -157,13 +163,15 @@ export class TibMethods extends KeyedCollection<TibMethod>
 /** Информация об XML узле */
 export class SurveyNode
 {
-	constructor(type: string, id: string, pos: server.Position, fileName: string)
+	constructor(type: string, id: string, pos: server.Position, document: server.TextDocument)
 	{
+		this._document = document;
+		this._safeText = CurrentTag.PrepareXML(document.getText());
 		this.Id = id;
 		this.Type = type;
 		this.Position = pos;
-		this.FileName = fileName;
-		this.Uri = fileName;
+		this.FileName = document.uri;
+		this.Uri = document.uri;
 		this.IconKind = this.GetKind(type);
 	}
 
@@ -178,11 +186,28 @@ export class SurveyNode
 	public Content?: string;
 
 	private Uri: string;
+	private _document: server.TextDocument;
+	private _safeText: string;
 
 	/** Location начала тега */
 	GetLocation(): server.Location
 	{
 		return server.Location.create(this.Uri, server.Range.create(this.Position, this.Position));
+	}
+
+	GetLocationLink(): server.LocationLink
+	{
+		let startPosition = this.Position;
+		let endPosition = startPosition;
+		let fromIndex = this._document.offsetAt(startPosition);
+		let lastIndex = this._safeText.indexOf("</" + this.Type, fromIndex);
+		if (lastIndex > -1)
+		{
+			lastIndex = this._safeText.indexOf(">" + this.Type, lastIndex);
+			if (lastIndex > -1) endPosition = this._document.positionAt(lastIndex);
+		}
+		const range = server.Range.create(startPosition, endPosition);
+		return server.LocationLink.create(this.Uri, range, range);
 	}
 
 	/** Чтобы иконки отличались */
@@ -385,16 +410,16 @@ export async function getDocumentNodeIds(document: server.TextDocument, NodeStor
 	res.forEach(element => 
 	{
 		let pos = document.positionAt(txt.indexOf(element[0]));
-		let item = new SurveyNode(element[1], element[idIndex], pos, document.uri);
+		let item = new SurveyNode(element[1], element[idIndex], pos, document);
 		nodes.Add(item);
 	});
 	// дополнительно
-	nodes.Add(new SurveyNode("Page", "pre_data", null, document.uri));
-	nodes.Add(new SurveyNode("Question", "pre_data", null, document.uri));
-	nodes.Add(new SurveyNode("Question", "pre_sex", null, document.uri));
-	nodes.Add(new SurveyNode("Question", "pre_age", null, document.uri));
-	nodes.Add(new SurveyNode("Page", "debug", null, document.uri));
-	nodes.Add(new SurveyNode("Question", "debug", null, document.uri));
+	nodes.Add(new SurveyNode("Page", "pre_data", null, document));
+	nodes.Add(new SurveyNode("Question", "pre_data", null, document));
+	nodes.Add(new SurveyNode("Question", "pre_sex", null, document));
+	nodes.Add(new SurveyNode("Question", "pre_age", null, document));
+	nodes.Add(new SurveyNode("Page", "debug", null, document));
+	nodes.Add(new SurveyNode("Question", "debug", null, document));
 	return nodes;
 }
 
@@ -438,7 +463,7 @@ export async function getConstants(document: server.TextDocument): Promise<Keyed
 				items.forEach(item =>
 				{
 					let position = document.positionAt(constTagStart + item.Index);
-					let constant = new SurveyNode("ConstantItem", item.Result[2], position, document.uri);
+					let constant = new SurveyNode("ConstantItem", item.Result[2], position, document);
 					let value = item.Result[0].match(/(<Value>)([\s\S]*)<\/Value>/);
 					if (!value) value = item.Result[0].match(/Value=('|")(.+)(\1)/);
 					if (!!value) constant.Content = value[2];

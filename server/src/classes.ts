@@ -1083,9 +1083,9 @@ export class TibDocumentHighLights
 
 
 /** Переход к определению */
-export function getDefinition(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData): server.Location
+export function getDefinition(tag: CurrentTag, document: server.TextDocument, position: server.Position, surveyData: ISurveyData): server.LocationLink
 {
-	let res: server.Location;
+	let res: server.LocationLink;
 
 	try
 	{
@@ -1100,12 +1100,12 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 		if (startsAsConstant)
 		{// для начала считаем это константой
 			let constant = surveyData.ConstantItems.Find((key, value) => key == word);
-			if (!!constant) return constant.Value.GetLocation();
+			if (!!constant) return constant.Value.GetLocationLink();
 		}
 
 		if (tag.GetLaguage() == Language.CSharp && !tag.InCSString()) // C#
 		{
-			if (surveyData.Methods.ContainsKey(word)) res = surveyData.Methods.Item(word).GetLocation();
+			if (surveyData.Methods.ContainsKey(word)) res = surveyData.Methods.Item(word).GetLocationLink();
 		}
 		else // XML узлы
 		{
@@ -1118,7 +1118,8 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 				{
 					fileName = applyConstants(fileName);
 					let nullPosition = server.Position.create(0, 0);
-					res = server.Location.create(uriFromName(fileName), server.Range.create(nullPosition, nullPosition));
+					let range = server.Range.create(nullPosition, nullPosition);
+					res = server.LocationLink.create(uriFromName(fileName), range, range);
 				}
 			}
 
@@ -1137,7 +1138,7 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 				let item = surveyData.CurrentNodes.GetItem(word, element);
 				if (!!item)
 				{
-					res = item.GetLocation();
+					res = item.GetLocationLink();
 					return;
 				}
 			});
