@@ -115,12 +115,12 @@ export class DocumentBuffer
 		this.createDocument(data.version, data.content);
 	}
 
-	public update(version: number, contentChanges: server.TextDocumentContentChangeEvent[]): server.TextDocument
+	/* public update(version: number, contentChanges: server.TextDocumentContentChangeEvent[]): server.TextDocument
 	{
 		let content = this.applyChangesToContent(contentChanges);
 		this.createDocument(version, content);
 		return this.document;
-	}
+	} */
 
 
 	public setDocument(document: server.TextDocument): void
@@ -129,7 +129,7 @@ export class DocumentBuffer
 	}
 
 
-	private applyChangesToContent(contentChanges: server.TextDocumentContentChangeEvent[]): string
+	/* private applyChangesToContent(contentChanges: server.TextDocumentContentChangeEvent[]): string
 	{
 		let res = this.document.getText();
 		try
@@ -147,7 +147,7 @@ export class DocumentBuffer
 			logError('Ошибка применения изменений к документу', true, error);
 		}
 		return res;
-	}
+	} */
 
 	private createDocument(version: number, content: string)
 	{
@@ -195,12 +195,12 @@ export class ServerDocumentStore
 	}
 
 	/** Обновляет документ в коллекции на основе `contentChanges` */
-	public update(uri: string, version: number, contentChanges: server.TextDocumentContentChangeEvent[]): server.TextDocument
+	/* public update(uri: string, version: number, contentChanges: server.TextDocumentContentChangeEvent[]): server.TextDocument
 	{
 		let doc = this._docs.Item(uri);
 		doc.update(version, contentChanges);
 		return doc.document;
-	}
+	} */
 
 	/** Удаляет документ из колекции */
 	public remove(uri: string): void
@@ -235,7 +235,7 @@ class ElementExtractor
 		try
 		{
 			let res = new KeyedCollection<string[]>();
-			let match = input.matchAll(/{{(\w+)}}/);
+			let match = input.matchAllGroups(/{{(\w+)}}/);
 			if (!match || match.length == 0) return input;
 			let parent = this._ElementFunctions;
 			match.forEach(element =>
@@ -1043,7 +1043,7 @@ export class TibDocumentHighLights
 
 			if (!!reg[1])
 			{
-				let allBlocks = prevText.matchAll(/<!--#block.*-->/);
+				let allBlocks = prevText.matchAllGroups(/<!--#block.*-->/);
 				if (!allBlocks || allBlocks.length == 0) return res;
 
 				let match = allBlocks.last();

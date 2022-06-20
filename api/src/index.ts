@@ -335,7 +335,7 @@ declare global
 		 *  
 		 * Нельзя использовать флаг `g`!
 		*/
-		matchAll(search: RegExp): RegExpMatchArray[];
+		matchAllGroups(search: RegExp): RegExpMatchArray[];
 		/** Замена, начиная с `from` длиной `subsr` символов (если string, то берётся длина строки) */
 		replaceRange(from: number, substr: string | number, newValue: string): string;
 		/** Заменяет все Key (отсортированные) на Value */
@@ -427,7 +427,7 @@ String.prototype.findLast = function (search: string): SearchResult
 	return { Index: ind, Result: res };
 } */
 
-String.prototype.matchAll = function (search: RegExp): RegExpMatchArray[]
+String.prototype.matchAllGroups = function (search: RegExp): RegExpMatchArray[]
 {
 	let res: RegExpMatchArray[] = [];
 	if (typeof search == 'undefined') return res;

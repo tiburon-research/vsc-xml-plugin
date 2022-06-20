@@ -521,7 +521,7 @@ function preFormatXML(text: string): string
 	res = res.replace(/<!\[CDATA\[\s*\]\]>/, "");
 	// переносим остатки CDATA на новую строку
 	let regCS = new RegExp("(<!\\[CDATA\\[)(.*\\r?\\n[\\s\\S]*)(\\]\\]>)");
-	let resCS = res.matchAll(regCS);
+	let resCS = res.matchAllGroups(regCS);
 	resCS.forEach(element =>
 	{
 		if (!element[2].match(/\]\]>/))

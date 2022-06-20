@@ -52,7 +52,7 @@ function TransformElement(text: string, from: string, to: string): string
 function getAgeRanges(text: string): { from: string, to: string }[]
 {
 	let res = [];
-	let ageLimits = text.split('\n').map(x => x.trim().matchAll(/\d+/)).filter(x => x.length > 0);
+	let ageLimits = text.split('\n').map(x => x.trim().matchAllGroups(/\d+/)).filter(x => x.length > 0);
 	for (let i = 0; i < ageLimits.length; i++)
 	{
 		let from: string;

@@ -11,7 +11,7 @@ import * as fs from 'fs';
 import * as debug from './debug'
 import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames, QuestionTypes, OpenQuestionTagNames } from 'tib-api/lib/constants'
 import * as TibDocumentEdits from './documentEdits'
-import * as client from 'vscode-languageclient';
+import * as client from 'vscode-languageclient/node';
 import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors, showInfo, showError } from './errors';
@@ -28,9 +28,31 @@ export { CSFormatter, _settings as Settings };
 //#region
 
 
+class OnReady {
+    constructor(private _resolve: Function, private _reject: Function) {
+        this._resolve = _resolve;
+        this._reject = _reject;
+    }
+    resolve = this._resolve
+	reject = this._reject;
+}
+
 var _client: client.LanguageClient;
 
 var _clientIsReady = false;
+var _clientOnReady = new Promise<void>((resolve, reject) => {
+	_clientWaiter = new OnReady(() =>
+	{
+		_clientIsReady = true;
+		resolve();
+	}, err =>
+	{
+		_clientIsReady = false;
+		logError("Ошибка при подключении к серверной части расширения", true, err);
+		reject();
+	});
+});
+var _clientWaiter: OnReady;
 
 /** объект для управления ботом */
 var _bot: TelegramBot;
@@ -140,7 +162,7 @@ export function activate(context: vscode.ExtensionContext)
 		let changes: ContextChange[];
 		try
 		{
-			changes = getContextChanges(event.document, editor.selections, event.contentChanges, true);
+			changes = getContextChanges(event.document, editor.selections as vscode.Selection[], event.contentChanges, true);
 		} catch (error)
 		{
 			logError("Ошибка в getContextChanges", false, error)
@@ -392,7 +414,8 @@ async function registerCommands()
 	{
 		let editor = vscode.window.activeTextEditor;
 		let document = createServerDocument(editor.document);
-		let prom = editor.selections.forEachAsync(selection =>
+		var selections = editor.selections as Array<vscode.Selection>;
+		let prom = selections.forEachAsync(selection =>
 		{
 			return new Promise<vscode.Selection>((resolve) =>
 			{
@@ -419,7 +442,8 @@ async function registerCommands()
 		let document = vscode.window.activeTextEditor.document;
 		return new Promise<vscode.Selection>((resolve, reject) =>
 		{
-			vscode.window.activeTextEditor.selections.forEachAsync(selection =>
+			var selections = vscode.window.activeTextEditor.selections as Array<vscode.Selection>;
+			selections.forEachAsync(selection =>
 			{
 				return new Promise<vscode.Selection>((resl, rej) =>
 				{
@@ -445,7 +469,8 @@ async function registerCommands()
 	{
 		let editor = vscode.window.activeTextEditor;
 		let document = createServerDocument(editor.document);
-		let prom = editor.selections.forEachAsync(selection =>
+		var selections = editor.selections as Array<vscode.Selection>;
+		let prom = selections.forEachAsync(selection =>
 		{
 			return new Promise<vscode.Selection>((resolve) =>
 			{
@@ -523,7 +548,8 @@ async function registerCommands()
 			try
 			{
 				let doc = vscode.window.activeTextEditor.document;
-				vscode.window.activeTextEditor.selections.forEachAsync(selection =>
+				var selections = vscode.window.activeTextEditor.selections as Array<vscode.Selection>;
+				selections.forEachAsync(selection =>
 				{
 					return new Promise<vscode.Selection>((resl, rej) =>
 					{
@@ -657,7 +683,7 @@ async function registerCommands()
 					let res = TibDocumentEdits.AnswersToItems(text);
 					results.push(res);
 				});
-				multiPaste(editor, editor.selections, results).then(() => { resolve(); });
+				multiPaste(editor, editor.selections as vscode.Selection[], results).then(() => { resolve(); });
 			}
 			catch (error)
 			{
@@ -681,7 +707,7 @@ async function registerCommands()
 					let res = TibDocumentEdits.ItemsToAnswers(text);
 					results.push(res);
 				});
-				multiPaste(editor, editor.selections, results).then(() => { resolve(); });
+				multiPaste(editor, editor.selections as vscode.Selection[], results).then(() => { resolve(); });
 			}
 			catch (error)
 			{
@@ -830,11 +856,11 @@ async function registerCommands()
 		let editor = vscode.window.activeTextEditor;
 		let selections = editor.selections;
 		// отсортированные от начала к концу выделения
-		if (selections.length > 1) selections = selections.sort(function (a, b)
+		if (selections.length > 1) selections = (selections as vscode.Selection[]).sort(function (a, b)
 		{
 			return editor.document.offsetAt(b.active) - editor.document.offsetAt(a.active);
 		});
-		return commentAllBlocks(selections);
+		return commentAllBlocks(selections as vscode.Selection[]);
 	});
 
 	// комментирование строки
@@ -846,7 +872,7 @@ async function registerCommands()
 		if (selections.length > 1)
 		{
 			// отсортированные от начала к концу выделения
-			selections = selections.sort(function (a, b)
+			selections = (selections as vscode.Selection[]).sort(function (a, b)
 			{
 				return editor.document.offsetAt(b.active) - editor.document.offsetAt(a.active);
 			});
@@ -862,7 +888,7 @@ async function registerCommands()
 		});
 		// для каждого выделения
 		//InProcess = true;
-		return commentAllBlocks(selections);
+		return commentAllBlocks(selections as vscode.Selection[]);
 	});
 
 	// комментирование строк отдельно
@@ -1670,7 +1696,7 @@ async function multiPaste(editor: vscode.TextEditor, selections: vscode.Selectio
 async function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: boolean = false): Promise<void>
 {
 	if (separate) lines = lines.map(s => { return s.replace(/\t/g, ",") });
-	await multiPaste(editor, editor.selections.sort((a, b) => { let ld = a.start.line - b.start.line; return ld == 0 ? a.start.character - b.start.character : ld; }), lines);
+	await multiPaste(editor, (editor.selections as vscode.Selection[]).sort((a, b) => { let ld = a.start.line - b.start.line; return ld == 0 ? a.start.character - b.start.character : ld; }), lines);
 	// ставим курсор в конец
 	editor.selections = editor.selections.map(sel => { return new vscode.Selection(sel.end, sel.end) });
 }
@@ -2035,8 +2061,7 @@ async function createClientConnection(context: vscode.ExtensionContext)
 			clientOptions
 		);
 
-		_client.start();
-		_client.onReady().then(() =>
+		_client.start().then(() =>
 		{
 
 			_client.onNotification(RequestNames.LogToOutput, data =>
@@ -2080,12 +2105,11 @@ async function createClientConnection(context: vscode.ExtensionContext)
 
 			sendNotification<Object>(RequestNames.UpdateExtensionSettings, _settings.ToSimpleObject(), true);
 
-			_clientIsReady = true;
-
+			_clientWaiter.resolve();
 		});
 	} catch (error)
 	{
-		logError("Ошибка при подключении к серверной части расширения", true, error);
+		_clientWaiter.reject(error);
 	}
 }
 
@@ -2095,7 +2119,7 @@ async function createRequest<T, R>(name: string, data: T, waitForServerIsReady =
 {
 	if (!_clientIsReady)
 	{
-		if (waitForServerIsReady) await _client.onReady();
+		if (waitForServerIsReady) await _clientOnReady;
 		else return undefined;
 	}
 	return _client.sendRequest<R>(name, data);
@@ -2107,7 +2131,7 @@ async function sendNotification<T>(name: string, data: T, waitForServerIsReady =
 {
 	if (!_clientIsReady)
 	{
-		if (waitForServerIsReady) await _client.onReady();
+		if (waitForServerIsReady) await _clientOnReady;
 		else return undefined;
 	}
 	return _client.sendNotification(name, data);
@@ -2205,7 +2229,7 @@ async function registerActionCommands()
 			let editor = vscode.window.activeTextEditor;
 			let text = editor.document.getText(range);
 			let res = text;
-			let matches = text.matchAll(/_([a-zA-Z@\-\(\)]?)/);
+			let matches = text.matchAllGroups(/_([a-zA-Z@\-\(\)]?)/);
 			matches.forEach(element =>
 			{
 				let search = "_";
@@ -2469,6 +2493,10 @@ async function runCustomJS()
 		console.error(error);
 	}
 }
+
+
+
+
 
 
 //#endregion

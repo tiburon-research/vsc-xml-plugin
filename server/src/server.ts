@@ -1,6 +1,6 @@
 'use strict'
 
-import * as server from 'vscode-languageserver';
+import * as server from 'vscode-languageserver/node';
 import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData, isValidDocumentPosition, IErrorTagData, Watcher } from 'tib-api';
 import { TibAutoCompleteItem, getCompletions, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition, LanguageString } from './classes';
 import * as AutoCompleteArray from './autoComplete';

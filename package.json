@@ -19,7 +19,7 @@
     "homepage": "https://github.com/tiburon-research/vsc-xml-plugin/blob/master/README.md",
     "license": "MIT",
     "engines": {
-        "vscode": "^1.38.0",
+        "vscode": "^1.67.0",
         "node": "*"
     },
     "categories": [
@@ -87,7 +87,7 @@
                 "title": "Выбрать географию",
                 "category": "tib"
             },
-			{
+            {
                 "command": "tib.ChooseGeoOld",
                 "title": "Выбрать географию. Старый вариант",
                 "category": "tib"
@@ -476,23 +476,23 @@
         "node-xlsx": "^0.15.0",
         "short-hash": "^1.0.0",
         "tib-api": "file:api",
-        "vscode-languageclient": "^5.2.1",
-        "vscode-languageserver": "^5.2.1"
+        "vscode-languageclient": "^8.0.1",
+        "vscode-languageserver": "^8.0.1",
+        "vscode-uri": "^3.0.3"
     },
     "devDependencies": {
-        "typescript": "^3.8.0",
         "@types/dateformat": "^1.0.1",
-        "@types/jsdom": "^12.2.1",
         "@types/jquery": "^3.3.29",
+        "@types/jsdom": "^12.2.1",
         "@types/mocha": "^5.2.5",
-        "@types/node": "^12.12.11",
-        "vscode": "^1.1.33"
+        "@types/node": "^16.0.0",
+        "typescript": "^4.7.4",
+        "@types/vscode": "^1.67.0"
     },
     "scripts": {
         "vscode:prepublish": "npm run compile && npm run copy-signature",
         "compile": "tsc -b api client server",
         "watch": "tsc -b -w  api client server",
-        "postinstall": "npm run compile && npm install -g vsce",
         "rebuild": "cd api && rmdir /q/s lib && del tsconfig.tsbuildinfo && cd ../client && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../server && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../ && npm run compile",
         "restore-modules": "rmdir /q/s node_modules && npm i && npm run rebuild",
         "copy-signature": "copy \"client\\out\\customSurveyCode.d.ts\" \"\\\\192.168.177.11\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts\""

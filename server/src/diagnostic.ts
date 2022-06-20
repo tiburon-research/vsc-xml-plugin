@@ -301,7 +301,7 @@ async function dangerousConstandIds(data: IDiagnosticFunctionData): Promise<Pars
 	{
 		for (const constantTag of constants)
 		{
-			let items = constantTag.Value[itemsGroup].matchAll(regItem);
+			let items = constantTag.Value[itemsGroup].matchAllGroups(regItem);
 			if (!!items && items.length > 0)
 			{
 				for (const item of items)
@@ -474,8 +474,8 @@ function copyPastedCS(data: IDiagnosticFunctionData): Promise<Parse.DocumentElem
 		let groups = csIns.groupBy<SearchResult>(x => x.Result[1]).Filter((key, value) =>
 		{
 			if (value.length < 5) return false;
-			if (key.matchAll(/\w{5,}\(/).length > 1) return true; // проверяем количество вызываемых методов
-			if (key.matchAll(/\+|(\|\|)|(\&\&)/).length > 2) return true; // проверяем количество операторов (самых частых)
+			if (key.matchAllGroups(/\w{5,}\(/).length > 1) return true; // проверяем количество вызываемых методов
+			if (key.matchAllGroups(/\+|(\|\|)|(\&\&)/).length > 2) return true; // проверяем количество операторов (самых частых)
 			return false;
 		});
 		

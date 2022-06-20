@@ -700,7 +700,7 @@ export async function getDocumentElements(document: server.TextDocument, search:
 {
 	let res: DocumentElement[] = [];
 	let text = preparedText;
-	let matches = text.matchAll(search);
+	let matches = text.matchAllGroups(search);
 	if (!!matches && matches.length > 0)
 	{
 		matches.forEach(element =>
@@ -764,7 +764,7 @@ export function getDuplicatedElementsIds(document: server.TextDocument, prepeare
 					duplicated.forEach(d =>
 					{
 						let reg = new RegExp('(<' + key + ")(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")" + d + "('|\"))", "i");
-						let matches = prepearedText.matchAll(reg);
+						let matches = prepearedText.matchAllGroups(reg);
 						if (!!matches)
 						{
 							matches.forEach(mt =>
@@ -805,7 +805,7 @@ export function getWrongMixedElements(document: server.TextDocument, prepearedTe
 	{
 		let res: DocumentElement[] = [];
 		let mixRegex = /((<(Page|Question|Repeat)\s[^>]*)(Mix(Id)?)=[^>]*>)([\s\S]*?)<\/\3/;
-		let parents = prepearedText.matchAll(mixRegex);
+		let parents = prepearedText.matchAllGroups(mixRegex);
 
 		parents.forEach(parent =>
 		{
@@ -841,8 +841,8 @@ export function getCsInAutoSplit(document: server.TextDocument, prepearedText: s
 			let answer = content.find(/(<Answer([\s\S]+?)<Text\s*>)([\s\S]+?)<\/Text/);
 			if (!!answer.Result)
 			{
-				let matchAll = answer.Result[3].findAll(/(\[c#[^\]]*\][\s\S]+?\[\/c#\])|(\$\w+)|(@Text)/i).filter(x => !!x.Result && x.Result[0] != '$repeat');
-				let match = matchAll.length > 0 ? matchAll[0] : null;
+				let matchAllGroups = answer.Result[3].findAll(/(\[c#[^\]]*\][\s\S]+?\[\/c#\])|(\$\w+)|(@Text)/i).filter(x => !!x.Result && x.Result[0] != '$repeat');
+				let match = matchAllGroups.length > 0 ? matchAllGroups[0] : null;
 				if (!!match)
 				{
 					let From = element.Index + element.Result[1].length + answer.Index + answer.Result[1].length + match.Index;
@@ -869,7 +869,7 @@ export function getCsInAutoSplit(document: server.TextDocument, prepearedText: s
 export async function getCustomJS(text: string): Promise<string>
 {
 	let res: string = "";
-	let jsElements = text.matchAll(/<!--#JS([\s\S]*?)-->/);
+	let jsElements = text.matchAllGroups(/<!--#JS([\s\S]*?)-->/);
 	jsElements.forEach(body =>
 	{
 		if (!body[1]) return;

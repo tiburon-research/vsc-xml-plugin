@@ -335,7 +335,7 @@ export async function getDocumentMethods(document: server.TextDocument): Promise
 	let res = new TibMethods();
 	let text = document.getText();
 	text = Encoding.clearXMLComments(text);
-	let mtd = text.matchAll(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
+	let mtd = text.matchAllGroups(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
 	if (mtd.length == 0)
 	{
 		return res;
@@ -354,7 +354,7 @@ export async function getDocumentMethods(document: server.TextDocument): Promise
 	{
 		let str = element[3];
 		str = Encoding.clearCSComments(str);
-		let m = str.matchAll(reg);
+		let m = str.matchAllGroups(reg);
 		m.forEach(met => 
 		{
 			if (met[groups.FullName])
@@ -381,7 +381,7 @@ export async function getDocumentNodeIds(document: server.TextDocument, NodeStor
 	let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')");
 	let idIndex = nNames.length + 3;
 	let nodes = new SurveyNodes();
-	let res = txt.matchAll(reg);
+	let res = txt.matchAllGroups(reg);
 	res.forEach(element => 
 	{
 		let pos = document.positionAt(txt.indexOf(element[0]));
@@ -404,8 +404,8 @@ export async function getMixIds(document: server.TextDocument): Promise<string[]
 	let res: string[] = [];
 	let txt = document.getText();
 	txt = Encoding.clearXMLComments(txt);
-	let matches = txt.matchAll(/MixId=('|")((?!:)(\w+))(\1)/);
-	let matchesStore = txt.matchAll(/<Question[^>]+Store=('|")(\w+?)(\1)[^>]*>/);
+	let matches = txt.matchAllGroups(/MixId=('|")((?!:)(\w+))(\1)/);
+	let matchesStore = txt.matchAllGroups(/<Question[^>]+Store=('|")(\w+?)(\1)[^>]*>/);
 	let mixIdsStore: string[] = [];
 	matchesStore.forEach(element =>
 	{
@@ -457,7 +457,7 @@ export function getIncludePaths(text: string): string[]
 	let reg = /<Include[\s\S]*?FileName=(("[^"]+")|('[^']+'))/;
 	let txt = text;
 	txt = Encoding.clearXMLComments(txt);
-	res = txt.matchAll(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x)).map(x => uriFromName(x));
+	res = txt.matchAllGroups(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x)).map(x => uriFromName(x));
 	return res;
 }
 

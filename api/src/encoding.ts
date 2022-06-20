@@ -232,7 +232,7 @@ export function clearCSContents(text: string): string
 	// Очищаем полные теги
 	let reg = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]+?)?(<\\/\\2\\s*>)");
 
-	let resCS = res.matchAll(reg);
+	let resCS = res.matchAllGroups(reg);
 	resCS.forEach(element =>
 	{
 		let open = element[1];

@@ -4,7 +4,7 @@
 
 
 import * as fs from 'fs'
-import Uri from 'vscode-uri'
+import { URI as Uri } from 'vscode-uri'
 //import * as winattr from 'winattr'
 import * as process from 'child_process'
 

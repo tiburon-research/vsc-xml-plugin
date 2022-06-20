@@ -6,7 +6,8 @@
 		"outDir": "out",
 		"sourceMap": true,
 		"watch": true,
-		"composite": true
+		"composite": true,
+		"skipLibCheck": true
 	},
 	"include": [ "src" ],
 	"exclude": [
