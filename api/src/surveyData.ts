@@ -197,6 +197,7 @@ export class SurveyNode
 
 	GetLocationLink(): server.LocationLink
 	{
+		if (!this.Position) return null;
 		let startPosition = this.Position;
 		let endPosition = startPosition;
 		let fromIndex = this._document.offsetAt(startPosition);
