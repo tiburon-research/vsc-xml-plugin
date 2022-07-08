@@ -1,13 +1,15 @@
 'use strict'
 
 import * as server from 'vscode-languageserver/node';
-import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData, isValidDocumentPosition, IErrorTagData, Watcher } from 'tib-api';
+import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData, isValidDocumentPosition, IErrorTagData, Watcher, Encoding } from 'tib-api';
 import { TibAutoCompleteItem, getCompletions, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition, LanguageString } from './classes';
 import * as AutoCompleteArray from './autoComplete';
-import { _NodeStoreNames, _pack, RequestNames } from 'tib-api/lib/constants';
+import { _pack, RequestNames } from 'tib-api/lib/constants';
 import { getDiagnosticElements } from './diagnostic';
 import { CacheSet } from 'tib-api/lib/cache';
+import * as xmlDoc from 'xmldoc';
 import { SurveyData, TibMethods, SurveyNodes, getDocumentMethods, getDocumentNodeIds, getMixIds, getIncludePaths, getConstants, SurveyNode, ExportLabel, getExportLabels } from 'tib-api/lib/surveyData';
+import { getXmlObject } from 'tib-api/lib/parsing';
 
 
 
@@ -450,44 +452,72 @@ async function updateSurveyData(document: server.TextDocument)
 {
 	let log = new Watcher('SurveyData').CreateLogger(x => { consoleLog(x) });
 	log('start');
+
 	try
 	{
 		let docs = [document.uri];
-		let includes = getIncludePaths(document.getText());
-		let methods = new TibMethods();
-		let nodes = new SurveyNodes();
-		let constants = new KeyedCollection<SurveyNode>();
-		let mixIds: string[] = [];
-		let exportLabels: ExportLabel[] = [];
-
-		// если Include поменялись, то обновляем все
-		if (!_SurveyData.Includes || !_SurveyData.Includes.equalsTo(includes))
+		let text = document.getText();
+		let parseResult = getXmlObject(text);
+		if (parseResult.ok)
 		{
-			docs = docs.concat(includes);
-			_SurveyData.Includes = includes;
+			let currentXml = parseResult.object;
+			let includes = getIncludePaths(currentXml);
+			let methods = new TibMethods();
+			let nodes = new SurveyNodes();
+			let constants = new KeyedCollection<SurveyNode>();
+			let mixIds: string[] = [];
+			let exportLabels: ExportLabel[] = [];
+	
+			// если Include поменялись, то обновляем все
+			if (!_SurveyData.Includes || !_SurveyData.Includes.equalsTo(includes))
+			{
+				docs = docs.concat(includes);
+				_SurveyData.Includes = includes;
+			}
+			else // иначе обновляем только текущий документ
+			{
+				methods = _SurveyData.Methods.Filter((name, element) => element.FileName != document.uri);
+				nodes = _SurveyData.CurrentNodes.FilterNodes((node) => node.FileName != document.uri);
+			}
+	
+	
+			for (let i = 0; i < docs.length; i++) 
+			{
+				const isCurrent = docs[i] == document.uri;
+				// либо этот, либо надо открыть
+				let doc = isCurrent ? document : await getDocument(docs[i]);
+				if (!!doc)
+				{
+					let xml = isCurrent ? currentXml : undefined;
+					if (!isCurrent)
+					{
+						let parseResultSub = getXmlObject(doc.getText());
+						if (parseResultSub.ok)
+						{
+							xml = parseResultSub.object;
+							methods.AddRange(await getDocumentMethods(doc, xml));
+							nodes.AddRange(await getDocumentNodeIds(doc, xml));
+							mixIds = mixIds.concat(await getMixIds(doc, xml));
+							constants.AddRange(await getConstants(doc, xml));
+							exportLabels = exportLabels.concat(await getExportLabels(doc));
+						}
+					}
+				}
+			}
+			let preparedXml = CurrentTag.PrepareXML(text);
+			nodes.Add(new SurveyNode("Page", "pre_data", null, document, preparedXml));
+			nodes.Add(new SurveyNode("Question", "pre_data", null, document, preparedXml));
+			nodes.Add(new SurveyNode("Question", "pre_sex", null, document, preparedXml));
+			nodes.Add(new SurveyNode("Question", "pre_age", null, document, preparedXml));
+			nodes.Add(new SurveyNode("Page", "debug", null, document, preparedXml));
+			nodes.Add(new SurveyNode("Question", "debug", null, document, preparedXml));
+	
+			_SurveyData.Methods = methods;
+			_SurveyData.CurrentNodes = nodes;
+			_SurveyData.MixIds = mixIds;
+			_SurveyData.ConstantItems = constants;
+			_SurveyData.ExportLabels = exportLabels;	
 		}
-		else // иначе обновляем только текущий документ
-		{
-			methods = _SurveyData.Methods.Filter((name, element) => element.FileName != document.uri);
-			nodes = _SurveyData.CurrentNodes.FilterNodes((node) => node.FileName != document.uri);
-		}
-
-
-		for (let i = 0; i < docs.length; i++) 
-		{
-			// либо этот, либо надо открыть
-			let doc = docs[i] == document.uri ? document : await getDocument(docs[i]);
-			methods.AddRange(await getDocumentMethods(doc));
-			nodes.AddRange(await getDocumentNodeIds(doc, _NodeStoreNames));
-			mixIds = mixIds.concat(await getMixIds(doc));
-			constants.AddRange(await getConstants(doc));
-			exportLabels = exportLabels.concat(await getExportLabels(doc));
-		}
-		_SurveyData.Methods = methods;
-		_SurveyData.CurrentNodes = nodes;
-		_SurveyData.MixIds = mixIds;
-		_SurveyData.ConstantItems = constants;
-		_SurveyData.ExportLabels = exportLabels;
 	} catch (error)
 	{
 		logError("Ошибка при сборе сведений о документе", false, error);

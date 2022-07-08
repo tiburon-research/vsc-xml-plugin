@@ -2,7 +2,7 @@
     "name": "tiburonscripter",
     "displayName": "Tiburon XML Helper",
     "description": "Плагин для работы с языком Tiburon XML script",
-    "version": "2.16.1",
+    "version": "2.17.1",
     "publisher": "TiburonResearch",
     "author": {
         "name": "GuRu",
@@ -478,7 +478,8 @@
         "tib-api": "file:api",
         "vscode-languageclient": "^8.0.1",
         "vscode-languageserver": "^8.0.1",
-        "vscode-uri": "^3.0.3"
+        "vscode-uri": "^3.0.3",
+        "xmldoc": "^1.1.4"
     },
     "devDependencies": {
         "@types/dateformat": "^1.0.1",
@@ -486,8 +487,9 @@
         "@types/jsdom": "^12.2.1",
         "@types/mocha": "^5.2.5",
         "@types/node": "^16.0.0",
-        "typescript": "^4.7.4",
-        "@types/vscode": "^1.67.0"
+        "@types/vscode": "^1.67.0",
+        "@types/xmldoc": "^1.1.6",
+        "typescript": "^4.7.4"
     },
     "scripts": {
         "vscode:prepublish": "npm run compile && npm run copy-signature",

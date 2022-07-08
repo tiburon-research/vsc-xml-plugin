@@ -3,7 +3,7 @@
 import * as server from 'vscode-languageserver';
 import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordRangeAtPosition, translatePosition, applyConstants, uriFromName, KeyValuePair, SimpleTag } from 'tib-api';
 import { ISurveyData, TibAttribute, TextEdits } from 'tib-api/lib/surveyData';
-import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, _NodeStoreNames, PreDefinedConstants } from 'tib-api/lib/constants';
+import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, PreDefinedConstants } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
 import { logError, _Settings } from './server';
 
@@ -690,7 +690,7 @@ export class TibAutoCompletes
 						}
 						else // всё подряд
 						{
-							_NodeStoreNames.forEach(name =>
+							this.surveyData.CurrentNodes.Keys.forEach(name =>
 							{
 								completionItems = completionItems.concat(this.surveyData.CurrentNodes.CompletitionItems(name));
 							});

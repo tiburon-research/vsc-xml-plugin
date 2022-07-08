@@ -9,7 +9,7 @@ import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSetti
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
-import { _pack, RegExpPatterns, _NodeStoreNames, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames, QuestionTypes, OpenQuestionTagNames } from 'tib-api/lib/constants'
+import { _pack, RegExpPatterns, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames, QuestionTypes, OpenQuestionTagNames } from 'tib-api/lib/constants'
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient/node';
 import * as path from 'path';
@@ -28,19 +28,22 @@ export { CSFormatter, _settings as Settings };
 //#region
 
 
-class OnReady {
-    constructor(private _resolve: Function, private _reject: Function) {
-        this._resolve = _resolve;
-        this._reject = _reject;
-    }
-    resolve = this._resolve
+class OnReady
+{
+	constructor(private _resolve: Function, private _reject: Function)
+	{
+		this._resolve = _resolve;
+		this._reject = _reject;
+	}
+	resolve = this._resolve
 	reject = this._reject;
 }
 
 var _client: client.LanguageClient;
 
 var _clientIsReady = false;
-var _clientOnReady = new Promise<void>((resolve, reject) => {
+var _clientOnReady = new Promise<void>((resolve, reject) =>
+{
 	_clientWaiter = new OnReady(() =>
 	{
 		_clientIsReady = true;
@@ -198,10 +201,10 @@ export function activate(context: vscode.ExtensionContext)
 				editor
 			};
 			_inProcess = true;
-			tibEdit([insertAutoCloseTags, insertSpecialSnippets, upcaseFirstLetter, checkCodingEntity], data).then(() =>
+			tibEdit([insertAutoCloseTags, insertSpecialSnippets, upcaseFirstLetter, checkCodingEntity], data).then(anythingChanged =>
 			{
 				_inProcess = false;
-				updateDocumentOnServer();
+				if (anythingChanged) updateDocumentOnServer();
 			});
 		});
 	});
@@ -1265,31 +1268,30 @@ interface ITibEditorData
 	text: string;
 }
 
-type TibEditor = (data: ITibEditorData) => Thenable<any>[];
+type TibEditor = (data: ITibEditorData) => Thenable<boolean>;
 
 /** Выполняет все переданные функции по очереди */
-function tibEdit(funcs: TibEditor[], data: ITibEditorData): Promise<void>
+function tibEdit(funcs: TibEditor[], data: ITibEditorData): Promise<boolean>
 {
-	return new Promise<void>((resolve) =>
+	let log = new Watcher('tibEdit').CreateLogger();
+	log('start');
+	return new Promise<boolean>(async (resolve) =>
 	{
-		(function callNext(restFuncs: TibEditor[])
+		let changed = false;
+		for (let fn of funcs)
 		{
-			if (restFuncs.length > 0)
-			{
-				Promise.all(restFuncs.pop()(data)).then(() =>
-				{
-					callNext(restFuncs);
-				});
-			}
-			else return resolve();
-		})(funcs);
+			let res = await fn(data);
+			changed = changed || res;
+		}
+		log('complete');
+		resolve(changed);
 	});
 }
 
 /** автоматическое закрывание <тегов> */
-function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
+async function insertAutoCloseTags(data: ITibEditorData): Promise<boolean>
 {
-	let res: Thenable<any>[] = [];
+	let res = false;
 
 	if (!data.tag || !data.editor || !data.changes || data.changes.length == 0) return res;
 	let fullText = data.editor.document.getText();
@@ -1297,13 +1299,11 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 	// сохраняем начальное положение
 	let prevSels = data.editor.selections;
 
-	let changesCount = 0;
-
 	// проверяем только рандомный tag (который передаётся из activate), чтобы не перегружать процесс
 	// хреново но быстро
 	if (!data.tag.Body || data.tag.Body.trim().length == 0 || data.tag.GetLaguage() != Language.CSharp || data.tag.InCSString())
 	{
-		data.changes.forEach(change =>
+		for (let change of data.changes)
 		{
 			let originalPosition = change.Active.translate(0, 1);
 			if (change.Change.text == ">")
@@ -1312,43 +1312,34 @@ function insertAutoCloseTags(data: ITibEditorData): Thenable<any>[]
 				let prev = curLine.substr(0, change.Active.character + 1);
 				let after = curLine.substr(change.Active.character + 1);
 				let result = prev.match(/<(\w+)[^>\/]*>?$/);
-				if (!result) return;
-				// проверяем, не закрыт ли уже этот тег
-				let afterFull = fullText.substr(data.editor.document.offsetAt(originalPosition));
-				let tagOp = positiveMin(afterFull.indexOf("<" + result[1] + " "), afterFull.indexOf("<" + result[1] + ">"), -1);
-				let tagCl = positiveMin(afterFull.indexOf("</" + result[1] + " "), afterFull.indexOf("</" + result[1] + ">"), -1);
-
-				if ((tagCl == -1 || tagOp > -1 && tagOp < tagCl) || result[1].match(/^(Repeat)|(Condition)|(Block)$/))
+				if (!!result)
 				{
-					let closed = after.match(new RegExp("^[^<]*(<\\/)?" + safeRegexp(result[1])));
-					if (!closed)
+					// проверяем, не закрыт ли уже этот тег
+					let afterFull = fullText.substr(data.editor.document.offsetAt(originalPosition));
+					let tagOp = positiveMin(afterFull.indexOf("<" + result[1] + " "), afterFull.indexOf("<" + result[1] + ">"), -1);
+					let tagCl = positiveMin(afterFull.indexOf("</" + result[1] + " "), afterFull.indexOf("</" + result[1] + ">"), -1);
+
+					if ((tagCl == -1 || tagOp > -1 && tagOp < tagCl) || result[1].match(/^(Repeat)|(Condition)|(Block)$/))
 					{
-						changesCount++;
-						let snp = data.editor.insertSnippet(new vscode.SnippetString("</" + result[1] + ">"), originalPosition, { undoStopAfter: false, undoStopBefore: false });
-						res.push(snp);
-						snp.then(() =>
+						let closed = after.match(new RegExp("^[^<]*(<\\/)?" + safeRegexp(result[1])));
+						if (!closed)
 						{
-							// ожидаем конца всех изменений
-							if (changesCount <= 1)
-							{
-								data.editor.selections = prevSels;
-							}
-							else changesCount--;
-						});
+							res = res || await data.editor.insertSnippet(new vscode.SnippetString("</" + result[1] + ">"), originalPosition, { undoStopAfter: false, undoStopBefore: false });
+						}
 					}
 				}
 			}
-		});
+		}
+		data.editor.selections = prevSels;
 	}
 
 	return res;
 }
 
 
-function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
+async function insertSpecialSnippets(data: ITibEditorData): Promise<boolean>
 {
-	let res: Thenable<any>[] = [];
-	if (!data.tag || !data.editor || !data.changes || data.changes.length == 0) return res;
+	if (!data.tag || !data.editor || !data.changes || data.changes.length == 0) return true;
 
 	let change = data.changes[0].Change.text;
 	let positions = data.editor.selections.map(x => new vscode.Position(x.active.line, x.active.character));
@@ -1370,15 +1361,15 @@ function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
 			results.push("");
 			sels.push(nextCharRangeC);
 		});
-		res.push(multiPaste(data.editor, sels, results));
+		await multiPaste(data.editor, sels, results);
+		return true;
 	}
 
 	// закрывание скобок
 	// автозакрывание этих скобок отключено для языка tib, чтобы нормально закрывать теги
 	if (isScriptLanguage(lang) && !data.tag.InString() && change[change.length - 1] == "[")
 	{
-		let snp = data.editor.insertSnippet(new vscode.SnippetString("$0]"), data.changes.map(x => x.Selection.active.translate(0, 1)));
-		res.push(snp);
+		return await data.editor.insertSnippet(new vscode.SnippetString("$0]"), data.changes.map(x => x.Selection.active.translate(0, 1)));
 	}
 
 	// закрывание [тегов]
@@ -1395,19 +1386,17 @@ function insertSpecialSnippets(data: ITibEditorData): Thenable<any>[]
 	)
 	{
 		let str = tagT[2] ? "$0;[/c#]" : "$0[/" + tagT[1] + "]";
-		let snp = data.editor.insertSnippet(new vscode.SnippetString(str), positions);
-		res.push(snp);
+		return await data.editor.insertSnippet(new vscode.SnippetString(str), positions);
 	}
 
-	return res;
+	return false;
 }
 
 /** Делает первую букву тега заглавной */
-function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
+async function upcaseFirstLetter(data: ITibEditorData): Promise<boolean>
 {
-	let res: Thenable<any>[] = [];
 	// если хоть одна позиция такова, то нафиг
-	if (!data.editor || !data.tag || !data.changes || data.changes.length == 0 || !_settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return res;
+	if (!data.editor || !data.tag || !data.changes || data.changes.length == 0 || !_settings.Item("upcaseFirstLetter") || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return false;
 	let tagRegex = /(<\/?)(\w+)$/;
 	let nullPosition = new vscode.Position(0, 0);
 	try
@@ -1430,45 +1419,47 @@ function upcaseFirstLetter(data: ITibEditorData): Thenable<any>[]
 			replaces.push({ Range: range, Value: up });
 		});
 
-		res.push(data.editor.edit(builder =>
+		return replaces.length > 0 && await data.editor.edit(builder =>
 		{
 			replaces.forEach(element =>
 			{
 				builder.replace(element.Range, element.Value);
 			});
-		}));
+		});
 
 	} catch (error)
 	{
 		logError("Ошибка при добавлении заглавной буквы", true, error);
 	}
-	return res;
+	return false;
 }
 
 
 
 /** Добавляет CodingEntity для открытых */
-function checkCodingEntity(data: ITibEditorData): Thenable<any>[]
+async function checkCodingEntity(data: ITibEditorData): Promise<boolean>
 {
-	let res: Thenable<any>[] = [];
-	if (!data.editor || !data.tag || data.tag.OpenTagIsClosed || data.tag.Name != "Question" || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return res;
+	if (!data.editor || !data.tag || data.tag.OpenTagIsClosed || data.tag.Name != "Question" || data.tag.GetLaguage() != Language.XML || inCDATA(data.editor.document, data.editor.selection.active)) return false;
 	let fullText = data.editor.document.getText();
 	let indexOf = data.editor.document.offsetAt(data.editor.selection.active);
 	let prevText = fullText.slice(0, indexOf);
 	let curAttr = prevText.match(/\sType=(["'])(\w+)$/);
-	if (!curAttr || !OpenQuestionTagNames.contains(curAttr[2])) return res;
-	let value = '\t'.repeat(data.tag.GetIndent()) + '<CodingEntity></CodingEntity>\n';
-	let lastIndex = data.editor.document.getText().indexOf("\n", indexOf) + 1;
-	if (lastIndex < 1) return res;
-	let lastPosition = data.editor.document.positionAt(lastIndex);
-	let closedIndex = fullText.indexOf("<Question", lastIndex);
-	if (fullText.slice(lastIndex, closedIndex).contains("<CodingEntity")) return res;
-	
-	res.push(data.editor.edit(builder =>
+	if (!!curAttr && OpenQuestionTagNames.contains(curAttr[2]))
 	{
-		builder.insert(lastPosition, value);
-	}));
-	return res;
+		let value = '\t'.repeat(data.tag.GetIndent()) + '<CodingEntity></CodingEntity>\n';
+		let lastIndex = data.editor.document.getText().indexOf("\n", indexOf) + 1;
+		if (lastIndex < 1) return false;
+		let lastPosition = data.editor.document.positionAt(lastIndex);
+		let closedIndex = fullText.indexOf("<Question", lastIndex);
+		if (!fullText.slice(lastIndex, closedIndex).contains("<CodingEntity"))
+		{
+			return await data.editor.edit(builder =>
+			{
+				builder.insert(lastPosition, value);
+			});
+		}
+	}
+	return false;
 }
 
 
@@ -2310,9 +2301,6 @@ async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null
 {
 	let log = new Watcher('updateDocumentOnServer').CreateLogger();
 	log('start');
-	let editor = vscode.window.activeTextEditor;
-	if (!editor) return null;
-	let doc = editor.document;
 	/*if (!changeData)
 	{
 		let documentData = ClientServerTransforms.ToServer.Document(doc);
@@ -2329,6 +2317,9 @@ async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null
 	let res: CurrentTag = null;
 	if (!!changeData)
 	{
+		let editor = vscode.window.activeTextEditor;
+		if (!editor) return null;
+		let doc = editor.document;
 		let isLarge = doc.lineCount > _settings.Item("largeFileLineCount");
 		if (isLarge && !_largeFileMode)
 		{

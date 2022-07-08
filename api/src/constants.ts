@@ -5,9 +5,6 @@
 /** Тип сборки */
 export const _pack: ("debug" | "release") = "release";
 
-/** XML теги, которые сохраняются в CurrentNodes */
-export const _NodeStoreNames = ["Page", "Question", "Quota", "List"];
-
 export const OpenQuestionTagNames = ["Memo", "Text"];
 
 /** Snippets для разных типов Item */

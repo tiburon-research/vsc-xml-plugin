@@ -9,6 +9,7 @@ import * as charDetect from 'charset-detector'
 import * as server from 'vscode-languageserver';
 import { init as initJQuery } from './tibJQuery';
 import { Structures } from "./surveyObjects";
+import * as xmlDoc from 'xmldoc';
 
 
 
@@ -25,7 +26,7 @@ export interface FindTagResult
 export class ParsedElementObject
 {
 	/** Инициализация */
-	constructor(Id?: string, Text?: string )
+	constructor(Id?: string, Text?: string)
 	{
 		if (!!Id) this.Id = Id.replace(/\s*(\.|\)|-)\s*$/, '');
 		if (!!Text) this.Text = Text;
@@ -39,7 +40,7 @@ export class ParsedElementObject
 	{
 		return checkResetAnswer(this.Text);
 	}
-	
+
 	public IsTextAnswer(): boolean
 	{
 		return checkOpenAnswer(this.Text);
@@ -337,7 +338,8 @@ function checkResetAnswer(answerText: string): boolean
 {
 	if (!answerText || answerText.length > 50) return false;
 	let text = answerText.toLocaleLowerCase();
-	for (const pattern of RegExpPatterns.ResetAnswerText) {
+	for (const pattern of RegExpPatterns.ResetAnswerText)
+	{
 		if (text.match(pattern)) return true;
 	}
 	return false;
@@ -349,7 +351,8 @@ function checkOpenAnswer(answerText: string): boolean
 {
 	if (!answerText) return false;
 	let text = answerText.toLocaleLowerCase();
-	for (const pattern of RegExpPatterns.OpenAnswerText) {
+	for (const pattern of RegExpPatterns.OpenAnswerText)
+	{
 		if (text.match(pattern)) return true;
 	}
 	return false;
@@ -415,7 +418,7 @@ export function parseElements(strings: string[]): ParsedElementObject[]
 		}
 	}
 
-	if (!withIds) res = strings.map((s, i) => { return new ParsedElementObject('' + (i + 1), s); } );
+	if (!withIds) res = strings.map((s, i) => { return new ParsedElementObject('' + (i + 1), s); });
 
 	return res;
 }
@@ -438,7 +441,8 @@ function parseHorizontalAnswers(strings: string[]): ParsedElementObject[]
 		let l2 = strings[1].split('\t');
 		// количество должно быть одинаковым
 		if (l1.length != l2.length) return res;
-		for (let i = 0; i < l1.length; i++) {
+		for (let i = 0; i < l1.length; i++)
+		{
 			res.push(new ParsedElementObject(l1[i], l2[i]));
 		}
 	}
@@ -446,14 +450,16 @@ function parseHorizontalAnswers(strings: string[]): ParsedElementObject[]
 	{
 		if (isIds)
 		{
-			for (let i = 0; i < l1.length; i++) {
+			for (let i = 0; i < l1.length; i++)
+			{
 				res.push(new ParsedElementObject(l1[i], l1[i]));
 			}
 		}
 		else
 		{
-			for (let i = 0; i < l1.length; i++) {
-				res.push(new ParsedElementObject(''+ (i+1), l1[i]));
+			for (let i = 0; i < l1.length; i++)
+			{
+				res.push(new ParsedElementObject('' + (i + 1), l1[i]));
 			}
 		}
 	}
@@ -470,7 +476,8 @@ function parseTableForItems(strings: string[]): ParsedElementObject[]
 	if (splitted.map(x => x.length).distinct().length != 1) return res;
 	// считаем только больше одного \t
 	if (splitted[0].length < 3) return res;
-	splitted.forEach(str => {
+	splitted.forEach(str =>
+	{
 		let el = new ParsedElementObject(str[0], str.last());
 		let vars: string[] = [];
 		for (let i = 1; i < str.length - 1; i++)
@@ -831,7 +838,8 @@ export function getWrongMixedElements(document: server.TextDocument, prepearedTe
 /** Находит использование c# в AutoSplit */
 export function getCsInAutoSplit(document: server.TextDocument, prepearedText: string): Promise<DocumentElement[]>
 {
-	return new Promise<DocumentElement[]>((resolve, reject) => {
+	return new Promise<DocumentElement[]>((resolve, reject) =>
+	{
 		let res: DocumentElement[] = [];
 		let autoSplits = prepearedText.findAll(/(Type=("|')AutoSplit(\2))([\s\S]+?)<\/Question/);
 		autoSplits.forEach(element =>
@@ -922,7 +930,7 @@ export function getAnswer(jqObject): Structures.Answer
 export function findCloseBracket(text: string, openBracketIndex: number): number
 {
 	let res = -1;
-	if (!text ||openBracketIndex < 0 || openBracketIndex >= text.length) return res;
+	if (!text || openBracketIndex < 0 || openBracketIndex >= text.length) return res;
 	let bracketMatch = KeyedCollection.FromArrays(["(", "[", "{", "<"], [")", "]", "}", ">"]);
 	let openB = text[openBracketIndex];
 	let closeB = bracketMatch.Item(openB);
@@ -940,4 +948,73 @@ export function findCloseBracket(text: string, openBracketIndex: number): number
 		};
 	}
 	return res;
+}
+
+
+interface XmlDeserrializingError
+{
+	ok: false;
+	error: Object;
+}
+
+interface XmlDeserrializingResult
+{
+	ok: true;
+	object: xmlDoc.XmlDocument;
+}
+
+/** Пытается  */
+export function getXmlObject(text: string): XmlDeserrializingResult | XmlDeserrializingError
+{
+	try
+	{
+		return { ok: true, object: new xmlDoc.XmlDocument(text) }
+	}
+	catch (error)
+	{
+		return { ok: false, error }
+	}
+}
+
+
+interface XmlDocElement
+{
+	content: string;
+	attrs: { [key: string]: string };
+	name: string;
+	position: number;
+	children: xmlDoc.XmlNode[];
+	tagStart: number;
+}
+
+/** Ищет все `targetName` в переданных `nodes`, заходя в Repeat */
+export function getNestedElements(nodes: xmlDoc.XmlElement[], targetNames: string[], parentIndent: number): XmlDocElement[]
+{
+	let res: XmlDocElement[] = [];
+	for (const node of nodes)
+	{
+		if (node.name == 'Repeat')
+		{
+			let subEls = getNestedElements(node.children.filter(x => x.type == 'element') as xmlDoc.XmlElement[], targetNames, node.position);
+			subEls.forEach(x => res.push(x));
+		}
+		else if (targetNames.contains(node.name))
+		{
+			res.push ({
+				attrs: node.attr,
+				content: getXmlElementFullContent(node),
+				name: node.name,
+				position: node.position + parentIndent,
+				children: node.children,
+				tagStart: node.startTagPosition + parentIndent
+			});
+		}
+	};
+
+	return res;
+}
+
+export function getXmlElementFullContent(node: xmlDoc.XmlElement)
+{
+	return node.children.map(x => x.toString({ preserveWhitespace: true, compressed: false, trimmed: false })).join('');
 }

@@ -3,11 +3,12 @@
 
 
 
-
 import * as server from 'vscode-languageserver';
 import * as Encoding from './encoding'
-import { KeyedCollection, pathExists, uriFromName } from './customs';
-import { CurrentTag, SimpleTag } from '.';
+import * as Parse from './parsing';
+import { KeyedCollection, uriFromName } from './customs';
+import { CurrentTag } from '.';
+import * as xmlDoc from 'xmldoc';
 
 
 export interface ISurveyData
@@ -163,10 +164,10 @@ export class TibMethods extends KeyedCollection<TibMethod>
 /** Информация об XML узле */
 export class SurveyNode
 {
-	constructor(type: string, id: string, pos: server.Position, document: server.TextDocument)
+	constructor(type: string, id: string, pos: server.Position, document: server.TextDocument, preparedFullDocumentXml: string)
 	{
 		this._document = document;
-		this._safeText = CurrentTag.PrepareXML(document.getText());
+		this._safeText = preparedFullDocumentXml;
 		this.Id = id;
 		this.Type = type;
 		this.Position = pos;
@@ -341,14 +342,11 @@ export class ExportLabel
 {
 	/** Диапазон атрибута целиком */
 	Range: server.Range;
-	/** Родитель */
-	Parent: ExportLabelParent;
 	/** Значение атрибута */
 	Value: string;
 
-	constructor(range: server.Range, parent: ExportLabelParent, value: string)
+	constructor(range: server.Range, value: string)
 	{
-		this.Parent = parent;
 		this.Range = range;
 		this.Value = value;
 	}
@@ -356,18 +354,13 @@ export class ExportLabel
 
 
 /** Возвращает список public-методов из `<Methods>` */
-export async function getDocumentMethods(document: server.TextDocument): Promise<TibMethods>
+export async function getDocumentMethods(document: server.TextDocument, xml: xmlDoc.XmlDocument): Promise<TibMethods>
 {
 	let res = new TibMethods();
-	let text = document.getText();
-	text = Encoding.clearXMLComments(text);
-	let mtd = text.matchAllGroups(/(<Methods)([^>]*>)([\s\S]*)(<\/Methods)/);
-	if (mtd.length == 0)
-	{
-		return res;
-	}
-	let reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/);
-	let groups = {
+	let mtd = xml.children.filter(x => x.type == 'element' && x.name == 'Methods') as xmlDoc.XmlElement[];
+	if (mtd.length == 0) return res;
+	const reg = new RegExp(/((public)|(private)|(protected))(((\s*static)|(\s*readonly))*)?\s+([\w<>\[\],\s]+)\s+((\w+)\s*(\([^)]*\))?)/);
+	const groups = {
 		Full: 0,
 		Modificator: 1,
 		Properties: 5,
@@ -376,16 +369,17 @@ export async function getDocumentMethods(document: server.TextDocument): Promise
 		Name: 11,
 		Parameters: 12
 	};
+	const text = document.getText();
 	mtd.forEach(element =>
 	{
-		let str = element[3];
+		let str = Parse.getXmlElementFullContent(element);
 		str = Encoding.clearCSComments(str);
 		let m = str.matchAllGroups(reg);
 		m.forEach(met => 
 		{
 			if (met[groups.FullName])
 			{
-				let start = text.indexOf(met[groups.Full]);
+				let start = element.position + str.indexOf(met[groups.Full]);
 				let isFunc = !!met[groups.Parameters];
 				let end = text.indexOf(isFunc ? ")" : ";", start) + 1;
 				let positionFrom = document.positionAt(start);
@@ -399,92 +393,63 @@ export async function getDocumentMethods(document: server.TextDocument): Promise
 }
 
 /** Возвращает список тегов `NodeStoreNames` с Id */
-export async function getDocumentNodeIds(document: server.TextDocument, NodeStoreNames: string[]): Promise<SurveyNodes>
+export async function getDocumentNodeIds(document: server.TextDocument, xml: xmlDoc.XmlDocument): Promise<SurveyNodes>
 {
-	let nNames = NodeStoreNames;
-	let txt = document.getText();
-	txt = Encoding.clearXMLComments(txt);
-	let reg = new RegExp("<((" + nNames.join(")|(") + "))[^>]*\\sId=(\"|')([^\"']+)(\"|')");
-	let idIndex = nNames.length + 3;
+	let nNames = ["Page", "Quota", "List"];
 	let nodes = new SurveyNodes();
-	let res = txt.matchAllGroups(reg);
+	let res = Parse.getNestedElements(xml.children.filter(x => x.type == 'element') as xmlDoc.XmlElement[], nNames, 0);
+
+	let pages = res.filter(x => x.name == 'Page');
+	let questions = pages.map(x => Parse.getNestedElements(x.children.filter(c => c.type == 'element') as xmlDoc.XmlElement[], ['Question'], x.position));
+	questions.forEach(x => x.forEach(q => res.push(q)));
+
+	let text = CurrentTag.PrepareXML(document.getText());
 	res.forEach(element => 
 	{
-		let pos = document.positionAt(txt.indexOf(element[0]));
-		let item = new SurveyNode(element[1], element[idIndex], pos, document);
+		const pos = document.positionAt(element.tagStart);
+		let item = new SurveyNode(element.name, element.attrs['Id'], pos, document, text);
 		nodes.Add(item);
 	});
-	// дополнительно
-	nodes.Add(new SurveyNode("Page", "pre_data", null, document));
-	nodes.Add(new SurveyNode("Question", "pre_data", null, document));
-	nodes.Add(new SurveyNode("Question", "pre_sex", null, document));
-	nodes.Add(new SurveyNode("Question", "pre_age", null, document));
-	nodes.Add(new SurveyNode("Page", "debug", null, document));
-	nodes.Add(new SurveyNode("Question", "debug", null, document));
 	return nodes;
 }
 
 /** Возвращает список MixId */
-export async function getMixIds(document: server.TextDocument): Promise<string[]>
+export async function getMixIds(document: server.TextDocument, xml: xmlDoc.XmlDocument): Promise<string[]>
 {
 	let res: string[] = [];
-	let txt = document.getText();
-	txt = Encoding.clearXMLComments(txt);
-	let matches = txt.matchAllGroups(/MixId=('|")((?!:)(\w+))(\1)/);
-	let matchesStore = txt.matchAllGroups(/<Question[^>]+Store=('|")(\w+?)(\1)[^>]*>/);
-	let mixIdsStore: string[] = [];
-	matchesStore.forEach(element =>
-	{
-		let idmt = element[0].match(/\sId=("|')(.+?)\1/);
-		if (!idmt) return;
-		mixIdsStore.push(":" + idmt[2]);
-	});
-	if (!!matches) res = res.concat(matches.map(x => x[2]));
-	if (!!matchesStore) res = res.concat(mixIdsStore);
-	return res.distinct();
+	let tagsToSearch = ['Page', 'Question', 'Block', 'Repeat'];
+	let parentElements = xml.children.filter(x => x.type == 'element' && tagsToSearch.contains(x.name)) as xmlDoc.XmlElement[];
+	let mixIds = parentElements.map(x => x.attr['MixId']).filter(x => !!x);
+	let storeIds = parentElements.filter(x => x.name == 'Question' && !!x.attr['Store']).map(x => ':' + x.attr['Id']);
+	return [...storeIds, ...mixIds].distinct();
 }
 
 /** Возвращает список констант */
-export async function getConstants(document: server.TextDocument): Promise<KeyedCollection<SurveyNode>>
+export async function getConstants(document: server.TextDocument, xml: xmlDoc.XmlDocument): Promise<KeyedCollection<SurveyNode>>
 {
 	let res = new KeyedCollection<SurveyNode>();
-	let txt = document.getText();
-	txt = Encoding.clearXMLComments(txt);
-	// ищем только первый тэг
-	let constTagStart = txt.indexOf('<Constants');
-	if (constTagStart > -1)
+	let constTags = xml.children.filter(x => x.type == 'element' && x.name == 'Constants') as xmlDoc.XmlElement[];
+	let items = constTags.flatMap(x => Parse.getNestedElements([x], ['Item'], x.position));
+	let text = CurrentTag.PrepareXML(document.getText());
+	items.forEach(item =>
 	{
-		let constEnd = txt.indexOf('</Constants', constTagStart);
-		if (constEnd > 0)
-		{
-			let constTag = txt.slice(constTagStart, constEnd);
-			let items = constTag.findAll(/<Item\s+.*(Id=.([^'"]+).)[\s\S]+?((\/>)|(<\/Item[^>]*>))/);
-			if (items.length > 0)
-			{
-				items.forEach(item =>
-				{
-					let position = document.positionAt(constTagStart + item.Index);
-					let constant = new SurveyNode("ConstantItem", item.Result[2], position, document);
-					let value = item.Result[0].match(/(<Value>)([\s\S]*)<\/Value>/);
-					if (!value) value = item.Result[0].match(/Value=('|")(.+)(\1)/);
-					if (!!value) constant.Content = value[2];
-					res.AddPair(item.Result[2], constant);
-				});
-			}
-		}
-	}
+		let id = item.attrs['Id'];
+		let constant = new SurveyNode("ConstantItem", id, document.positionAt(item.position), document, text);
+		let value = item.content;
+		if (!value) value = item.attrs['Value'];
+		if (!!value) constant.Content = value;
+		res.AddPair(id, constant);
+	});
 	return res;
 }
 
 /** Получает URI ко всем <Include> */
-export function getIncludePaths(text: string): string[]
+export function getIncludePaths(xml: xmlDoc.XmlDocument): string[]
 {
-	let res: string[] = [];
-	let reg = /<Include[\s\S]*?FileName=(("[^"]+")|('[^']+'))/;
-	let txt = text;
-	txt = Encoding.clearXMLComments(txt);
-	res = txt.matchAllGroups(reg).map(x => x[1].replace(/(^["'"])|(['"]$)/g, '')).filter(x => pathExists(x)).map(x => uriFromName(x));
-	return res;
+	return Parse.getNestedElements(xml.children.filter(x => x.type == 'element') as xmlDoc.XmlElement[], ['Include'], 0)
+		.map(x => x.attrs['FileName'])
+		.filter(x => !!x)
+		.map(uriFromName);
 }
 
 
@@ -498,21 +463,12 @@ export async function getExportLabels(document: server.TextDocument): Promise<Ex
 	let exportLabels = txt.findAll(/\sExportLabel=(('[^']*')|("[^"]*"))/);
 	exportLabels.forEach(match =>
 	{
-		let before = txt.slice(0, match.Index);
-		let parentTag = before.match(/<(\w+)\s*(\s*(\w+)=(("[^"]*")|('[^']*'))\s*)*$/);
-		if (!!parentTag)
-		{
-			let from = document.positionAt(match.Index + 1);
-			let to = document.positionAt(match.Index + match.Result[0].length);
-			let range = server.Range.create(from, to);
-			let parent: ExportLabelParent = {
-				Start: from,
-				TagName: parentTag[1]
-			}
-			let value = match.Result[1].slice(1, match.Result[1].length - 1);
-			let result = new ExportLabel(range, parent, value);
-			res.push(result);
-		}
+		let from = document.positionAt(match.Index + 1);
+		let to = document.positionAt(match.Index + match.Result[0].length);
+		let range = server.Range.create(from, to);
+		let value = match.Result[1].slice(1, match.Result[1].length - 1);
+		let result = new ExportLabel(range, value);
+		res.push(result);
 	});
 	return res;
 }
