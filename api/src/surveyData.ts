@@ -205,7 +205,7 @@ export class SurveyNode
 		let lastIndex = this._safeText.indexOf("</" + this.Type, fromIndex);
 		if (lastIndex > -1)
 		{
-			lastIndex = this._safeText.indexOf(">" + this.Type, lastIndex);
+			lastIndex = this._safeText.indexOf(">", lastIndex);
 			if (lastIndex > -1) endPosition = this._document.positionAt(lastIndex);
 		}
 		const range = server.Range.create(startPosition, endPosition);
