@@ -467,7 +467,7 @@ async function updateSurveyData(document: server.TextDocument)
 			let constants = new KeyedCollection<SurveyNode>();
 			let mixIds: string[] = [];
 			let exportLabels: ExportLabel[] = [];
-	
+
 			// если Include поменялись, то обновляем все
 			if (!_SurveyData.Includes || !_SurveyData.Includes.equalsTo(includes))
 			{
@@ -479,8 +479,8 @@ async function updateSurveyData(document: server.TextDocument)
 				methods = _SurveyData.Methods.Filter((name, element) => element.FileName != document.uri);
 				nodes = _SurveyData.CurrentNodes.FilterNodes((node) => node.FileName != document.uri);
 			}
-	
-	
+
+
 			for (let i = 0; i < docs.length; i++) 
 			{
 				const isCurrent = docs[i] == document.uri;
@@ -492,15 +492,15 @@ async function updateSurveyData(document: server.TextDocument)
 					if (!isCurrent)
 					{
 						let parseResultSub = getXmlObject(doc.getText());
-						if (parseResultSub.ok)
-						{
-							xml = parseResultSub.object;
-							methods.AddRange(await getDocumentMethods(doc, xml));
-							nodes.AddRange(await getDocumentNodeIds(doc, xml));
-							mixIds = mixIds.concat(await getMixIds(doc, xml));
-							constants.AddRange(await getConstants(doc, xml));
-							exportLabels = exportLabels.concat(await getExportLabels(doc));
-						}
+						if (parseResultSub.ok) xml = parseResultSub.object;
+					}
+					if (!!xml)
+					{
+						methods.AddRange(await getDocumentMethods(doc, xml));
+						nodes.AddRange(await getDocumentNodeIds(doc, xml));
+						mixIds = mixIds.concat(await getMixIds(doc, xml));
+						constants.AddRange(await getConstants(doc, xml));
+						exportLabels = exportLabels.concat(await getExportLabels(doc));
 					}
 				}
 			}
@@ -511,12 +511,12 @@ async function updateSurveyData(document: server.TextDocument)
 			nodes.Add(new SurveyNode("Question", "pre_age", null, document, preparedXml));
 			nodes.Add(new SurveyNode("Page", "debug", null, document, preparedXml));
 			nodes.Add(new SurveyNode("Question", "debug", null, document, preparedXml));
-	
+
 			_SurveyData.Methods = methods;
 			_SurveyData.CurrentNodes = nodes;
 			_SurveyData.MixIds = mixIds;
 			_SurveyData.ConstantItems = constants;
-			_SurveyData.ExportLabels = exportLabels;	
+			_SurveyData.ExportLabels = exportLabels;
 		}
 	} catch (error)
 	{
