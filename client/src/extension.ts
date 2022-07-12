@@ -1330,7 +1330,7 @@ async function insertAutoCloseTags(data: ITibEditorData): Promise<boolean>
 				}
 			}
 		}
-		data.editor.selections = prevSels;
+		if (res) data.editor.selections = prevSels;
 	}
 
 	return res;
