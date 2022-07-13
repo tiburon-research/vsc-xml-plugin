@@ -206,7 +206,7 @@ export class SurveyNode
 		if (lastIndex > -1)
 		{
 			lastIndex = this._safeText.indexOf(">", lastIndex);
-			if (lastIndex > -1) endPosition = this._document.positionAt(lastIndex);
+			if (lastIndex > -1) endPosition = this._document.positionAt(lastIndex + 1);
 		}
 		const range = server.Range.create(startPosition, endPosition);
 		return server.LocationLink.create(this.Uri, range, range);
@@ -397,10 +397,10 @@ export async function getDocumentNodeIds(document: server.TextDocument, xml: xml
 {
 	let nNames = ["Page", "Quota", "List"];
 	let nodes = new SurveyNodes();
-	let res = Parse.getNestedElements(xml.children.filter(x => x.type == 'element') as xmlDoc.XmlElement[], nNames, 0);
+	let res = Parse.getNestedElements(xml.children.filter(x => x.type == 'element') as xmlDoc.XmlElement[], nNames);
 
 	let pages = res.filter(x => x.name == 'Page');
-	let questions = pages.map(x => Parse.getNestedElements(x.children.filter(c => c.type == 'element') as xmlDoc.XmlElement[], ['Question'], x.position));
+	let questions = pages.map(x => Parse.getNestedElements(x.children.filter(c => c.type == 'element') as xmlDoc.XmlElement[], ['Question']));
 	questions.forEach(x => x.forEach(q => res.push(q)));
 
 	let text = CurrentTag.PrepareXML(document.getText());
@@ -429,7 +429,7 @@ export async function getConstants(document: server.TextDocument, xml: xmlDoc.Xm
 {
 	let res = new KeyedCollection<SurveyNode>();
 	let constTags = xml.children.filter(x => x.type == 'element' && x.name == 'Constants') as xmlDoc.XmlElement[];
-	let items = constTags.flatMap(x => Parse.getNestedElements([x], ['Item'], x.position));
+	let items = constTags.flatMap(x => Parse.getNestedElements([x], ['Item']));
 	let text = CurrentTag.PrepareXML(document.getText());
 	items.forEach(item =>
 	{
@@ -446,7 +446,7 @@ export async function getConstants(document: server.TextDocument, xml: xmlDoc.Xm
 /** Получает URI ко всем <Include> */
 export function getIncludePaths(xml: xmlDoc.XmlDocument): string[]
 {
-	return Parse.getNestedElements(xml.children.filter(x => x.type == 'element') as xmlDoc.XmlElement[], ['Include'], 0)
+	return Parse.getNestedElements(xml.children.filter(x => x.type == 'element') as xmlDoc.XmlElement[], ['Include'])
 		.map(x => x.attrs['FileName'])
 		.filter(x => !!x)
 		.map(uriFromName);

@@ -988,14 +988,14 @@ interface XmlDocElement
 }
 
 /** Ищет все `targetName` в переданных `nodes`, заходя в Repeat */
-export function getNestedElements(nodes: xmlDoc.XmlElement[], targetNames: string[], parentIndent: number): XmlDocElement[]
+export function getNestedElements(nodes: xmlDoc.XmlElement[], targetNames: string[]): XmlDocElement[]
 {
 	let res: XmlDocElement[] = [];
 	for (const node of nodes)
 	{
 		if (node.name == 'Repeat')
 		{
-			let subEls = getNestedElements(node.children.filter(x => x.type == 'element') as xmlDoc.XmlElement[], targetNames, node.position);
+			let subEls = getNestedElements(node.children.filter(x => x.type == 'element') as xmlDoc.XmlElement[], targetNames);
 			subEls.forEach(x => res.push(x));
 		}
 		else if (targetNames.contains(node.name))
@@ -1004,9 +1004,9 @@ export function getNestedElements(nodes: xmlDoc.XmlElement[], targetNames: strin
 				attrs: node.attr,
 				content: getXmlElementFullContent(node),
 				name: node.name,
-				position: node.position + parentIndent,
+				position: node.position,
 				children: node.children,
-				tagStart: node.startTagPosition + parentIndent
+				tagStart: node.startTagPosition - 1
 			});
 		}
 	};
