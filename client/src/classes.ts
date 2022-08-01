@@ -501,17 +501,22 @@ export namespace ClientServerTransforms
 
 }
 
-
-export interface CustomQuickPickOptions
+export interface ICustomQuickPickOptions
 {
-	canSelectMany?: boolean;
 	ignoreFocusOut?: boolean;
 	totalSteps?: number;
 	step?: number;
 	placeHolder?: string;
+	title?: string;
+	activeItems?: vscode.QuickPickItem[];
+}
+
+
+export interface CustomQuickPickOptions extends ICustomQuickPickOptions
+{
+	canSelectMany?: boolean;
 	items?: vscode.QuickPickItem[];
 	selectedItems?: vscode.QuickPickItem[];
-	title?: string;
 }
 
 
@@ -537,6 +542,32 @@ export class CustomQuickPick
 				this.qickPick.hide();
 			})
 		});
+	}
+}
+
+
+export class YesNoQuickPick
+{
+	private quickPick: CustomQuickPick;
+		
+	constructor(options: ICustomQuickPickOptions, private defaultAnswer: "Да" | "Нет" = "Да")
+	{
+		let items: vscode.QuickPickItem[] = ['Да', 'Нет'].map(x => { return { label: x } });
+		let resultOptions: CustomQuickPickOptions = {
+			...options,
+			canSelectMany: false,
+			items,
+			activeItems: items.filter(x => x.label == defaultAnswer)
+		}
+		this.quickPick = new CustomQuickPick(resultOptions);
+	}
+
+	/** Положительный ли ответ */
+	public async ask(): Promise<boolean>
+	{
+		let res = (await this.quickPick.execute())?.[0];
+		if (!res) res = this.defaultAnswer;
+		return res == 'Да';
 	}
 }
 

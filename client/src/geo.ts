@@ -117,10 +117,12 @@ export async function readGeoFile(): Promise<GeoFileLineData[]>
 
 
 /** Создаёт все нужные списки для географии */
-export async function createGeolists(cities: GeoFileLineData[], lists: string[], withPopulation: boolean): Promise<string>
+export async function createGeolists(cities: GeoFileLineData[], lists: string[], withPopulation: boolean, addCremea: boolean): Promise<string>
 {
 	let res = '\n\n';
-	let international = cities.map(x => x.CountryId).distinct().length > 1
+	let international = cities.map(x => x.CountryId).distinct().length > 1;
+	// Исключаем Республику Крым и Севастополь
+	if (!addCremea) cities = cities.filter(x => !['97', '122'].includes(x.SubjectId));
 
 	// Страны
 	if (international)

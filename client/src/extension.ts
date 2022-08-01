@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 
 import { CurrentTag, Language, positiveMin, isScriptLanguage, safeRegexp, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit, Watcher, Encoding } from "tib-api";
 import { SurveyElementType, SurveyQuestionBlock } from 'tib-api/lib/surveyObjects'
-import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox, readFileText, openTextInNewTab } from "./classes";
+import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox, readFileText, openTextInNewTab, YesNoQuickPick } from "./classes";
 import * as Formatting from './formatting'
 import * as fs from 'fs';
 import * as debug from './debug'
@@ -947,9 +947,9 @@ async function registerCommands()
 					lines = pre.map(s => { return s.trim() });
 					if (lines.filter(l => { return l.indexOf("\t") > -1; }).length == lines.length)
 					{
-						vscode.window.showQuickPick(["Да", "Нет"], { placeHolder: "Разделить запятыми?" }).then(x =>
+						new YesNoQuickPick({ placeHolder: "Разделить запятыми?" }).ask().then(x =>
 						{
-							multiLinePaste(editor, lines, x == "Да").then(() => { resolve(); });
+							multiLinePaste(editor, lines, x).then(() => { resolve(); });
 						});
 					}
 					else multiLinePaste(editor, lines).then(() => { resolve(); });
@@ -2363,7 +2363,7 @@ async function chooseGeo(oldVariant = false)
 	let geoData = await readGeoFile();
 	let step = 1;
 	let ignoreFocusOut = true;
-	let totalSteps = 6;
+	let totalSteps = 7;
 	let minPopulation = 100000;
 
 	let qp = new CustomQuickPick({
@@ -2404,6 +2404,12 @@ async function chooseGeo(oldVariant = false)
 	// спрашиваем географию
 	await nextStep("CountryName", "Страна:", ["Россия"]);
 	await nextStep("DistrictName", "Федеральный округ:", ["Центральный", "Северо-Западный", "Сибирский", "Уральский", "Приволжский", "Южный", "Дальневосточный", "Северо-Кавказский"]);
+	let addCrimeaQP = new YesNoQuickPick({
+		title: "Добавить Крым в Южный ФО?",
+		step: ++step,
+		totalSteps
+	}, 'Нет');
+	let addCrimea = await addCrimeaQP.ask();
 	if (!byPop) await nextStep("StrataName", "Страта:", ["1млн +", "500тыс.-1 млн.", "250тыс.-500тыс.", "100тыс. - 250тыс."]);
 	else
 	{
@@ -2454,7 +2460,7 @@ async function chooseGeo(oldVariant = false)
 
 
 	// генерация XML
-	let lists = await createGeolists(geoData, groupBy, byPop);
+	let lists = await createGeolists(geoData, groupBy, byPop, addCrimea);
 	let page = await createGeoPage(oldVariant ? groupBy : [], qIds, byPop, !oldVariant);
 	return lists + page;
 }
