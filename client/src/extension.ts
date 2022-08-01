@@ -1324,7 +1324,7 @@ async function insertAutoCloseTags(data: ITibEditorData): Promise<boolean>
 						let closed = after.match(new RegExp("^[^<]*(<\\/)?" + safeRegexp(result[1])));
 						if (!closed)
 						{
-							res = res || await data.editor.insertSnippet(new vscode.SnippetString("</" + result[1] + ">"), originalPosition, { undoStopAfter: false, undoStopBefore: false });
+							res = await data.editor.insertSnippet(new vscode.SnippetString("</" + result[1] + ">"), originalPosition, { undoStopAfter: false, undoStopBefore: false }) || res;
 						}
 					}
 				}
