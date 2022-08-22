@@ -3178,6 +3178,46 @@ export const XMLFeatures = [
 			"</Page>\n"
 		],
 		"description": "Полная структура Page с Union, Repeat по Length"
+	},
+	{
+		"prefix": "_kano",
+		"body": `
+	<List Id="kanoList">
+
+	</List>
+
+	<Repeat List="kanoList" MixId="kanoMix">
+		<Page Id="F_@ID">
+			<Ui Step="1" HeaderFix="1"/>
+            <Header>[div align='right' class='nt' style='font-size: 10px;']Экран [c#]MixItera(@ID);[/c#] из [c#]CurrentSurvey.Lists["kanoList"].Items.Items.Values.Count().ToString();[/c#][/div]
+            [div class="c"][u]@Text[/u][/div]</Header>
+			<Question Id="Q1_@ID" Type="RadioButton" ExportLabel="@Text">
+				<Header>Вам понятна эта идея?</Header>
+				<Ui Extend="Scale"/>
+				<Answer Id="1"><Text>Да, понятна</Text></Answer>
+				<Answer Id="2"><Text>Нет, не понятна</Text></Answer>
+			</Question>
+			<Question Id="R1_@ID" Type="RadioButton" ExportLabel="@Text">
+				<Header>Как вы отнесетесь, если сервис [u]БУДЕТ[/u] показывать эту информацию при онлайн-бронировании жилья для краткосрочной аренды?</Header>
+				<Ui Extend="Scale"/>
+				<Answer Id="5"><Text>Мне это не нужно, будет мне мешать</Text></Answer>
+				<Answer Id="4"><Text>Мне это не нужно, но и мешать не будет</Text></Answer>
+				<Answer Id="3"><Text>Мне все равно</Text></Answer>
+				<Answer Id="2"><Text>Это нормально, так и должно быть</Text></Answer>
+				<Answer Id="1"><Text>Мне это очень понравится!</Text></Answer>
+			</Question>
+			<Question Id="R2_@ID" Type="RadioButton" ExportLabel="@Text">
+				<Header>Как вы отнесетесь, если сервис [u]НЕ БУДЕТ[/u] показывать эту информацию при онлайн-бронировании жилья для краткосрочной аренды?</Header>
+				<Ui Extend="Scale"/>
+				<Answer Id="1"><Text>Очень хорошо, что этого НЕ будет!</Text></Answer>
+				<Answer Id="2"><Text>Это нормально, так и должно быть</Text></Answer>
+				<Answer Id="3"><Text>Мне все равно</Text></Answer>
+				<Answer Id="4"><Text>Мне это нужно, но переживу и без этого</Text></Answer>
+				<Answer Id="5"><Text>Мне это нужно! Плохо, что этого не будет!</Text></Answer>
+			</Question>		
+		</Page>
+	</Repeat>`,
+		"description": "КАНО"
 	}
 ];
 
