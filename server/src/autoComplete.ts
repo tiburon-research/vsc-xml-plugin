@@ -2988,7 +2988,7 @@ export const XMLFeatures = [
 	{
 		"prefix": "_video",
 		"body": [
-			"<Ui Extend=\"MediaPlayer\" Type=\"Video\" Src=\"@ContentUrl/$1/}/$1.mp4,@ContentUrl/$1/}/$1.webm\" PlayAuto=\"1\" SeekEnable=\"1\"/>"
+			"<Ui Extend=\"MediaPlayer\" Type=\"Video\" Src=\"@ContentUrl/$1/}/$1.mp4\" PlayAuto=\"1\" SeekEnable=\"1\"/>"
 		],
 		"description": "QuestionUi: MediaPlayer Video"
 	},
@@ -3047,33 +3047,8 @@ export const XMLFeatures = [
 		"prefix": "_yandexMetrika",
 		"body": [
 			"<CustomText2 Action=\"Append\"><![CDATA[",
-			"\t<!-- Yandex.Metrika counter -->",
-			"\t<script type=\"text/javascript\">",
-			"\tvar yaParams = {'project': '[c#]InterviewPars.ProjectID;[/c#]', 'interview': '[c#]InterviewPars.RespID;[/c#]'};",
-			"\t(function (d, w, c) {",
-			"\t\t(w[c] = w[c] || []).push(function() {",
-			"\t\t\ttry {",
-			"\t\t\t\tw.yaCounter26653611 = new Ya.Metrika({id:26653611,",
-			"\t\t\t\t\twebvisor:true,",
-			"\t\t\t\t\tclickmap:true,",
-			"\t\t\t\t\ttrackLinks:true,",
-			"\t\t\t\t\taccurateTrackBounce:true,",
-			"\t\t\t\t\tparams:window.yaParams||{} });",
-			"\t\t\t} catch(e) { }",
-			"\t\t});",
-			"\t\tvar n = d.getElementsByTagName(\"script\")[0],",
-			"\t\t\ts = d.createElement(\"script\"),",
-			"\t\t\tf = function () { n.parentNode.insertBefore(s, n); };",
-			"\t\ts.type = \"text/javascript\";",
-			"\t\ts.async = true;",
-			"\t\ts.src = (d.location.protocol == \"https:\" ? \"https:\" : \"http:\") + \"//mc.yandex.ru/metrika/watch.js\";",
-			"\t\tif (w.opera == \"[object Opera]\") {",
-			"\t\t\td.addEventListener(\"DOMContentLoaded\", f, false);",
-			"\t\t} else { f(); }",
-			"\t})(document, window, \"yandex_metrika_callbacks\");",
-			"\t</script>",
-			"\t<noscript><div><img src=\"//mc.yandex.ru/watch/26653611\" style=\"position:absolute; left:-9999px;\" alt=\"\" /></div></noscript>",
-			"\t<!-- /Yandex.Metrika counter -->",
+			"\t<script src=\"@StoreUrl/t/adaptiveJsHelpers.js\"></script>",
+			"\t<script>initYandexMetrika('[c#]InterviewPars.ProjectID;[/c#]', '[c#]InterviewPars.RespID;[/c#]');</script>",
 			"]]></CustomText2>"
 		],
 		"description": "Яндекс.Метрика"
