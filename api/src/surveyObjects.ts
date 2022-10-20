@@ -510,6 +510,8 @@ export class SurveyQuestionBlock
 	/** Заголовок вопроса */
 	public Header: string;
 	public QuestionMix: string;
+	public HeaderFix = false;
+	public Step = false;
 
 	constructor(pageId: string)
 	{
@@ -534,6 +536,8 @@ export class SurveyQuestionBlock
 		let question = this.setQuestion(qPrefix + "_dummy", qType);
 		question.AddAttr('Union', '$all');
 		question.AddAttr('TextWidth', '');
+		let ui = this.getUi();
+		if (!!ui) question.AddChild(ui);
 		question.Header = this.Header;
 		let page = new SurveyPage(this.pageId);
 		let repeat = new SurveyElement("Repeat");
@@ -568,6 +572,8 @@ export class SurveyQuestionBlock
 		repeat.AddAttr('List', this.questions.AttrValue("Id"));
 		repeat.AddChild(question);
 		let page = new SurveyPage(this.pageId);
+		let ui = this.getUi();
+		if (!!ui) page.AddChild(ui);
 		let pageHeader = new SurveyElement("Header");
 		pageHeader.Content = this.Header;
 		page.AddChild(pageHeader);
@@ -593,6 +599,16 @@ export class SurveyQuestionBlock
 			question.AddAnswer(a);
 		});
 		return question;
+	}
+
+	private getUi()
+	{
+		if (!this.Step && !this.HeaderFix) return null;
+		let res = new SurveyElement('Ui');
+		res.SelfClosed = true;
+		if (this.Step) res.AddAttr('Step', '1');
+		if (this.HeaderFix) res.AddAttr('HeaderFix', '1');
+		return res;
 	}
 }
 
