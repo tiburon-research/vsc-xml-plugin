@@ -11,5 +11,7 @@
     },
     "search.exclude": {
         "out": true // set this to false to include "out" folder in search results
-	}
+	},
+	"task.allowAutomaticTasks": "on",
+	"terminal.integrated.persistentSessionReviveProcess": "never"
 }

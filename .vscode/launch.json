@@ -7,20 +7,25 @@
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
-            "args": ["--extensionDevelopmentPath=${workspaceRoot}"],
-            "stopOnEntry": false,
+            "args": [
+				"--extensionDevelopmentPath=${workspaceRoot}",
+				"--profile=extension_dev"
+			],
 			"sourceMaps": true,
 			"skipFiles": ["**/node_modules.asar/**"],
             "outFiles": [
 				"${workspaceRoot}/client/out/*.js",
 				"${workspaceRoot}/node_modules/tib-api/lib/*.js"
-            ]
+            ],
+			"preLaunchTask": {
+				"type": "npm",
+				"script": "watch"
+			}
         },
         {
 			"type": "node",
 			"request": "attach",
 			"name": "Server",
-			"protocol": "legacy",
             "port": 4711,
             "restart": true,
 			"outFiles": [
