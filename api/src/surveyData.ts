@@ -416,11 +416,18 @@ export async function getDocumentNodeIds(document: server.TextDocument, xml: xml
 /** Возвращает список MixId */
 export async function getMixIds(document: server.TextDocument, xml: xmlDoc.XmlDocument): Promise<string[]>
 {
-	let res: string[] = [];
-	let tagsToSearch = ['Page', 'Question', 'Block', 'Repeat'];
-	let parentElements = xml.children.filter(x => x.type == 'element' && tagsToSearch.contains(x.name)) as xmlDoc.XmlElement[];
-	let mixIds = parentElements.map(x => x.attr['MixId']).filter(x => !!x);
-	let storeIds = parentElements.filter(x => x.name == 'Question' && !!x.attr['Store']).map(x => ':' + x.attr['Id']);
+	let tagsToSearch = ['Page', 'Block', 'Repeat'];
+	let subTagsToSearch = ['Question', 'Block', 'Repeat'];
+	// находим страницы, блоки и внешние повторы
+	let outers = Parse.getNestedElements(xml.children.filter(x => x.type == 'element') as xmlDoc.XmlElement[], tagsToSearch);
+	// внутри страниц ищем вопросы, блоки и повторы
+	let inners = Parse.getNestedElements(outers.filter(x => x.name == 'Page').map(x => x.children as xmlDoc.XmlElement[]).flat(), subTagsToSearch);
+	// внутри вопросов ищем блоки и повторы
+	let last = Parse.getNestedElements(inners.filter(x => x.name == 'Question').map(x => x.children as xmlDoc.XmlElement[]).flat(), ['Block', 'Repeat']);
+	
+	let res = [...outers, ...inners, ...last];
+	let mixIds = res.map(x => x.attrs['MixId']).filter(x => !!x);
+	let storeIds = res.filter(x => x.name == 'Question' && !!x.attrs['Store']).map(x => ':' + x.attrs['Id']);
 	return [...storeIds, ...mixIds].distinct();
 }
 

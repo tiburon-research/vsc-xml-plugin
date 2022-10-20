@@ -998,7 +998,8 @@ export function getNestedElements(nodes: xmlDoc.XmlElement[], targetNames: strin
 			let subEls = getNestedElements(node.children.filter(x => x.type == 'element') as xmlDoc.XmlElement[], targetNames);
 			subEls.forEach(x => res.push(x));
 		}
-		else if (targetNames.contains(node.name))
+		
+		if (targetNames.contains(node.name))
 		{
 			res.push ({
 				attrs: node.attr,
