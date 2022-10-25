@@ -471,7 +471,7 @@
         "install-local": "^0.6.2",
         "jquery": "^3.4.1",
         "js-beautify": "^1.7.5",
-        "jsdom": "^11.6.2",
+        "jsdom": "^16.5.0",
         "node-machine-id": "^1.1.10",
         "node-xlsx": "^0.15.0",
         "short-hash": "^1.0.0",
