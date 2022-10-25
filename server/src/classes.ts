@@ -475,7 +475,7 @@ export class TibAutoCompletes
 								break;
 
 							default:
-								body = 'Repeat {{init}}>\n\n\n</Repeat>';
+								body = 'Repeat {{init}}>\n\t$0\n</Repeat>';
 								break;
 						}
 
