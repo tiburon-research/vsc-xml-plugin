@@ -15,10 +15,11 @@ import * as client from 'vscode-languageclient/node';
 import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors, showInfo, showError } from './errors';
-import { readGeoFile, GeoConstants, createGeolists, createGeoPage, GeoClusters } from './geo';
+import { readGeoFile, createGeolists, createGeoPage } from './geo';
 import { getCustomJS, getListItem, getAnswer } from 'tib-api/lib/parsing';
 import * as customCode from './customSurveyCode';
 import { createAnswers } from './documentEdits';
+import { GeoClusters, GeoConstants } from '@vsc-xml-plugin/geo';
 
 
 export { CSFormatter, _settings as Settings };
@@ -2382,7 +2383,7 @@ async function chooseGeo(oldVariant = false)
 	{
 		return new Promise<string[]>((resolve, reject) =>
 		{
-			let items = geoData.map(x => { return x[propertyName] as string }).distinct().filter(x => !!x).map(x => { return { label: x } });
+			let items = geoData.get(false).map(x => { return x[propertyName] as string }).distinct().filter(x => !!x).map(x => { return { label: x } });
 			if (items.length == 0) return resolve([]);
 			let options: CustomQuickPickOptions = {
 				canSelectMany: true,
@@ -2396,7 +2397,7 @@ async function chooseGeo(oldVariant = false)
 			let q = new CustomQuickPick(options);
 			q.execute().then(selectedItems =>
 			{
-				geoData = geoData.filter(x => selectedItems.contains(x[propertyName]));
+				geoData.filter(x => selectedItems.contains(x[propertyName]));
 				resolve(selectedItems);
 			});
 		});
@@ -2410,14 +2411,14 @@ async function chooseGeo(oldVariant = false)
 		step: ++step,
 		totalSteps
 	}, 'Нет');
-	let addCrimea = await addCrimeaQP.ask();
+	if (!await addCrimeaQP.ask()) geoData.excludeCrimea();
 	if (!byPop) await nextStep("StrataName", "Страта:", ["1млн +", "500тыс.-1 млн.", "250тыс.-500тыс.", "100тыс. - 250тыс."]);
 	else
 	{
 		let input = new CustomInputBox({ title: 'Минимальная численность населения', value: '' + minPopulation, totalSteps, step: ++step });
 		input.intOnly = true;
 		minPopulation = Number(await input.execute());
-		geoData = geoData.filter(x => x.CityPopulation >= minPopulation);
+		geoData.filter(x => x.CityPopulation >= minPopulation);
 	}
 
 	let groupBy: string[] = [];
@@ -2461,7 +2462,7 @@ async function chooseGeo(oldVariant = false)
 
 
 	// генерация XML
-	let lists = await createGeolists(geoData, groupBy, byPop, addCrimea);
+	let lists = await createGeolists(geoData.get(true), groupBy, byPop);
 	let page = await createGeoPage(oldVariant ? groupBy : [], qIds, byPop, !oldVariant);
 	return lists + page;
 }

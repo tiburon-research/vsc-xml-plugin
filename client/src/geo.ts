@@ -1,128 +1,26 @@
-import * as fs from 'fs';
-import { pathExists, KeyedCollection } from 'tib-api';
-import { Path } from './classes';
-import xlsx from 'node-xlsx';
-import { SurveyList, SurveyListItem, SurveyListItemObject } from 'tib-api/lib/surveyObjects';
+import { KeyedCollection } from 'tib-api';
+import { SurveyList, SurveyListItemObject } from 'tib-api/lib/surveyObjects';
+import { City, GeoClusters, GeoConstants, GeoData, getAllCities } from '@vsc-xml-plugin/geo';
 
 
-var geoFileCache: GeoFileLineData[] = [];
-
-export interface GeoClusters
-{
-	District: string;
-	Subject: string;
-	City: string;
-}
-
-
-export const GeoConstants = {
-	/** Названия компоновки географии */
-	GroupBy: {
-		District: "Федеральный округ",
-		Subject: "Область"
-	},
-	ListNames: {
-		City: "cityList",
-		District: "districtList",
-		Subject: "subjectList",
-		Strata: "strataList",
-		Country: "countryList"
-	},
-	QuestionNames: {
-		District: "District",
-		Subject: "Subject",
-		City: "City"
-	},
-	FilePath: "T:\\=Tiburon_NEW\\Geo"
-}
-
-
-/** Структура одной строки в файле географии */
-export class GeoFileLineData
-{
-	CountryId: string;
-	CityId: string;
-	DistrictId: string;
-	StrataId: string;
-	SubjectId: string;
-	FilMegafonId: string;
-
-	CountryName: string;
-	CityName: string;
-	CityPopulation: number;
-	DistrictName: string;
-	StrataName: string;
-	SubjectName: string;
-	FilMegafonName: string;
-}
-
-/** Возвращает путь к самому свежему файлу `*-geo.xlsx` */
-function getGeoPath(): string
-{
-	let res: string = null;
-	if (pathExists(GeoConstants.FilePath))
-	{
-		let files = fs.readdirSync(GeoConstants.FilePath).map(f =>
-		{
-			let res: number;
-			let match = f.match(/^(\d+)-geo\.xlsx$/);
-			if (!!match) res = Number(match[1]);
-			return res;
-		}).filter(f => !!f).sort((a, b) => { return b - a; });
-		if (files.length > 0) res = Path.Concat(GeoConstants.FilePath, files[0] + "-geo.xlsx");
-	}
-	return res;
-}
-
-/** Все строки первого листа (Geo) */
-async function readGeoFileList(path: string): Promise<[][]>
-{
-	return xlsx.parse(path)[0].data;
-}
-
-/** Преобразование записей файла в структуру */
-async function parseGeoList(data: [][]): Promise<GeoFileLineData[]>
-{
-	let lines = data.concat([]);
-	let cellNames = lines.shift();
-	let res: GeoFileLineData[] = [];
-	lines.forEach(line =>
-	{
-		// либо все, либо без мегафона
-		if (line.length != cellNames.length && line.length != cellNames.length - 2) return;
-		let lineData = new GeoFileLineData();
-		for (let i = 0; i < cellNames.length; i++)
-		{
-			lineData[cellNames[i]] = line[i];
-		}
-		res.push(lineData);
-	});
-	return res;
-}
-
+var geoFileCache: City[] = [];
 
 /** Возвращает все города */
-export async function readGeoFile(): Promise<GeoFileLineData[]>
+export async function readGeoFile(): Promise<GeoData>
 {
 	if (geoFileCache.length == 0)
 	{
-		let path = getGeoPath();
-		if (!path) throw "Путь к файлу с георафией не найден";
-		let geoList = await readGeoFileList(path);
-		let res = await parseGeoList(geoList);
-		geoFileCache = res.filter(x => !!x.CityId && !!x.CityName); // фильтруем косяки
+		geoFileCache = (await getAllCities()).get(false);
 	}
-	return geoFileCache;
+	return new GeoData(geoFileCache);
 }
 
 
 /** Создаёт все нужные списки для географии */
-export async function createGeolists(cities: GeoFileLineData[], lists: string[], withPopulation: boolean, addCremea: boolean): Promise<string>
+export async function createGeolists(cities: City[], lists: string[], withPopulation: boolean): Promise<string>
 {
 	let res = '\n\n';
 	let international = cities.map(x => x.CountryId).distinct().length > 1;
-	// Исключаем Республику Крым и Севастополь
-	if (!addCremea) cities = cities.filter(x => !['97', '122'].includes(x.SubjectId));
 
 	// Страны
 	if (international)
