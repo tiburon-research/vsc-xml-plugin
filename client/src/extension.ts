@@ -2001,9 +2001,13 @@ async function getAnswers()
 					xml.AddQuestions(qId + '_QList', data);
 					xml.AddAnswers(createAnswers(qData.Answers, _settings).ToArray((key, value) => value));
 					xml.Header = qData.Question.Header;
-					xml.Step = true;
 					if (res == 'Union') result += xml.ToUnionXml(qId, "${2|" + QuestionTypes.join(',') + "|}");
-					else result += xml.ToQuestionBlock("${2|" + QuestionTypes.join(',') + "|}");
+					else
+					{
+						xml.Step = true;
+						xml.HeaderFix = true;
+						result += xml.ToQuestionBlock("${2|" + QuestionTypes.join(',') + "|}");
+					}
 					_inProcess = true;
 					let indent = !!tag ? tag.GetIndent() : 1;
 					Formatting.format(result, Language.XML, _settings, "\t", indent).then(x =>
