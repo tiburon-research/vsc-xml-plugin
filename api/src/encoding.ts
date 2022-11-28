@@ -1,8 +1,9 @@
 'use strict'
 
 import * as shortHash from "short-hash"
-import { KeyedCollection, safeRegexp } from "./customs"
 import { RegExpPatterns } from './constants'
+import '@vsc-xml-plugin/extensions';
+import { KeyedCollection } from "@vsc-xml-plugin/common-classes/keyedCollection";
 
 
 /* ---------------------------------------- КОДИРОВАНИЕ ---------------------------------------- */
@@ -88,7 +89,7 @@ export function getElementsBack(text: string, encodeResult: XMLencodeResult): st
 	let newText = text;
 	encodeResult.EncodedCollection.ForEach(function (i, e)
 	{
-		newText = newText.replace(new RegExp(safeRegexp(encodeResult.Delimiter + i + encodeResult.Delimiter), "g"), e);
+		newText = newText.replace(new RegExp((encodeResult.Delimiter + i + encodeResult.Delimiter).escape(), "g"), e);
 	})
 	return newText;
 }
@@ -149,7 +150,7 @@ export function getReplaceDelimiter(text: string, length?: number): string
 	for (let i = 0; i < dels.length; i++) 
 	{
 		let curDel = dels[i].repeat(length);
-		let mt = text.match(new RegExp(safeRegexp(curDel) + RegExpPatterns.DelimiterContent + safeRegexp(curDel), "g"));
+		let mt = text.match(new RegExp(curDel.escape() + RegExpPatterns.DelimiterContent + curDel.escape(), "g"));
 		if (!mt || mt.length == 0) return curDel;
 	}
 	if (!del) throw 'Подходящий разделитель не найден';
@@ -232,13 +233,13 @@ export function clearCSContents(text: string): string
 	// Очищаем полные теги
 	let reg = new RegExp("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)((?![\\t ]+\\r?\\n)[\\s\\S]+?)?(<\\/\\2\\s*>)");
 
-	let resCS = res.matchAllGroups(reg);
+	let resCS = res.findAll(reg);
 	resCS.forEach(element =>
 	{
-		let open = element[1];
-		let inner = typeof element[7 + tCount] == 'undefined' ? '' : element[7 + tCount].replace(/./g, ' ');
-		let close = element[8 + tCount];
-		let repl = new RegExp(safeRegexp(element[0]));
+		let open = element.Result[1];
+		let inner = typeof element.Result[7 + tCount] == 'undefined' ? '' : element.Result[7 + tCount].replace(/./g, ' ');
+		let close = element.Result[8 + tCount];
+		let repl = new RegExp(element.Result[0].escape());
 		res = res.replace(repl, open + inner + close);
 	});
 

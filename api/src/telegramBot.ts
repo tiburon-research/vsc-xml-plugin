@@ -1,9 +1,8 @@
 'use strict';
+
+import { KeyedCollection } from "@vsc-xml-plugin/common-classes/keyedCollection";
+
 // TELEGRAM БОТ ДЛЯ ОПОВЕЩЕНИЯ ОБ ОШИБКАХ
-
-
-
-import { KeyedCollection } from "./index";
 
 
 
@@ -91,7 +90,7 @@ export class TelegramBot
 	 */
 	public sendLog(text: string, userName: string): void
 	{
-		if (!!userName && !!this.Data.ignoreUsers && this.Data.ignoreUsers.contains(userName)) return;
+		if (!!userName && !!this.Data.ignoreUsers && this.Data.ignoreUsers.includes(userName)) return;
 		this.Data.logIds.forEach(id =>
 		{
 			this.sendMessage(id, text);

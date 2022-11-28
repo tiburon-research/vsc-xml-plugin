@@ -1,11 +1,12 @@
 'use strict'
 
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, CurrentTag, Language, getPreviousText, comparePositions, IServerDocument, Parse, getCurrentLineText, getWordRangeAtPosition, translatePosition, applyConstants, uriFromName, KeyValuePair, SimpleTag } from 'tib-api';
+import { CurrentTag, Language, getPreviousText, IServerDocument, Parse, getCurrentLineText, getWordRangeAtPosition, translatePosition, applyConstants, uriFromName, SimpleTag } from 'tib-api';
 import { ISurveyData, TibAttribute, TextEdits } from 'tib-api/lib/surveyData';
 import { ItemSnippets, QuestionTypes, RegExpPatterns, XMLEmbeddings, PreDefinedConstants } from 'tib-api/lib/constants';
 import * as AutoCompleteArray from './autoComplete';
 import { logError, _Settings } from './server';
+import { KeyedCollection, KeyValuePair } from '@vsc-xml-plugin/common-classes/keyedCollection';
 
 
 /** Возвращает все автозавершения для текущего места */
@@ -235,14 +236,14 @@ class ElementExtractor
 		try
 		{
 			let res = new KeyedCollection<string[]>();
-			let match = input.matchAllGroups(/{{(\w+)}}/);
+			let match = input.findAll(/{{(\w+)}}/);
 			if (!match || match.length == 0) return input;
 			let parent = this._ElementFunctions;
 			match.forEach(element =>
 			{
-				if (!!parent[element[1]] && !res.ContainsKey(element[1]))
+				if (!!parent[element.Result[1]] && !res.ContainsKey(element.Result[1]))
 				{
-					res.AddPair(element[1], parent[element[1]].call(this));
+					res.AddPair(element.Result[1], parent[element.Result[1]].call(this));
 				}
 			});
 			let i = 1;
@@ -467,7 +468,7 @@ export class TibAutoCompletes
 						{
 							case 'Page':
 								body = '!-- <Block Items="\\$repeat($1){$2_{{iterator}}[,]}" MixId="$2Mix"/> -->\n<Repeat {{init}}>\n\t<Question Id="${2:Q1}_{{iterator}}" SyncId="{{iterator}}" Hint="">\n\t\t<Header>[div class="c"]' + (type == "List" ? "@Text" : "$3") + '[/div]</Header>\n\t\t$0\n\t</Question>\n</Repeat>';
-								if (!this.tag.Body.contains("Step='1'") && !this.tag.Body.contains('Step="1"')) body = 'Ui Step="1" HeaderFix="1"/>\n<' + body;
+								if (!this.tag.Body.includes("Step='1'") && !this.tag.Body.includes('Step="1"')) body = 'Ui Step="1" HeaderFix="1"/>\n<' + body;
 								break;
 
 							case 'Question':
@@ -757,7 +758,7 @@ export class TibAutoCompletes
 		{
 			let consts = this.surveyData.ConstantItems.Select((key, value) => new KeyValuePair(value.Id, value.Content));
 			consts.AddRange(KeyedCollection.FromObject(PreDefinedConstants));
-			let suitable = !!word ? consts.Filter((key, value) => key.contains(word)) : consts;
+			let suitable = !!word ? consts.Filter((key, value) => key.includes(word)) : consts;
 			if (suitable.Count > 0) completionItems = completionItems.concat(suitable.ToArray((key, value) =>
 			{
 				let ci = server.CompletionItem.create(key);
@@ -877,7 +878,7 @@ export function getHovers(tag: CurrentTag, document: server.TextDocument, positi
 		// надо проверить родителя: если нашёлся static, то только его, иначе всё подходящее
 		let suit = codeAutoCompleteArray.filter(x => x.Name == text);
 		let staticParens = codeAutoCompleteArray.filter(x => x.Kind == 'Class').map(x => x.Name);
-		if (staticParens.contains(parent))
+		if (staticParens.includes(parent))
 		{
 			suit = suit.filter(x =>
 			{
@@ -1043,13 +1044,13 @@ export class TibDocumentHighLights
 
 			if (!!reg[1])
 			{
-				let allBlocks = prevText.matchAllGroups(/<!--#block.*-->/);
+				let allBlocks = prevText.findAll(/<!--#block.*-->/);
 				if (!allBlocks || allBlocks.length == 0) return res;
 
 				let match = allBlocks.last();
 				nextRange = server.Range.create(
-					this.document.positionAt(match.index),
-					this.document.positionAt(match.index + match[0].length)
+					this.document.positionAt(match.Index),
+					this.document.positionAt(match.Index + match.Result[0].length)
 				);
 			}
 			else
@@ -1129,7 +1130,7 @@ export function getDefinition(tag: CurrentTag, document: server.TextDocument, po
 			let enabledNodes = allNodes;
 			if (!!target)
 			{
-				if (allNodes.contains(target[1])) enabledNodes = [target[1]];
+				if (allNodes.includes(target[1])) enabledNodes = [target[1]];
 				else if (target[1] == "Store") enabledNodes = ["Question"];
 			}
 			else if (!!prevText.match(/Lists\[\s*"$/)) enabledNodes = ["List"];

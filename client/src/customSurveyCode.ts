@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { JQuery, Language } from 'tib-api';
-import { SurveyListItem, SurveyListItemVars, SurveyConstantsItem } from 'tib-api/lib/surveyObjects';
+import { SurveyListItem, SurveyListItemVars, SurveyConstantsItem } from '@vsc-xml-plugin/survey-objects';
 import * as Formatting from './formatting';
 import { Settings } from './extension';
 import xlsx from 'node-xlsx';

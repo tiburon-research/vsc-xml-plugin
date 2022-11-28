@@ -3,8 +3,8 @@
 import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
-import { CurrentTag, Language, positiveMin, isScriptLanguage, safeRegexp, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit, Watcher, Encoding } from "tib-api";
-import { SurveyElementType, SurveyQuestionBlock } from 'tib-api/lib/surveyObjects'
+import { CurrentTag, Language, positiveMin, isScriptLanguage, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit, Watcher } from "tib-api";
+import { SurveyElementType, SurveyQuestionBlock } from '@vsc-xml-plugin/survey-objects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox, readFileText, openTextInNewTab, YesNoQuickPick } from "./classes";
 import * as Formatting from './formatting'
 import * as fs from 'fs';
@@ -15,11 +15,12 @@ import * as client from 'vscode-languageclient/node';
 import * as path from 'path';
 import { TelegramBot } from 'tib-api/lib/telegramBot';
 import { TibOutput, showWarning, LogData, TibErrors, showInfo, showError } from './errors';
-import { readGeoFile, createGeolists, createGeoPage } from './geo';
 import { getCustomJS, getListItem, getAnswer } from 'tib-api/lib/parsing';
 import * as customCode from './customSurveyCode';
 import { createAnswers } from './documentEdits';
-import { GeoClusters, GeoConstants } from '@vsc-xml-plugin/geo';
+import { GeoClusters, GeoConstants, getAllCities } from '@vsc-xml-plugin/geo';
+import { createGeoPage, createGeolists, GeoXmlCreateionConfig } from '@vsc-xml-plugin/geo/xml';
+import { SurveEngineGeneration } from '@vsc-xml-plugin/survey-objects';
 
 
 export { CSFormatter, _settings as Settings };
@@ -355,7 +356,7 @@ async function registerCommands()
 	{
 		return new Promise<void>((resolve, reject) =>
 		{
-			chooseGeo().then(geoXML =>
+			chooseGeo(false).then(geoXML =>
 			{
 				_inProcess = true;
 				Formatting.format(geoXML, Language.XML, _settings, "\t", 1).then(formatted =>
@@ -1322,7 +1323,7 @@ async function insertAutoCloseTags(data: ITibEditorData): Promise<boolean>
 
 					if ((tagCl == -1 || tagOp > -1 && tagOp < tagCl) || result[1].match(/^(Repeat)|(Condition)|(Block)$/))
 					{
-						let closed = after.match(new RegExp("^[^<]*(<\\/)?" + safeRegexp(result[1])));
+						let closed = after.match(new RegExp("^[^<]*(<\\/)?" + result[1].escape()));
 						if (!closed)
 						{
 							res = await data.editor.insertSnippet(new vscode.SnippetString("</" + result[1] + ">"), originalPosition, { undoStopAfter: false, undoStopBefore: false }) || res;
@@ -1445,14 +1446,14 @@ async function checkCodingEntity(data: ITibEditorData): Promise<boolean>
 	let indexOf = data.editor.document.offsetAt(data.editor.selection.active);
 	let prevText = fullText.slice(0, indexOf);
 	let curAttr = prevText.match(/\sType=(["'])(\w+)$/);
-	if (!!curAttr && OpenQuestionTagNames.contains(curAttr[2]))
+	if (!!curAttr && OpenQuestionTagNames.includes(curAttr[2]))
 	{
 		let value = '\t'.repeat(data.tag.GetIndent()) + '<CodingEntity></CodingEntity>\n';
 		let lastIndex = data.editor.document.getText().indexOf("\n", indexOf) + 1;
 		if (lastIndex < 1) return false;
 		let lastPosition = data.editor.document.positionAt(lastIndex);
 		let closedIndex = fullText.indexOf("<Question", lastIndex);
-		if (!fullText.slice(lastIndex, closedIndex).contains("<CodingEntity"))
+		if (!fullText.slice(lastIndex, closedIndex).includes("<CodingEntity"))
 		{
 			return await data.editor.edit(builder =>
 			{
@@ -1594,7 +1595,7 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 	let newText = text;
 
 	//проверяем на наличие комментов внутри
-	let inComReg = new RegExp("(" + safeRegexp(cStart) + ")|(" + safeRegexp(cEnd) + ")");
+	let inComReg = new RegExp("(" + cStart.escape() + ")|(" + cEnd.escape() + ")");
 
 	function checkInnerComments(text: string): boolean
 	{
@@ -1604,9 +1605,9 @@ async function commentBlock(editor: vscode.TextEditor, selection: vscode.Selecti
 	let valid = checkInnerComments(newText);
 
 	// если это закомментированный, то снимаем комментирование
-	if (!valid && newText.match(new RegExp("^\\s*" + safeRegexp(cStart) + "[\\S\\s]*" + safeRegexp(cEnd) + "\\s*$")))
+	if (!valid && newText.match(new RegExp("^\\s*" + cStart.escape() + "[\\S\\s]*" + cEnd.escape() + "\\s*$")))
 	{
-		newText = newText.replace(new RegExp("^(\\s*)" + safeRegexp(cStart) + "( ?)([\\S\\s]*)( ?)" + safeRegexp(cEnd) + "(\\s*)$"), "$1$3$5");
+		newText = newText.replace(new RegExp("^(\\s*)" + cStart.escape() + "( ?)([\\S\\s]*)( ?)" + cEnd.escape() + "(\\s*)$"), "$1$3$5");
 		valid = checkInnerComments(newText);
 	}
 	else
@@ -1820,10 +1821,10 @@ function lockDocument(document: vscode.TextDocument, log = false, force = false)
 		let docPath = path.FullPath;
 		if (document.languageId == "tib" && (!fileIsLocked(docPath) || force))
 		{
-			if (!!noLock && noLock.contains(docPath)) return;
+			if (!!noLock && noLock.includes(docPath)) return;
 			lockFile(docPath);
 			createLockInfoFile(path, _userInfo);
-			if (!_lockedFiles.contains(docPath)) _lockedFiles.push(docPath);
+			if (!_lockedFiles.includes(docPath)) _lockedFiles.push(docPath);
 			if (log) _outChannel.logToOutput(`Файл "${path.FileName}" заблокирован для других пользователей.`);
 		}
 	} catch (error)
@@ -1841,7 +1842,7 @@ function unlockDocument(document: vscode.TextDocument, log = false)
 	{
 		let path = new Path(document.fileName);
 		let docPath = path.FullPath;
-		if (document.languageId == "tib" && _lockedFiles.contains(docPath))
+		if (document.languageId == "tib" && _lockedFiles.includes(docPath))
 		{
 			unlockFile(docPath);
 			removeLockInfoFile(path);
@@ -1858,7 +1859,7 @@ function unlockDocument(document: vscode.TextDocument, log = false)
 function isLocked(document: vscode.TextDocument): boolean
 {
 	let docPath = new Path(document.fileName).FullPath;
-	return !_lockedFiles.contains(docPath) && fileIsLocked(docPath);
+	return !_lockedFiles.includes(docPath) && fileIsLocked(docPath);
 }
 
 
@@ -1938,10 +1939,10 @@ async function createElements(elementType: SurveyElementType)
 		}
 		if (elementType == SurveyElementType.Page)
 		{
-			if (parentNames.contains("Question")) elementType = SurveyElementType.Answer;
-			else if (parentNames.contains("Page")) elementType = SurveyElementType.Question;
+			if (parentNames.includes("Question")) elementType = SurveyElementType.Answer;
+			else if (parentNames.includes("Page")) elementType = SurveyElementType.Question;
 		}
-		else if (elementType == SurveyElementType.List && parentNames.contains("List")) elementType = SurveyElementType.ListItem;
+		else if (elementType == SurveyElementType.List && parentNames.includes("List")) elementType = SurveyElementType.ListItem;
 
 		let res = TibDocumentEdits.createElements(text, elementType, _settings);
 		if (!res.Ok)
@@ -1996,7 +1997,7 @@ async function getAnswers()
 					let data = _lastCommand.data as Parse.ParsedElementObject[];
 					let qData = Parse.parseQuestion(text);
 					let qId = !!qData.Question.Id ? '${1:' + qData.Question.Id + '}' : '$1';
-					let xml = new SurveyQuestionBlock(qId);
+					let xml = new SurveyQuestionBlock(qId, SurveEngineGeneration.Adaptive);
 					xml.QuestionMix = qId + 'mix';
 					xml.AddQuestions(qId + '_QList', data);
 					xml.AddAnswers(createAnswers(qData.Answers, _settings).ToArray((key, value) => value));
@@ -2226,15 +2227,15 @@ async function registerActionCommands()
 			let editor = vscode.window.activeTextEditor;
 			let text = editor.document.getText(range);
 			let res = text;
-			let matches = text.matchAllGroups(/_([a-zA-Z@\-\(\)]?)/);
+			let matches = text.findAll(/_([a-zA-Z@\-\(\)]?)/);
 			matches.forEach(element =>
 			{
 				let search = "_";
 				let repl = "";
-				if (!!element[1])
+				if (!!element.Result[1])
 				{
-					search += element[1];
-					repl = element[1].toLocaleUpperCase();
+					search += element.Result[1];
+					repl = element.Result[1].toLocaleUpperCase();
 				}
 				res = res.replace(new RegExp(search, "g"), repl);
 			});
@@ -2364,9 +2365,9 @@ async function registerCommand(name: string, command: (...args) => Promise<any>,
 
 
 
-async function chooseGeo(oldVariant = false)
+async function chooseGeo(oldVariant)
 {
-	let geoData = await readGeoFile();
+	let geoData = await getAllCities();
 	let step = 1;
 	let ignoreFocusOut = true;
 	let totalSteps = 7;
@@ -2396,12 +2397,12 @@ async function chooseGeo(oldVariant = false)
 				step: ++step,
 				placeHolder,
 				items,
-				selectedItems: !!selectedItems ? items.filter(x => selectedItems.contains(x.label)) : undefined
+				selectedItems: !!selectedItems ? items.filter(x => selectedItems.includes(x.label)) : undefined
 			}
 			let q = new CustomQuickPick(options);
 			q.execute().then(selectedItems =>
 			{
-				geoData.filter(x => selectedItems.contains(x[propertyName]));
+				geoData.filter(x => selectedItems.includes(x[propertyName]));
 				resolve(selectedItems);
 			});
 		});
@@ -2459,15 +2460,23 @@ async function chooseGeo(oldVariant = false)
 
 	if (oldVariant)
 	{
-		if (groupBy.contains(GeoConstants.GroupBy.District)) await getNextQuestionId("District", GeoConstants.QuestionNames.District, GeoConstants.GroupBy.District);
-		if (groupBy.contains(GeoConstants.GroupBy.Subject)) await getNextQuestionId("Subject", GeoConstants.QuestionNames.Subject, GeoConstants.GroupBy.Subject);
+		if (groupBy.includes(GeoConstants.GroupBy.District)) await getNextQuestionId("District", GeoConstants.QuestionNames.District, GeoConstants.GroupBy.District);
+		if (groupBy.includes(GeoConstants.GroupBy.Subject)) await getNextQuestionId("Subject", GeoConstants.QuestionNames.Subject, GeoConstants.GroupBy.Subject);
 	}
 	await getNextQuestionId("City", GeoConstants.QuestionNames.City, "Город");
 
 
 	// генерация XML
-	let lists = await createGeolists(geoData.get(true), groupBy, byPop);
-	let page = await createGeoPage(oldVariant ? groupBy : [], qIds, byPop, !oldVariant);
+	let config: GeoXmlCreateionConfig = {
+		seType: SurveEngineGeneration.Adaptive,
+		asComboBox: !oldVariant,
+		cities: geoData.get(true),
+		groupBy,
+		questionIds: qIds,
+		withPopulation: byPop
+	};
+	let lists = await createGeolists(config);
+	let page = await createGeoPage(config);
 	return lists + page;
 }
 

@@ -1,9 +1,11 @@
 'use strict'
 import * as server from 'vscode-languageserver';
-import { KeyedCollection, translatePosition, Encoding, Parse, ErrorCodes, SearchResult, Watcher } from 'tib-api';
+import { Encoding, Parse, ErrorCodes } from 'tib-api';
 import { RegExpPatterns } from 'tib-api/lib/constants';
 import { logError, consoleLog } from './server';
 import { SurveyData, SurveyNode } from 'tib-api/lib/surveyData';
+import { KeyedCollection } from '@vsc-xml-plugin/common-classes/keyedCollection';
+import { SearchResult } from '@vsc-xml-plugin/extensions';
 
 
 //#region --------------------------- const type interface
@@ -241,7 +243,7 @@ async function wrongQuots(data: IDiagnosticFunctionData): Promise<Parse.Document
 	let res: Parse.DocumentElement[] = [];
 	let ins = preparedText.findAll(/(\w+=)("|')([^'"]*\[c#.+?\[\/c#\s*\][^'"]*)\2/);
 	ins.forEach(element => {
-		if (element.Result[3].contains(element.Result[2]))
+		if (element.Result[3].includes(element.Result[2]))
 		{
 			let from = element.Index + element.Result[1].length;
 			res.push(new Parse.DocumentElement(document, {
@@ -301,16 +303,16 @@ async function dangerousConstandIds(data: IDiagnosticFunctionData): Promise<Pars
 	{
 		for (const constantTag of constants)
 		{
-			let items = constantTag.Value[itemsGroup].matchAllGroups(regItem);
+			let items = constantTag.Value[itemsGroup].findAll(regItem);
 			if (!!items && items.length > 0)
 			{
 				for (const item of items)
 				{
-					if (!item) continue;
-					let match = regStart.exec(item[itemIdGroup]);
+					if (!item.Result) continue;
+					let match = regStart.exec(item.Result[itemIdGroup]);
 					if (!!match)
 					{
-						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length;
+						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.Index + item.Result[itemPreGroup].length;
 						let wrongItem = new Parse.DocumentElement(document, {
 							Value: match,
 							Message: `Не стоит начинать Id константы с "${match[0]}"`,
@@ -319,15 +321,15 @@ async function dangerousConstandIds(data: IDiagnosticFunctionData): Promise<Pars
 						});
 						res.push(wrongItem);
 					}
-					let _ = item[itemIdGroup].indexOf("_");
+					let _ = item.Result[itemIdGroup].indexOf("_");
 					if (_ > -1)
 					{
-						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.index + item[itemPreGroup].length;
+						let from = constantTag.From + constantTag.Value[constTagGroup].length + item.Index + item.Result[itemPreGroup].length;
 						let wrongItem = new Parse.DocumentElement(document, {
 							Value: ["_"],
 							Message: "Константы с '_' не распознаются в расширении как константы",
 							From: from,
-							To: from + item[itemIdGroup].length,
+							To: from + item.Result[itemIdGroup].length,
 							DiagnosticProperties:
 							{
 								Type: server.DiagnosticSeverity.Information,
@@ -398,7 +400,7 @@ async function metaNotProhibited(data: IDiagnosticFunctionData): Promise<Parse.D
 				.map(t => ({ Result: t.Result, Index: l.Index + t.Index + l.Result[1].length } as SearchResult))
 		);
 	const listItemsText: SearchResult[] = [].concat(...listItems);
-	[...pages, ...listItemsText].forEach(tag =>
+	[...pages, ...listItemsText].forEach((tag: SearchResult) =>
 	{
 		const tagContent = tag.Result[2];
 		const prohibited = tagContent?.find(prohibitedTexts);
@@ -471,11 +473,11 @@ function copyPastedCS(data: IDiagnosticFunctionData): Promise<Parse.DocumentElem
 	{
 		let res: Parse.DocumentElement[] = [];
 		let csIns = preparedText.findAll(/\[c#[^\]]*\]([\s\S]+?)\[\/c#\s*\]/);
-		let groups = csIns.groupBy<SearchResult>(x => x.Result[1]).Filter((key, value) =>
+		let groups = csIns.groupBy(x => x.Result[1]).Filter((key, value) =>
 		{
 			if (value.length < 5) return false;
-			if (key.matchAllGroups(/\w{5,}\(/).length > 1) return true; // проверяем количество вызываемых методов
-			if (key.matchAllGroups(/\+|(\|\|)|(\&\&)/).length > 2) return true; // проверяем количество операторов (самых частых)
+			if (key.findAll(/\w{5,}\(/).length > 1) return true; // проверяем количество вызываемых методов
+			if (key.findAll(/\+|(\|\|)|(\&\&)/).length > 2) return true; // проверяем количество операторов (самых частых)
 			return false;
 		});
 		
@@ -599,10 +601,10 @@ async function findDuplicatedText(document: server.TextDocument, searchResults: 
 	let res: Parse.DocumentElement[] = [];
 	let filteredREsults = searchResults.filter(x => x.Result[groupIndex].length > minLength && !x.Result[groupIndex].match(/(\[c#\])|@(ID|Text|Pure|Var|Itera)/));
 	let eqComparer = (result: SearchResult) => { return result.Result[groupIndex].replace(/(<!\[CDATA\[)|(\]\]>)/g, '').trim() };
-	let eqTexts = filteredREsults.findDuplicates<SearchResult>((x1, x2) => eqComparer(x1) == eqComparer(x2));
+	let eqTexts = filteredREsults.findDuplicates((x1, x2) => eqComparer(x1) == eqComparer(x2));
 	if (eqTexts.length > 0)
 	{
-		searchResults.filter(x => eqTexts.contains(x, el => eqComparer(el) == eqComparer(x))).forEach(header =>
+		searchResults.filter(x => !!eqTexts.find(el => eqComparer(el) == eqComparer(x))).forEach(header =>
 		{
 			let indent = groupIndent > -1 ? header.Result[groupIndent].length : 0;
 			res.push(new Parse.DocumentElement(document, {

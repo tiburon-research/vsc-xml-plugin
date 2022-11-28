@@ -1,6 +1,6 @@
 'use strict';
 
-import { Language, safeRegexp, Parse, Encoding } from "tib-api";
+import { Language, Parse, Encoding } from "tib-api";
 import * as Constants from "tib-api/lib/constants";
 import * as beautify from 'js-beautify';
 import * as cssbeautify from 'cssbeautify';
@@ -521,15 +521,15 @@ function preFormatXML(text: string): string
 	res = res.replace(/<!\[CDATA\[\s*\]\]>/, "");
 	// переносим остатки CDATA на новую строку
 	let regCS = new RegExp("(<!\\[CDATA\\[)(.*\\r?\\n[\\s\\S]*)(\\]\\]>)");
-	let resCS = res.matchAllGroups(regCS);
+	let resCS = res.findAll(regCS);
 	resCS.forEach(element =>
 	{
-		if (!element[2].match(/\]\]>/))
+		if (!element.Result[2].match(/\]\]>/))
 		{
-			if (element[2].match(/^.*\S.*\r?\n/)) // переносим начало
-				res = res.replace(new RegExp(safeRegexp(element[1] + element[2]), "g"), element[1] + "\n" + element[2]);
-			if (element[2].match(/\S[ \t]*$/)) // переносим конец
-				res = res.replace(new RegExp(safeRegexp(element[2] + element[3]), "g"), element[2] + "\n" + element[3]);
+			if (element.Result[2].match(/^.*\S.*\r?\n/)) // переносим начало
+				res = res.replace(new RegExp(element.Result[1] + element.Result[2].escape(), "g"), element.Result[1] + "\n" + element.Result[2]);
+			if (element.Result[2].match(/\S[ \t]*$/)) // переносим конец
+				res = res.replace(new RegExp(element.Result[2] + element.Result[3].escape(), "g"), element.Result[2] + "\n" + element.Result[3]);
 		}
 	});
 

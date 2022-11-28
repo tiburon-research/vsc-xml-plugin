@@ -1,15 +1,15 @@
 'use strict'
 
 import * as server from 'vscode-languageserver/node';
-import { KeyedCollection, getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData, isValidDocumentPosition, IErrorTagData, Watcher, Encoding } from 'tib-api';
+import { getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData, isValidDocumentPosition, IErrorTagData, Watcher } from 'tib-api';
 import { TibAutoCompleteItem, getCompletions, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition, LanguageString } from './classes';
 import * as AutoCompleteArray from './autoComplete';
 import { _pack, RequestNames } from 'tib-api/lib/constants';
 import { getDiagnosticElements } from './diagnostic';
 import { CacheSet } from 'tib-api/lib/cache';
-import * as xmlDoc from 'xmldoc';
 import { SurveyData, TibMethods, SurveyNodes, getDocumentMethods, getDocumentNodeIds, getMixIds, getIncludePaths, getConstants, SurveyNode, ExportLabel, getExportLabels } from 'tib-api/lib/surveyData';
 import { getXmlObject } from 'tib-api/lib/parsing';
+import { KeyedCollection } from '@vsc-xml-plugin/common-classes/keyedCollection';
 
 
 

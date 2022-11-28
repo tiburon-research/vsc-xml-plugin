@@ -5,8 +5,10 @@
 
 
 import * as server from 'vscode-languageserver';
-import { translatePosition, KeyedCollection, Language, Encoding, KeyValuePair, Parse } from './index';
+import { translatePosition, Language, Encoding, Parse } from './index';
 import * as Constants from './constants'
+import '@vsc-xml-plugin/common-classes/keyedCollection';
+import { KeyedCollection, KeyValuePair } from '@vsc-xml-plugin/common-classes/keyedCollection';
 
 
 

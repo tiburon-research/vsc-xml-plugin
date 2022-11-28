@@ -2,14 +2,16 @@
 
 import { Language, getPreviousText } from "./index";
 import { TextRange, TagInfo, CurrentTag } from './currentTag'
-import { safeRegexp, positiveMin, KeyedCollection } from './customs'
+import { positiveMin } from './customs'
 import { clearXMLComments } from "./encoding"
 import { RegExpPatterns } from './constants'
 import * as charDetect from 'charset-detector'
 import * as server from 'vscode-languageserver';
 import { init as initJQuery } from './tibJQuery';
-import { Structures } from "./surveyObjects";
 import * as xmlDoc from 'xmldoc';
+import '@vsc-xml-plugin/extensions';
+import { KeyedCollection } from "@vsc-xml-plugin/common-classes/keyedCollection";
+import { Structures } from "@vsc-xml-plugin/survey-objects";
 
 
 
@@ -72,7 +74,7 @@ export class ParsedQuestion
 export function findCloseTag(opBracket: string, tagName: string, clBracket: string, before: string | number, fullText: string, needClear = true): FindTagResult
 {
 	let tResult: FindTagResult = { Range: null, SelfClosed: false };
-	let sct = new RegExp("^" + safeRegexp(opBracket) + "?\\w*(\\s+\\w+=((\"[^\"]*\")|('[^']*')))*\\s*\\/" + safeRegexp(clBracket)); // для проверки на selfCloseed
+	let sct = new RegExp("^" + opBracket.escape() + "?\\w*(\\s+\\w+=((\"[^\"]*\")|('[^']*')))*\\s*\\/" + clBracket.escape()); // для проверки на selfCloseed
 	try
 	{
 		let pos = typeof before == 'number' ? before : before.length;
@@ -86,8 +88,8 @@ export function findCloseTag(opBracket: string, tagName: string, clBracket: stri
 			return tResult;
 		}
 		let rest = textAfter;
-		let regOp = new RegExp(safeRegexp(opBracket) + safeRegexp(tagName) + "[^\\w]");
-		let regCl = new RegExp(safeRegexp(opBracket) + "\\/" + safeRegexp(tagName) + "[^\\w]");
+		let regOp = new RegExp(opBracket.escape() + tagName.escape() + "[^\\w]");
+		let regCl = new RegExp(opBracket.escape() + "\\/" + tagName.escape() + "[^\\w]");
 		let op = -1;
 		let cl = -1;
 		let res = regCl.exec(rest);
@@ -520,7 +522,7 @@ export function breakText(text: string): string[]
 {
 	let byBreak = text.split("\n").filter(x => x.trim().length > 0);
 	let byTab = text.split("\t").filter(x => x.trim().length > 0);
-	let strings = byTab.length > 0 && !byTab.find(x => x.contains("\n")) ? byTab : byBreak;
+	let strings = byTab.length > 0 && !byTab.find(x => x.includes("\n")) ? byTab : byBreak;
 	return strings;
 }
 
@@ -707,15 +709,15 @@ export async function getDocumentElements(document: server.TextDocument, search:
 {
 	let res: DocumentElement[] = [];
 	let text = preparedText;
-	let matches = text.matchAllGroups(search);
+	let matches = text.findAll(search);
 	if (!!matches && matches.length > 0)
 	{
 		matches.forEach(element =>
 		{
-			let to = element.index + element[0].length;
+			let to = element.Index + element.Result[0].length;
 			res.push(new DocumentElement(document, {
-				Value: element,
-				From: element.index + (!!indentGroup ? element[indentGroup].length : 0),
+				Value: element.Result,
+				From: element.Index + (!!indentGroup ? element.Result[indentGroup].length : 0),
 				To: to,
 				Message: errorMessage,
 				DiagnosticProperties: diagnosticProps || {} as IDocumentElementDiagnosticProps
@@ -771,18 +773,18 @@ export function getDuplicatedElementsIds(document: server.TextDocument, prepeare
 					duplicated.forEach(d =>
 					{
 						let reg = new RegExp('(<' + key + ")(" + RegExpPatterns.SingleAttribute + ")*\\s*(Id=('|\")" + d + "('|\"))", "i");
-						let matches = prepearedText.matchAllGroups(reg);
+						let matches = prepearedText.findAll(reg);
 						if (!!matches)
 						{
 							matches.forEach(mt =>
 							{
-								if (!!mt.index)
+								if (!!mt.Index)
 								{
-									let full = mt[0];
-									let idAttr = mt[mt.length - 3];
-									let from = mt.index + full.length - idAttr.length;
-									let to = mt.index + full.length;
-									let isWarning = d.contains("@");
+									let full = mt.Result[0];
+									let idAttr = mt.Result[mt.Result.length - 3];
+									let from = mt.Index + full.length - idAttr.length;
+									let to = mt.Index + full.length;
+									let isWarning = d.includes("@");
 									res.push(new DocumentElement(document, {
 										Value: null,
 										From: from,
@@ -812,21 +814,21 @@ export function getWrongMixedElements(document: server.TextDocument, prepearedTe
 	{
 		let res: DocumentElement[] = [];
 		let mixRegex = /((<(Page|Question|Repeat)\s[^>]*)(Mix(Id)?)=[^>]*>)([\s\S]*?)<\/\3/;
-		let parents = prepearedText.matchAllGroups(mixRegex);
+		let parents = prepearedText.findAll(mixRegex);
 
 		parents.forEach(parent =>
 		{
-			let child = parent[6].find(mixRegex);
+			let child = parent.Result[6].find(mixRegex);
 			if (!!child.Result && child.Result.length > 0)
 			{
-				let resultIndex = parent.index + parent[1].length + child.Index + child.Result[2].length;
+				let resultIndex = parent.Index + parent.Result[1].length + child.Index + child.Result[2].length;
 				let endIndex = resultIndex + child.Result[4].length;
-				let parentString = document.positionAt(parent.index).line + 1;
+				let parentString = document.positionAt(parent.Index).line + 1;
 				res.push(new DocumentElement(document, {
 					From: resultIndex,
 					To: endIndex,
 					Value: child.Result,
-					Message: `В родительском ${parent[3]} (строка ${parentString}) указан ${parent[4]}. Вложенные Mix/MixId надо оборачивать в <Block />`
+					Message: `В родительском ${parent.Result[3]} (строка ${parentString}) указан ${parent.Result[4]}. Вложенные Mix/MixId надо оборачивать в <Block />`
 				}));
 			}
 		});
@@ -849,8 +851,8 @@ export function getCsInAutoSplit(document: server.TextDocument, prepearedText: s
 			let answer = content.find(/(<Answer([\s\S]+?)<Text\s*>)([\s\S]+?)<\/Text/);
 			if (!!answer.Result)
 			{
-				let matchAllGroups = answer.Result[3].findAll(/(\[c#[^\]]*\][\s\S]+?\[\/c#\])|(\$\w+)|(@Text)/i).filter(x => !!x.Result && x.Result[0] != '$repeat');
-				let match = matchAllGroups.length > 0 ? matchAllGroups[0] : null;
+				let findAll = answer.Result[3].findAll(/(\[c#[^\]]*\][\s\S]+?\[\/c#\])|(\$\w+)|(@Text)/i).filter(x => !!x.Result && x.Result[0] != '$repeat');
+				let match = findAll.length > 0 ? findAll[0] : null;
 				if (!!match)
 				{
 					let From = element.Index + element.Result[1].length + answer.Index + answer.Result[1].length + match.Index;
@@ -877,12 +879,12 @@ export function getCsInAutoSplit(document: server.TextDocument, prepearedText: s
 export async function getCustomJS(text: string): Promise<string>
 {
 	let res: string = "";
-	let jsElements = text.matchAllGroups(/<!--#JS([\s\S]*?)-->/);
+	let jsElements = text.findAll(/<!--#JS([\s\S]*?)-->/);
 	jsElements.forEach(body =>
 	{
-		if (!body[1]) return;
-		if (!!res) res += "\n" + body[1];
-		else res += body[1];
+		if (!body.Result[1]) return;
+		if (!!res) res += "\n" + body.Result[1];
+		else res += body.Result[1];
 	});
 	return res;
 }
@@ -999,7 +1001,7 @@ export function getNestedElements(nodes: xmlDoc.XmlElement[], targetNames: strin
 			subEls.forEach(x => res.push(x));
 		}
 		
-		if (targetNames.contains(node.name))
+		if (targetNames.includes(node.name))
 		{
 			res.push ({
 				attrs: node.attr,

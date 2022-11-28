@@ -2,9 +2,9 @@
 
 import { JSDOM } from 'jsdom'
 import * as _JQuery from 'jquery'
-import { KeyedCollection } from './customs'
 import * as Encoding from './encoding'
 import { ReplaceXMLDeclaration } from './parsing';
+import { KeyedCollection } from '@vsc-xml-plugin/common-classes/keyedCollection';
 
 
 /** Класс из XMLencodeResult:

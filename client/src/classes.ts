@@ -5,7 +5,8 @@ import * as fs from 'fs'
 import * as iconv from 'iconv-lite'
 import { machineIdSync } from "node-machine-id"
 import { _LockInfoFilePrefix, _pack } from 'tib-api/lib/constants'
-import { CurrentTag, Language, KeyedCollection, Parse, pathExists, IServerDocument, hideFile, showFile, SimpleTag } from 'tib-api';
+import { CurrentTag, Language, Parse, pathExists, IServerDocument, hideFile, showFile, SimpleTag } from 'tib-api';
+import { KeyedCollection } from '@vsc-xml-plugin/common-classes/keyedCollection';
 
 
 

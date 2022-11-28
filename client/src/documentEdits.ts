@@ -1,10 +1,12 @@
 'use strict'
 
-import { Parse, safeRegexp, JQuery, translit, KeyedCollection, safeSnippet } from 'tib-api'
-import { SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElementType, SurveyElement, SurveyListItemVars } from 'tib-api/lib/surveyObjects'
+import { Parse, JQuery, translit } from 'tib-api'
+import { SurveyListItem, SurveyQuestion, SurveyAnswer, SurveyList, SurveyPage, SurveyElementType, SurveyElement, SurveyListItemVars } from '@vsc-xml-plugin/survey-objects'
 import * as vscode from 'vscode'
 import { QuestionTypes } from 'tib-api/lib/constants';
 import { ExtensionSettings } from './classes';
+import '@vsc-xml-plugin/extensions'
+import { KeyedCollection } from '@vsc-xml-plugin/common-classes/keyedCollection';
 
 
 export function AnswersToItems(text: string): string
@@ -52,7 +54,7 @@ function TransformElement(text: string, from: string, to: string): string
 function getAgeRanges(text: string): { from: string, to: string }[]
 {
 	let res = [];
-	let ageLimits = text.split('\n').map(x => x.trim().matchAllGroups(/\d+/)).filter(x => x.length > 0);
+	let ageLimits = text.split('\n').map(x => x.trim().findAll(/\d+/)).filter(x => x.length > 0);
 	for (let i = 0; i < ageLimits.length; i++)
 	{
 		let from: string;
@@ -62,19 +64,19 @@ function getAgeRanges(text: string): { from: string, to: string }[]
 			if (i == 0)
 			{
 				from = '0';
-				to = ageLimits[i][0][0];
+				to = ageLimits[i][0].Result[0];
 			}
 			else if (i == ageLimits.length - 1)
 			{
-				from = ageLimits[i][0][0];
+				from = ageLimits[i][0].Result[0];
 				to = '99';
 			}
 			else throw "Не удалось получить возрастной диапазон в строке " + (i + 1);
 		}
 		else
 		{
-			from = ageLimits[i][0][0];
-			to = ageLimits[i][1][0];
+			from = ageLimits[i][0].Result[0];
+			to = ageLimits[i][1].Result[0];
 		}
 		res.push({ from, to });
 	}
@@ -135,8 +137,8 @@ export function RemoveQuestionIds(text: string): string
 	{
 		let questionHeader = $(this).find("Header");
 		let headerText = questionHeader.text();
-		let qIDValue = $(this).attr('Id');
-		let regex = new RegExp("^\\s*" + safeRegexp(qIDValue) + "\\.?\\s*");
+		let qIDValue = $(this).attr('Id') as string;
+		let regex = new RegExp("^\\s*" + qIDValue.escape() + "\\.?\\s*");
 		qIDValue = headerText.match(regex);
 		headerText = questionHeader.text().replace(qIDValue, "");
 		questionHeader.text(headerText);
@@ -370,7 +372,7 @@ export function createElements(text: string, type: SurveyElementType, settings: 
 		elements.forEach(element =>
 		{
 			if (varsAsTags) return;
-			if (element.Vars.length > 0) varsAsTags = !!element.Vars.find(v => v.contains(","));
+			if (element.Vars.length > 0) varsAsTags = !!element.Vars.find(v => v.includes(","));
 		});
 		elements.forEach(element =>
 		{

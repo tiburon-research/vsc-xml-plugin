@@ -6,9 +6,10 @@
 import * as server from 'vscode-languageserver';
 import * as Encoding from './encoding'
 import * as Parse from './parsing';
-import { KeyedCollection, uriFromName } from './customs';
+import { uriFromName } from './customs';
 import { CurrentTag } from '.';
 import * as xmlDoc from 'xmldoc';
+import { KeyedCollection } from '@vsc-xml-plugin/common-classes/keyedCollection';
 
 
 export interface ISurveyData
@@ -374,18 +375,18 @@ export async function getDocumentMethods(document: server.TextDocument, xml: xml
 	{
 		let str = Parse.getXmlElementFullContent(element);
 		str = Encoding.clearCSComments(str);
-		let m = str.matchAllGroups(reg);
+		let m = str.findAll(reg);
 		m.forEach(met => 
 		{
-			if (met[groups.FullName])
+			if (met.Result[groups.FullName])
 			{
-				let start = element.position + str.indexOf(met[groups.Full]);
-				let isFunc = !!met[groups.Parameters];
+				let start = element.position + str.indexOf(met.Result[groups.Full]);
+				let isFunc = !!met.Result[groups.Parameters];
 				let end = text.indexOf(isFunc ? ")" : ";", start) + 1;
 				let positionFrom = document.positionAt(start);
 				let positionTo = document.positionAt(end);
 				let rng = server.Range.create(positionFrom, positionTo);
-				res.Add(new TibMethod(met[groups.Name], met[groups.Full].trim().replace(/\s{2,}/g, " "), rng, document.uri, isFunc, met[groups.Type]));
+				res.Add(new TibMethod(met.Result[groups.Name], met.Result[groups.Full].trim().replace(/\s{2,}/g, " "), rng, document.uri, isFunc, met.Result[groups.Type]));
 			}
 		});
 	});
