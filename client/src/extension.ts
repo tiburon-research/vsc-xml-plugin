@@ -13,7 +13,7 @@ import { _pack, RegExpPatterns, _WarningLogPrefix, TibPaths, GenerableRepeats, R
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient/node';
 import * as path from 'path';
-import { TelegramBot } from 'tib-api/lib/telegramBot';
+import { TelegramBot } from '@vsc-xml-plugin/telegram-bot';
 import { TibOutput, showWarning, LogData, TibErrors, showInfo, showError } from './errors';
 import { getCustomJS, getListItem, getAnswer } from 'tib-api/lib/parsing';
 import * as customCode from './customSurveyCode';
