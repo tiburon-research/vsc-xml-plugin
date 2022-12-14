@@ -2,7 +2,7 @@
     "name": "tiburonscripter",
     "displayName": "Tiburon XML Helper",
     "description": "Плагин для работы с языком Tiburon XML script",
-    "version": "2.19.3",
+    "version": "2.19.4",
     "publisher": "TiburonResearch",
     "author": {
         "name": "GuRu",
@@ -497,6 +497,7 @@
         "typescript": "^4.7.4"
     },
     "scripts": {
+		"publish": "vsce publish",
         "vscode:prepublish": "npm run compile && npm run copy-signature",
         "compile": "tsc -b api client server",
         "watch": "tsc -b -w  api client server",
