@@ -8,7 +8,6 @@ import { SurveyElementType, SurveyQuestionBlock } from '@vsc-xml-plugin/survey-o
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox, readFileText, openTextInNewTab, YesNoQuickPick } from "./classes";
 import * as Formatting from './formatting'
 import * as fs from 'fs';
-import * as debug from './debug'
 import { _pack, RegExpPatterns, _WarningLogPrefix, TibPaths, GenerableRepeats, RequestNames, QuestionTypes, OpenQuestionTagNames } from 'tib-api/lib/constants'
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient/node';
@@ -17,10 +16,10 @@ import { TelegramBot } from '@vsc-xml-plugin/telegram-bot';
 import { TibOutput, showWarning, LogData, TibErrors, showInfo, showError } from './errors';
 import { getCustomJS, getListItem, getAnswer } from 'tib-api/lib/parsing';
 import * as customCode from './customSurveyCode';
-import { createAnswers } from './documentEdits';
 import { GeoClusters, GeoConstants, getAllCities } from '@vsc-xml-plugin/geo';
 import { createGeoPage, createGeolists, GeoXmlCreateionConfig } from '@vsc-xml-plugin/geo/xml';
 import { SurveEngineGeneration } from '@vsc-xml-plugin/survey-objects';
+import * as TextToXml from '@vsc-xml-plugin/text-to-xml';
 
 
 export { CSFormatter, _settings as Settings };
@@ -112,7 +111,7 @@ export function activate(context: vscode.ExtensionContext)
 
 	let waitFor: Promise<any>[] = [];
 
-	// общие дествия при старте расширения
+	// общие действия при старте расширения
 	waitFor.push(getStaticData());
 	createClientConnection(context); // этого не ждём
 
@@ -275,7 +274,7 @@ async function getStaticData()
 		if (!pathExists(TibPaths.Logs)) _outChannel.logToOutput("Отчёты об ошибках сохранятся не будут. Путь недоступен.", _WarningLogPrefix);
 		_useLinq = _settings.Item("useLinq");
 
-		// получаем фунцию форматирования C#
+		// получаем функцию форматирования C#
 		let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
 		if (!!csharpfixformat) getCSFormatter(csharpfixformat).then(formatter => { CSFormatter = formatter });
 		else _outChannel.logToOutput("Расширение 'Leopotam.csharpfixformat' не установлено, C# будет форматироваться, как простой текст", _WarningLogPrefix);
@@ -326,6 +325,7 @@ async function registerCommands()
 		{
 			if (_pack != "debug") return;
 			// выполняем дебажный тест
+			let debug = require('./debug');
 			debug.test();
 			resolve();
 		});
@@ -391,26 +391,16 @@ async function registerCommands()
 		return createElements(SurveyElementType.List);
 	});
 
-	registerCommand('tib.getQuestions', () => 
+	registerCommand('tib.getQuestions', async () => 
 	{
-		return new Promise<any>((resolve, reject) =>
+		let editor = vscode.window.activeTextEditor;
+		let text = editor.document.getText(editor.selection);
+		let questions = TextToXml.getQuestions(text);
+		await editor.edit(builder =>
 		{
-			let editor = vscode.window.activeTextEditor;
-			let text = editor.document.getText(editor.selection);
-			// находим оптимальный вариант того, как распарсить текст на вопросы
-			let strings = Parse.breakText(text);
-			let questions = strings.map(x => Parse.parseQuestionString(x, true));
-			if (questions.filter(x => !!x.Id).length != questions.length) questions = strings.map(x => new Parse.ParsedElementObject(null, x));
-			let validQuestionsCount = questions.filter(q => !!q.Id).length;
-			let elements = Parse.parseElements(strings);
-			let validElementsCount = elements.filter(q => !!q.Id).length;
-			let results = validQuestionsCount >= validElementsCount ? questions : elements;
-			resolve(results);
-			editor.edit(builder =>
-			{
-				builder.delete(editor.selection);
-			});
+			builder.delete(editor.selection);
 		});
+		return questions;
 	}, false);
 
 
@@ -596,7 +586,7 @@ async function registerCommands()
 		});
 	});
 
-	//Удаление айди вопроса в заголовках вопроса
+	//Удаление id вопроса в заголовках вопроса
 	registerCommand('tib.remove.QuestionIds', () =>
 	{
 		return new Promise<void>((resolve, reject) =>
@@ -1662,7 +1652,7 @@ function pasteText(editor: vscode.TextEditor, selection: vscode.Selection, text:
 /** Замена (вставка) элементов из `lines` в соответствующие выделения `selections` */
 async function multiPaste(editor: vscode.TextEditor, selections: vscode.Selection[], lines: string[]): Promise<void>
 {
-	if (selections.length != lines.length) return showWarning('Количесво выделенных областей не совпадает с количеством вставляемых строк');
+	if (selections.length != lines.length) return showWarning('Количество выделенных областей не совпадает с количеством вставляемых строк');
 
 	/** функция для рекурсивной вставки */
 	async function pasteLines(selections: vscode.Selection[], lines: string[])
@@ -1685,7 +1675,7 @@ async function multiPaste(editor: vscode.TextEditor, selections: vscode.Selectio
 }
 
 
-// вынесенный кусок из комманды вставки
+// вынесенный кусок из команды вставки
 async function multiLinePaste(editor: vscode.TextEditor, lines: string[], separate: boolean = false): Promise<void>
 {
 	if (separate) lines = lines.map(s => { return s.replace(/\t/g, ",") });
@@ -1944,19 +1934,40 @@ async function createElements(elementType: SurveyElementType)
 		}
 		else if (elementType == SurveyElementType.List && parentNames.includes("List")) elementType = SurveyElementType.ListItem;
 
-		let res = TibDocumentEdits.createElements(text, elementType, _settings);
-		if (!res.Ok)
+		let blocks = text.normalizeSpaces().split(/(\r?\n[\t ]*){2,}/).map(x => x.trim()).filter(x => !!x);
+		const single = blocks.length == 1;
+
+		let created = blocks.map(x => TextToXml.createElements({
+			asSnippet: single,
+			questionTypes: QuestionTypes,
+			text: x,
+			type: elementType
+		}));
+		let wrong = created.find(x => !x.Ok);
+		if (!!wrong)
 		{
-			showWarning(res.Message);
+			showWarning(wrong.Message);
 			return;
 		}
 
+		let resultText = single ? created[0].Result : created.map(x => x.Result).join('\n\n');
+
 		_inProcess = true;
 		let indent = !!tag ? tag.GetIndent() : 1;
-		Formatting.format(res.Result.value, Language.XML, _settings, "\t", indent).then(x =>
+		Formatting.format(resultText, Language.XML, _settings, "\t", indent).then(x =>
 		{
-			res.Result.value = x;
-			vscode.window.activeTextEditor.insertSnippet(res.Result).then(() => { _inProcess = false });
+			if (single)
+			{
+				let snippet = new vscode.SnippetString(x);
+				vscode.window.activeTextEditor.insertSnippet(snippet).then(() => { _inProcess = false; });
+			}
+			else
+			{
+				vscode.window.activeTextEditor
+					.edit(builder => builder.replace(editor.selection, resultText))
+					.then(() => { _inProcess = false; });
+
+			}
 		});
 	} catch (error)
 	{
@@ -1968,7 +1979,6 @@ async function createElements(elementType: SurveyElementType)
 /** Команда выделения ответов с выбором */
 async function getAnswers()
 {
-	let simple = true;
 	if (_lastCommand.name == 'tib.getQuestions' && !!_lastCommand.data)
 	{
 		let editor = vscode.window.activeTextEditor;
@@ -1987,44 +1997,33 @@ async function getAnswers()
 		if (!!t?.length)
 		{
 			let res = t[0];
-			let result = '';
 			if (res != 'Игнорировать вопросы')
 			{
-				let answers = TibDocumentEdits.createElements(text, SurveyElementType.Question, _settings);
-				if (answers.Ok)
+				let data = _lastCommand.data as TextToXml.QuestionData[];
+				let result = TextToXml.createQuestionBlock({
+					text,
+					generation: SurveEngineGeneration.Adaptive,
+					asUnion: res == 'Union',
+					questionData: data,
+					questionTypes: QuestionTypes
+				});
+				if (!result.Ok)
 				{
-					simple = false;
-					let data = _lastCommand.data as Parse.ParsedElementObject[];
-					let qData = Parse.parseQuestion(text);
-					let qId = !!qData.Question.Id ? '${1:' + qData.Question.Id + '}' : '$1';
-					let xml = new SurveyQuestionBlock(qId, SurveEngineGeneration.Adaptive);
-					xml.QuestionMix = qId + 'mix';
-					xml.AddQuestions(qId + '_QList', data);
-					xml.AddAnswers(createAnswers(qData.Answers, _settings).ToArray((key, value) => value));
-					xml.Header = qData.Question.Header;
-					if (res == 'Union') result += xml.ToUnionXml(qId, "${2|" + QuestionTypes.join(',') + "|}");
-					else
-					{
-						xml.Step = true;
-						xml.HeaderFix = true;
-						result += xml.ToQuestionBlock("${2|" + QuestionTypes.join(',') + "|}");
-					}
-					_inProcess = true;
-					let indent = !!tag ? tag.GetIndent() : 1;
-					Formatting.format(result, Language.XML, _settings, "\t", indent).then(x =>
-					{
-						// преобразования обычного xml под snippet
-						x = x.replace(/\$all/, '\\$all');
-						x = x.replace(/\$repeat/, '\\$repeat');
-						vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString(x)).then(() => { _inProcess = false });
-					});
+					showWarning(result.Message);
+					return;
 				}
+				_inProcess = true;
+				let indent = !!tag ? tag.GetIndent() : 1;
+				Formatting.format(result.Result, Language.XML, _settings, "\t", indent).then(x =>
+				{
+					let snippet = new vscode.SnippetString(x);
+					vscode.window.activeTextEditor.insertSnippet(snippet).then(() => { _inProcess = false; });
+				});
 			}
 		}
 
 	}
-
-	if (simple)
+	else
 	{
 		await createElements(SurveyElementType.Page);
 	}
@@ -2160,7 +2159,7 @@ interface CodeActionCallback
 
 type ArgumentsInvoker = ((document: vscode.TextDocument, range: vscode.Range, context: vscode.CodeActionContext) => CodeActionCallback);
 
-/** Создаёт комманду и CodeAction для неё */
+/** Создаёт команду и CodeAction для неё */
 async function createCommandActionPair(cmdName: string, actionTitle: string, commandFunction: (...args) => Promise<any>, argumentInvoker: ArgumentsInvoker): Promise<void>
 {
 	registerCommand(cmdName, commandFunction);
@@ -2303,7 +2302,7 @@ async function registerActionCommands()
 }
 
 
-/** Отправка документа на сервер. При вызове с вустым `changeData` не возвращает tag */
+/** Отправка документа на сервер. При вызове с пустым `changeData` не возвращает tag */
 async function updateDocumentOnServer(changeData: OnDidChangeDocumentData = null)
 {
 	let log = new Watcher('updateDocumentOnServer').CreateLogger();

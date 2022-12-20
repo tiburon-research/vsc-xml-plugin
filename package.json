@@ -469,6 +469,7 @@
         "@vsc-xml-plugin/geo": "^1.0.21",
         "@vsc-xml-plugin/survey-objects": "^1.0.4",
         "@vsc-xml-plugin/telegram-bot": "^1.0.2",
+        "@vsc-xml-plugin/text-to-xml": "^1.0.3",
         "charset-detector": "^0.0.2",
         "cssbeautify": "^0.3.1",
         "dateformat": "^3.0.3",
@@ -497,7 +498,7 @@
         "typescript": "^4.7.4"
     },
     "scripts": {
-		"publish": "vsce publish",
+        "publish": "vsce publish",
         "vscode:prepublish": "npm run compile && npm run copy-signature",
         "compile": "tsc -b api client server",
         "watch": "tsc -b -w  api client server",
