@@ -2383,11 +2383,17 @@ async function chooseGeo(oldVariant)
 
 	let byPop = (await qp.execute())[0] == 'численности';
 
-	let nextStep = function (propertyName: string, placeHolder: string, selectedItems?: string[]): Promise<string[]>
+	let nextStep = function (propertyName: string, placeHolder: string, selectedItems?: string[], orderBy?: string): Promise<string[]>
 	{
 		return new Promise<string[]>((resolve, reject) =>
 		{
-			let items = geoData.get(false).map(x => { return x[propertyName] as string }).distinct().filter(x => !!x).map(x => { return { label: x } });
+			let itemsRaw = geoData.get(false);
+			if (!!orderBy) itemsRaw = itemsRaw.orderByValue(x => Number(x[orderBy]));
+			let items = itemsRaw
+				.map(x => { return x[propertyName] as string; })
+				.distinct()
+				.filter(x => !!x)
+				.map(x => { return { label: x }; });
 			if (items.length == 0) return resolve([]);
 			let options: CustomQuickPickOptions = {
 				canSelectMany: true,
@@ -2416,7 +2422,7 @@ async function chooseGeo(oldVariant)
 		totalSteps
 	}, 'Нет');
 	if (!await addCrimeaQP.ask()) geoData.excludeCrimea();
-	if (!byPop) await nextStep("StrataName", "Страта:", ["1млн +", "500тыс.-1 млн.", "250тыс.-500тыс.", "100тыс. - 250тыс."]);
+	if (!byPop) await nextStep("StrataName", "Страта:", ["1млн +", "500тыс.-1 млн.", "250тыс.-500тыс.", "100тыс. - 250тыс."], "StrataId");
 	else
 	{
 		let input = new CustomInputBox({ title: 'Минимальная численность населения', value: '' + minPopulation, totalSteps, step: ++step });
