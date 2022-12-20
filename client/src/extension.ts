@@ -1934,40 +1934,25 @@ async function createElements(elementType: SurveyElementType)
 		}
 		else if (elementType == SurveyElementType.List && parentNames.includes("List")) elementType = SurveyElementType.ListItem;
 
-		let blocks = text.normalizeSpaces().split(/(\r?\n[\t ]*){2,}/).map(x => x.trim()).filter(x => !!x);
-		const single = blocks.length == 1;
-
-		let created = blocks.map(x => TextToXml.createElements({
-			asSnippet: single,
+		let created = TextToXml.createElements({
 			questionTypes: QuestionTypes,
-			text: x,
-			type: elementType
-		}));
-		let wrong = created.find(x => !x.Ok);
-		if (!!wrong)
+			text,
+			type: elementType,
+			multipleSeparator: '\n\n'
+		});
+
+		if (!created.Ok)
 		{
-			showWarning(wrong.Message);
+			showWarning(created.Message);
 			return;
 		}
 
-		let resultText = single ? created[0].Result : created.map(x => x.Result).join('\n\n');
-
 		_inProcess = true;
 		let indent = !!tag ? tag.GetIndent() : 1;
-		Formatting.format(resultText, Language.XML, _settings, "\t", indent).then(x =>
+		Formatting.format(created.Result, Language.XML, _settings, '\t', indent).then(x =>
 		{
-			if (single)
-			{
-				let snippet = new vscode.SnippetString(x);
-				vscode.window.activeTextEditor.insertSnippet(snippet).then(() => { _inProcess = false; });
-			}
-			else
-			{
-				vscode.window.activeTextEditor
-					.edit(builder => builder.replace(editor.selection, resultText))
-					.then(() => { _inProcess = false; });
-
-			}
+			let snippet = new vscode.SnippetString(x);
+			vscode.window.activeTextEditor.insertSnippet(snippet).then(() => { _inProcess = false; });
 		});
 	} catch (error)
 	{
