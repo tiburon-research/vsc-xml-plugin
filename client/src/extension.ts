@@ -1952,7 +1952,8 @@ async function createElements(elementType: SurveyElementType)
 		Formatting.format(created.Result, Language.XML, _settings, '\t', indent).then(x =>
 		{
 			let snippet = new vscode.SnippetString(x);
-			vscode.window.activeTextEditor.insertSnippet(snippet).then(() => { _inProcess = false; });
+			let lines = selectLines(editor.document, editor.selection);
+			vscode.window.activeTextEditor.insertSnippet(snippet, lines).then(() => { _inProcess = false; });
 		});
 	} catch (error)
 	{
@@ -2002,7 +2003,8 @@ async function getAnswers()
 				Formatting.format(result.Result, Language.XML, _settings, "\t", indent).then(x =>
 				{
 					let snippet = new vscode.SnippetString(x);
-					vscode.window.activeTextEditor.insertSnippet(snippet).then(() => { _inProcess = false; });
+					let lines = selectLines(editor.document, editor.selection);
+					vscode.window.activeTextEditor.insertSnippet(snippet, lines).then(() => { _inProcess = false; });
 				});
 			}
 		}
