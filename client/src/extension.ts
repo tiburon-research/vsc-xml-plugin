@@ -4,7 +4,7 @@ import * as server from 'vscode-languageserver';
 import * as vscode from 'vscode';
 
 import { CurrentTag, Language, positiveMin, isScriptLanguage, Parse, getPreviousText, translatePosition, translate, IProtocolTagFields, OnDidChangeDocumentData, pathExists, IServerDocument, IErrorLogData, fileIsLocked, lockFile, unlockFile, JQuery, getWordRangeAtPosition, ErrorCodes, translit, Watcher } from "tib-api";
-import { SurveyElementType, SurveyQuestionBlock } from '@vsc-xml-plugin/survey-objects'
+import { SurveyElementType, SurveyEngineGeneration } from '@vsc-xml-plugin/survey-objects'
 import { openFileText, getContextChanges, inCDATA, ContextChange, ExtensionSettings, Path, createLockInfoFile, getLockData, getLockFilePath, removeLockInfoFile, StatusBar, ClientServerTransforms, isTib, UserData, getUserData, ICSFormatter, logString, CustomQuickPickOptions, CustomQuickPick, CustomInputBox, readFileText, openTextInNewTab, YesNoQuickPick } from "./classes";
 import * as Formatting from './formatting'
 import * as fs from 'fs';
@@ -18,8 +18,9 @@ import { getCustomJS, getListItem, getAnswer } from 'tib-api/lib/parsing';
 import * as customCode from './customSurveyCode';
 import { GeoClusters, GeoConstants, getAllCities } from '@vsc-xml-plugin/geo';
 import { createGeoPage, createGeolists, GeoXmlCreateionConfig } from '@vsc-xml-plugin/geo/xml';
-import { SurveEngineGeneration } from '@vsc-xml-plugin/survey-objects';
 import * as TextToXml from '@vsc-xml-plugin/text-to-xml';
+import { QuestionData, SettingsRules } from '@vsc-xml-plugin/text-to-xml/types';
+import { getAnswerScreenoutRules, getAnswerTextRules, getQuestionHeaderRules, RequestConfig } from '@vsc-xml-plugin/vsc-api-client/rules';
 
 
 export { CSFormatter, _settings as Settings };
@@ -98,6 +99,8 @@ var _lastCommand = {
 	data: null
 }
 
+var _xmlRules: SettingsRules;
+
 //#endregion
 
 
@@ -111,8 +114,11 @@ export function activate(context: vscode.ExtensionContext)
 
 	let waitFor: Promise<any>[] = [];
 
+	let dataPath = TibPaths.Logs + "\\data.json";
+	let configData = pathExists(dataPath) ? JSON.parse(fs.readFileSync(dataPath).toString()) : null;
+
 	// общие действия при старте расширения
-	waitFor.push(getStaticData());
+	waitFor.push(getStaticData(configData));
 	createClientConnection(context); // этого не ждём
 
 	waitFor.push(makeIndent());
@@ -230,7 +236,14 @@ export function activate(context: vscode.ExtensionContext)
 
 	Promise.all(waitFor).then(() => 
 	{
-		_outChannel.logToOutput("Активация клиентской части завершена");
+		// это сделано через такой глубокий Promise потому что
+		// если запускать кучу соединений параллельно, то они встают в очередь
+		// т.к. Node.js поддерживает только 5 параллельно.
+		// при медленном интернете соединение иногда вылетает по таймауту
+		getXmlRules(configData).then(() =>
+		{
+			_outChannel.logToOutput("Активация клиентской части завершена");
+		});
 	});
 
 	_currentStatus.setInfoMessage("Tiburon XML Helper запущен!", 3000);
@@ -243,25 +256,19 @@ export function deactivate()
 }
 
 
-
 /** Сбор необходимых данных */
-async function getStaticData()
+async function getStaticData(configData: any)
 {
 	try 
 	{
 		// запускаем бота
-		let dataPath = TibPaths.Logs + "\\data.json";
-		if (pathExists(dataPath))
+		if (!!configData)
 		{
-			let data = JSON.parse(fs.readFileSync(dataPath).toString());
-			if (!!data)
+			_bot = new TelegramBot(configData, function (res)
 			{
-				_bot = new TelegramBot(data, function (res)
-				{
-					if (!res) _outChannel.logToOutput("Отправка логов недоступна", _WarningLogPrefix);
-					else _outChannel.logToOutput("telegram-бот активирован");
-				});
-			}
+				if (!res) _outChannel.logToOutput("Отправка логов недоступна", _WarningLogPrefix);
+				else _outChannel.logToOutput("telegram-бот активирован");
+			});
 		}
 
 		// инициализируем errors
@@ -279,6 +286,7 @@ async function getStaticData()
 		if (!!csharpfixformat) getCSFormatter(csharpfixformat).then(formatter => { CSFormatter = formatter });
 		else _outChannel.logToOutput("Расширение 'Leopotam.csharpfixformat' не установлено, C# будет форматироваться, как простой текст", _WarningLogPrefix);
 
+		// проверяем наличие плагина с темами
 		if (!_settings.Item("themeExtensionChecked"))
 		{
 			let themeExtension = vscode.extensions.all.find(x => x.id == "TiburonResearch.tiburon-xml-themes");
@@ -300,6 +308,34 @@ async function getStaticData()
 	}
 }
 
+
+async function getXmlRules(configData: { redirect: string, secret: string })
+{
+	// получаем правила преобразования текста в xml
+	const config: RequestConfig = {
+		baseUrl: configData.redirect.replace(/[\\\/]bot([\\\/]?)$/, ''), // костыль, чтоб всё не переделывать
+		secret: configData.secret
+	};
+	try
+	{
+		const answerScreenoutRules = await getAnswerScreenoutRules(config);
+		const answerTextRules = await getAnswerTextRules(config, SurveyEngineGeneration.Adaptive);
+		const questionHeaderRules = await getQuestionHeaderRules(config, SurveyEngineGeneration.Adaptive);
+
+		_xmlRules = {
+			AnswerScreenoutRules: answerScreenoutRules,
+			AnswerTextRules: answerTextRules,
+			QuestionHeaderRules: questionHeaderRules
+		}
+
+		_outChannel.logToOutput("Список правил для генерации XML получен");
+	}
+	catch (error)
+	{
+		showError("Не удалось получить список правил для генерации XML. Дополнительные элементы генерироваться не будут.");
+		_outChannel.logToOutput("Не удалось обновить список правил для генерации XML", _WarningLogPrefix);
+	}
+}
 
 
 //#endregion
@@ -1939,6 +1975,10 @@ async function createElements(elementType: SurveyElementType)
 			text,
 			type: elementType,
 			multipleSeparator: '\n\n'
+		}, {
+			EnableAdditionalXml: _settings.Item('enableAdditionalXml'),
+			SurveyEngineGeneration: SurveyEngineGeneration.Adaptive,
+			Rules: _xmlRules
 		});
 
 		if (!created.Ok)
@@ -1985,14 +2025,20 @@ async function getAnswers()
 			let res = t[0];
 			if (res != 'Игнорировать вопросы')
 			{
-				let data = _lastCommand.data as TextToXml.QuestionData[];
-				let result = TextToXml.createQuestionBlock({
-					text,
-					generation: SurveEngineGeneration.Adaptive,
-					asUnion: res == 'Union',
-					questionData: data,
-					questionTypes: QuestionTypes
-				});
+				let data = _lastCommand.data as QuestionData[];
+				let result = TextToXml.createQuestionBlock(
+					{
+						text,
+						generation: SurveyEngineGeneration.Adaptive,
+						asUnion: res == 'Union',
+						questionData: data,
+						questionTypes: QuestionTypes
+					},
+					{
+						EnableAdditionalXml: _settings.Item('enableAdditionalXml'),
+						SurveyEngineGeneration: SurveyEngineGeneration.Adaptive,
+						Rules: _xmlRules
+					});
 				if (!result.Ok)
 				{
 					showWarning(result.Message);
@@ -2460,7 +2506,7 @@ async function chooseGeo(oldVariant)
 
 	// генерация XML
 	let config: GeoXmlCreateionConfig = {
-		seType: SurveEngineGeneration.Adaptive,
+		seType: SurveyEngineGeneration.Adaptive,
 		asComboBox: !oldVariant,
 		cities: geoData.get(true),
 		groupBy,
