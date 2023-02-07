@@ -312,8 +312,9 @@ async function getStaticData(configData: any)
 async function getXmlRules(configData: { redirect: string, secret: string })
 {
 	// получаем правила преобразования текста в xml
+	if (!configData) return;
 	const config: RequestConfig = {
-		baseUrl: configData.redirect.replace(/[\\\/]bot([\\\/]?)$/, ''), // костыль, чтоб всё не переделывать
+		baseUrl: configData.redirect,
 		secret: configData.secret
 	};
 	try
