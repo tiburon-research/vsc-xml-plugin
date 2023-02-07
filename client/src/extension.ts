@@ -12,7 +12,7 @@ import { _pack, RegExpPatterns, _WarningLogPrefix, TibPaths, GenerableRepeats, R
 import * as TibDocumentEdits from './documentEdits'
 import * as client from 'vscode-languageclient/node';
 import * as path from 'path';
-import { TelegramBot } from '@vsc-xml-plugin/telegram-bot';
+import { ProxyData, TelegramBot } from '@vsc-xml-plugin/telegram-bot';
 import { TibOutput, showWarning, LogData, TibErrors, showInfo, showError } from './errors';
 import { getCustomJS, getListItem, getAnswer } from 'tib-api/lib/parsing';
 import * as customCode from './customSurveyCode';
@@ -108,17 +108,26 @@ var _xmlRules: SettingsRules;
 /*---------------------------------------- активация ----------------------------------------*/
 //#region
 
-export function activate(context: vscode.ExtensionContext)
+export async function activate(context: vscode.ExtensionContext)
 {
 	_outChannel.logToOutput("Начало активации");
 
 	let waitFor: Promise<any>[] = [];
 
 	let dataPath = TibPaths.Logs + "\\data.json";
-	let configData = pathExists(dataPath) ? JSON.parse(fs.readFileSync(dataPath).toString()) : null;
+	let parsedConfig = pathExists(dataPath) ?
+		JSON.parse(fs.readFileSync(dataPath).toString()) as { redirect: string, secret: string, logIds?: string[], ignoreUsers?: string[] }
+		: null;
+
+	const configData = !!parsedConfig ? {
+		secret: parsedConfig.secret,
+		url: parsedConfig.redirect,
+		ignoreUsers: parsedConfig.ignoreUsers,
+		logIds: parsedConfig.logIds
+	} as ProxyData : null;
 
 	// общие действия при старте расширения
-	waitFor.push(getStaticData(configData));
+	await getStaticData(configData);
 	createClientConnection(context); // этого не ждём
 
 	waitFor.push(makeIndent());
@@ -234,17 +243,13 @@ export function activate(context: vscode.ExtensionContext)
 		if (x.languageId == 'tib') unlockDocument(x, true);
 	})
 
-	Promise.all(waitFor).then(() => 
-	{
-		// это сделано через такой глубокий Promise потому что
-		// если запускать кучу соединений параллельно, то они встают в очередь
-		// т.к. Node.js поддерживает только 5 параллельно.
-		// при медленном интернете соединение иногда вылетает по таймауту
-		getXmlRules(configData).then(() =>
-		{
-			_outChannel.logToOutput("Активация клиентской части завершена");
-		});
-	});
+	await waitFor;
+	// это сделано через такой глубокий Promise потому что
+	// если запускать кучу соединений параллельно, то они встают в очередь
+	// т.к. Node.js поддерживает только 5 параллельно.
+	// при медленном интернете соединение иногда вылетает по таймауту
+	await getXmlRules(configData);
+	_outChannel.logToOutput("Активация клиентской части завершена");
 
 	_currentStatus.setInfoMessage("Tiburon XML Helper запущен!", 3000);
 }
@@ -257,18 +262,23 @@ export function deactivate()
 
 
 /** Сбор необходимых данных */
-async function getStaticData(configData: any)
+async function getStaticData(configData: ProxyData)
 {
 	try 
 	{
 		// запускаем бота
 		if (!!configData)
 		{
-			_bot = new TelegramBot(configData, function (res)
+			let botProm = new Promise<void>((resolve, reject) =>
 			{
-				if (!res) _outChannel.logToOutput("Отправка логов недоступна", _WarningLogPrefix);
-				else _outChannel.logToOutput("telegram-бот активирован");
+				_bot = new TelegramBot(configData, function (res)
+				{
+					if (!res) _outChannel.logToOutput("Отправка логов недоступна", _WarningLogPrefix);
+					else _outChannel.logToOutput("telegram-бот активирован");
+					resolve();
+				});
 			});
+			await botProm;
 		}
 
 		// инициализируем errors
@@ -283,7 +293,7 @@ async function getStaticData(configData: any)
 
 		// получаем функцию форматирования C#
 		let csharpfixformat = vscode.extensions.all.find(x => x.id == "Leopotam.csharpfixformat");
-		if (!!csharpfixformat) getCSFormatter(csharpfixformat).then(formatter => { CSFormatter = formatter });
+		if (!!csharpfixformat) await getCSFormatter(csharpfixformat).then(formatter => { CSFormatter = formatter });
 		else _outChannel.logToOutput("Расширение 'Leopotam.csharpfixformat' не установлено, C# будет форматироваться, как простой текст", _WarningLogPrefix);
 
 		// проверяем наличие плагина с темами
@@ -309,12 +319,12 @@ async function getStaticData(configData: any)
 }
 
 
-async function getXmlRules(configData: { redirect: string, secret: string })
+async function getXmlRules(configData: ProxyData)
 {
 	// получаем правила преобразования текста в xml
 	if (!configData) return;
 	const config: RequestConfig = {
-		baseUrl: configData.redirect,
+		baseUrl: configData.url,
 		secret: configData.secret
 	};
 	try
