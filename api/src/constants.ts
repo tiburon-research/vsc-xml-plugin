@@ -105,7 +105,7 @@ export const PreDefinedConstants = {
 
 export const TibPaths = {
 	Logs: "\\\\tib-nas-1.corp.tiburon-research.ru\\Garbage\\Разное\\TiburonXMLHelper\\Logs",
-	CustomCodeSignatures: "\\\\192.168.177.11\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts"
+	CustomCodeSignatures: "\\\\tib-nas-1.corp.tiburon-research.ru\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts"
 }
 
 
