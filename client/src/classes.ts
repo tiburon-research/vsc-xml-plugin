@@ -261,7 +261,8 @@ export class Path
 		// замена слешей
 		let res = value.replace(/\//, "\\");
 		// убираем слеш в начале и в конце
-		res = res.replace(/(^\\)|(\\$)/, '');
+		if (!res.startsWith('\\\\tib')) res = res.replace(/(^\\)/, '');
+		res = res.replace(/(\\$)/, '');
 		// заглавная буква диска
 		if (res.match(/^[a-z]:/)) res = res[0].toLocaleUpperCase() + res.slice(1);
 		return res;
