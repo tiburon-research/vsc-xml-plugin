@@ -187,7 +187,7 @@ export class TibErrors
 		fs.writeFile(filename, data.toString(), (err) =>
 		{
 			if (!!err) this.sendLogMessage(JSON.stringify(err), data.UserName);
-			this.sendLogMessage("Добавлена ошибка:\n`" + text + "`\n\nПуть:\n`" + filename + "`", data.UserName);
+			this.sendLogMessage("Добавлена ошибка:\n`" + text + "`\n\nПуть:\n`" + filename.escapeMarkdown() + "`", data.UserName);
 		});
 	}
 
