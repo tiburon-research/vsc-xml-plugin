@@ -124,7 +124,8 @@ export enum ErrorCodes
 	oldCustomMethods = "oldCustomMethods",
 	exportLabelsWithCS = "csInLabels",
 	notDigitalAnswerIds = "notDigitalAnswerIds",
-	metaNotProhibited = "metaNotProhibited"
+	metaNotProhibited = "metaNotProhibited",
+	repeatWithGeneric = "repeatWithGeneric"
 };
 
 export interface IErrorTagData

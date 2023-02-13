@@ -6,6 +6,7 @@ import { logError, consoleLog } from './server';
 import { SurveyData, SurveyNode } from 'tib-api/lib/surveyData';
 import { KeyedCollection } from '@vsc-xml-plugin/common-classes/keyedCollection';
 import { SearchResult } from '@vsc-xml-plugin/extensions';
+import { DocumentElement } from 'tib-api/lib/parsing';
 
 
 //#region --------------------------- const type interface
@@ -15,47 +16,48 @@ import { SearchResult } from '@vsc-xml-plugin/extensions';
 
 /** Массив из всех типов диагностик */
 const _AllDiagnostics: IDiagnosticType[] =
-[
-	{
-		Type: server.DiagnosticSeverity.Error,
-		Functions: KeyedCollection.FromPairs(
-			[
-				{ Key: ErrorCodes.wrongIds, Value: getWrongIds },
-				{ Key: ErrorCodes.longIds, Value: getLongIds },
-				{ Key: ErrorCodes.wrongXML, Value: getWrongXML },
-				{ Key: ErrorCodes.duplicatedId, Value: getDuplicatedIds },
-				{ Key: ErrorCodes.wrongMixes, Value: getWrongMixes },
-				{ Key: ErrorCodes.csInAutoSplit, Value: getCsInAutoSplit },
-				{ Key: ErrorCodes.wrongSpaces, Value: getWrongSpaces },
-				{ Key: ErrorCodes.wrongQuotes, Value: wrongQuots },
-				{ Key: ErrorCodes.exportLabelsWithCS, Value: wrongExportLabel }
-			]
-		)
-	},
-	{
-		Type: server.DiagnosticSeverity.Warning,
-		Functions: KeyedCollection.FromPairs(
-			[
-				{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"+Information
-				{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions },
-				{ Key: ErrorCodes.oldCustomMethods, Value: oldRangeMethods },
-				{ Key: ErrorCodes.notDigitalAnswerIds, Value: notDigitalAnswerIds },
-				{ Key: ErrorCodes.metaNotProhibited, Value: metaNotProhibited}
-			]
-		)
-	},
-	{
-		Type: server.DiagnosticSeverity.Information,
-		Functions: KeyedCollection.FromPairs(
-			[
-				{ Key: ErrorCodes.duplicatedText, Value: equalTexts },
-				{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS },
-				{ Key: ErrorCodes.linqHelp, Value: linqHelper },
-				{ Key: ErrorCodes.mixIdSuggestion, Value: mixIdSuggestion }
-			]
-		)
-	}
-];
+	[
+		{
+			Type: server.DiagnosticSeverity.Error,
+			Functions: KeyedCollection.FromPairs(
+				[
+					{ Key: ErrorCodes.wrongIds, Value: getWrongIds },
+					{ Key: ErrorCodes.longIds, Value: getLongIds },
+					{ Key: ErrorCodes.wrongXML, Value: getWrongXML },
+					{ Key: ErrorCodes.duplicatedId, Value: getDuplicatedIds },
+					{ Key: ErrorCodes.wrongMixes, Value: getWrongMixes },
+					{ Key: ErrorCodes.csInAutoSplit, Value: getCsInAutoSplit },
+					{ Key: ErrorCodes.wrongSpaces, Value: getWrongSpaces },
+					{ Key: ErrorCodes.wrongQuotes, Value: wrongQuots },
+					{ Key: ErrorCodes.exportLabelsWithCS, Value: wrongExportLabel }
+				]
+			)
+		},
+		{
+			Type: server.DiagnosticSeverity.Warning,
+			Functions: KeyedCollection.FromPairs(
+				[
+					{ Key: ErrorCodes.constantIds, Value: dangerousConstandIds }, // иногда оно может стать "delimitedConstant"+Information
+					{ Key: ErrorCodes.notImperative, Value: notImperativeQuestions },
+					{ Key: ErrorCodes.oldCustomMethods, Value: oldRangeMethods },
+					{ Key: ErrorCodes.notDigitalAnswerIds, Value: notDigitalAnswerIds },
+					{ Key: ErrorCodes.metaNotProhibited, Value: metaNotProhibited },
+					{ Key: ErrorCodes.repeatWithGeneric, Value: repeatWithGeneric }
+				]
+			)
+		},
+		{
+			Type: server.DiagnosticSeverity.Information,
+			Functions: KeyedCollection.FromPairs(
+				[
+					{ Key: ErrorCodes.duplicatedText, Value: equalTexts },
+					{ Key: ErrorCodes.copyPastedCS, Value: copyPastedCS },
+					{ Key: ErrorCodes.linqHelp, Value: linqHelper },
+					{ Key: ErrorCodes.mixIdSuggestion, Value: mixIdSuggestion }
+				]
+			)
+		}
+	];
 
 
 interface IDiagnosticFunctionData
@@ -242,7 +244,8 @@ async function wrongQuots(data: IDiagnosticFunctionData): Promise<Parse.Document
 	let { document, preparedText } = data;
 	let res: Parse.DocumentElement[] = [];
 	let ins = preparedText.findAll(/(\w+=)("|')([^'"]*\[c#.+?\[\/c#\s*\][^'"]*)\2/);
-	ins.forEach(element => {
+	ins.forEach(element =>
+	{
 		if (element.Result[3].includes(element.Result[2]))
 		{
 			let from = element.Index + element.Result[1].length;
@@ -415,7 +418,44 @@ async function metaNotProhibited(data: IDiagnosticFunctionData): Promise<Parse.D
 			}));
 		}
 	});
-	
+
+	return res;
+}
+
+
+/**  */
+async function repeatWithGeneric(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
+{
+	let res: Parse.DocumentElement[] = [];
+	const { document, text } = data;
+	let redirectStart = text.findAll("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)");
+	redirectStart.forEach((start, i) =>
+	{
+		let tagName = start.Result[2];
+		const tagStart = start.Index + start.Result[0].length;
+		let end = text.indexOf(`</${tagName}`, tagStart + start.Result[0].length);
+		if (end > -1 && (i == redirectStart.length - 1 || end < redirectStart[i + 1].Index))
+		{
+			const part = text.slice(tagStart, end);
+			const search = "$repeat";
+			const repeatIndex = part.indexOf(search);
+			if (repeatIndex > -1)
+			{
+				if (!!part.match(/<|>/))
+				{
+					const from = tagStart + repeatIndex;
+					const to = from + search.length;
+					res.push(new DocumentElement(document, {
+						From: from,
+						To: to,
+						Message: '$repeat не уживается с угловыми скобками в одном узле',
+						Value: null
+					}))
+				}
+			}
+		}
+	})
+
 	return res;
 }
 
@@ -480,7 +520,7 @@ function copyPastedCS(data: IDiagnosticFunctionData): Promise<Parse.DocumentElem
 			if (key.findAll(/\+|(\|\|)|(\&\&)/).length > 2) return true; // проверяем количество операторов (самых частых)
 			return false;
 		});
-		
+
 		groups.ForEach((key, value) =>
 		{
 			let ar = value.map(x => new Parse.DocumentElement(document, {
@@ -553,7 +593,8 @@ async function mixIdSuggestion(data: IDiagnosticFunctionData): Promise<Parse.Doc
 		let text = preparedText.slice(x.Start.Index + x.Start.Result[0].length, x.End.From);
 		if (!text) return;
 		let matches = text.findAll(/\sMix=/);
-		matches.forEach(match => {
+		matches.forEach(match =>
+		{
 			let from = x.Start.Index + x.Start.Result[0].length + match.Index + 1;
 			let el = new Parse.DocumentElement(document, {
 				From: from,
