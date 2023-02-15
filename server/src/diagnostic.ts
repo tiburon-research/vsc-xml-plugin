@@ -95,7 +95,7 @@ export async function getDiagnosticElements(document: server.TextDocument, surve
 	let res: server.Diagnostic[] = [];
 	try
 	{
-		let stack = [];
+		let stack: Promise<server.Diagnostic[]>[] = [];
 		let text = document.getText();
 		text = Encoding.clearXMLComments(text);
 		let preparedText = Encoding.clearCDATA(text);
@@ -109,11 +109,12 @@ export async function getDiagnosticElements(document: server.TextDocument, surve
 		{
 			diagnosticType.Functions.ForEach((name, func) =>
 			{
-				stack.push(_diagnosticElements(data, diagnosticType.Type, func, name).then(x => res = res.concat(x)));
+				stack.push(_diagnosticElements(data, diagnosticType.Type, func, name));
 			});
 		};
-		await Promise.all(stack);
-	} catch (error)
+		res = (await Promise.all(stack)).flat();
+	}
+	catch(error)
 	{
 		logError('Ошибка получения Diagnostic', true, error);
 	}
