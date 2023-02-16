@@ -25,9 +25,6 @@
 	"categories": [
 		"Other"
 	],
-	"activationEvents": [
-		"onLanguage:tib"
-	],
 	"main": "./client/out/extension",
 	"contributes": {
 		"languages": [
