@@ -14,7 +14,7 @@ import * as client from 'vscode-languageclient/node';
 import * as path from 'path';
 import { ProxyData, TelegramBot } from '@vsc-xml-plugin/telegram-bot';
 import { TibOutput, showWarning, LogData, TibErrors, showInfo, showError } from './errors';
-import { getCustomJS, getListItem, getAnswer } from 'tib-api/lib/parsing';
+import { getCustomJS, getListItem, getAnswer, findCloseTag } from 'tib-api/lib/parsing';
 import * as customCode from './customSurveyCode';
 import { GeoClusters, GeoConstants, getAllCities } from '@vsc-xml-plugin/geo';
 import { createGeoPage, createGeolists, GeoXmlCreateionConfig } from '@vsc-xml-plugin/geo/xml';
@@ -1334,6 +1334,7 @@ async function insertAutoCloseTags(data: ITibEditorData): Promise<boolean>
 
 	if (!data.tag || !data.editor || !data.changes || data.changes.length == 0) return res;
 	let fullText = data.editor.document.getText();
+	let preparedText = CurrentTag.PrepareXML(fullText);
 
 	// сохраняем начальное положение
 	let prevSels = data.editor.selections;
@@ -1342,19 +1343,27 @@ async function insertAutoCloseTags(data: ITibEditorData): Promise<boolean>
 	// хреново но быстро
 	if (!data.tag.Body || data.tag.Body.trim().length == 0 || data.tag.GetLaguage() != Language.CSharp || data.tag.InCSString())
 	{
+		let edits: (() => Thenable<boolean>)[] = [];
+
 		for (let change of data.changes)
 		{
 			let originalPosition = change.Active.translate(0, 1);
 			if (change.Change.text == ">")
 			{
 				let curLine = getCurrentLineText(data.editor.document, originalPosition);
-				let prev = curLine.substr(0, change.Active.character + 1);
-				let after = curLine.substr(change.Active.character + 1);
+				let prev = curLine.slice(0, change.Active.character);
+				//let after = curLine.slice(change.Active.character);
 				let result = prev.match(/<(\w+)[^>\/]*>?$/);
 				if (!!result)
 				{
 					// проверяем, не закрыт ли уже этот тег
-					let afterFull = fullText.substr(data.editor.document.offsetAt(originalPosition));
+					let currentOffset = data.editor.document.offsetAt(originalPosition);
+					let closingTag = findCloseTag('<', result[1], '>', currentOffset - result[0].length, preparedText, false);
+					if (!closingTag)
+					{
+						edits.push(() => data.editor.insertSnippet(new vscode.SnippetString("</" + result[1] + ">"), originalPosition, { undoStopAfter: false, undoStopBefore: false }));
+					}
+					/* let afterFull = fullText.slice(data.editor.document.offsetAt(originalPosition));
 					let tagOp = positiveMin(afterFull.indexOf("<" + result[1] + " "), afterFull.indexOf("<" + result[1] + ">"), -1);
 					let tagCl = positiveMin(afterFull.indexOf("</" + result[1] + " "), afterFull.indexOf("</" + result[1] + ">"), -1);
 
@@ -1365,10 +1374,16 @@ async function insertAutoCloseTags(data: ITibEditorData): Promise<boolean>
 						{
 							res = await data.editor.insertSnippet(new vscode.SnippetString("</" + result[1] + ">"), originalPosition, { undoStopAfter: false, undoStopBefore: false }) || res;
 						}
-					}
+					} */
 				}
 			}
 		}
+
+		for (const edit of edits)
+		{
+			res = await edit() || res;
+		}
+
 		if (res) data.editor.selections = prevSels;
 	}
 
