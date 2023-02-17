@@ -114,7 +114,7 @@ export async function getDiagnosticElements(document: server.TextDocument, surve
 		};
 		res = (await Promise.all(stack)).flat();
 	}
-	catch(error)
+	catch (error)
 	{
 		logError('Ошибка получения Diagnostic', true, error);
 	}
@@ -424,11 +424,13 @@ async function metaNotProhibited(data: IDiagnosticFunctionData): Promise<Parse.D
 }
 
 
-/**  */
+/** $repeat и угловые кавычки в одном кодовом узле приводят к ошибке парсинга */
 async function repeatWithGeneric(data: IDiagnosticFunctionData): Promise<Parse.DocumentElement[]>
 {
 	let res: Parse.DocumentElement[] = [];
 	const { document, text } = data;
+	const cdataStart = "<![CDATA[";
+	const cdataEnd = "]]>";
 	let redirectStart = text.findAll("(<(" + RegExpPatterns.AllowCodeTags + ")(\\s*\\w+=((\"[^\"]*\")|('[^']*')))*\\s*>)");
 	redirectStart.forEach((start, i) =>
 	{
@@ -442,7 +444,11 @@ async function repeatWithGeneric(data: IDiagnosticFunctionData): Promise<Parse.D
 			const repeatIndex = part.indexOf(search);
 			if (repeatIndex > -1)
 			{
-				if (!!part.match(/<|>/))
+
+				const clearPart = part
+					.replace(cdataStart, ' '.repeat(cdataStart.length))
+					.replace(cdataEnd, ' '.repeat(cdataEnd.length));
+				if (!!clearPart.match(/<|>/))
 				{
 					const from = tagStart + repeatIndex;
 					const to = from + search.length;

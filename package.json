@@ -2,7 +2,7 @@
 	"name": "tiburonscripter",
 	"displayName": "Tiburon XML Helper",
 	"description": "Плагин для работы с языком Tiburon XML script",
-	"version": "2.21.18",
+	"version": "2.22.1",
 	"publisher": "TiburonResearch",
 	"author": {
 		"name": "GuRu",
@@ -452,11 +452,6 @@
 					"type": "boolean",
 					"default": true
 				},
-				"tib.enableUiIsolateGen": {
-					"description": "Добавлять Isolate при генерации ответов",
-					"type": "boolean",
-					"default": true
-				},
 				"tib.themeExtensionChecked": {
 					"description": "Установка плагина с темами проверена",
 					"type": "boolean",
@@ -468,10 +463,10 @@
 	"dependencies": {
 		"@vsc-xml-plugin/common-classes": "^1.0.4",
 		"@vsc-xml-plugin/extensions": "^1.0.12",
-		"@vsc-xml-plugin/geo": "^1.0.22",
-		"@vsc-xml-plugin/survey-objects": "^1.1.3",
+		"@vsc-xml-plugin/geo": "^1.0.23",
+		"@vsc-xml-plugin/survey-objects": "^1.1.4",
 		"@vsc-xml-plugin/telegram-bot": "^1.0.3",
-		"@vsc-xml-plugin/text-to-xml": "^1.1.21",
+		"@vsc-xml-plugin/text-to-xml": "^1.1.24",
 		"@vsc-xml-plugin/vsc-api-client": "^1.1.7",
 		"charset-detector": "^0.0.2",
 		"cssbeautify": "^0.3.1",
@@ -498,6 +493,7 @@
 		"@types/node": "^16.0.0",
 		"@types/vscode": "^1.75.0",
 		"@types/xmldoc": "^1.1.6",
+		"@vsc-xml-plugin/tsml-update-cli": "^1.0.6",
 		"typescript": "^4.9.5"
 	},
 	"scripts": {
@@ -507,6 +503,8 @@
 		"watch": "tsc -b -w  api client server",
 		"rebuild": "cd api && rmdir /q/s lib && del tsconfig.tsbuildinfo && cd ../client && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../server && rmdir /q/s out && del tsconfig.tsbuildinfo && cd ../ && npm run compile",
 		"restore-modules": "rmdir /q/s node_modules && npm ci && npm run rebuild",
-		"copy-signature": "copy \"client\\out\\customSurveyCode.d.ts\" \"\\\\192.168.177.11\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts\""
+		"copy-signature": "copy \"client\\out\\customSurveyCode.d.ts\" \"\\\\192.168.177.11\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts\"",
+		"tsml-update": "tsml update",
+		"patch": "npm --no-git-tag-version version patch && npm run publish"
 	}
 }

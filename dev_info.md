@@ -60,3 +60,4 @@
 - сборка версии в пакет VSIX: `vsce package`.
 - публикация новой версии: `vsce publish` (данные для аутентификации лежат в `G:\Разное\TiburonXMLHelper\data.txt`).
 - копирование файла с сигнатурами пользовательского кода: `copy-signature` (выполняется при каждом `vscode:prepublish`).
+- `npm run tsml-update`: обновляет все tsml-модули
