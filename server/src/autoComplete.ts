@@ -1414,6 +1414,11 @@ export const Attributes = {
 	],
 	"Defaults": [
 		{
+			"Name": "ImageError",
+			"Type": "String",
+			"Default": "Не удалось загрузить изображение"
+		},
+		{
 			"Name": "ProductProhibitedText",
 			"Type": "String",
 			"Default": "* Продукт компании Meta, деятельность которой запрещена на территории России."
