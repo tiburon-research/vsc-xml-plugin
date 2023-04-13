@@ -1414,6 +1414,16 @@ export const Attributes = {
 	],
 	"Defaults": [
 		{
+			"Name": "SurveyLanguageCodeFallback",
+			"Type": "String",
+			"Default": "ru"
+		},
+		{
+			"Name": "SurveyLanguageCode",
+			"Type": "String",
+			"Default": "В зависимости от домена: для .com - `en`, для .ru - `ru`"
+		},
+		{
 			"Name": "ImageError",
 			"Type": "String",
 			"Default": "Не удалось загрузить изображение"
