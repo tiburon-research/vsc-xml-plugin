@@ -2,7 +2,7 @@
 	"name": "tiburonscripter",
 	"displayName": "Tiburon XML Helper",
 	"description": "Плагин для работы с языком Tiburon XML script",
-	"version": "2.22.7",
+	"version": "2.22.8",
 	"publisher": "TiburonResearch",
 	"author": {
 		"name": "GuRu",
@@ -480,8 +480,8 @@
 		"node-xlsx": "^0.15.0",
 		"short-hash": "^1.0.0",
 		"tib-api": "file:api",
-		"vscode-languageclient": "^8.0.1",
-		"vscode-languageserver": "^8.0.1",
+		"vscode-languageclient": "^8.1.0",
+		"vscode-languageserver": "^8.1.0",
 		"vscode-uri": "^3.0.3",
 		"xmldoc": "^1.1.4"
 	},

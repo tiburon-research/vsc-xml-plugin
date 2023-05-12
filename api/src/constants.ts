@@ -102,10 +102,12 @@ export const PreDefinedConstants = {
 	ProductProhibited: "Добавляет сноску о продукте запрещённой организации Meta"
 };
 
+const G = "tib-nas-1.corp.tiburon-research.ru";
 
 export const TibPaths = {
-	Logs: "\\\\tib-nas-1.corp.tiburon-research.ru\\Garbage\\Разное\\TiburonXMLHelper\\Logs",
-	CustomCodeSignatures: "\\\\tib-nas-1.corp.tiburon-research.ru\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts"
+	G,
+	Logs: `\\\\${G}\\Garbage\\Разное\\TiburonXMLHelper\\Logs`,
+	CustomCodeSignatures: `\\\\${G}\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts`
 }
 
 

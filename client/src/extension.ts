@@ -126,6 +126,12 @@ export async function activate(context: vscode.ExtensionContext)
 		logIds: parsedConfig.logIds
 	} as ProxyData : null;
 
+	// обновляем настройки безопасности для tib-nas
+	let config = vscode.workspace.getConfiguration();
+	const settingsName = "security.allowedUNCHosts";
+	const allowedUNCHosts = (config.get(settingsName) || []) as string[];
+	if (!allowedUNCHosts?.includes(TibPaths.G)) config.update(settingsName, [...allowedUNCHosts, TibPaths.G], vscode.ConfigurationTarget.Global);
+
 	// общие действия при старте расширения
 	await getStaticData(configData);
 	createClientConnection(context); // этого не ждём
