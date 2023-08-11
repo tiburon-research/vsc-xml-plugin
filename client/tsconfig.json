@@ -5,7 +5,6 @@
 		"rootDir": "src",
 		"outDir": "out",
         "sourceMap": true,
-        "watch": true,
 		"composite": true,
 		"skipLibCheck": true
 	},

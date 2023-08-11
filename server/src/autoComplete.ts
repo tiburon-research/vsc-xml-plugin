@@ -1414,6 +1414,11 @@ export const Attributes = {
 	],
 	"Defaults": [
 		{
+			"Name": "MiBrowserVideoWarning",
+			"Type": "String",
+			"Default": "Если видео не воспроизводится, попробуйте подключиться к сети Wi-Fi или зайти через другой браузер"
+		},
+		{
 			"Name": "SurveyLanguageCodeFallback",
 			"Type": "String",
 			"Default": "ru"

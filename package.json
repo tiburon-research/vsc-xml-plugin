@@ -2,7 +2,7 @@
 	"name": "tiburonscripter",
 	"displayName": "Tiburon XML Helper",
 	"description": "Плагин для работы с языком Tiburon XML script",
-	"version": "2.22.10",
+	"version": "2.22.13",
 	"publisher": "TiburonResearch",
 	"author": {
 		"name": "GuRu",
@@ -19,7 +19,7 @@
 	"homepage": "https://github.com/tiburon-research/vsc-xml-plugin/blob/master/README.md",
 	"license": "MIT",
 	"engines": {
-		"vscode": "^1.75.0",
+		"vscode": "^1.80.0",
 		"node": "*"
 	},
 	"categories": [
@@ -464,9 +464,9 @@
 		"@vsc-xml-plugin/common-classes": "^1.0.5",
 		"@vsc-xml-plugin/extensions": "^1.0.12",
 		"@vsc-xml-plugin/geo": "^1.0.24",
-		"@vsc-xml-plugin/survey-objects": "^1.1.4",
+		"@vsc-xml-plugin/survey-objects": "^1.1.7",
 		"@vsc-xml-plugin/telegram-bot": "^1.0.4",
-		"@vsc-xml-plugin/text-to-xml": "^1.1.29",
+		"@vsc-xml-plugin/text-to-xml": "^1.1.31",
 		"@vsc-xml-plugin/vsc-api-client": "^1.1.8",
 		"charset-detector": "^0.0.2",
 		"cssbeautify": "^0.3.1",
@@ -490,8 +490,8 @@
 		"@types/jquery": "^3.3.29",
 		"@types/jsdom": "^12.2.1",
 		"@types/mocha": "^5.2.5",
-		"@types/node": "^16.0.0",
-		"@types/vscode": "^1.75.0",
+		"@types/node": "^16.18.38",
+		"@types/vscode": "^1.80.0",
 		"@types/xmldoc": "^1.1.6",
 		"@vsc-xml-plugin/tsml-update-cli": "^1.0.6",
 		"typescript": "^4.9.5"
