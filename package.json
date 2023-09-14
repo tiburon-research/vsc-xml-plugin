@@ -2,7 +2,7 @@
 	"name": "tiburonscripter",
 	"displayName": "Tiburon XML Helper",
 	"description": "Плагин для работы с языком Tiburon XML script",
-	"version": "2.22.13",
+	"version": "2.22.14",
 	"publisher": "TiburonResearch",
 	"author": {
 		"name": "GuRu",
@@ -463,7 +463,7 @@
 	"dependencies": {
 		"@vsc-xml-plugin/common-classes": "^1.0.5",
 		"@vsc-xml-plugin/extensions": "^1.0.12",
-		"@vsc-xml-plugin/geo": "^1.0.24",
+		"@vsc-xml-plugin/geo": "^1.0.25",
 		"@vsc-xml-plugin/survey-objects": "^1.1.7",
 		"@vsc-xml-plugin/telegram-bot": "^1.0.4",
 		"@vsc-xml-plugin/text-to-xml": "^1.1.31",
