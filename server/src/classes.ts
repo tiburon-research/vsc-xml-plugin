@@ -467,7 +467,15 @@ export class TibAutoCompletes
 						switch (lastParent.Name)
 						{
 							case 'Page':
-								body = '!-- <Block Items="\\$repeat($1){$2_{{iterator}}[,]}" MixId="$2Mix"/> -->\n<Repeat {{init}}>\n\t<Question Id="${2:Q1}_{{iterator}}" SyncId="{{iterator}}" Hint="">\n\t\t<Header>[div class="c"]' + (type == "List" ? "@Text" : "$3") + '[/div]</Header>\n\t\t$0\n\t</Question>\n</Repeat>';
+								body = [
+									'!-- <Block Items="\\$repeat($1){$2_{{iterator}}[,]}" MixId="$2Mix"/> -->',
+									'<Repeat {{init}}>',
+									'\t<Question Id="${2:Q1}_{{iterator}}" Type="{{questionTypes}}" SyncId="{{iterator}}" Hint="">',
+									'\t\t<Header>[div class="c"]' + (type == "List" ? "@Text" : "$4") + '[/div]</Header>',
+									'\t\t$0',
+									'\t</Question>',
+									'</Repeat>'
+								].join('\n');
 								if (!this.tag.Body.includes("Step='1'") && !this.tag.Body.includes('Step="1"')) body = 'Ui Step="1" HeaderFix="1"/>\n<' + body;
 								break;
 
@@ -776,9 +784,9 @@ export class TibAutoCompletes
 	{
 		let res = body;
 		let init = "$1";
+		let extractor = new ElementExtractor(this.surveyData);
 		if (type == 'List')
 		{
-			let extractor = new ElementExtractor(this.surveyData);
 			let lists = extractor.getAllLists().join(',');
 			if (!!lists) lists = '|' + lists + '|';
 			init = `\${1${lists}}`;
@@ -786,6 +794,7 @@ export class TibAutoCompletes
 		res = res.replace(/\{\{iterator\}\}/g, type == 'List' ? '@ID' : '@Itera');
 		res = res.replace(/\{\{textIterator\}\}/g, type == 'List' ? '@Text' : '@Itera');
 		res = res.replace(/\{\{init\}\}/g, type + `="${init}"`);
+		res = res.replace(/\{\{questionTypes\}\}/g, '\${3|' + extractor.getQuestionTypes().join(',') + '|}')
 		return res;
 	}
 
