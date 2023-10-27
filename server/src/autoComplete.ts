@@ -3366,7 +3366,7 @@ export const RangeQuestion = {
 			'\t\t\t\t<Answer Id="@ID">',
 			'\t\t\t\t\t<Filter><![CDATA[ return AnswerExists("$1", "@ID"); ]]></Filter>',
 			'\t\t\t\t\t<Filter Side="Client"><![CDATA[ return AnswerEnabledForRanging("$4_", "@ID", @Itera(-1), @RangeCount); ]]></Filter>',
-			'\t\t\t\t\t<Text>[img src="@ContentUrl/$1/}/@ID.jpg"/]@Text</Text>',
+			'\t\t\t\t\t<Text>[img src="@ContentUrl/$1/@ID.jpg"/]@Text</Text>',
 			'\t\t\t\t</Answer>',
 			'\t\t\t</Repeat>',
 			'\t\t\t<Answer Id="999" Reset="true" Fix="true" NoUseInQstFilter="true"><Ui Isolate="1"/><Text>$6</Text></Answer>',
