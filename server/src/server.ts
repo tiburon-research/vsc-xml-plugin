@@ -4,12 +4,13 @@ import * as server from 'vscode-languageserver/node';
 import { getCurrentTag, CurrentTagGetFields, CurrentTag, ProtocolTagFields, IProtocolTagFields, IServerDocument, OnDidChangeDocumentData, IErrorLogData, isValidDocumentPosition, IErrorTagData, Watcher } from 'tib-api';
 import { TibAutoCompleteItem, getCompletions, ServerDocumentStore, getSignatureHelpers, getHovers, TibDocumentHighLights, getDefinition, LanguageString } from './classes';
 import * as AutoCompleteArray from './autoComplete';
-import { _pack, RequestNames } from 'tib-api/lib/constants';
+import { _pack, RequestNames, TibPaths } from 'tib-api/lib/constants';
 import { getDiagnosticElements } from './diagnostic';
 import { CacheSet } from 'tib-api/lib/cache';
 import { SurveyData, TibMethods, SurveyNodes, getDocumentMethods, getDocumentNodeIds, getMixIds, getIncludePaths, getConstants, SurveyNode, ExportLabel, getExportLabels } from 'tib-api/lib/surveyData';
 import { getXmlObject } from 'tib-api/lib/parsing';
 import { KeyedCollection } from '@vsc-xml-plugin/common-classes/keyedCollection';
+import { TemplateParseResult, getTemplates } from '@vsc-xml-plugin/xml-local-templates';
 
 
 
@@ -374,10 +375,31 @@ async function getAutoComleteList()
 {
 	try
 	{
+		let staticAutoCompletes = { ...AutoCompleteArray };
+
+		// получаем шаблоны с диска
+		try
+		{
+			const snips = await getTemplates(TibPaths.Snippets);
+			if (snips.ok == false) // тут компилятор сломался от восклицательного знака
+			{
+				logError(snips.errorMessage, false);
+			}
+			else
+			{
+				(staticAutoCompletes.XMLFeatures as TemplateParseResult[]).push(...snips.data);
+				connection.sendNotification(RequestNames.LogToOutput, "Добавлено шаблонов: " + snips.data.length);
+			}
+		}
+		catch (error)
+		{
+			logError(error, false);
+		}
+
 		// получаем AutoComplete
-		let tibCode = AutoCompleteArray.Code.map(x => { return new TibAutoCompleteItem(x); });
+		let tibCode = staticAutoCompletes.Code.map(x => { return new TibAutoCompleteItem(x); });
 		let statCS: TibAutoCompleteItem[] = [];
-		for (let key in AutoCompleteArray.StaticMethods)
+		for (let key in staticAutoCompletes.StaticMethods)
 		{
 			// добавляем сам тип в AutoComplete
 			let tp = new TibAutoCompleteItem({
@@ -389,7 +411,7 @@ async function getAutoComleteList()
 			// и в classTypes
 			ClassTypes.push(key);
 			// добавляем все его статические методы
-			let items: object[] = AutoCompleteArray.StaticMethods[key];
+			let items: object[] = staticAutoCompletes.StaticMethods[key];
 			items.forEach(item =>
 			{
 				let aci = new TibAutoCompleteItem(item);

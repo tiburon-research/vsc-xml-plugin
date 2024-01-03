@@ -107,7 +107,8 @@ const G = "tib-nas-1.corp.tiburon-research.ru";
 export const TibPaths = {
 	G,
 	Logs: `\\\\${G}\\Garbage\\Разное\\TiburonXMLHelper\\Logs`,
-	CustomCodeSignatures: `\\\\${G}\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts`
+	CustomCodeSignatures: `\\\\${G}\\Garbage\\Разное\\TiburonXMLHelper\\DomSignature.d.ts`,
+	Snippets: `T:\\Разное\\TiburonXMLHelper\\Templates\\Snippets\\Adaptive`
 }
 
 
