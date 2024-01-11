@@ -19,7 +19,7 @@ import * as customCode from './customSurveyCode';
 import { GeoClusters, GeoConstants, getAllCities } from '@vsc-xml-plugin/geo';
 import { createGeoPage, createGeolists, GeoXmlCreateionConfig } from '@vsc-xml-plugin/geo/xml';
 import * as TextToXml from '@vsc-xml-plugin/text-to-xml';
-import { QuestionData, SettingsRules } from '@vsc-xml-plugin/text-to-xml/types';
+import { QuestionData, SettingsRules, XmlGenerationSettings } from '@vsc-xml-plugin/text-to-xml/types';
 import { getAnswerScreenoutRules, getAnswerTextRules, getQuestionHeaderRules, RequestConfig } from '@vsc-xml-plugin/vsc-api-client/rules';
 
 
@@ -448,7 +448,7 @@ async function registerCommands()
 	{
 		let editor = vscode.window.activeTextEditor;
 		let text = editor.document.getText(editor.selection);
-		let questions = TextToXml.getQuestions(text);
+		let questions = TextToXml.getQuestions(text, getXmlGenerationSettings());
 		await editor.edit(builder =>
 		{
 			builder.delete(editor.selection);
@@ -2007,11 +2007,9 @@ async function createElements(elementType: SurveyElementType)
 			text,
 			type: elementType,
 			multipleSeparator: '\n\n'
-		}, {
-			EnableAdditionalXml: _settings.Item('enableAdditionalXml'),
-			SurveyEngineGeneration: SurveyEngineGeneration.Adaptive,
-			Rules: _xmlRules
-		});
+		},
+			getXmlGenerationSettings()
+		);
 
 		if (!created.Ok)
 		{
@@ -2066,11 +2064,8 @@ async function getAnswers()
 						questionData: data,
 						questionTypes: QuestionTypes
 					},
-					{
-						EnableAdditionalXml: _settings.Item('enableAdditionalXml'),
-						SurveyEngineGeneration: SurveyEngineGeneration.Adaptive,
-						Rules: _xmlRules
-					});
+					getXmlGenerationSettings()
+				);
 				if (!result.Ok)
 				{
 					showWarning(result.Message);
@@ -2091,6 +2086,17 @@ async function getAnswers()
 	else
 	{
 		await createElements(SurveyElementType.Page);
+	}
+}
+
+
+function getXmlGenerationSettings(): XmlGenerationSettings
+{
+	return {
+		EnableAdditionalXml: _settings.Item('enableAdditionalXml'),
+		SurveyEngineGeneration: SurveyEngineGeneration.Adaptive,
+		Rules: _xmlRules,
+		Capitalize: true
 	}
 }
 
