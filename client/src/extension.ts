@@ -350,7 +350,8 @@ async function getXmlRules(configData: ProxyData)
 	catch (error)
 	{
 		showError("Не удалось получить список правил для генерации XML. Дополнительные элементы генерироваться не будут.");
-		_outChannel.logToOutput("Не удалось обновить список правил для генерации XML", _WarningLogPrefix);
+		//_outChannel.logToOutput("Не удалось обновить список правил для генерации XML", _WarningLogPrefix);
+		logError("Ошибка получения правил для генерации XML", false, error);
 	}
 }
 

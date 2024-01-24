@@ -5,7 +5,7 @@
 
 import { TelegramBot } from "@vsc-xml-plugin/telegram-bot";
 import * as vscode from 'vscode';
-import * as dateFormat from 'dateFormat';
+import * as dateFormat from 'dateformat';
 import { pathExists, createDir, IErrorTagData } from "tib-api";
 import { Path, UserData, getTibVersion } from "./classes";
 import * as fs from 'fs'
