@@ -21,6 +21,7 @@ import { createGeoPage, createGeolists, GeoXmlCreateionConfig } from '@vsc-xml-p
 import * as TextToXml from '@vsc-xml-plugin/text-to-xml';
 import { QuestionData, SettingsRules, XmlGenerationSettings } from '@vsc-xml-plugin/text-to-xml/types';
 import { getAnswerScreenoutRules, getAnswerTextRules, getQuestionHeaderRules, RequestConfig } from '@vsc-xml-plugin/vsc-api-client/rules';
+import { SortedArrayResult } from '@vsc-xml-plugin/extensions';
 
 
 export { CSFormatter, _settings as Settings };
@@ -1280,8 +1281,9 @@ async function insertMultipleSnippets(singleSnip: vscode.SnippetString, multiSni
 	const editor = vscode.window.activeTextEditor;
 	if (editor.selections.length > 1)
 	{
+		const sorted = sortSelections(editor.selections);
 		const doc = editor.document;
-		for (const sel of editor.selections)
+		for (const sel of sorted.Array)
 		{
 			const text = doc.getText(sel);
 			const snip = multiSnip(text);
@@ -1754,16 +1756,22 @@ async function multiPaste(editor: vscode.TextEditor, selections: vscode.Selectio
 	};
 
 	// Сортируем оба массива так, чтобы вставлялось снизу вверх
-	let sortingData = selections.orderBy((a: vscode.Selection, b: vscode.Selection) =>
+	let sortingData = sortSelections(selections);
+	let newSelections = sortingData.Array;
+	let newLines = sortingData.IndexOrder.map(i => lines[i]);
+
+	await pasteLines(newSelections, newLines);
+}
+
+/** Сортируем так, чтобы вставлялось снизу вверх */
+function sortSelections(selections: ReadonlyArray<vscode.Selection>): SortedArrayResult<vscode.Selection>
+{
+	return [...selections].orderBy((a: vscode.Selection, b: vscode.Selection) =>
 	{
 		let lineD = b.active.line - a.active.line;
 		if (lineD != 0) return lineD;
 		return b.active.character - a.active.character;
 	});
-	let newSelections = sortingData.Array;
-	let newLines = sortingData.IndexOrder.map(i => lines[i]);
-
-	await pasteLines(newSelections, newLines);
 }
 
 

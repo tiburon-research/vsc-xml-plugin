@@ -149,15 +149,6 @@ export interface IErrorLogData
 }
 
 
-/** Результат сортировки массива */
-export interface SortedArrayResult<T>
-{
-	/** Отсортированный массив элементов */
-	Array: T[];
-	/** Отсортированный массив индексов */
-	IndexOrder: number[];
-}
-
 export enum Language { XML, CSharp, CSS, JS, PlainText, Inline };
 
 
