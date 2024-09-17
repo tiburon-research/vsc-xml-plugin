@@ -553,17 +553,14 @@ async function registerCommands()
 	});
 
 	// оборачивание в [тег]
-	registerCommand('tib.insertTag', () => 
+	registerCommand('tib.insertTag', async () => 
 	{
 		_inProcess = true;
-		return new Promise<void>((resolve, reject) =>
-		{
-			vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]")).then(() => 
-			{
-				_inProcess = false;
-				resolve();
-			});
-		});
+		await insertMultipleSnippets(
+			new vscode.SnippetString("[${1:u}$2]$TM_SELECTED_TEXT[/${1:u}]"),
+			text => new vscode.SnippetString(`[u]${text}[/u]`)
+		)
+		_inProcess = false;
 	});
 
 	registerCommand('tib.cdata', () => 
@@ -576,7 +573,10 @@ async function registerCommands()
 				let multi = vscode.window.activeTextEditor.document.getText(vscode.window.activeTextEditor.selection).indexOf("\n") > -1;
 				let pre = multi ? "" : " ";
 				let post = multi ? "" : " ";
-				vscode.window.activeTextEditor.insertSnippet(new vscode.SnippetString("<![CDATA[" + pre + "$TM_SELECTED_TEXT" + post + "]]>")).then(() => 
+				insertMultipleSnippets(
+					new vscode.SnippetString("<![CDATA[" + pre + "$TM_SELECTED_TEXT" + post + "]]>"),
+					text => new vscode.SnippetString("<![CDATA[" + pre + text + post + "]]>")
+				).then(() => 
 				{
 					_inProcess = false;
 					resolve();
@@ -1269,6 +1269,29 @@ async function registerCommands()
 			return res;
 		}
 	});
+}
+
+
+
+async function insertMultipleSnippets(singleSnip: vscode.SnippetString, multiSnip: (text: string) => vscode.SnippetString)
+{
+	//https://github.com/microsoft/vscode/issues/206121
+
+	const editor = vscode.window.activeTextEditor;
+	if (editor.selections.length > 1)
+	{
+		const doc = editor.document;
+		for (const sel of editor.selections)
+		{
+			const text = doc.getText(sel);
+			const snip = multiSnip(text);
+			await editor.insertSnippet(snip, sel, { undoStopAfter: false, undoStopBefore: false });
+		}
+	}
+	else
+	{
+		await editor.insertSnippet(singleSnip);
+	}
 }
 
 
@@ -2003,13 +2026,15 @@ async function createElements(elementType: SurveyElementType)
 		}
 		else if (elementType == SurveyElementType.List && parentNames.includes("List")) elementType = SurveyElementType.ListItem;
 
-		let created = TextToXml.createElements({
+		const a = getXmlGenerationSettings();
+		const b = {
 			questionTypes: QuestionTypes,
 			text,
 			type: elementType,
 			multipleSeparator: '\n\n'
-		},
-			getXmlGenerationSettings()
+		};
+		let created = TextToXml.createElements(b,
+			a
 		);
 
 		if (!created.Ok)

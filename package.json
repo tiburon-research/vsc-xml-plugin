@@ -2,7 +2,7 @@
 	"name": "tiburonscripter",
 	"displayName": "Tiburon XML Helper",
 	"description": "Плагин для работы с языком Tiburon XML script",
-	"version": "2.24.7",
+	"version": "2.24.9",
 	"publisher": "TiburonResearch",
 	"author": {
 		"name": "GuRu",
@@ -393,7 +393,7 @@
 				"tib.demoPath": {
 					"description": "Путь к скрипту демонстрационной анкеты",
 					"type": "string",
-					"default": "T:\\=Tiburon_NEW\\!!!Проекты\\=OWN\\Deman\\Adaptive\\deman_adaptive.xml"
+					"default": "T:\\=Tiburon_NEW\\=!Проекты\\=OWN\\Deman\\Adaptive\\deman_adaptive.xml"
 				},
 				"tib.templatePathFolder": {
 					"description": "Путь к шаблону tibXML",
@@ -463,11 +463,11 @@
 	"dependencies": {
 		"@vsc-xml-plugin/common-classes": "^1.0.5",
 		"@vsc-xml-plugin/extensions": "^1.0.14",
-		"@vsc-xml-plugin/geo": "^1.0.26",
+		"@vsc-xml-plugin/geo": "^1.0.27",
 		"@vsc-xml-plugin/survey-objects": "^1.1.13",
 		"@vsc-xml-plugin/telegram-bot": "^1.0.8",
-		"@vsc-xml-plugin/text-to-xml": "^1.1.39",
-		"@vsc-xml-plugin/vsc-api-client": "^1.1.8",
+		"@vsc-xml-plugin/text-to-xml": "^1.1.40",
+		"@vsc-xml-plugin/vsc-api-client": "^1.1.9",
 		"@vsc-xml-plugin/xml-local-templates": "^1.0.4",
 		"charset-detector": "^0.0.2",
 		"cssbeautify": "^0.3.1",
